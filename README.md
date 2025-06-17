@@ -1,36 +1,295 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏈 LUFA Fantasy - Sistema de Gestión de Flag Football
 
-## Getting Started
+Un sistema completo de gestión para ligas de Flag Football desarrollado con **Next.js**, **TypeScript** y **MongoDB**.
 
-First, run the development server:
+## 📋 Descripción del Proyecto
+
+Este proyecto está diseñado para replicar y mejorar funcionalidades de páginas como CópaFácil, proporcionando una plataforma integral para la gestión de torneos, equipos, jugadores y estadísticas de Flag Football.
+
+## 🏗️ Arquitectura del Sistema
+
+### Entidades Principales
+
+El sistema maneja las siguientes entidades principales:
+
+#### 1. **Torneos (Tournaments)**
+
+- Gestión de competiciones principales (ej: "APERTURA FLAG 2025")
+- Configuración de reglas de juego
+- Sistema de puntuación personalizable
+- Premios y reconocimientos
+
+#### 2. **Divisiones (Divisions)**
+
+- Categorías por género (masculino, femenino, mixto)
+- Grupos de edad
+- Límites de equipos por división
+
+#### 3. **Equipos (Teams)**
+
+- Información completa del equipo
+- Datos del entrenador
+- Colores y logo del equipo
+- Información de contacto
+
+#### 4. **Jugadores (Players)**
+
+- Datos personales y de contacto
+- Posiciones específicas de Flag Football (QB, WR, RB, etc.)
+- Información médica y de emergencia
+- Número de jersey único por equipo
+
+#### 5. **Partidos (Games)**
+
+- Programación de encuentros
+- Registro de puntuaciones por cuartos
+- Estadísticas detalladas del juego
+- Eventos del partido (touchdowns, intercepciones, etc.)
+- Información de oficiales y condiciones climáticas
+
+#### 6. **Estadísticas de Jugadores (PlayerStatistics)**
+
+- **Ofensivas**: Pases, carrera, recepciones
+- **Defensivas**: Tacleadas, intercepciones, sacks
+- **Especiales**: Pateo, punting, retornos
+
+#### 7. **Estadísticas de Equipos (TeamStatistics)**
+
+- Record de victorias/derrotas
+- Puntos a favor y en contra
+- Estadísticas ofensivas y defensivas
+- Eficiencia en terceras oportunidades y zona roja
+
+#### 8. **Tabla de Posiciones (Standings)**
+
+- Clasificación por división
+- Porcentaje de victorias
+- Diferencial de puntos
+- Records en casa/visitante
+
+#### 9. **Campos de Juego (Venues)**
+
+- Ubicación y capacidad
+- Instalaciones disponibles
+- Horarios de disponibilidad
+- Información de contacto
+
+#### 10. **Temporadas (Seasons)**
+
+- Agrupación de torneos por año
+- Fechas de inicio y fin
+- Estado de la temporada
+
+## 🛠️ Tecnologías Utilizadas
+
+- **Frontend**: Next.js 15 con React 19
+- **Backend**: Next.js API Routes
+- **Base de Datos**: MongoDB con Mongoose
+- **Lenguaje**: TypeScript
+- **Estilos**: Tailwind CSS
+- **Herramientas**: ESLint, PostCSS
+
+## 📁 Estructura del Proyecto
+
+```
+src/
+├── app/                    # App Router de Next.js
+│   ├── page.tsx           # Página principal (Dashboard)
+│   ├── layout.tsx         # Layout principal
+│   └── globals.css        # Estilos globales
+├── lib/                   # Librerías y utilitarios
+│   ├── mongodb.ts         # Configuración de MongoDB
+│   └── statistics.ts      # Utilitarios de estadísticas
+├── models/                # Modelos de MongoDB
+│   ├── Tournament.ts      # Modelo de torneos
+│   ├── Division.ts        # Modelo de divisiones
+│   ├── Team.ts           # Modelo de equipos
+│   ├── Player.ts         # Modelo de jugadores
+│   ├── Game.ts           # Modelo de partidos
+│   ├── PlayerStatistics.ts # Estadísticas de jugadores
+│   ├── TeamStatistics.ts  # Estadísticas de equipos
+│   ├── Standing.ts        # Tabla de posiciones
+│   ├── Venue.ts          # Campos de juego
+│   ├── Season.ts         # Temporadas
+│   └── index.ts          # Exportaciones
+└── types/                # Definiciones de tipos
+    └── index.ts          # Tipos TypeScript
+```
+
+## 🎯 Características Específicas de Flag Football
+
+### Posiciones de Jugadores
+
+- **QB** (Quarterback): Lanza los pases
+- **WR** (Wide Receiver): Recibe pases
+- **RB** (Running Back): Corre con el balón
+- **C** (Center): Centra el balón
+- **G** (Guard): Línea ofensiva
+- **T** (Tackle): Línea ofensiva
+- **DE** (Defensive End): Línea defensiva
+- **DT** (Defensive Tackle): Línea defensiva
+- **LB** (Linebacker): Defensa media
+- **CB** (Cornerback): Defensa secundaria
+- **FS** (Free Safety): Seguridad libre
+- **SS** (Strong Safety): Seguridad fuerte
+- **K** (Kicker): Pateador
+- **P** (Punter): Despejador
+- **FLEX**: Posición flexible
+
+### Sistema de Puntuación
+
+- **Touchdown**: 6 puntos
+- **Extra Point 1 yarda**: 1 punto
+- **Extra Point 5 yardas**: 2 puntos
+- **Extra Point 10 yardas**: 3 puntos
+- **Safety**: 2 puntos
+- **Field Goal**: 3 puntos (opcional)
+
+### Estadísticas Detalladas
+
+#### Ofensivas
+
+- Pases completados/intentados
+- Yardas por pase y carrera
+- Touchdowns ofensivos
+- Intercepciones lanzadas
+- Recepciones y yardas recibidas
+
+#### Defensivas
+
+- Tacleadas y tacleadas asistidas
+- Sacks al quarterback
+- Intercepciones defensivas
+- Pases defendidos
+- Fumbles forzados y recuperados
+- Touchdowns defensivos
+
+## 🔧 Configuración del Proyecto
+
+### Requisitos Previos
+
+- Node.js 18+
+- MongoDB (local o en la nube)
+- npm o yarn
+
+### Instalación
+
+1. **Clonar el repositorio**
+
+```bash
+git clone <repository-url>
+cd lufa_fantasy
+```
+
+2. **Instalar dependencias**
+
+```bash
+npm install
+```
+
+3. **Configurar variables de entorno**
+
+```bash
+cp .env.example .env.local
+```
+
+Editar `.env.local` con tus configuraciones:
+
+```env
+MONGODB_URI=tu_cadena_de_conexion_mongodb
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=tu_clave_secreta
+```
+
+4. **Ejecutar en desarrollo**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. **Compilar para producción**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📊 Funcionalidades de Estadísticas
 
-## Learn More
+El sistema incluye utilitarios avanzados para el cálculo de estadísticas:
 
-To learn more about Next.js, take a look at the following resources:
+- **Passer Rating**: Calcula el rating del quarterback
+- **Promedios**: Yardas por intento, por recepción, etc.
+- **Eficiencias**: Terceras oportunidades, zona roja
+- **Clasificaciones**: Ordenamiento automático de standings
+- **Validaciones**: Números de jersey, puntuaciones, etc.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Próximas Características
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [ ] Sistema de autenticación
+- [ ] API REST completa
+- [ ] Dashboard en tiempo real
+- [ ] Generación de reportes
+- [ ] Aplicación móvil
+- [ ] Integración con redes sociales
+- [ ] Sistema de notificaciones
+- [ ] Modo offline
 
-## Deploy on Vercel
+## 🤝 Contribuciones
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Este es un proyecto de práctica personal. Si tienes sugerencias o mejoras:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📝 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
+
+## 👨‍💻 Autor
+
+Desarrollado como proyecto de práctica para mejorar habilidades en TypeScript y desarrollo full-stack.
+
+---
+
+## 📈 Modelo de Datos Completo
+
+### Relaciones Entre Entidades
+
+```
+Season (1) ↔ (N) Tournament
+Tournament (1) ↔ (N) Division
+Division (1) ↔ (N) Team
+Team (1) ↔ (N) Player
+Tournament + Division (1) ↔ (N) Game
+Game (1) ↔ (N) GameEvent
+Player + Tournament (1) ↔ (1) PlayerStatistics
+Team + Tournament (1) ↔ (1) TeamStatistics
+Division (1) ↔ (N) Standing
+Venue (1) ↔ (N) Game
+```
+
+### Índices de Base de Datos
+
+Para optimizar el rendimiento, se han implementado índices en:
+
+- Nombres únicos de torneos por año
+- Equipos únicos por división
+- Números de jersey únicos por equipo
+- Fechas de partidos
+- Estados de entidades
+- Ubicaciones geográficas de venues
+
+## 🎮 Casos de Uso Principales
+
+1. **Gestión de Torneos**: Crear y configurar nuevas competiciones
+2. **Registro de Equipos**: Inscribir equipos con sus jugadores
+3. **Programación**: Crear calendario de partidos
+4. **Seguimiento en Vivo**: Registrar eventos durante los juegos
+5. **Estadísticas**: Generar reportes y rankings
+6. **Tabla de Posiciones**: Mantener clasificaciones actualizadas
+
+Este sistema proporciona una base sólida para cualquier organización que desee gestionar ligas de Flag Football de manera profesional y completa.
