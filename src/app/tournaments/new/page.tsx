@@ -155,7 +155,7 @@ export default function NewTournamentPage() {
       setFormData((prev) => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof TournamentFormData],
+          ...prev,
           [child]: type === "number" ? Number(value) : value,
         },
       }));

@@ -3,14 +3,12 @@ import connectToDatabase from "@/lib/mongodb";
 import { TeamModel } from "@/models";
 
 // GET /api/teams/[id] - Obtener equipo por ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectToDatabase();
 
-    const team = await TeamModel.findById(params.id)
-      .populate("division")
-      .populate("players")
-      .populate("homeVenue");
+    const { id } = await params;
+    const team = await TeamModel.findById(id).populate("division").populate("players").populate("homeVenue");
 
     if (!team) {
       return NextResponse.json(
@@ -39,12 +37,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/teams/[id] - Actualizar equipo
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectToDatabase();
 
+    const { id } = await params;
     const body = await request.json();
-    const team = await TeamModel.findByIdAndUpdate(params.id, body, {
+    const team = await TeamModel.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     })
@@ -80,11 +79,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/teams/[id] - Eliminar equipo
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectToDatabase();
 
-    const team = await TeamModel.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const team = await TeamModel.findByIdAndDelete(id);
 
     if (!team) {
       return NextResponse.json(

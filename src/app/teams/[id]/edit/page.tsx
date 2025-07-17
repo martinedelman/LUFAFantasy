@@ -206,7 +206,7 @@ export default function EditTeamPage() {
                       <option value="">Seleccionar división</option>
                       {divisions.map((division) => (
                         <option key={division._id} value={division._id}>
-                          {division.name} - {division.category} ({division.tournament.name})
+                          {division.name}
                         </option>
                       ))}
                     </select>

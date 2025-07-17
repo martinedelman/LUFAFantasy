@@ -46,7 +46,7 @@ export default function CreateTeamPage() {
   useEffect(() => {
     const fetchDivisions = async () => {
       try {
-        const res = await fetch("/api/divisions?limit=100");
+        const res = await fetch("/api/divisions?limit=10");
         const data = await res.json();
         if (data.success) {
           setDivisions(data.data);
@@ -158,7 +158,7 @@ export default function CreateTeamPage() {
                       <option value="">Seleccionar división</option>
                       {divisions.map((division) => (
                         <option key={division._id} value={division._id}>
-                          {division.name} - {division.category} ({division.tournament.name})
+                          {division.name}
                         </option>
                       ))}
                     </select>

@@ -3,11 +3,12 @@ import connectToDatabase from "@/lib/mongodb";
 import { TournamentModel } from "@/models";
 
 // GET /api/tournaments/[id] - Obtener torneo por ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectToDatabase();
 
-    const tournament = await TournamentModel.findById(params.id).populate({
+    const { id } = await params;
+    const tournament = await TournamentModel.findById(id).populate({
       path: "divisions",
       populate: {
         path: "teams",
@@ -38,12 +39,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/tournaments/[id] - Actualizar torneo
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectToDatabase();
 
+    const { id } = await params;
     const body = await request.json();
-    const tournament = await TournamentModel.findByIdAndUpdate(params.id, body, {
+    const tournament = await TournamentModel.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     });
@@ -70,11 +72,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/tournaments/[id] - Eliminar torneo
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectToDatabase();
 
-    const tournament = await TournamentModel.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const tournament = await TournamentModel.findByIdAndDelete(id);
 
     if (!tournament) {
       return NextResponse.json({ success: false, message: "Torneo no encontrado" }, { status: 404 });

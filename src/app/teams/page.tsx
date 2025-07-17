@@ -18,7 +18,6 @@ interface Team {
   division: {
     _id: string;
     name: string;
-    category: string;
   };
   coach?: {
     name: string;
@@ -252,7 +251,7 @@ export default function TeamsPage() {
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{team.name}</h3>
-                          <p className="text-sm text-gray-500">{team.division.name}</p>
+                          <p className="text-sm text-gray-500">{team.division.name || "Sin División"}</p>
                         </div>
                       </div>
                       {getStatusBadge(team.status)}

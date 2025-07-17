@@ -226,7 +226,7 @@ export interface GameEvent {
   description: string;
   yards?: number;
   points?: number;
-  details?: any;
+  details?: string;
 }
 
 export type GameEventType =
@@ -492,7 +492,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   message?: string;

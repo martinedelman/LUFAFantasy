@@ -84,7 +84,7 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     fetchTournaments(currentPage);
-  }, [currentPage, filters]);
+  }, [currentPage, fetchTournaments, filters]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
