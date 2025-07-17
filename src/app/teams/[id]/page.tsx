@@ -15,6 +15,9 @@ interface Player {
   position: string;
   email: string;
   phone: string;
+  height?: number;
+  weight?: number;
+  experience?: string;
   status: "active" | "inactive" | "injured";
 }
 
@@ -703,16 +706,14 @@ export default function TeamViewerPage() {
                             Posición
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Contacto
+                            Información
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Estado
                           </th>
-                          {user?.role === "admin" && (
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Acciones
-                            </th>
-                          )}
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Acciones
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -737,11 +738,23 @@ export default function TeamViewerPage() {
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div>{player.email}</div>
-                              <div>{player.phone}</div>
+                              <div className="space-y-1">
+                                <div>
+                                  {player.height && player.weight ? (
+                                    <span>
+                                      {player.height} cm, {player.weight} kg
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">-</span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  {player.experience || "Sin experiencia especificada"}
+                                </div>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(player.status)}</td>
-                            {user?.role === "admin" && (
+                            {user?.role === "admin" ? (
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <Link
                                   href={`/players/${player._id}`}
@@ -754,6 +767,15 @@ export default function TeamViewerPage() {
                                   className="text-blue-600 hover:text-blue-900"
                                 >
                                   Editar
+                                </Link>
+                              </td>
+                            ) : (
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Link
+                                  href={`/players/${player._id}`}
+                                  className="text-green-600 hover:text-green-900"
+                                >
+                                  Ver Perfil
                                 </Link>
                               </td>
                             )}
