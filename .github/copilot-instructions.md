@@ -6,11 +6,11 @@
 - Alcance MVP: fixture + carga de puntos en vivo + asignación de anotación a jugador.
 - No proponer ni implementar funcionalidades fuera de MVP salvo pedido explícito.
 
-## Prioridades de implementación
+## Despues de modificar código
 
-1. Integridad de datos en MongoDB.
-2. Simplicidad y mantenibilidad.
-3. Cambios mínimos y enfocados.
+1. Ejecutar npm run lint
+2. Ejecutar npm run build
+3. Probar manualmente la funcionalidad modificada
 
 ## Estándares de código
 

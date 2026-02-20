@@ -334,7 +334,7 @@ async function seedDatabase() {
         dateOfBirth: new Date(
           1995 + Math.floor(Math.random() * 10),
           Math.floor(Math.random() * 12),
-          Math.floor(Math.random() * 28) + 1
+          Math.floor(Math.random() * 28) + 1,
         ),
         team: teams[0]._id,
         height: 170 + Math.floor(Math.random() * 20),
@@ -360,7 +360,7 @@ async function seedDatabase() {
         dateOfBirth: new Date(
           1995 + Math.floor(Math.random() * 10),
           Math.floor(Math.random() * 12),
-          Math.floor(Math.random() * 28) + 1
+          Math.floor(Math.random() * 28) + 1,
         ),
         team: teams[4]._id,
         height: 160 + Math.floor(Math.random() * 20),
@@ -391,7 +391,7 @@ async function seedDatabase() {
         isActive: true,
         profile: {
           bio: "Administrador principal del sistema LUFA Fantasy",
-          phone: "+52 55 1234 5678",
+          phone: "+525512345678",
         },
       },
       {
@@ -402,7 +402,7 @@ async function seedDatabase() {
         isActive: true,
         profile: {
           bio: "Usuario de ejemplo para pruebas",
-          phone: "+52 55 8765 4321",
+          phone: "+525587654321",
         },
       },
     ]);
