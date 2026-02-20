@@ -268,29 +268,37 @@ export default function EditTournamentPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre *
+                  Nombre del Torneo *
                 </label>
                 <input
                   id="name"
                   name="name"
+                  type="text"
                   required
                   value={formData.name}
+                  disabled={true}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed"
                 />
               </div>
               <div>
                 <label htmlFor="season" className="block text-sm font-medium text-gray-700 mb-2">
                   Temporada *
                 </label>
-                <input
+                <select
                   id="season"
                   name="season"
                   required
+                  disabled={true}
                   value={formData.season}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed"
+                >
+                  <option value="Apertura">Apertura</option>
+                  <option value="Clausura">Clausura</option>
+                  <option value="Verano">Verano</option>
+                  <option value="Invierno">Invierno</option>
+                </select>
               </div>
               <div>
                 <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-2">
@@ -300,10 +308,13 @@ export default function EditTournamentPage() {
                   id="year"
                   name="year"
                   type="number"
+                  min="2026"
+                  max="2100"
+                  disabled={true}
                   required
                   value={formData.year}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed"
                 />
               </div>
               <div>
@@ -314,8 +325,9 @@ export default function EditTournamentPage() {
                   id="format"
                   name="format"
                   value={formData.format}
+                  disabled={true}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed"
                 >
                   <option value="league">Liga Regular</option>
                   <option value="playoff">Playoff</option>
@@ -406,79 +418,152 @@ export default function EditTournamentPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Reglas y Puntuación</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <input
-                name="rules.gameDuration"
-                type="number"
-                value={formData.rules.gameDuration}
-                onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-              <input
-                name="rules.quarters"
-                type="number"
-                value={formData.rules.quarters}
-                onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-              <input
-                name="rules.timeoutsPerTeam"
-                type="number"
-                value={formData.rules.timeoutsPerTeam}
-                onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-              <input
-                name="rules.playersPerTeam"
-                type="number"
-                value={formData.rules.playersPerTeam}
-                onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-              <input
-                name="rules.minimumPlayers"
-                type="number"
-                value={formData.rules.minimumPlayers}
-                onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
+              <div>
+                <label htmlFor="gameDuration" className="block text-sm font-medium text-gray-700 mb-2">
+                  Duración del Juego (minutos)
+                </label>
+                <input
+                  id="gameDuration"
+                  name="rules.gameDuration"
+                  type="number"
+                  min="1"
+                  value={formData.rules.gameDuration}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label htmlFor="quarters" className="block text-sm font-medium text-gray-700 mb-2">
+                  Número de Cuartos
+                </label>
+                <input
+                  id="quarters"
+                  name="rules.quarters"
+                  type="number"
+                  min="1"
+                  value={formData.rules.quarters}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label htmlFor="timeoutsPerTeam" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tiempos Fuera por Equipo
+                </label>
+                <input
+                  id="timeoutsPerTeam"
+                  name="rules.timeoutsPerTeam"
+                  type="number"
+                  min="0"
+                  value={formData.rules.timeoutsPerTeam}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label htmlFor="playersPerTeam" className="block text-sm font-medium text-gray-700 mb-2">
+                  Jugadores por Equipo
+                </label>
+                <input
+                  id="playersPerTeam"
+                  name="rules.playersPerTeam"
+                  type="number"
+                  min="1"
+                  value={formData.rules.playersPerTeam}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label htmlFor="minimumPlayers" className="block text-sm font-medium text-gray-700 mb-2">
+                  Mínimo de Jugadores
+                </label>
+                <input
+                  id="minimumPlayers"
+                  name="rules.minimumPlayers"
+                  type="number"
+                  min="1"
+                  value={formData.rules.minimumPlayers}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div className="md:col-span-2 lg:col-span-3">
+                <label htmlFor="overtimeRules" className="block text-sm font-medium text-gray-700 mb-2">
+                  Reglas de Tiempo Extra
+                </label>
+                <textarea
+                  id="overtimeRules"
+                  name="rules.overtimeRules"
+                  rows={3}
+                  value={formData.rules.overtimeRules}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
             </div>
+            <h3 className="text-lg font-medium text-gray-900 mt-8 mb-4">Sistema de Puntuación</h3>
             <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-              <input
-                type="number"
-                value={formData.rules.scoringRules.touchdown}
-                onChange={(e) => handleScoringRuleChange("touchdown", Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-              <input
-                type="number"
-                value={formData.rules.scoringRules.extraPoint1Yard}
-                onChange={(e) => handleScoringRuleChange("extraPoint1Yard", Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-              <input
-                type="number"
-                value={formData.rules.scoringRules.extraPoint5Yard}
-                onChange={(e) => handleScoringRuleChange("extraPoint5Yard", Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-              <input
-                type="number"
-                value={formData.rules.scoringRules.extraPoint10Yard}
-                onChange={(e) => handleScoringRuleChange("extraPoint10Yard", Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-              <input
-                type="number"
-                value={formData.rules.scoringRules.safety}
-                onChange={(e) => handleScoringRuleChange("safety", Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
-              <input
-                type="number"
-                value={formData.rules.scoringRules.fieldGoal}
-                onChange={(e) => handleScoringRuleChange("fieldGoal", Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Touchdown</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.rules.scoringRules.touchdown}
+                  onChange={(e) => handleScoringRuleChange("touchdown", Number(e.target.value))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Extra Point (1 yarda)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.rules.scoringRules.extraPoint1Yard}
+                  onChange={(e) => handleScoringRuleChange("extraPoint1Yard", Number(e.target.value))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Extra Point (5 yardas)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.rules.scoringRules.extraPoint5Yard}
+                  onChange={(e) => handleScoringRuleChange("extraPoint5Yard", Number(e.target.value))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Extra Point (10 yardas)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.rules.scoringRules.extraPoint10Yard}
+                  onChange={(e) => handleScoringRuleChange("extraPoint10Yard", Number(e.target.value))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Safety</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.rules.scoringRules.safety}
+                  onChange={(e) => handleScoringRuleChange("safety", Number(e.target.value))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Field Goal</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.rules.scoringRules.fieldGoal}
+                  onChange={(e) => handleScoringRuleChange("fieldGoal", Number(e.target.value))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
             </div>
           </div>
 
