@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -62,7 +62,7 @@ interface TournamentDivisionsResponse {
   };
 }
 
-export default function TeamsPage() {
+function TeamsPageContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const tournamentId = searchParams.get("tournament") || "";
@@ -397,5 +397,19 @@ export default function TeamsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TeamsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <LoadingSpinner size="lg" />
+        </div>
+      }
+    >
+      <TeamsPageContent />
+    </Suspense>
   );
 }

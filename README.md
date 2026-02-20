@@ -216,6 +216,74 @@ npm run build
 npm start
 ```
 
+## ▲ Deploy en Vercel (Testing + Prod en paralelo)
+
+Este proyecto puede usar un solo proyecto de Vercel con 2 entornos activos al mismo tiempo:
+
+- **Testing**: entorno **Preview** (ej: branch `testing`)
+- **Prod**: entorno **Production** (ej: branch `main`)
+
+### 1) Preparar Vercel CLI y link del proyecto
+
+```bash
+npm i -g vercel
+vercel login
+vercel link
+```
+
+### 2) Configurar variables de entorno en ambos entornos
+
+Variables requeridas por esta app:
+
+- `MONGODB_URI`
+- `JWT_SECRET`
+
+Configúralas en Preview y Production:
+
+```bash
+vercel env add MONGODB_URI preview
+vercel env add MONGODB_URI production
+vercel env add JWT_SECRET preview
+vercel env add JWT_SECRET production
+```
+
+### 3) Deploy manual en paralelo
+
+Puedes lanzar ambos deploys desde 2 terminales distintas:
+
+```bash
+# Terminal 1 - testing (preview)
+npm run deploy:testing
+
+# Terminal 2 - producción
+npm run deploy:prod
+```
+
+Scripts disponibles en `package.json`:
+
+- `npm run deploy:testing`
+- `npm run deploy:prod`
+- `npm run vercel:pull:testing`
+- `npm run vercel:pull:prod`
+
+### 4) Deploy automático por ramas (recomendado)
+
+- Define `main` como rama de producción en Vercel.
+- Usa una rama `testing` para preview estable.
+- Cada push a `testing` genera deploy preview.
+- Cada push/merge a `main` genera deploy prod.
+
+### 5) Dominio sugerido
+
+- Producción: `app.tu-dominio.com` (Production)
+- Testing: `testing.tu-dominio.com` (alias a Preview)
+
+Para alias manual:
+
+```bash
+vercel alias set <preview-deployment-url> testing.tu-dominio.com
+```
+
 ## 📊 Funcionalidades de Estadísticas
 
 El sistema incluye utilitarios avanzados para el cálculo de estadísticas:

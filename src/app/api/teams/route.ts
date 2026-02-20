@@ -94,7 +94,9 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const tournamentData = await TournamentModel.findById(tournament).select("divisions").lean();
+      const tournamentData = await TournamentModel.findById(tournament)
+        .select("divisions")
+        .lean<{ divisions?: mongoose.Types.ObjectId[] }>();
       if (!tournamentData) {
         return NextResponse.json(
           {
