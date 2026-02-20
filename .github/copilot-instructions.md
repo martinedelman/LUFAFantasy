@@ -30,6 +30,7 @@
 
 - Mantener interfaz simple para operaciones de torneo/fixture y score en vivo.
 - Evitar rediseños o componentes no solicitados.
+- Utilizar la paleta de colores en globals.css para mantener consistencia visual.
 - Mantener la pagina en español y consistente con el estilo actual.
 
 ## Entorno

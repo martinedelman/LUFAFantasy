@@ -1,17 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: "🏠" },
-  { name: "Torneos", href: "/tournaments", icon: "🏆" },
-  { name: "Equipos", href: "/teams", icon: "👥" },
-  { name: "Jugadores", href: "/players", icon: "🏃‍♂️" },
-  { name: "Partidos", href: "/games", icon: "🏈" },
-  { name: "Posiciones", href: "/standings", icon: "📊" },
+  { name: "Torneos", href: "/tournaments" },
+  { name: "Equipos", href: "/teams" },
+  { name: "Jugadores", href: "/players" },
+  { name: "Partidos", href: "/games" },
+  { name: "Posiciones", href: "/standings" },
 ];
 
 export default function Navbar() {
@@ -26,16 +26,22 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-green-800 text-white shadow-lg">
+    <nav className="bg-green-800 text-white shadow-lg border-b border-green-700/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center py-3">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl">🏈</span>
-            <span className="text-xl font-bold">LUFA Fantasy</span>
-            <span className="hidden sm:inline-block px-2 py-1 bg-green-600 rounded-full text-xs">
-              Flag Football
-            </span>
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="h-9 w-9 rounded-md overflow-hidden bg-white/95 border border-white/20 shadow-sm">
+              <Image
+                src="/lufa_flag_icon.jpeg"
+                alt="Logo LUFA"
+                width={36}
+                height={36}
+                className="h-full w-full object-cover"
+                priority
+              />
+            </div>
+            <span className="text-3xl font-bold leading-none">LUFA Fantasy</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -45,13 +51,12 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     pathname === item.href
                       ? "bg-green-700 text-white"
                       : "text-green-100 hover:bg-green-700 hover:text-white"
                   }`}
                 >
-                  <span>{item.icon}</span>
                   <span>{item.name}</span>
                 </Link>
               ))}
@@ -93,29 +98,23 @@ export default function Navbar() {
                         <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Administración
                         </div>
-                        <Link
-                          href="/teams/create"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          ➕ Crear Equipo
+                        <Link href="/teams/create" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Crear Equipo
                         </Link>
                         <Link
                           href="/players/create"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          ➕ Crear Jugador
+                          Crear Jugador
                         </Link>
                         <Link
                           href="/tournaments/new"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          ➕ Crear Torneo
+                          Crear Torneo
                         </Link>
-                        <Link
-                          href="/admin"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          ⚙️ Panel Admin
+                        <Link href="/admin" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Panel Admin
                         </Link>
                       </>
                     )}
@@ -152,21 +151,11 @@ export default function Navbar() {
               <span className="sr-only">Abrir menú principal</span>
               {!isMenuOpen ? (
                 <svg className="block h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               ) : (
                 <svg className="block h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
             </button>
@@ -181,14 +170,13 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-md text-base font-medium transition-colors ${
                     pathname === item.href
                       ? "bg-green-700 text-white"
                       : "text-green-100 hover:bg-green-700 hover:text-white"
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <span>{item.icon}</span>
                   <span>{item.name}</span>
                 </Link>
               ))}
@@ -247,28 +235,28 @@ export default function Navbar() {
                           className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          ➕ Crear Equipo
+                          Crear Equipo
                         </Link>
                         <Link
                           href="/players/create"
                           className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          ➕ Crear Jugador
+                          Crear Jugador
                         </Link>
                         <Link
                           href="/tournaments/new"
                           className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          ➕ Crear Torneo
+                          Crear Torneo
                         </Link>
                         <Link
                           href="/admin"
                           className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          ⚙️ Panel Admin
+                          Panel Admin
                         </Link>
                       </>
                     )}
