@@ -196,9 +196,11 @@ cp .env.example .env.local
 Editar `.env.local` con tus configuraciones:
 
 ```env
-MONGODB_URI=tu_cadena_de_conexion_mongodb
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=tu_clave_secreta
+MONGODB_URI=mongodb://localhost:27017/lufa_fantasy
+
+# Opcionales (no usados en el MVP actual)
+# NEXTAUTH_URL=http://localhost:3000
+# NEXTAUTH_SECRET=change-me
 ```
 
 4. **Ejecutar en desarrollo**
