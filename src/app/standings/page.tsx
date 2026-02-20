@@ -106,14 +106,17 @@ export default function StandingsPage() {
   const selectedTournamentData = tournaments.find((t) => t._id === selectedTournament);
   const availableDivisions = selectedTournamentData?.divisions || [];
 
-  const groupedStandings = standings.reduce((acc, standing) => {
-    const divisionName = standing.division.name;
-    if (!acc[divisionName]) {
-      acc[divisionName] = [];
-    }
-    acc[divisionName].push(standing);
-    return acc;
-  }, {} as Record<string, Standing[]>);
+  const groupedStandings = standings.reduce(
+    (acc, standing) => {
+      const divisionName = standing.division.name;
+      if (!acc[divisionName]) {
+        acc[divisionName] = [];
+      }
+      acc[divisionName].push(standing);
+      return acc;
+    },
+    {} as Record<string, Standing[]>,
+  );
 
   const getStreakColor = (streak?: string) => {
     if (!streak) return "bg-gray-100 text-gray-800";
@@ -148,9 +151,7 @@ export default function StandingsPage() {
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900">Tabla de Posiciones</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Consulta las posiciones de los equipos en cada división
-          </p>
+          <p className="mt-1 text-sm text-gray-600">Consulta las posiciones de los equipos en cada división</p>
         </div>
       </div>
 
@@ -210,12 +211,7 @@ export default function StandingsPage() {
         {/* Standings Tables */}
         {Object.keys(groupedStandings).length === 0 && !loading ? (
           <div className="text-center py-12 bg-white rounded-lg shadow">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -224,9 +220,7 @@ export default function StandingsPage() {
               />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No hay datos disponibles</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Selecciona un torneo para ver la tabla de posiciones.
-            </p>
+            <p className="mt-1 text-sm text-gray-500">Selecciona un torneo para ver la tabla de posiciones.</p>
           </div>
         ) : (
           <div className="space-y-8">
@@ -286,12 +280,19 @@ export default function StandingsPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-8 w-8">
-                                <div
-                                  className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                  style={{ backgroundColor: standing.team.colors.primary }}
-                                >
-                                  {standing.team.shortName || standing.team.name.substring(0, 2)}
-                                </div>
+                                {standing.team.logo ? (
+                                  <div
+                                    className="h-8 w-8 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                                    style={{ backgroundImage: `url(${standing.team.logo})` }}
+                                  />
+                                ) : (
+                                  <div
+                                    className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                    style={{ backgroundColor: standing.team.colors.primary }}
+                                  >
+                                    {standing.team.shortName || standing.team.name.substring(0, 2)}
+                                  </div>
+                                )}
                               </div>
                               <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900">{standing.team.name}</div>
@@ -333,7 +334,7 @@ export default function StandingsPage() {
                             {standing.streak && (
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStreakColor(
-                                  standing.streak
+                                  standing.streak,
                                 )}`}
                               >
                                 {standing.streak}

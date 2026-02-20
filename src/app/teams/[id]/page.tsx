@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -33,14 +33,6 @@ interface Division {
   };
 }
 
-interface Venue {
-  _id: string;
-  name: string;
-  address: string;
-  capacity: number;
-  type: string;
-}
-
 interface Team {
   _id: string;
   name: string;
@@ -59,8 +51,7 @@ interface Team {
     certifications: string[];
   };
   players: Player[];
-  homeVenue?: Venue;
-  contact: {
+  contact?: {
     email: string;
     phone: string;
     address?: string;
@@ -138,6 +129,7 @@ interface TeamStats {
 
 export default function TeamViewerPage() {
   const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const params = useParams();
   const router = useRouter();
   const teamId = params?.id as string;
@@ -148,6 +140,22 @@ export default function TeamViewerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"info" | "roster" | "stats">("info");
+
+  const fetchPlayers = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/players?team=${teamId}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setPlayers(data.data);
+      } else {
+        setError(data.message || "Error al cargar los jugadores");
+      }
+    } catch (error) {
+      console.error("Error fetching players:", error);
+      setError("Error de conexión. Por favor, intenta de nuevo.");
+    }
+  }, [teamId]);
 
   useEffect(() => {
     const fetchTeamData = async () => {
@@ -187,25 +195,9 @@ export default function TeamViewerPage() {
 
     if (teamId) {
       fetchTeamData();
-      fetchPlayers();
+      void fetchPlayers();
     }
-  }, [teamId]);
-
-  async function fetchPlayers() {
-    try {
-      const response = await fetch(`/api/players?team=${teamId}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setPlayers(data.data);
-      } else {
-        setError(data.message || "Error al cargar los jugadores");
-      }
-    } catch (error) {
-      console.error("Error fetching players:", error);
-      setError("Error de conexión. Por favor, intenta de nuevo.");
-    }
-  }
+  }, [teamId, fetchPlayers]);
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -281,12 +273,19 @@ export default function TeamViewerPage() {
                 </svg>
               </button>
               <div className="flex items-center space-x-4">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl"
-                  style={{ backgroundColor: team.colors.primary }}
-                >
-                  {team.shortName || team.name.substring(0, 2).toUpperCase()}
-                </div>
+                {team.logo ? (
+                  <div
+                    className="w-16 h-16 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${team.logo})` }}
+                  />
+                ) : (
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl"
+                    style={{ backgroundColor: team.colors.primary }}
+                  >
+                    {team.shortName || team.name.substring(0, 2).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">{team.name}</h1>
                   <div className="flex items-center space-x-4 mt-1">
@@ -357,9 +356,7 @@ export default function TeamViewerPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">% Victorias</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {calculateWinPercentage(teamStats)}%
-                      </dd>
+                      <dd className="text-lg font-medium text-gray-900">{calculateWinPercentage(teamStats)}%</dd>
                     </dl>
                   </div>
                 </div>
@@ -503,7 +500,7 @@ export default function TeamViewerPage() {
                   </div>
 
                   {/* Coach Information */}
-                  {team.coach && (
+                  {team.coach && isAdmin && (
                     <div className="bg-gray-50 rounded-lg p-6">
                       <h3 className="text-lg font-medium text-gray-900 mb-4">Entrenador</h3>
                       <dl className="space-y-3">
@@ -514,10 +511,7 @@ export default function TeamViewerPage() {
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Email</dt>
                           <dd className="text-sm text-gray-900">
-                            <a
-                              href={`mailto:${team.coach.email}`}
-                              className="text-green-600 hover:text-green-800"
-                            >
+                            <a href={`mailto:${team.coach.email}`} className="text-green-600 hover:text-green-800">
                               {team.coach.email}
                             </a>
                           </dd>
@@ -525,19 +519,14 @@ export default function TeamViewerPage() {
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Teléfono</dt>
                           <dd className="text-sm text-gray-900">
-                            <a
-                              href={`tel:${team.coach.phone}`}
-                              className="text-green-600 hover:text-green-800"
-                            >
+                            <a href={`tel:${team.coach.phone}`} className="text-green-600 hover:text-green-800">
                               {team.coach.phone}
                             </a>
                           </dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-gray-500">Experiencia</dt>
-                          <dd className="text-sm text-gray-900">
-                            {team.coach.experience || "No especificada"}
-                          </dd>
+                          <dd className="text-sm text-gray-900">{team.coach.experience || "No especificada"}</dd>
                         </div>
                         {team.coach.certifications && team.coach.certifications.length > 0 && (
                           <div>
@@ -550,99 +539,75 @@ export default function TeamViewerPage() {
                   )}
 
                   {/* Contact Information */}
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Contacto</h3>
-                    <dl className="space-y-3">
-                      <div>
-                        <dt className="text-sm font-medium text-gray-500">Email</dt>
-                        <dd className="text-sm text-gray-900">
-                          <a
-                            href={`mailto:${team.contact.email}`}
-                            className="text-green-600 hover:text-green-800"
-                          >
-                            {team.contact.email}
-                          </a>
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-medium text-gray-500">Teléfono</dt>
-                        <dd className="text-sm text-gray-900">
-                          <a
-                            href={`tel:${team.contact.phone}`}
-                            className="text-green-600 hover:text-green-800"
-                          >
-                            {team.contact.phone}
-                          </a>
-                        </dd>
-                      </div>
-                      {team.contact.address && (
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Dirección</dt>
-                          <dd className="text-sm text-gray-900">{team.contact.address}</dd>
-                        </div>
-                      )}
-                      {team.contact.socialMedia && (
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Redes sociales</dt>
-                          <dd className="flex space-x-3">
-                            {team.contact.socialMedia.facebook && (
-                              <a
-                                href={team.contact.socialMedia.facebook}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                Facebook
-                              </a>
-                            )}
-                            {team.contact.socialMedia.instagram && (
-                              <a
-                                href={team.contact.socialMedia.instagram}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-pink-600 hover:text-pink-800"
-                              >
-                                Instagram
-                              </a>
-                            )}
-                            {team.contact.socialMedia.twitter && (
-                              <a
-                                href={team.contact.socialMedia.twitter}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:text-blue-600"
-                              >
-                                Twitter
-                              </a>
-                            )}
-                          </dd>
-                        </div>
-                      )}
-                    </dl>
-                  </div>
-
-                  {/* Home Venue */}
-                  {team.homeVenue && (
+                  {team.contact ? (
                     <div className="bg-gray-50 rounded-lg p-6">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Campo Local</h3>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Contacto</h3>
                       <dl className="space-y-3">
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">Nombre</dt>
-                          <dd className="text-sm text-gray-900">{team.homeVenue.name}</dd>
+                          <dt className="text-sm font-medium text-gray-500">Email</dt>
+                          <dd className="text-sm text-gray-900">
+                            <a href={`mailto:${team.contact.email}`} className="text-green-600 hover:text-green-800">
+                              {team.contact.email}
+                            </a>
+                          </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">Dirección</dt>
-                          <dd className="text-sm text-gray-900">{team.homeVenue.address}</dd>
+                          <dt className="text-sm font-medium text-gray-500">Teléfono</dt>
+                          <dd className="text-sm text-gray-900">
+                            <a href={`tel:${team.contact.phone}`} className="text-green-600 hover:text-green-800">
+                              {team.contact.phone}
+                            </a>
+                          </dd>
                         </div>
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Capacidad</dt>
-                          <dd className="text-sm text-gray-900">{team.homeVenue.capacity} personas</dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Tipo</dt>
-                          <dd className="text-sm text-gray-900">{team.homeVenue.type}</dd>
-                        </div>
+                        {team.contact.address && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">Dirección</dt>
+                            <dd className="text-sm text-gray-900">{team.contact.address}</dd>
+                          </div>
+                        )}
+                        {team.contact.socialMedia && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">Redes sociales</dt>
+                            <dd className="flex space-x-3">
+                              {team.contact.socialMedia.facebook && (
+                                <a
+                                  href={team.contact.socialMedia.facebook}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  Facebook
+                                </a>
+                              )}
+                              {team.contact.socialMedia.instagram && (
+                                <a
+                                  href={team.contact.socialMedia.instagram}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-pink-600 hover:text-pink-800"
+                                >
+                                  Instagram
+                                </a>
+                              )}
+                              {team.contact.socialMedia.twitter && (
+                                <a
+                                  href={team.contact.socialMedia.twitter}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-400 hover:text-blue-600"
+                                >
+                                  Twitter
+                                </a>
+                              )}
+                            </dd>
+                          </div>
+                        )}
                       </dl>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Contacto</h3>
+                      <p className="text-sm text-gray-600">No hay información de contacto disponible.</p>
                     </div>
                   )}
                 </div>
@@ -655,9 +620,7 @@ export default function TeamViewerPage() {
                 <div className="sm:flex sm:items-center mb-6">
                   <div className="sm:flex-auto">
                     <h3 className="text-lg font-medium text-gray-900">Plantilla del Equipo</h3>
-                    <p className="mt-1 text-sm text-gray-700">
-                      Lista completa de jugadores registrados en el equipo.
-                    </p>
+                    <p className="mt-1 text-sm text-gray-700">Lista completa de jugadores registrados en el equipo.</p>
                   </div>
                   {user?.role === "admin" && (
                     <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
@@ -687,9 +650,7 @@ export default function TeamViewerPage() {
                       />
                     </svg>
                     <h3 className="mt-2 text-sm font-medium text-gray-900">No hay jugadores</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Este equipo aún no tiene jugadores registrados.
-                    </p>
+                    <p className="mt-1 text-sm text-gray-500">Este equipo aún no tiene jugadores registrados.</p>
                   </div>
                 ) : (
                   <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
@@ -771,10 +732,7 @@ export default function TeamViewerPage() {
                               </td>
                             ) : (
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Link
-                                  href={`/players/${player._id}`}
-                                  className="text-green-600 hover:text-green-900"
-                                >
+                                <Link href={`/players/${player._id}`} className="text-green-600 hover:text-green-900">
                                   Ver Perfil
                                 </Link>
                               </td>
@@ -831,9 +789,7 @@ export default function TeamViewerPage() {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-sm text-gray-600">Puntos en Contra</span>
-                            <span className="text-sm font-medium text-red-600">
-                              {teamStats.pointsAgainst}
-                            </span>
+                            <span className="text-sm font-medium text-red-600">{teamStats.pointsAgainst}</span>
                           </div>
                           <div className="border-t pt-4">
                             <div className="flex justify-between">
@@ -859,10 +815,9 @@ export default function TeamViewerPage() {
                             <span className="text-sm text-gray-600">Puntos por Juego</span>
                             <span className="text-sm font-medium text-gray-900">
                               {teamStats.wins + teamStats.losses + teamStats.ties > 0
-                                ? (
-                                    teamStats.pointsFor /
-                                    (teamStats.wins + teamStats.losses + teamStats.ties)
-                                  ).toFixed(1)
+                                ? (teamStats.pointsFor / (teamStats.wins + teamStats.losses + teamStats.ties)).toFixed(
+                                    1,
+                                  )
                                 : "0.0"}
                             </span>
                           </div>

@@ -16,6 +16,7 @@ interface Player {
     _id: string;
     name: string;
     shortName: string;
+    logo?: string;
     colors: {
       primary: string;
       secondary?: string;
@@ -224,10 +225,7 @@ export default function PlayerProfilePage() {
                   </h1>
                   <div className="flex items-center space-x-4 mt-1">
                     <p className="text-sm text-gray-600">{getPositionName(player.position)}</p>
-                    <Link
-                      href={`/teams/${player.team._id}`}
-                      className="text-sm text-blue-600 hover:text-blue-800"
-                    >
+                    <Link href={`/teams/${player.team._id}`} className="text-sm text-blue-600 hover:text-blue-800">
                       {player.team.name}
                     </Link>
                     {getStatusBadge(player.status)}
@@ -276,9 +274,7 @@ export default function PlayerProfilePage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Fecha de nacimiento:</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {formatDate(player.dateOfBirth)}
-                        </span>
+                        <span className="text-sm font-medium text-gray-900">{formatDate(player.dateOfBirth)}</span>
                       </div>
                       {player.height && (
                         <div className="flex justify-between">
@@ -310,9 +306,7 @@ export default function PlayerProfilePage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Posición:</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {getPositionName(player.position)}
-                        </span>
+                        <span className="text-sm font-medium text-gray-900">{getPositionName(player.position)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Equipo:</span>
@@ -329,9 +323,7 @@ export default function PlayerProfilePage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Fecha de registro:</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {formatDate(player.registrationDate)}
-                        </span>
+                        <span className="text-sm font-medium text-gray-900">{formatDate(player.registrationDate)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Estado:</span>
@@ -432,28 +424,29 @@ export default function PlayerProfilePage() {
                   href={`/teams/${player.team._id}`}
                   className="flex items-center space-x-3 hover:bg-gray-50 p-3 rounded-lg transition-colors"
                 >
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                    style={{ backgroundColor: player.team.colors.primary }}
-                  >
-                    {player.team.shortName || player.team.name.substring(0, 2).toUpperCase()}
-                  </div>
+                  {player.team.logo ? (
+                    <div
+                      className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${player.team.logo})` }}
+                    />
+                  ) : (
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                      style={{ backgroundColor: player.team.colors.primary }}
+                    >
+                      {player.team.shortName || player.team.name.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
                   <div className="flex-1">
                     <div className="text-sm font-medium text-gray-900">{player.team.name}</div>
                     <div className="text-xs text-gray-500">{player.team.division.name}</div>
                     {player.team.division.category && (
                       <div className="text-xs text-gray-400">
-                        {player.team.division.category.charAt(0).toUpperCase() +
-                          player.team.division.category.slice(1)}
+                        {player.team.division.category.charAt(0).toUpperCase() + player.team.division.category.slice(1)}
                       </div>
                     )}
                   </div>
-                  <svg
-                    className="w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>

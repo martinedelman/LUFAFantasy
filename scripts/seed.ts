@@ -148,14 +148,7 @@ async function seedDatabase() {
     // Crear divisiones
     const divisions = await DivisionModel.insertMany([
       {
-        name: "Masculino A",
-        category: "masculino",
-        ageGroup: "Adultos (18+)",
-        tournament: tournament._id,
-        maxTeams: 8,
-      },
-      {
-        name: "Masculino B",
+        name: "Masculino",
         category: "masculino",
         ageGroup: "Adultos (18+)",
         tournament: tournament._id,

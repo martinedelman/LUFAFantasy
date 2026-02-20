@@ -32,7 +32,6 @@ const TeamSchema = new Schema(
     division: { type: Schema.Types.ObjectId, ref: "Division", required: true },
     coach: { type: CoachSchema },
     players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
-    homeVenue: { type: Schema.Types.ObjectId, ref: "Venue" },
     contact: { type: ContactInfoSchema, required: true },
     registrationDate: { type: Date, required: true },
     status: {
@@ -44,7 +43,7 @@ const TeamSchema = new Schema(
   {
     timestamps: true,
     collection: "teams",
-  }
+  },
 );
 
 // Índices

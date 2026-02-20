@@ -68,7 +68,6 @@ export interface Team {
   division: string; // Referencia a Division
   coach?: Coach;
   players: string[]; // Referencias a Player
-  homeVenue?: string; // Referencia a Venue
   contact: ContactInfo;
   registrationDate: Date;
   status: "active" | "inactive" | "suspended";

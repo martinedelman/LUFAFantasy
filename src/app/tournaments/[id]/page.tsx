@@ -49,6 +49,7 @@ interface Tournament {
       _id: string;
       name: string;
       shortName: string;
+      logo?: string;
     }>;
   }>;
 }
@@ -350,7 +351,17 @@ export default function TournamentDetailPage() {
                                 key={team._id}
                                 className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
                               >
-                                {team.shortName}
+                                {team.logo ? (
+                                  <>
+                                    <span
+                                      className="w-4 h-4 rounded-full bg-white border border-gray-200 bg-cover bg-center mr-1"
+                                      style={{ backgroundImage: `url(${team.logo})` }}
+                                    />
+                                    {team.name}
+                                  </>
+                                ) : (
+                                  team.shortName || team.name
+                                )}
                               </span>
                             ))}
                           </div>

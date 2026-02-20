@@ -58,6 +58,7 @@ interface TeamStatistic {
     _id: string;
     name: string;
     shortName: string;
+    logo?: string;
     colors: {
       primary: string;
     };
@@ -143,7 +144,7 @@ export default function StatisticsPage() {
         setLoading(false);
       }
     },
-    [filters]
+    [filters],
   );
 
   const fetchTeamStatistics = useCallback(
@@ -177,7 +178,7 @@ export default function StatisticsPage() {
         setLoading(false);
       }
     },
-    [filters]
+    [filters],
   );
 
   useEffect(() => {
@@ -448,12 +449,19 @@ export default function StatisticsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
-                            <div
-                              className="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                              style={{ backgroundColor: stat.team.colors.primary }}
-                            >
-                              {stat.team.shortName || stat.team.name.substring(0, 2)}
-                            </div>
+                            {stat.team.logo ? (
+                              <div
+                                className="h-10 w-10 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                                style={{ backgroundImage: `url(${stat.team.logo})` }}
+                              />
+                            ) : (
+                              <div
+                                className="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                style={{ backgroundColor: stat.team.colors.primary }}
+                              >
+                                {stat.team.shortName || stat.team.name.substring(0, 2)}
+                              </div>
+                            )}
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{stat.team.name}</div>
@@ -488,16 +496,10 @@ export default function StatisticsPage() {
         )}
 
         {/* Empty State */}
-        {((activeTab === "players" && playerStats.length === 0) ||
-          (activeTab === "teams" && teamStats.length === 0)) &&
+        {((activeTab === "players" && playerStats.length === 0) || (activeTab === "teams" && teamStats.length === 0)) &&
           !loading && (
             <div className="text-center py-12 bg-white rounded-lg shadow">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -513,8 +515,7 @@ export default function StatisticsPage() {
           )}
 
         {/* Pagination */}
-        {((activeTab === "players" && playerStats.length > 0) ||
-          (activeTab === "teams" && teamStats.length > 0)) && (
+        {((activeTab === "players" && playerStats.length > 0) || (activeTab === "teams" && teamStats.length > 0)) && (
           <Pagination
             currentPage={pagination.current}
             totalPages={pagination.pages}

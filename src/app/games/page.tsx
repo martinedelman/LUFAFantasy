@@ -119,7 +119,7 @@ export default function GamesPage() {
         setLoading(false);
       }
     },
-    [filters]
+    [filters],
   );
 
   useEffect(() => {
@@ -190,9 +190,7 @@ export default function GamesPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Partidos</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Gestiona la programación y resultados de los partidos
-              </p>
+              <p className="mt-1 text-sm text-gray-600">Gestiona la programación y resultados de los partidos</p>
             </div>
             <Link
               href="/games/create"
@@ -259,10 +257,7 @@ export default function GamesPage() {
         {/* Games List */}
         <div className="space-y-4">
           {games.map((game) => (
-            <div
-              key={game._id}
-              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
-            >
+            <div key={game._id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                 {/* Game Info */}
                 <div className="flex-1">
@@ -282,14 +277,23 @@ export default function GamesPage() {
                     <div className="flex items-center space-x-3 flex-1 justify-end">
                       <div className="text-right">
                         <div className="font-semibold text-gray-900">{game.homeTeam.name}</div>
-                        <div className="text-sm text-gray-500">{game.homeTeam.shortName}</div>
+                        {!game.homeTeam.logo && game.homeTeam.shortName && (
+                          <div className="text-sm text-gray-500">{game.homeTeam.shortName}</div>
+                        )}
                       </div>
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: game.homeTeam.colors.primary }}
-                      >
-                        {game.homeTeam.shortName || game.homeTeam.name.substring(0, 2)}
-                      </div>
+                      {game.homeTeam.logo ? (
+                        <div
+                          className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${game.homeTeam.logo})` }}
+                        />
+                      ) : (
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                          style={{ backgroundColor: game.homeTeam.colors.primary }}
+                        >
+                          {game.homeTeam.shortName || game.homeTeam.name.substring(0, 2)}
+                        </div>
+                      )}
                     </div>
 
                     {/* Score */}
@@ -310,15 +314,24 @@ export default function GamesPage() {
 
                     {/* Away Team */}
                     <div className="flex items-center space-x-3 flex-1">
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: game.awayTeam.colors.primary }}
-                      >
-                        {game.awayTeam.shortName || game.awayTeam.name.substring(0, 2)}
-                      </div>
+                      {game.awayTeam.logo ? (
+                        <div
+                          className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${game.awayTeam.logo})` }}
+                        />
+                      ) : (
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                          style={{ backgroundColor: game.awayTeam.colors.primary }}
+                        >
+                          {game.awayTeam.shortName || game.awayTeam.name.substring(0, 2)}
+                        </div>
+                      )}
                       <div>
                         <div className="font-semibold text-gray-900">{game.awayTeam.name}</div>
-                        <div className="text-sm text-gray-500">{game.awayTeam.shortName}</div>
+                        {!game.awayTeam.logo && game.awayTeam.shortName && (
+                          <div className="text-sm text-gray-500">{game.awayTeam.shortName}</div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -367,12 +380,7 @@ export default function GamesPage() {
 
         {games.length === 0 && !loading && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

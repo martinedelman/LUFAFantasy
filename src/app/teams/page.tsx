@@ -11,6 +11,7 @@ interface Team {
   _id: string;
   name: string;
   shortName: string;
+  logo?: string;
   colors: {
     primary: string;
     secondary: string;
@@ -25,12 +26,13 @@ interface Team {
     phone: string;
   };
   players?: { _id: string; firstName: string; lastName: string }[];
-  homeVenue?: {
-    _id: string;
-    name: string;
-  };
   status: "active" | "inactive" | "suspended";
   registrationDate: string;
+}
+
+interface Division {
+  _id: string;
+  name: string;
 }
 
 interface ApiResponse {
@@ -46,9 +48,17 @@ interface ApiResponse {
   message?: string;
 }
 
+interface DivisionsApiResponse {
+  success: boolean;
+  data: Division[];
+  message?: string;
+}
+
 export default function TeamsPage() {
   const { user } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
+  const [divisions, setDivisions] = useState<Division[]>([]);
+  const [loadingDivisions, setLoadingDivisions] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,11 +101,30 @@ export default function TeamsPage() {
         setLoading(false);
       }
     },
-    [filters.division, filters.status]
+    [filters.division, filters.status],
   );
   useEffect(() => {
     fetchTeams(currentPage);
   }, [currentPage, filters, fetchTeams]);
+
+  useEffect(() => {
+    const fetchDivisions = async () => {
+      try {
+        const response = await fetch("/api/divisions?limit=100");
+        const result: DivisionsApiResponse = await response.json();
+
+        if (result.success) {
+          setDivisions(result.data);
+        }
+      } catch {
+        setDivisions([]);
+      } finally {
+        setLoadingDivisions(false);
+      }
+    };
+
+    fetchDivisions();
+  }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -170,12 +199,14 @@ export default function TeamsPage() {
               value={filters.division}
               onChange={(e) => handleFilterChange("division", e.target.value)}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+              disabled={loadingDivisions}
             >
               <option value="">Todas las divisiones</option>
-              <option value="masculino-a">Masculino A</option>
-              <option value="masculino-b">Masculino B</option>
-              <option value="femenino">Femenino</option>
-              <option value="mixto">Mixto</option>
+              {divisions.map((division) => (
+                <option key={division._id} value={division._id}>
+                  {division.name}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -207,12 +238,7 @@ export default function TeamsPage() {
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
         {teams.length === 0 ? (
           <div className="text-center py-12">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -221,15 +247,21 @@ export default function TeamsPage() {
               />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No hay equipos</h3>
-            <p className="mt-1 text-sm text-gray-500">Comienza registrando un nuevo equipo.</p>
-            <div className="mt-6">
-              <Link
-                href="/teams/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                Registrar Equipo
-              </Link>
-            </div>
+            <p className="mt-1 text-sm text-gray-500">
+              {user?.role === "admin"
+                ? "Comienza registrando un nuevo equipo."
+                : "Todavía no hay equipos registrados en la liga."}
+            </p>
+            {user?.role === "admin" && (
+              <div className="mt-6">
+                <Link
+                  href="/teams/create"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  Registrar Equipo
+                </Link>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -243,12 +275,19 @@ export default function TeamsPage() {
                     {/* Team Header */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                        <div
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                          style={{ backgroundColor: team.colors.primary }}
-                        >
-                          {team.shortName || team.name.substring(0, 2).toUpperCase()}
-                        </div>
+                        {team.logo ? (
+                          <div
+                            className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                            style={{ backgroundImage: `url(${team.logo})` }}
+                          />
+                        ) : (
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                            style={{ backgroundColor: team.colors.primary }}
+                          >
+                            {team.shortName || team.name.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{team.name}</h3>
                           <p className="text-sm text-gray-500">{team.division.name || "Sin División"}</p>
@@ -280,25 +319,6 @@ export default function TeamsPage() {
                             />
                           </svg>
                           {team.coach.name}
-                        </div>
-                      )}
-                      {team.homeVenue && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
-                          {team.homeVenue.name}
                         </div>
                       )}
                     </div>
