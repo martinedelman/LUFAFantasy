@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --background: #f2f7fb;
+  --surface: #ffffff;
+  --surface-soft: #e5eff7;
+  --foreground: #12324a;
+  --muted: #57748a;
+  --muted-2: #7f96a9;
+  --border: #c4d6e4;
+
+  --brand-900: #0b5f8d;
+  --brand-800: #1176ad;
+  --brand-700: #1c8ac3;
+  --brand-600: #2a9ed9;
+  --brand-100: #dceefa;
 }
 
 @theme inline {
@@ -14,8 +26,20 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+    --background: #061521;
+    --surface: #0d2233;
+    --surface-soft: #163145;
+    --foreground: #e7f4ff;
+    --muted: #abc2d3;
+    --muted-2: #88a3b7;
+    --border: #2d4f68;
+
+    --brand-900: #0f6ea4;
+    --brand-800: #1683be;
+    --brand-700: #2896d0;
+    --brand-600: #48aee2;
+    --brand-100: #163b57;
   }
 }
 
@@ -25,13 +49,147 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-input {
-  color: #171717;
+/* Controles de formulario */
+input,
+select,
+textarea {
+  color: var(--foreground);
+  background-color: var(--surface);
+  border-color: var(--border);
 }
 
-select {
-  color: #171717;
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted-2);
 }
-textarea {
-  color: #171717;
+
+/* Overrides globales para clases usadas en pantallas existentes */
+.bg-gray-50,
+.bg-slate-50 {
+  background-color: var(--background) !important;
+}
+
+.bg-white,
+.bg-gray-100 {
+  background-color: var(--surface) !important;
+}
+
+.text-gray-900,
+.text-black {
+  color: var(--foreground) !important;
+}
+
+.text-gray-700,
+.text-gray-600,
+.text-gray-500,
+.text-gray-400 {
+  color: var(--muted) !important;
+}
+
+.border-gray-100,
+.border-gray-200,
+.border-gray-300,
+.border-gray-400 {
+  border-color: var(--border) !important;
+}
+
+.shadow,
+.shadow-sm,
+.shadow-md,
+.shadow-lg {
+  box-shadow: 0 6px 18px rgba(4, 22, 35, 0.14) !important;
+}
+
+/* Marca LUFA: mapeo de verdes/azules a paleta del logo */
+.bg-green-800,
+.bg-blue-800 {
+  background-color: var(--brand-900) !important;
+}
+
+.bg-green-700,
+.bg-blue-700,
+.bg-purple-700 {
+  background-color: var(--brand-800) !important;
+}
+
+.bg-green-600,
+.bg-blue-600,
+.bg-purple-600 {
+  background-color: var(--brand-700) !important;
+}
+
+.bg-green-500,
+.bg-blue-500 {
+  background-color: var(--brand-600) !important;
+}
+
+.bg-green-100,
+.bg-blue-100,
+.bg-purple-100 {
+  background-color: var(--brand-100) !important;
+}
+
+.text-green-900,
+.text-green-800,
+.text-blue-900,
+.text-blue-800 {
+  color: var(--brand-900) !important;
+}
+
+.text-green-700,
+.text-green-600,
+.text-blue-700,
+.text-blue-600,
+.text-purple-700,
+.text-purple-600 {
+  color: var(--brand-800) !important;
+}
+
+.text-green-100,
+.text-blue-100,
+.text-green-300,
+.text-blue-300 {
+  color: #eff8ff !important;
+}
+
+.border-green-700,
+.border-green-500,
+.border-blue-700,
+.border-blue-500 {
+  border-color: var(--brand-800) !important;
+}
+
+.hover\:bg-green-700:hover,
+.hover\:bg-blue-700:hover,
+.hover\:bg-purple-700:hover {
+  background-color: var(--brand-800) !important;
+}
+
+.hover\:bg-green-600:hover,
+.hover\:bg-blue-600:hover,
+.hover\:bg-purple-600:hover,
+.hover\:bg-green-500:hover,
+.hover\:bg-blue-500:hover {
+  background-color: var(--brand-700) !important;
+}
+
+.hover\:text-green-700:hover,
+.hover\:text-blue-700:hover,
+.hover\:text-green-600:hover,
+.hover\:text-blue-600:hover,
+.hover\:text-green-800:hover,
+.hover\:text-blue-800:hover {
+  color: var(--brand-900) !important;
+}
+
+.focus\:ring-green-500:focus,
+.focus\:ring-blue-500:focus,
+.focus\:ring-green-600:focus,
+.focus\:ring-blue-600:focus {
+  --tw-ring-color: var(--brand-700) !important;
+}
+
+.focus\:border-green-500:focus,
+.focus\:border-blue-500:focus {
+  border-color: var(--brand-700) !important;
 }
