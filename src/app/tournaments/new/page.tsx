@@ -12,8 +12,8 @@ interface TournamentFormData {
   startDate: string;
   endDate: string;
   registrationDeadline: string;
-  format: "league" | "knockout" | "roundRobin";
-  status: "draft" | "active" | "completed" | "cancelled";
+  format: "league" | "playoff" | "tournament";
+  status: "upcoming" | "active" | "completed" | "cancelled";
   rules: {
     gameDuration: number;
     quarters: number;
@@ -39,7 +39,7 @@ interface TournamentFormData {
 }
 
 export default function NewTournamentPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,7 +53,7 @@ export default function NewTournamentPage() {
     endDate: "",
     registrationDeadline: "",
     format: "league",
-    status: "draft",
+    status: "upcoming",
     rules: {
       gameDuration: 40,
       quarters: 4,
@@ -76,6 +76,14 @@ export default function NewTournamentPage() {
       { position: 3, description: "Tercer Lugar", amount: 2500, trophy: "Copa de Bronce" },
     ],
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   // Verificar si el usuario es admin
   if (!user || user.role !== "admin") {
@@ -145,20 +153,20 @@ export default function NewTournamentPage() {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
 
     if (name.includes(".")) {
       const [parent, child] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: {
+      if (parent === "rules") {
+        setFormData((prev) => ({
           ...prev,
-          [child]: type === "number" ? Number(value) : value,
-        },
-      }));
+          rules: {
+            ...prev.rules,
+            [child]: type === "number" ? Number(value) : value,
+          },
+        }));
+      }
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -184,9 +192,7 @@ export default function NewTournamentPage() {
     setFormData((prev) => ({
       ...prev,
       prizes: prev.prizes.map((prize, i) =>
-        i === index
-          ? { ...prize, [field]: field === "amount" || field === "position" ? Number(value) : value }
-          : prize
+        i === index ? { ...prize, [field]: field === "amount" || field === "position" ? Number(value) : value } : prize,
       ),
     }));
   };
@@ -227,9 +233,7 @@ export default function NewTournamentPage() {
 
       <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">{error}</div>
-          )}
+          {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">{error}</div>}
 
           {/* Información Básica */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -301,8 +305,8 @@ export default function NewTournamentPage() {
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 >
                   <option value="league">Liga Regular</option>
-                  <option value="knockout">Eliminación Directa</option>
-                  <option value="roundRobin">Todos contra Todos</option>
+                  <option value="playoff">Playoff</option>
+                  <option value="tournament">Torneo</option>
                 </select>
               </div>
 
@@ -318,7 +322,7 @@ export default function NewTournamentPage() {
                   onChange={handleInputChange}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 >
-                  <option value="draft">Borrador</option>
+                  <option value="upcoming">Próximo</option>
                   <option value="active">Activo</option>
                   <option value="completed">Completado</option>
                   <option value="cancelled">Cancelado</option>
@@ -348,10 +352,7 @@ export default function NewTournamentPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label
-                  htmlFor="registrationDeadline"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label htmlFor="registrationDeadline" className="block text-sm font-medium text-gray-700 mb-2">
                   Fecha Límite de Registro *
                 </label>
                 <input
@@ -512,9 +513,7 @@ export default function NewTournamentPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Extra Point (1 yarda)
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Extra Point (1 yarda)</label>
                   <input
                     type="number"
                     min="0"
@@ -524,9 +523,7 @@ export default function NewTournamentPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Extra Point (5 yardas)
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Extra Point (5 yardas)</label>
                   <input
                     type="number"
                     min="0"
@@ -536,9 +533,7 @@ export default function NewTournamentPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Extra Point (10 yardas)
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Extra Point (10 yardas)</label>
                   <input
                     type="number"
                     min="0"

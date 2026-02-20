@@ -79,7 +79,7 @@ export default function TournamentsPage() {
         setLoading(false);
       }
     },
-    [filters.status, filters.year]
+    [filters.status, filters.year],
   );
 
   useEffect(() => {
@@ -142,10 +142,8 @@ export default function TournamentsPage() {
       {/* Header */}
       <div className="md:flex md:items-center md:justify-between mb-8">
         <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">🏆 Torneos</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Gestiona y visualiza todos los torneos de Flag Football
-          </p>{" "}
+          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Torneos</h2>
+          <p className="mt-1 text-sm text-gray-500">Gestiona y visualiza todos los torneos de Flag Football</p>{" "}
         </div>
         <div className="mt-4 flex md:mt-0 md:ml-4">
           {user && user.role === "admin" && (
@@ -211,12 +209,7 @@ export default function TournamentsPage() {
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
         {tournaments.length === 0 ? (
           <div className="text-center py-12">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -226,14 +219,16 @@ export default function TournamentsPage() {
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No hay torneos</h3>
             <p className="mt-1 text-sm text-gray-500">Comienza creando un nuevo torneo.</p>
-            <div className="mt-6">
-              <Link
-                href="/tournaments/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                Crear Torneo
-              </Link>
-            </div>
+            {user?.role === "admin" && (
+              <div className="mt-6">
+                <Link
+                  href="/tournaments/new"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  Crear Torneo
+                </Link>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -284,10 +279,7 @@ export default function TournamentsPage() {
                         {tournament.divisions?.length || 0} divisiones
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Link
-                          href={`/tournaments/${tournament._id}`}
-                          className="text-green-600 hover:text-green-900"
-                        >
+                        <Link href={`/tournaments/${tournament._id}`} className="text-green-600 hover:text-green-900">
                           Ver detalles
                         </Link>
                       </td>

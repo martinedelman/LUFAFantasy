@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -15,8 +15,8 @@ interface Tournament {
   startDate: string;
   endDate: string;
   registrationDeadline: string;
-  status: "draft" | "active" | "completed" | "cancelled";
-  format: "league" | "knockout" | "roundRobin";
+  status: "upcoming" | "active" | "completed" | "cancelled";
+  format: "league" | "playoff" | "tournament";
   rules: {
     gameDuration: number;
     quarters: number;
@@ -61,6 +61,7 @@ interface ApiResponse {
 
 export default function TournamentDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { user } = useAuth();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,14 +96,14 @@ export default function TournamentDetailPage() {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      draft: "bg-gray-100 text-gray-800",
+      upcoming: "bg-gray-100 text-gray-800",
       active: "bg-green-100 text-green-800",
       completed: "bg-blue-100 text-blue-800",
       cancelled: "bg-red-100 text-red-800",
     };
 
     const labels = {
-      draft: "Borrador",
+      upcoming: "Próximo",
       active: "Activo",
       completed: "Completado",
       cancelled: "Cancelado",
@@ -199,10 +200,24 @@ export default function TournamentDetailPage() {
                   Editar
                 </Link>
                 <button
-                  onClick={() => {
-                    if (confirm("¿Estás seguro de que quieres eliminar este torneo?")) {
-                      // TODO: Implement delete functionality
-                      console.log("Delete tournament");
+                  onClick={async () => {
+                    if (!confirm("¿Estás seguro de que quieres eliminar este torneo?")) {
+                      return;
+                    }
+
+                    try {
+                      const response = await fetch(`/api/tournaments/${tournament._id}`, {
+                        method: "DELETE",
+                      });
+
+                      const result = await response.json();
+                      if (!response.ok || !result.success) {
+                        throw new Error(result.message || "No se pudo eliminar el torneo");
+                      }
+
+                      router.push("/tournaments");
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : "Error al eliminar torneo");
                     }
                   }}
                   className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
@@ -295,9 +310,7 @@ export default function TournamentDetailPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Safety</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
-                    {tournament.rules.scoringRules.safety} pts
-                  </p>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">{tournament.rules.scoringRules.safety} pts</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Field Goal</h3>
@@ -357,10 +370,7 @@ export default function TournamentDetailPage() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">🏆 Premios</h2>
               <div className="space-y-4">
                 {tournament.prizes.map((prize) => (
-                  <div
-                    key={prize.position}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
+                  <div key={prize.position} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <div className="flex items-center space-x-2">
                         <span className="text-lg font-bold text-gray-900">{prize.position}°</span>
@@ -382,9 +392,7 @@ export default function TournamentDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-500">Divisiones</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {tournament.divisions?.length || 0}
-                  </span>
+                  <span className="text-sm font-medium text-gray-900">{tournament.divisions?.length || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-500">Equipos Registrados</span>

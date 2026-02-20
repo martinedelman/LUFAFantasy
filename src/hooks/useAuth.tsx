@@ -23,20 +23,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simular verificación de sesión al cargar
+  // Verificación real de sesión en backend
   useEffect(() => {
     const checkAuth = async () => {
-      // Verificar si hay datos de usuario en localStorage (temporal)
-      const userData = localStorage.getItem("lufa_user");
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
-        } catch (error) {
-          console.error("Error parsing user data:", error);
-          localStorage.removeItem("lufa_user");
+      try {
+        const response = await fetch("/api/auth/me", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setUser(data.data);
+        } else {
+          setUser(null);
         }
+      } catch {
+        setUser(null);
       }
+
       setIsLoading(false);
     };
 
@@ -47,42 +54,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
 
     try {
-      // Usuarios de prueba hardcodeados
-      const testUsers = [
-        {
-          id: "1",
-          name: "Administrador LUFA",
-          email: "admin@lufa.com",
-          password: "admin123",
-          role: "admin" as const,
-          avatar: "",
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          id: "2",
-          name: "Usuario Demo",
-          email: "user@lufa.com",
-          password: "user123",
-          role: "user" as const,
-          avatar: "",
-        },
-      ];
+        body: JSON.stringify({ email, password }),
+      });
 
-      const foundUser = testUsers.find((u) => u.email === email && u.password === password);
+      const data = await response.json();
 
-      if (foundUser) {
-        const userData = {
-          id: foundUser.id,
-          name: foundUser.name,
-          email: foundUser.email,
-          role: foundUser.role,
-          avatar: foundUser.avatar,
-        };
-
-        setUser(userData);
-        localStorage.setItem("lufa_user", JSON.stringify(userData));
+      if (response.ok && data.success) {
+        setUser(data.data);
         return { success: true };
       } else {
-        return { success: false, error: "Credenciales inválidas" };
+        return { success: false, error: data.message || "Credenciales inválidas" };
       }
     } catch {
       return { success: false, error: "Error de conexión" };
@@ -93,7 +79,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = () => {
     setUser(null);
-    localStorage.removeItem("lufa_user");
+    void fetch("/api/auth/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   };
 
   const signUp = async (name: string, email: string, password: string) => {
@@ -122,11 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signOut, signUp }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, isLoading, signIn, signOut, signUp }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

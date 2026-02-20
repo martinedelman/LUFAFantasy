@@ -1,6 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
-import { TournamentModel } from "@/models";
+import { TournamentModel, UserModel } from "@/models";
+import { getSessionTokenFromRequest, verifySessionToken } from "@/lib/auth";
+
+const TOURNAMENT_STATUS = ["upcoming", "active", "completed", "cancelled"] as const;
+const TOURNAMENT_FORMAT = ["league", "playoff", "tournament"] as const;
+
+async function isAdminRequest(request: NextRequest) {
+  const token = getSessionTokenFromRequest(request);
+  if (!token) return false;
+
+  const payload = verifySessionToken(token);
+  if (!payload) return false;
+
+  const user = await UserModel.findById(payload.userId).select("role isActive");
+  return Boolean(user && user.isActive && user.role === "admin");
+}
+
+function validateTournamentPayload(payload: Record<string, unknown>) {
+  if (!payload.name || typeof payload.name !== "string") {
+    return "El nombre del torneo es requerido";
+  }
+
+  if (!payload.season || typeof payload.season !== "string") {
+    return "La temporada es requerida";
+  }
+
+  if (!payload.year || typeof payload.year !== "number") {
+    return "El año es requerido";
+  }
+
+  if (!payload.startDate || !payload.endDate) {
+    return "Las fechas de inicio y fin son requeridas";
+  }
+
+  if (!payload.status || !TOURNAMENT_STATUS.includes(payload.status as (typeof TOURNAMENT_STATUS)[number])) {
+    return "Estado de torneo inválido";
+  }
+
+  if (!payload.format || !TOURNAMENT_FORMAT.includes(payload.format as (typeof TOURNAMENT_FORMAT)[number])) {
+    return "Formato de torneo inválido";
+  }
+
+  return null;
+}
 
 // GET /api/tournaments/[id] - Obtener torneo por ID
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -33,7 +76,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         message: "Error al obtener torneo",
         error: error instanceof Error ? error.message : "Error desconocido",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -43,8 +86,31 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     await connectToDatabase();
 
+    const isAdmin = await isAdminRequest(request);
+    if (!isAdmin) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo administradores pueden editar torneos",
+        },
+        { status: 403 },
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
+
+    const validationError = validateTournamentPayload(body);
+    if (validationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: validationError,
+        },
+        { status: 400 },
+      );
+    }
+
     const tournament = await TournamentModel.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
@@ -66,7 +132,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         message: "Error al actualizar torneo",
         error: error instanceof Error ? error.message : "Error desconocido",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
@@ -75,6 +141,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectToDatabase();
+
+    const isAdmin = await isAdminRequest(request);
+    if (!isAdmin) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo administradores pueden eliminar torneos",
+        },
+        { status: 403 },
+      );
+    }
 
     const { id } = await params;
     const tournament = await TournamentModel.findByIdAndDelete(id);
@@ -94,7 +171,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         message: "Error al eliminar torneo",
         error: error instanceof Error ? error.message : "Error desconocido",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
