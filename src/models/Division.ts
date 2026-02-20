@@ -10,18 +10,18 @@ const DivisionSchema = new Schema(
       required: true,
     },
     ageGroup: { type: String, trim: true },
-    tournament: { type: Schema.Types.ObjectId, ref: "Tournament", required: true },
+    tournament: { type: Schema.Types.ObjectId, ref: "Tournament" },
     teams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
     maxTeams: { type: Number },
   },
   {
     timestamps: true,
     collection: "divisions",
-  }
+  },
 );
 
 // Índices
-DivisionSchema.index({ tournament: 1, name: 1 }, { unique: true });
+DivisionSchema.index({ name: 1, category: 1 });
 DivisionSchema.index({ category: 1 });
 
 export const DivisionModel = mongoose.models.Division || mongoose.model<Division>("Division", DivisionSchema);

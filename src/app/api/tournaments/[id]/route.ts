@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
-import { TournamentModel, UserModel } from "@/models";
+import mongoose from "mongoose";
+import { DivisionModel, TournamentModel, UserModel } from "@/models";
 import { getSessionTokenFromRequest, verifySessionToken } from "@/lib/auth";
 
 const TOURNAMENT_STATUS = ["upcoming", "active", "completed", "cancelled"] as const;
@@ -40,6 +41,22 @@ function validateTournamentPayload(payload: Record<string, unknown>) {
 
   if (!payload.format || !TOURNAMENT_FORMAT.includes(payload.format as (typeof TOURNAMENT_FORMAT)[number])) {
     return "Formato de torneo inválido";
+  }
+
+  return null;
+}
+
+function validateDivisionIdsPayload(payload: unknown) {
+  if (payload === undefined) return null;
+
+  if (!Array.isArray(payload)) {
+    return "El formato de divisiones es inválido";
+  }
+
+  for (const divisionId of payload) {
+    if (typeof divisionId !== "string" || !mongoose.isValidObjectId(divisionId)) {
+      return "Cada división debe ser un identificador válido";
+    }
   }
 
   return null;
@@ -98,7 +115,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
 
     const validationError = validateTournamentPayload(body);
     if (validationError) {
@@ -111,7 +128,38 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const tournament = await TournamentModel.findByIdAndUpdate(id, body, {
+    const divisionsValidationError = validateDivisionIdsPayload(body.divisions);
+    if (divisionsValidationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: divisionsValidationError,
+        },
+        { status: 400 },
+      );
+    }
+
+    const divisions = Array.isArray(body.divisions) ? (body.divisions as string[]) : undefined;
+
+    if (divisions && divisions.length > 0) {
+      const existingDivisionsCount = await DivisionModel.countDocuments({ _id: { $in: divisions } });
+      if (existingDivisionsCount !== divisions.length) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Una o más divisiones seleccionadas no existen",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
+    const tournamentPayload = { ...body };
+    if (divisions) {
+      tournamentPayload.divisions = divisions;
+    }
+
+    const tournament = await TournamentModel.findByIdAndUpdate(id, tournamentPayload, {
       new: true,
       runValidators: true,
     });
@@ -120,9 +168,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, message: "Torneo no encontrado" }, { status: 404 });
     }
 
+    const populatedTournament = await TournamentModel.findById(id).populate("divisions");
+
     return NextResponse.json({
       success: true,
-      data: tournament,
+      data: populatedTournament,
       message: "Torneo actualizado exitosamente",
     });
   } catch (error) {

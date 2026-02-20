@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectToDatabase from "@/lib/mongodb";
-import { TeamModel, UserModel } from "@/models";
+import { TeamModel, TournamentModel, UserModel } from "@/models";
 import { getSessionTokenFromRequest, verifySessionToken } from "@/lib/auth";
 
 const TEAM_STATUS = ["active", "inactive", "suspended"] as const;
@@ -76,11 +76,42 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const division = searchParams.get("division");
+    const tournament = searchParams.get("tournament");
     const status = searchParams.get("status");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
 
-    const filter: Record<string, string> = {};
+    const filter: Record<string, unknown> = {};
+
+    if (tournament) {
+      if (!mongoose.isValidObjectId(tournament)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Torneo inválido",
+          },
+          { status: 400 },
+        );
+      }
+
+      const tournamentData = await TournamentModel.findById(tournament).select("divisions").lean();
+      if (!tournamentData) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Torneo no encontrado",
+          },
+          { status: 404 },
+        );
+      }
+
+      const divisionIds = Array.isArray(tournamentData.divisions)
+        ? tournamentData.divisions.map((divisionId) => divisionId.toString())
+        : [];
+
+      filter.division = { $in: divisionIds };
+    }
+
     if (division) {
       if (!mongoose.isValidObjectId(division)) {
         return NextResponse.json(
@@ -90,6 +121,23 @@ export async function GET(request: NextRequest) {
           },
           { status: 400 },
         );
+      }
+
+      if (tournament && typeof filter.division === "object" && filter.division !== null && "$in" in filter.division) {
+        const divisionFilter = filter.division as { $in: string[] };
+        if (!divisionFilter.$in.includes(division)) {
+          return NextResponse.json({
+            success: true,
+            data: [],
+            pagination: {
+              current: page,
+              total: 0,
+              pages: 0,
+              hasNext: false,
+              hasPrev: false,
+            },
+          });
+        }
       }
 
       filter.division = division;

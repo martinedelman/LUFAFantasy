@@ -49,7 +49,7 @@ export interface Division {
   name: string;
   category: "masculino" | "femenino" | "mixto";
   ageGroup?: string;
-  tournament: string; // Referencia a Tournament
+  tournament?: string; // Referencia opcional a Tournament (legacy)
   teams: string[]; // Referencias a Team
   maxTeams?: number;
   createdAt: Date;

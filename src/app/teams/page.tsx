@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
@@ -54,8 +55,17 @@ interface DivisionsApiResponse {
   message?: string;
 }
 
+interface TournamentDivisionsResponse {
+  success: boolean;
+  data: {
+    divisions?: Division[];
+  };
+}
+
 export default function TeamsPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const tournamentId = searchParams.get("tournament") || "";
   const [teams, setTeams] = useState<Team[]>([]);
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [loadingDivisions, setLoadingDivisions] = useState(true);
@@ -84,6 +94,7 @@ export default function TeamsPage() {
 
         if (filters.division) params.append("division", filters.division);
         if (filters.status) params.append("status", filters.status);
+        if (tournamentId) params.append("tournament", tournamentId);
 
         const response = await fetch(`/api/teams?${params}`);
         const result: ApiResponse = await response.json();
@@ -101,7 +112,7 @@ export default function TeamsPage() {
         setLoading(false);
       }
     },
-    [filters.division, filters.status],
+    [filters.division, filters.status, tournamentId],
   );
   useEffect(() => {
     fetchTeams(currentPage);
@@ -109,12 +120,24 @@ export default function TeamsPage() {
 
   useEffect(() => {
     const fetchDivisions = async () => {
+      setLoadingDivisions(true);
       try {
-        const response = await fetch("/api/divisions?limit=100");
-        const result: DivisionsApiResponse = await response.json();
+        if (tournamentId) {
+          const response = await fetch(`/api/tournaments/${tournamentId}`);
+          const result: TournamentDivisionsResponse = await response.json();
 
-        if (result.success) {
-          setDivisions(result.data);
+          if (result.success) {
+            setDivisions(result.data.divisions || []);
+          } else {
+            setDivisions([]);
+          }
+        } else {
+          const response = await fetch("/api/divisions?limit=100");
+          const result: DivisionsApiResponse = await response.json();
+
+          if (result.success) {
+            setDivisions(result.data);
+          }
         }
       } catch {
         setDivisions([]);
@@ -124,7 +147,7 @@ export default function TeamsPage() {
     };
 
     fetchDivisions();
-  }, []);
+  }, [tournamentId]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

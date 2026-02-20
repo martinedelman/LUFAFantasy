@@ -5,6 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 
+interface DivisionOption {
+  _id: string;
+  name: string;
+  category: "masculino" | "femenino" | "mixto";
+  ageGroup?: string;
+}
+
 interface TournamentFormData {
   name: string;
   description: string;
@@ -37,6 +44,7 @@ interface TournamentFormData {
     amount: number;
     trophy: string;
   }>;
+  divisions: string[];
 }
 
 const defaultForm: TournamentFormData = {
@@ -66,6 +74,7 @@ const defaultForm: TournamentFormData = {
     },
   },
   prizes: [],
+  divisions: [],
 };
 
 function toDateInputValue(value?: string) {
@@ -82,6 +91,8 @@ export default function EditTournamentPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<TournamentFormData>(defaultForm);
+  const [availableDivisions, setAvailableDivisions] = useState<DivisionOption[]>([]);
+  const [loadingDivisions, setLoadingDivisions] = useState(true);
 
   const tournamentId = params?.id as string;
 
@@ -134,6 +145,7 @@ export default function EditTournamentPage() {
                 trophy: prize.trophy ?? "",
               }),
             ) ?? [],
+          divisions: tournament.divisions?.map((division: { _id: string }) => division._id) ?? [],
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al cargar el torneo");
@@ -144,6 +156,25 @@ export default function EditTournamentPage() {
 
     fetchTournament();
   }, [tournamentId]);
+
+  useEffect(() => {
+    const fetchDivisions = async () => {
+      try {
+        const response = await fetch("/api/divisions?limit=200");
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          setAvailableDivisions(result.data);
+        }
+      } catch {
+        setAvailableDivisions([]);
+      } finally {
+        setLoadingDivisions(false);
+      }
+    };
+
+    fetchDivisions();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -178,6 +209,15 @@ export default function EditTournamentPage() {
           [rule]: value,
         },
       },
+    }));
+  };
+
+  const handleDivisionToggle = (divisionId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      divisions: prev.divisions.includes(divisionId)
+        ? prev.divisions.filter((id) => id !== divisionId)
+        : [...prev.divisions, divisionId],
     }));
   };
 
@@ -565,6 +605,42 @@ export default function EditTournamentPage() {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Divisiones</h2>
+            {loadingDivisions ? (
+              <p className="text-sm text-gray-500">Cargando divisiones...</p>
+            ) : availableDivisions.length === 0 ? (
+              <p className="text-sm text-gray-500">No hay divisiones disponibles para asignar.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {availableDivisions.map((division) => {
+                  const checked = formData.divisions.includes(division._id);
+
+                  return (
+                    <label
+                      key={division._id}
+                      className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => handleDivisionToggle(division._id)}
+                        className="h-4 w-4 text-green-600 border-gray-300 rounded"
+                      />
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">{division.name}</p>
+                        <p className="text-xs text-gray-500 capitalize">
+                          {division.category}
+                          {division.ageGroup ? ` • ${division.ageGroup}` : ""}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">

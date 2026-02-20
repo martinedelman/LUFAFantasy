@@ -437,7 +437,7 @@ export default function TournamentDetailPage() {
                   Ver Posiciones
                 </Link>
                 <Link
-                  href={`/tournaments/${tournament._id}/teams`}
+                  href={`/teams?tournament=${tournament._id}`}
                   className="block w-full bg-purple-600 hover:bg-purple-700 text-white text-center px-4 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Ver Equipos
