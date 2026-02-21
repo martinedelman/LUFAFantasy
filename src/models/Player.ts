@@ -2,9 +2,9 @@ import mongoose, { Schema } from "mongoose";
 import { Player } from "../types";
 
 const EmergencyContactSchema = new Schema({
-  name: { type: String, required: true, trim: true },
-  relationship: { type: String, required: true, trim: true },
-  phone: { type: String, required: true, trim: true },
+  name: { type: String, trim: true },
+  relationship: { type: String, trim: true },
+  phone: { type: String, trim: true },
   email: { type: String, trim: true, lowercase: true },
 });
 
@@ -34,7 +34,7 @@ const PlayerSchema = new Schema(
     experience: { type: String, trim: true },
     emergencyContact: { type: EmergencyContactSchema },
     medicalInfo: { type: MedicalInfoSchema },
-    registrationDate: { type: Date, required: true },
+    registrationDate: { type: Date, default: Date.now },
     status: {
       type: String,
       enum: ["active", "inactive", "injured", "suspended"],
@@ -44,7 +44,7 @@ const PlayerSchema = new Schema(
   {
     timestamps: true,
     collection: "players",
-  }
+  },
 );
 
 // Índices

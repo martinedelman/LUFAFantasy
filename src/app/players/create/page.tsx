@@ -81,10 +81,44 @@ export default function CreatePlayerPage() {
     setLoading(true);
     setError("");
     try {
+      const payload: Record<string, unknown> = {
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        dateOfBirth: form.dateOfBirth,
+        team: form.team,
+        jerseyNumber: Number(form.jerseyNumber),
+        position: form.position,
+        status: form.status,
+      };
+
+      if (form.email.trim()) payload.email = form.email.trim();
+      if (form.phone.trim()) payload.phone = form.phone.trim();
+      if (form.registrationDate) payload.registrationDate = form.registrationDate;
+      if (form.height !== "") payload.height = Number(form.height);
+      if (form.weight !== "") payload.weight = Number(form.weight);
+      if (form.experience.trim()) payload.experience = form.experience.trim();
+
+      const hasEmergencyContactData =
+        form.emergencyContact.name.trim() ||
+        form.emergencyContact.relationship.trim() ||
+        form.emergencyContact.phone.trim() ||
+        form.emergencyContact.email.trim();
+
+      if (hasEmergencyContactData) {
+        payload.emergencyContact = {
+          ...(form.emergencyContact.name.trim() && { name: form.emergencyContact.name.trim() }),
+          ...(form.emergencyContact.relationship.trim() && {
+            relationship: form.emergencyContact.relationship.trim(),
+          }),
+          ...(form.emergencyContact.phone.trim() && { phone: form.emergencyContact.phone.trim() }),
+          ...(form.emergencyContact.email.trim() && { email: form.emergencyContact.email.trim() }),
+        };
+      }
+
       const res = await fetch("/api/players", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
