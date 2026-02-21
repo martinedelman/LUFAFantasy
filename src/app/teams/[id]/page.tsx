@@ -232,7 +232,11 @@ export default function TeamViewerPage() {
   };
 
   if (loading) {
-    return <LoadingSpinner size="lg" />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
   }
 
   if (error) {
