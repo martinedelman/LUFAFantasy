@@ -120,17 +120,11 @@ export type PlayerPosition =
   | "WR" // Wide Receiver
   | "RB" // Running Back
   | "C" // Center
-  | "G" // Guard
-  | "T" // Tackle
-  | "DE" // Defensive End
-  | "DT" // Defensive Tackle
+  | "RS" // Rusher
   | "LB" // Linebacker
   | "CB" // Cornerback
   | "FS" // Free Safety
-  | "SS" // Strong Safety
-  | "K" // Kicker
-  | "P" // Punter
-  | "FLEX"; // Flexible position
+  | "SS"; // Strong Safety
 
 export interface EmergencyContact {
   name: string;

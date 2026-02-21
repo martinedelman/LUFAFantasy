@@ -182,10 +182,7 @@ export default function CreatePlayerPage() {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="registrationDate"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="registrationDate" className="block text-sm font-medium text-gray-700 mb-1">
                       Fecha de Registro
                     </label>
                     <input
@@ -257,17 +254,11 @@ export default function CreatePlayerPage() {
                       <option value="WR">Wide Receiver (WR)</option>
                       <option value="RB">Running Back (RB)</option>
                       <option value="C">Center (C)</option>
-                      <option value="G">Guard (G)</option>
-                      <option value="T">Tackle (T)</option>
-                      <option value="DE">Defensive End (DE)</option>
-                      <option value="DT">Defensive Tackle (DT)</option>
+                      <option value="RS">Rusher (RS)</option>
                       <option value="LB">Linebacker (LB)</option>
                       <option value="CB">Cornerback (CB)</option>
                       <option value="FS">Free Safety (FS)</option>
                       <option value="SS">Strong Safety (SS)</option>
-                      <option value="K">Kicker (K)</option>
-                      <option value="P">Punter (P)</option>
-                      <option value="FLEX">Flex (FLEX)</option>
                     </select>
                   </div>
                   <div>
@@ -339,10 +330,7 @@ export default function CreatePlayerPage() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Contacto de Emergencia</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label
-                      htmlFor="emergencyContact.name"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="emergencyContact.name" className="block text-sm font-medium text-gray-700 mb-1">
                       Nombre del Contacto
                     </label>
                     <input
@@ -372,10 +360,7 @@ export default function CreatePlayerPage() {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="emergencyContact.phone"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="emergencyContact.phone" className="block text-sm font-medium text-gray-700 mb-1">
                       Teléfono de Emergencia
                     </label>
                     <input
@@ -388,10 +373,7 @@ export default function CreatePlayerPage() {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="emergencyContact.email"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="emergencyContact.email" className="block text-sm font-medium text-gray-700 mb-1">
                       Email de Emergencia
                     </label>
                     <input

@@ -99,7 +99,7 @@ export default function PlayersPage() {
         setLoading(false);
       }
     },
-    [filters]
+    [filters],
   );
 
   useEffect(() => {
@@ -164,16 +164,14 @@ export default function PlayersPage() {
             {" "}
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Jugadores</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Gestiona el roster de jugadores en todos los equipos
-              </p>
+              <p className="mt-1 text-sm text-gray-600">Gestiona el roster de jugadores en todos los equipos</p>
             </div>
             {user?.role === "admin" && (
               <Link
                 href="/players/create"
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                ➕ Registrar Jugador
+                Registrar jugador
               </Link>
             )}
           </div>
@@ -212,17 +210,11 @@ export default function PlayersPage() {
                 <option value="WR">Wide Receiver</option>
                 <option value="RB">Running Back</option>
                 <option value="C">Center</option>
-                <option value="G">Guard</option>
-                <option value="T">Tackle</option>
-                <option value="DE">Defensive End</option>
-                <option value="DT">Defensive Tackle</option>
+                <option value="RS">Rusher</option>
                 <option value="LB">Linebacker</option>
                 <option value="CB">Cornerback</option>
                 <option value="FS">Free Safety</option>
                 <option value="SS">Strong Safety</option>
-                <option value="K">Kicker</option>
-                <option value="P">Punter</option>
-                <option value="FLEX">Flex</option>
               </select>
             </div>
             <div>
@@ -264,7 +256,7 @@ export default function PlayersPage() {
           {players.map((player) => (
             <div
               key={player._id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+              className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -284,8 +276,9 @@ export default function PlayersPage() {
                   </div>
                   {getStatusBadge(player.status)}
                 </div>
-                <div className="space-y-2 text-sm text-gray-600 mb-4">
-                  <div className="flex items-center">
+
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-gray-600">
                     <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
@@ -296,7 +289,7 @@ export default function PlayersPage() {
                     </svg>
                     {player.team.name}
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center text-sm text-gray-600">
                     <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
@@ -307,7 +300,7 @@ export default function PlayersPage() {
                     </svg>
                     {calculateAge(player.dateOfBirth)} años
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center text-sm text-gray-600">
                     <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
@@ -318,7 +311,7 @@ export default function PlayersPage() {
                     </svg>
                     {player.height} cm, {player.weight} kg
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center text-sm text-gray-600">
                     <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
@@ -329,24 +322,28 @@ export default function PlayersPage() {
                     </svg>
                     {player.team.division.name}
                   </div>
-                </div>{" "}
-                <div className="flex space-x-2">
-                  <Link
-                    href={`/players/${player._id}`}
-                    className={`${
-                      user?.role === "admin" ? "flex-1" : "w-full"
-                    } bg-green-600 hover:bg-green-700 text-white text-center px-3 py-2 rounded-md text-sm font-medium transition-colors`}
-                  >
-                    Ver Perfil
-                  </Link>
-                  {user?.role === "admin" && (
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex space-x-2">
                     <Link
-                      href={`/players/${player._id}/edit`}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                      href={`/players/${player._id}`}
+                      className="text-green-600 hover:text-green-800 text-sm font-medium"
                     >
-                      ✏️ Editar
+                      Ver perfil
                     </Link>
-                  )}
+                    {user?.role === "admin" && (
+                      <Link
+                        href={`/players/${player._id}/edit`}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium ml-2"
+                      >
+                        Editar
+                      </Link>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    Reg: {new Date(player.registrationDate).toLocaleDateString("es-ES")}
+                  </span>
                 </div>
               </div>
             </div>
@@ -355,12 +352,7 @@ export default function PlayersPage() {
 
         {players.length === 0 && !loading && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
