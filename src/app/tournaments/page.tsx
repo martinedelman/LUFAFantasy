@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
+import Tag from "@/components/Tag";
 
 interface Tournament {
   _id: string;
@@ -95,30 +96,16 @@ export default function TournamentsPage() {
     setCurrentPage(1);
   };
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      upcoming: "bg-blue-100 text-blue-800",
-      active: "bg-green-100 text-green-800",
-      completed: "bg-gray-100 text-gray-800",
-      cancelled: "bg-red-100 text-red-800",
+  const getStatusTag = (status: string) => {
+    const statusMap: Record<string, { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      upcoming: { label: "Próximo", type: "info" },
+      active: { label: "Activo", type: "success" },
+      completed: { label: "Completado", type: "warning" },
+      cancelled: { label: "Cancelado", type: "error" },
     };
 
-    const labels = {
-      upcoming: "Próximo",
-      active: "Activo",
-      completed: "Completado",
-      cancelled: "Cancelado",
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          badges[status as keyof typeof badges]
-        }`}
-      >
-        {labels[status as keyof typeof labels]}
-      </span>
-    );
+    const { label, type } = statusMap[status] || { label: status, type: "info" as const };
+    return <Tag label={label} type={type} />;
   };
 
   const formatDate = (dateString: string) => {
@@ -274,7 +261,7 @@ export default function TournamentsPage() {
                           <div className="text-gray-500">al {formatDate(tournament.endDate)}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(tournament.status)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getStatusTag(tournament.status)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {tournament.divisions?.length || 0} divisiones
                       </td>

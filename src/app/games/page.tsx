@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
+import Tag from "@/components/Tag";
 import { useAuth } from "@/hooks/useAuth";
 
 type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
@@ -385,30 +386,17 @@ export default function GamesPage() {
     }
   };
 
-  const getStatusBadge = (status: GameStatus) => {
-    const statusClasses: Record<GameStatus, string> = {
-      scheduled: "bg-blue-100 text-blue-800",
-      in_progress: "bg-yellow-100 text-yellow-800",
-      completed: "bg-green-100 text-green-800",
-      postponed: "bg-gray-100 text-gray-800",
-      cancelled: "bg-red-100 text-red-800",
+  const getStatusTag = (status: GameStatus) => {
+    const statusMap: Record<GameStatus, { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      scheduled: { label: "Programado", type: "info" },
+      in_progress: { label: "En Curso", type: "success" },
+      completed: { label: "Completado", type: "success" },
+      postponed: { label: "Pospuesto", type: "warning" },
+      cancelled: { label: "Cancelado", type: "error" },
     };
 
-    const statusLabels: Record<GameStatus, string> = {
-      scheduled: "Programado",
-      in_progress: "En Curso",
-      completed: "Completado",
-      postponed: "Pospuesto",
-      cancelled: "Cancelado",
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClasses[status]}`}
-      >
-        {statusLabels[status]}
-      </span>
-    );
+    const { label, type } = statusMap[status];
+    return <Tag label={label} type={type} />;
   };
 
   const formatDate = (date: string) => {
@@ -443,7 +431,11 @@ export default function GamesPage() {
   };
 
   if (loading && games.length === 0) {
-    return <LoadingSpinner size="lg" />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
   }
 
   return (
@@ -776,7 +768,7 @@ export default function GamesPage() {
 
               <div className="mt-1 text-xs text-gray-500 break-words">{game.venue.address}</div>
 
-              <div className="mt-3 flex justify-center">{getStatusBadge(game.status)}</div>
+              <div className="mt-3 flex justify-center">{getStatusTag(game.status)}</div>
 
               <div className="mt-3 flex items-center justify-between gap-2">
                 <div className="w-[36%] flex flex-col items-center text-center">
@@ -853,7 +845,7 @@ export default function GamesPage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      {getStatusBadge(game.status)}
+                      {getStatusTag(game.status)}
                       <span className="text-sm text-gray-500">
                         {game.week ? `Semana ${game.week}` : "Sin semana"} - {game.division.name}
                         {game.round ? ` - ${game.round}` : ""}

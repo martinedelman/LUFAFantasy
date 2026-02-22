@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import Tag from "@/components/Tag";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Player {
@@ -199,30 +200,16 @@ export default function TeamViewerPage() {
     }
   }, [teamId, fetchPlayers]);
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      active: "bg-green-100 text-green-800",
-      inactive: "bg-gray-100 text-gray-800",
-      suspended: "bg-red-100 text-red-800",
-      injured: "bg-yellow-100 text-yellow-800",
+  const getStatusTag = (status: string) => {
+    const statusMap: Record<string, { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      active: { label: "Activo", type: "success" },
+      inactive: { label: "Inactivo", type: "warning" },
+      suspended: { label: "Suspendido", type: "error" },
+      injured: { label: "Lesionado", type: "warning" },
     };
 
-    const labels = {
-      active: "Activo",
-      inactive: "Inactivo",
-      suspended: "Suspendido",
-      injured: "Lesionado",
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          badges[status as keyof typeof badges] || badges.inactive
-        }`}
-      >
-        {labels[status as keyof typeof labels] || status}
-      </span>
-    );
+    const { label, type } = statusMap[status] || { label: status, type: "info" as const };
+    return <Tag label={label} type={type} />;
   };
 
   const calculateWinPercentage = (stats: TeamStats) => {
@@ -294,7 +281,7 @@ export default function TeamViewerPage() {
                   <h1 className="text-3xl font-bold text-gray-900">{team.name}</h1>
                   <div className="flex items-center space-x-4 mt-1">
                     <p className="text-sm text-gray-600">{team.division.name}</p>
-                    {getStatusBadge(team.status)}
+                    {getStatusTag(team.status)}
                   </div>
                 </div>
               </div>
@@ -718,7 +705,7 @@ export default function TeamViewerPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(player.status)}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{getStatusTag(player.status)}</td>
                             {user?.role === "admin" ? (
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <Link

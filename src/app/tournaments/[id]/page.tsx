@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import Tag from "@/components/Tag";
 
 interface Tournament {
   _id: string;
@@ -95,30 +96,16 @@ export default function TournamentDetailPage() {
     }
   }, [tournamentId, fetchTournament]);
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      upcoming: "bg-gray-100 text-gray-800",
-      active: "bg-green-100 text-green-800",
-      completed: "bg-blue-100 text-blue-800",
-      cancelled: "bg-red-100 text-red-800",
+  const getStatusTag = (status: string) => {
+    const statusMap: Record<string, { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      upcoming: { label: "Próximo", type: "warning" },
+      active: { label: "Activo", type: "success" },
+      completed: { label: "Completado", type: "info" },
+      cancelled: { label: "Cancelado", type: "error" },
     };
 
-    const labels = {
-      upcoming: "Próximo",
-      active: "Activo",
-      completed: "Completado",
-      cancelled: "Cancelado",
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          badges[status as keyof typeof badges]
-        }`}
-      >
-        {labels[status as keyof typeof labels]}
-      </span>
-    );
+    const { label, type } = statusMap[status] || { label: status, type: "info" as const };
+    return <Tag label={label} type={type} />;
   };
 
   const formatDate = (dateString: string) => {
@@ -187,7 +174,7 @@ export default function TournamentDetailPage() {
                   <span className="text-sm text-gray-500">
                     {tournament.season} {tournament.year}
                   </span>
-                  {getStatusBadge(tournament.status)}
+                  {getStatusTag(tournament.status)}
                 </div>
               </div>
             </div>

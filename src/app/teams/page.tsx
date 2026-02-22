@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
+import Tag from "@/components/Tag";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Team {
@@ -158,28 +159,15 @@ function TeamsPageContent() {
     setCurrentPage(1);
   };
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      active: "bg-green-100 text-green-800",
-      inactive: "bg-gray-100 text-gray-800",
-      suspended: "bg-red-100 text-red-800",
+  const getStatusTag = (status: string) => {
+    const statusMap: Record<string, { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      active: { label: "Activo", type: "success" },
+      inactive: { label: "Inactivo", type: "warning" },
+      suspended: { label: "Suspendido", type: "error" },
     };
 
-    const labels = {
-      active: "Activo",
-      inactive: "Inactivo",
-      suspended: "Suspendido",
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          badges[status as keyof typeof badges]
-        }`}
-      >
-        {labels[status as keyof typeof labels]}
-      </span>
-    );
+    const { label, type } = statusMap[status] || { label: status, type: "info" as const };
+    return <Tag label={label} type={type} />;
   };
 
   if (loading && teams.length === 0) {
@@ -316,7 +304,7 @@ function TeamsPageContent() {
                           <p className="text-sm text-gray-500">{team.division.name || "Sin División"}</p>
                         </div>
                       </div>
-                      {getStatusBadge(team.status)}
+                      {getStatusTag(team.status)}
                     </div>
                     {/* Team Info */}
                     <div className="space-y-2 mb-4">

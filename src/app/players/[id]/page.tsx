@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import Tag from "@/components/Tag";
 
 interface Player {
   _id: string;
@@ -105,30 +106,16 @@ export default function PlayerProfilePage() {
     }
   }, [playerId]);
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      active: "bg-green-100 text-green-800",
-      inactive: "bg-gray-100 text-gray-800",
-      suspended: "bg-red-100 text-red-800",
-      injured: "bg-yellow-100 text-yellow-800",
+  const getStatusTag = (status: string) => {
+    const statusMap: Record<string, { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      active: { label: "Activo", type: "success" },
+      inactive: { label: "Inactivo", type: "warning" },
+      suspended: { label: "Suspendido", type: "error" },
+      injured: { label: "Lesionado", type: "warning" },
     };
 
-    const labels = {
-      active: "Activo",
-      inactive: "Inactivo",
-      suspended: "Suspendido",
-      injured: "Lesionado",
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          badges[status as keyof typeof badges] || badges.inactive
-        }`}
-      >
-        {labels[status as keyof typeof labels] || status}
-      </span>
-    );
+    const { label, type } = statusMap[status] || { label: status, type: "info" as const };
+    return <Tag label={label} type={type} />;
   };
 
   const getPositionName = (position: string) => {
@@ -222,7 +209,7 @@ export default function PlayerProfilePage() {
                     <Link href={`/teams/${player.team._id}`} className="text-sm text-blue-600 hover:text-blue-800">
                       {player.team.name}
                     </Link>
-                    {getStatusBadge(player.status)}
+                    {getStatusTag(player.status)}
                   </div>
                 </div>
               </div>
@@ -321,7 +308,7 @@ export default function PlayerProfilePage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Estado:</span>
-                        <span>{getStatusBadge(player.status)}</span>
+                        <span>{getStatusTag(player.status)}</span>
                       </div>
                     </div>
                   </div>
