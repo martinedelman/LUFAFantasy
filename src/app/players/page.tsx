@@ -150,32 +150,6 @@ export default function PlayersPage() {
     setCurrentPage(1);
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusClasses = {
-      active: "bg-green-100 text-green-800",
-      inactive: "bg-gray-100 text-gray-800",
-      injured: "bg-yellow-100 text-yellow-800",
-      suspended: "bg-red-100 text-red-800",
-    };
-
-    const statusLabels = {
-      active: "Activo",
-      inactive: "Inactivo",
-      injured: "Lesionado",
-      suspended: "Suspendido",
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          statusClasses[status as keyof typeof statusClasses]
-        }`}
-      >
-        {statusLabels[status as keyof typeof statusLabels]}
-      </span>
-    );
-  };
-
   const calculateAge = (dateOfBirth: string) => {
     const birth = new Date(dateOfBirth);
     const today = new Date();
@@ -365,7 +339,6 @@ export default function PlayersPage() {
                           <p className="text-sm text-gray-500">{player.position}</p>
                         </div>
                       </div>
-                      {getStatusBadge(player.status)}
                     </div>
 
                     <div className="space-y-2 mb-4">
