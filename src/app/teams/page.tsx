@@ -57,13 +57,6 @@ interface DivisionsApiResponse {
   message?: string;
 }
 
-interface TournamentDivisionsResponse {
-  success: boolean;
-  data: {
-    divisions?: Division[];
-  };
-}
-
 function TeamsPageContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -85,6 +78,11 @@ function TeamsPageContent() {
     division: "",
     status: "",
   });
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, division: "" }));
+    setCurrentPage(1);
+  }, [tournamentId]);
   const fetchTeams = useCallback(
     async (page = 1) => {
       try {
@@ -125,11 +123,11 @@ function TeamsPageContent() {
       setLoadingDivisions(true);
       try {
         if (tournamentId) {
-          const response = await fetch(`/api/tournaments/${tournamentId}`);
-          const result: TournamentDivisionsResponse = await response.json();
+          const response = await fetch(`/api/divisions?tournament=${tournamentId}&limit=100`);
+          const result: DivisionsApiResponse = await response.json();
 
           if (result.success) {
-            setDivisions(result.data.divisions || []);
+            setDivisions(result.data);
           } else {
             setDivisions([]);
           }
