@@ -1,5 +1,19 @@
 // Tipos principales para el sistema de Flag Football
 
+// Usuario del sistema
+export interface User {
+  _id?: string;
+  email: string;
+  name: string;
+  role: "admin" | "user";
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// Tipos de estado de juego
+export type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
+
 export interface Tournament {
   _id?: string;
   name: string;
@@ -153,7 +167,7 @@ export interface Game {
   scheduledDate: Date;
   actualStartTime?: Date;
   actualEndTime?: Date;
-  status: "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
+  status: GameStatus;
   week?: number;
   round?: string;
   officials: Official[];
