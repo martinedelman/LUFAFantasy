@@ -7,9 +7,9 @@ import {
   DivisionModel,
   TeamModel,
   PlayerModel,
-  VenueModel,
   SeasonModel,
   UserModel,
+  GameModel,
 } from "../src/models";
 
 async function seedDatabase() {
@@ -23,9 +23,9 @@ async function seedDatabase() {
       DivisionModel.deleteMany({}),
       TeamModel.deleteMany({}),
       PlayerModel.deleteMany({}),
-      VenueModel.deleteMany({}),
       SeasonModel.deleteMany({}),
       UserModel.deleteMany({}),
+      GameModel.deleteMany({}),
     ]);
     console.log("🧹 Datos existentes limpiados");
 
@@ -38,77 +38,6 @@ async function seedDatabase() {
       status: "active",
     });
     console.log("🗓️ Temporada creada");
-
-    // Crear venues
-    const venues = await VenueModel.insertMany([
-      {
-        name: "Campo Central",
-        address: "Av. Principal 123",
-        city: "Ciudad de México",
-        state: "CDMX",
-        zipCode: "01000",
-        fieldType: "artificial",
-        facilities: {
-          parking: true,
-          restrooms: true,
-          concessions: true,
-          seating: true,
-          lighting: true,
-          scoreboard: true,
-          changeRooms: true,
-          firstAid: true,
-        },
-        contact: {
-          email: "central@flagfootball.com",
-          phone: "555-0001",
-        },
-      },
-      {
-        name: "Campo Norte",
-        address: "Calle Norte 456",
-        city: "Ciudad de México",
-        state: "CDMX",
-        zipCode: "02000",
-        fieldType: "grass",
-        facilities: {
-          parking: true,
-          restrooms: true,
-          concessions: false,
-          seating: true,
-          lighting: true,
-          scoreboard: false,
-          changeRooms: true,
-          firstAid: true,
-        },
-        contact: {
-          email: "norte@flagfootball.com",
-          phone: "555-0002",
-        },
-      },
-      {
-        name: "Campo Sur",
-        address: "Av. Sur 789",
-        city: "Ciudad de México",
-        state: "CDMX",
-        zipCode: "03000",
-        fieldType: "artificial",
-        facilities: {
-          parking: true,
-          restrooms: true,
-          concessions: true,
-          seating: false,
-          lighting: true,
-          scoreboard: true,
-          changeRooms: false,
-          firstAid: true,
-        },
-        contact: {
-          email: "sur@flagfootball.com",
-          phone: "555-0003",
-        },
-      },
-    ]);
-    console.log("🏟️ Venues creados");
 
     // Crear torneo
     const tournament = await TournamentModel.create({
@@ -152,7 +81,7 @@ async function seedDatabase() {
         category: "masculino",
         ageGroup: "Adultos (18+)",
         tournament: tournament._id,
-        maxTeams: 8,
+        maxTeams: 16,
       },
       {
         name: "Femenino",
@@ -173,82 +102,138 @@ async function seedDatabase() {
 
     // Crear equipos
     const teams = await TeamModel.insertMany([
-      // División Masculino A
+      // Equipos masculinos del torneo
       {
-        name: "Halcones",
-        shortName: "HAL",
-        colors: { primary: "#FF0000", secondary: "#FFFFFF" },
+        name: "Dark Demons",
+        shortName: "DD",
+        colors: { primary: "#1a1a1a", secondary: "#FF0000" },
         division: divisions[0]._id,
         coach: {
-          name: "Carlos González",
-          email: "carlos@halcones.com",
-          phone: "555-1001",
-          experience: "5 años",
-          certifications: ["Certificado NFL Flag"],
+          name: "Javier Sánchez",
+          email: "javier@darkdemons.com",
+          phone: "555-1101",
+          experience: "8 años",
         },
-        homeVenue: venues[0]._id,
+
         contact: {
-          email: "info@halcones.com",
-          phone: "555-1000",
+          email: "info@darkdemons.com",
+          phone: "555-1100",
         },
         registrationDate: new Date("2025-01-15"),
         status: "active",
       },
       {
-        name: "Águilas",
-        shortName: "AGL",
-        colors: { primary: "#0000FF", secondary: "#FFFF00" },
+        name: "Albatros",
+        shortName: "ALB",
+        colors: { primary: "#FF0000", secondary: "#FFFFFF" },
         division: divisions[0]._id,
         coach: {
-          name: "Miguel Rodríguez",
-          email: "miguel@aguilas.com",
-          phone: "555-1002",
-          experience: "3 años",
+          name: "Víctor Romero",
+          email: "victor@albatros.com",
+          phone: "555-1102",
+          experience: "7 años",
         },
-        homeVenue: venues[1]._id,
+
         contact: {
-          email: "info@aguilas.com",
-          phone: "555-1010",
+          email: "info@albatros.com",
+          phone: "555-1101",
         },
-        registrationDate: new Date("2025-01-16"),
+        registrationDate: new Date("2025-01-15"),
         status: "active",
       },
       {
-        name: "Lobos",
-        shortName: "LOB",
-        colors: { primary: "#808080", secondary: "#000000" },
+        name: "Golden Bulls",
+        shortName: "GB",
+        colors: { primary: "#DAA520", secondary: "#000000" },
         division: divisions[0]._id,
         coach: {
-          name: "Ana López",
-          email: "ana@lobos.com",
-          phone: "555-1003",
-          experience: "4 años",
-        },
-        homeVenue: venues[2]._id,
-        contact: {
-          email: "info@lobos.com",
-          phone: "555-1020",
-        },
-        registrationDate: new Date("2025-01-17"),
-        status: "active",
-      },
-      {
-        name: "Tigres",
-        shortName: "TIG",
-        colors: { primary: "#FFA500", secondary: "#000000" },
-        division: divisions[0]._id,
-        coach: {
-          name: "Roberto Martínez",
-          email: "roberto@tigres.com",
-          phone: "555-1004",
+          name: "Santiago Flores",
+          email: "santiago@goldenbulls.com",
+          phone: "555-1103",
           experience: "6 años",
         },
-        homeVenue: venues[0]._id,
+
         contact: {
-          email: "info@tigres.com",
-          phone: "555-1030",
+          email: "info@goldenbulls.com",
+          phone: "555-1102",
         },
-        registrationDate: new Date("2025-01-18"),
+        registrationDate: new Date("2025-01-15"),
+        status: "active",
+      },
+      {
+        name: "Barbarians",
+        shortName: "BAR",
+        colors: { primary: "#228B22", secondary: "#FFFFFF" },
+        division: divisions[0]._id,
+        coach: {
+          name: "Eduardo Molina",
+          email: "eduardo@barbarians.com",
+          phone: "555-1104",
+          experience: "5 años",
+        },
+
+        contact: {
+          email: "info@barbarians.com",
+          phone: "555-1103",
+        },
+        registrationDate: new Date("2025-01-15"),
+        status: "active",
+      },
+      {
+        name: "Troyanos",
+        shortName: "TRO",
+        colors: { primary: "#8B7355", secondary: "#FFFFFF" },
+        division: divisions[0]._id,
+        coach: {
+          name: "Alberto Castro",
+          email: "alberto@troyanos.com",
+          phone: "555-1105",
+          experience: "4 años",
+        },
+
+        contact: {
+          email: "info@troyanos.com",
+          phone: "555-1104",
+        },
+        registrationDate: new Date("2025-01-15"),
+        status: "active",
+      },
+      {
+        name: "Ulises",
+        shortName: "ULI",
+        colors: { primary: "#8B4513", secondary: "#FFFFFF" },
+        division: divisions[0]._id,
+        coach: {
+          name: "Francisco Delgado",
+          email: "francisco@ulises.com",
+          phone: "555-1106",
+          experience: "5 años",
+        },
+
+        contact: {
+          email: "info@ulises.com",
+          phone: "555-1105",
+        },
+        registrationDate: new Date("2025-01-15"),
+        status: "active",
+      },
+      {
+        name: "Bats",
+        shortName: "BAT",
+        colors: { primary: "#8B0000", secondary: "#FFFF00" },
+        division: divisions[0]._id,
+        coach: {
+          name: "Daniel Núñez",
+          email: "daniel@bats.com",
+          phone: "555-1107",
+          experience: "6 años",
+        },
+
+        contact: {
+          email: "info@bats.com",
+          phone: "555-1106",
+        },
+        registrationDate: new Date("2025-01-15"),
         status: "active",
       },
       // División Femenino
@@ -256,14 +241,14 @@ async function seedDatabase() {
         name: "Panteras",
         shortName: "PAN",
         colors: { primary: "#FF1493", secondary: "#000000" },
-        division: divisions[2]._id,
+        division: divisions[1]._id,
         coach: {
           name: "María Fernández",
           email: "maria@panteras.com",
           phone: "555-2001",
           experience: "7 años",
         },
-        homeVenue: venues[1]._id,
+
         contact: {
           email: "info@panteras.com",
           phone: "555-2000",
@@ -275,14 +260,14 @@ async function seedDatabase() {
         name: "Leonas",
         shortName: "LEO",
         colors: { primary: "#FFD700", secondary: "#8B4513" },
-        division: divisions[2]._id,
+        division: divisions[1]._id,
         coach: {
           name: "Patricia Ruiz",
           email: "patricia@leonas.com",
           phone: "555-2002",
           experience: "2 años",
         },
-        homeVenue: venues[2]._id,
+
         contact: {
           email: "info@leonas.com",
           phone: "555-2010",
@@ -296,17 +281,6 @@ async function seedDatabase() {
     // Crear jugadores para cada equipo
     const players = [];
 
-    // Jugadores de Halcones
-    const halconesPlayers = [
-      { firstName: "Juan", lastName: "Rodríguez", position: "QB", jerseyNumber: 12 },
-      { firstName: "Pedro", lastName: "Martín", position: "WR", jerseyNumber: 80 },
-      { firstName: "Luis", lastName: "García", position: "WR", jerseyNumber: 81 },
-      { firstName: "Diego", lastName: "Hernández", position: "RB", jerseyNumber: 25 },
-      { firstName: "Marco", lastName: "López", position: "C", jerseyNumber: 55 },
-      { firstName: "Andrés", lastName: "Sánchez", position: "LB", jerseyNumber: 45 },
-      { firstName: "Fernando", lastName: "Ramírez", position: "CB", jerseyNumber: 21 },
-    ];
-
     // Jugadoras de Panteras
     const panterasPlayers = [
       { firstName: "Ana María", lastName: "López", position: "WR", jerseyNumber: 15 },
@@ -318,11 +292,82 @@ async function seedDatabase() {
       { firstName: "Gabriela", lastName: "Castro", position: "FS", jerseyNumber: 33 },
     ];
 
-    // Crear jugadores de Halcones
-    for (const playerData of halconesPlayers) {
+    // Jugadores de Dark Demons (reales)
+    const darkDemonsPlayers = [
+      { firstName: "Dariel", lastName: "Furones", position: "WR", jerseyNumber: 4 },
+      { firstName: "Mateo", lastName: "Todaro", position: "WR", jerseyNumber: 8 },
+      { firstName: "Diego", lastName: "Mega", position: "RB", jerseyNumber: 20 },
+      { firstName: "Felipe", lastName: "Nieves", position: "LB", jerseyNumber: 31 },
+    ];
+
+    // Jugadores de Albatros (reales)
+    const albatrosPlayers = [
+      { firstName: "Federico", lastName: "Dighiero", position: "WR", jerseyNumber: 5 },
+      { firstName: "Esteban", lastName: "Alves", position: "RB", jerseyNumber: 6 },
+      { firstName: "Lucas", lastName: "Porcal", position: "WR", jerseyNumber: 29 },
+    ];
+
+    // Jugadores de Golden Bulls (reales)
+    const goldenBullsPlayers = [
+      { firstName: "Nicolas", lastName: "Alvarez", position: "WR", jerseyNumber: 1 },
+      { firstName: "Juan", lastName: "Veiras", position: "WR", jerseyNumber: 7 },
+      { firstName: "Nicolas", lastName: "Salgueiro", position: "LB", jerseyNumber: 15 },
+      { firstName: "Waldo", lastName: "Melgar", position: "RB", jerseyNumber: 26 },
+      { firstName: "Gustavo", lastName: "Silva", position: "WR", jerseyNumber: 30 },
+    ];
+
+    // Jugadores de Barbarians (reales)
+    const barbariansPlayers = [
+      { firstName: "Juan Pablo", lastName: "Duarte", position: "WR", jerseyNumber: 17 },
+      { firstName: "Juan Andrés", lastName: "Fernández", position: "QB", jerseyNumber: 22 },
+      { firstName: "Joaquín", lastName: "Alarcón", position: "WR", jerseyNumber: 24 },
+      { firstName: "Fernando", lastName: "Larrica", position: "RB", jerseyNumber: 25 },
+      { firstName: "Mauro", lastName: "Silva", position: "LB", jerseyNumber: 27 },
+      { firstName: "Ignacio", lastName: "Silvera", position: "CB", jerseyNumber: 32 },
+    ];
+
+    // Jugadores de Troyanos (reales)
+    const troyanosPlayers = [
+      { firstName: "Benjamin", lastName: "Gimenez", position: "WR", jerseyNumber: 11 },
+      { firstName: "German", lastName: "Bera", position: "RB", jerseyNumber: 13 },
+      { firstName: "Pablo", lastName: "Paez", position: "WR", jerseyNumber: 14 },
+      { firstName: "Camilo", lastName: "Ottonello", position: "CB", jerseyNumber: 16 },
+      { firstName: "Felipe", lastName: "Vidal", position: "WR", jerseyNumber: 18 },
+      { firstName: "Richard", lastName: "Delgado", position: "RB", jerseyNumber: 19 },
+      { firstName: "Juan", lastName: "Frechou", position: "WR", jerseyNumber: 23 },
+    ];
+
+    // Jugadores de Ulises (reales)
+    const ulisesPlayers = [
+      { firstName: "Fernando", lastName: "López", position: "WR", jerseyNumber: 2 },
+      { firstName: "Andres", lastName: "Buttowski", position: "RB", jerseyNumber: 10 },
+      { firstName: "Matías", lastName: "Susunday", position: "WR", jerseyNumber: 28 },
+    ];
+
+    // Jugadores de Bats (reales)
+    const batsPlayers = [
+      { firstName: "Nicolas", lastName: "Pedezert", position: "WR", jerseyNumber: 3 },
+      { firstName: "Lucas", lastName: "Torrado", position: "WR", jerseyNumber: 9 },
+      { firstName: "Agustín", lastName: "Barboza", position: "RB", jerseyNumber: 12 },
+      { firstName: "Kevin", lastName: "Rivero", position: "CB", jerseyNumber: 21 },
+    ];
+
+    // Jugadoras de Leonas
+    const leonasPlayers = [
+      { firstName: "Marcela", lastName: "Ponce", position: "WR", jerseyNumber: 16 },
+      { firstName: "Yolanda", lastName: "Quiñones", position: "QB", jerseyNumber: 11 },
+      { firstName: "Roxana", lastName: "Ramírez", position: "RB", jerseyNumber: 32 },
+      { firstName: "Selena", lastName: "Sánchez", position: "WR", jerseyNumber: 88 },
+      { firstName: "Tamara", lastName: "Toscano", position: "LB", jerseyNumber: 52 },
+      { firstName: "Una", lastName: "Urbano", position: "CB", jerseyNumber: 28 },
+      { firstName: "Verónica", lastName: "Vega", position: "FS", jerseyNumber: 35 },
+    ];
+
+    // Crear jugadores de Dark Demons
+    for (const playerData of darkDemonsPlayers) {
       players.push({
         ...playerData,
-        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@halcones.com`,
+        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@darkdemons.com`,
         phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
         dateOfBirth: new Date(
           1995 + Math.floor(Math.random() * 10),
@@ -330,6 +375,150 @@ async function seedDatabase() {
           Math.floor(Math.random() * 28) + 1,
         ),
         team: teams[0]._id,
+        height: 170 + Math.floor(Math.random() * 20),
+        weight: 70 + Math.floor(Math.random() * 20),
+        emergencyContact: {
+          name: "Contacto de Emergencia",
+          relationship: "Familiar",
+          phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        },
+        registrationDate: new Date("2025-01-22"),
+        status: "active",
+      });
+    }
+
+    // Crear jugadores de Albatros
+    for (const playerData of albatrosPlayers) {
+      players.push({
+        ...playerData,
+        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@albatros.com`,
+        phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        dateOfBirth: new Date(
+          1995 + Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 12),
+          Math.floor(Math.random() * 28) + 1,
+        ),
+        team: teams[1]._id,
+        height: 170 + Math.floor(Math.random() * 20),
+        weight: 70 + Math.floor(Math.random() * 20),
+        emergencyContact: {
+          name: "Contacto de Emergencia",
+          relationship: "Familiar",
+          phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        },
+        registrationDate: new Date("2025-01-22"),
+        status: "active",
+      });
+    }
+
+    // Crear jugadores de Golden Bulls
+    for (const playerData of goldenBullsPlayers) {
+      players.push({
+        ...playerData,
+        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@goldenbulls.com`,
+        phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        dateOfBirth: new Date(
+          1995 + Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 12),
+          Math.floor(Math.random() * 28) + 1,
+        ),
+        team: teams[2]._id,
+        height: 170 + Math.floor(Math.random() * 20),
+        weight: 70 + Math.floor(Math.random() * 20),
+        emergencyContact: {
+          name: "Contacto de Emergencia",
+          relationship: "Familiar",
+          phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        },
+        registrationDate: new Date("2025-01-22"),
+        status: "active",
+      });
+    }
+
+    // Crear jugadores de Barbarians
+    for (const playerData of barbariansPlayers) {
+      players.push({
+        ...playerData,
+        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@barbarians.com`,
+        phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        dateOfBirth: new Date(
+          1995 + Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 12),
+          Math.floor(Math.random() * 28) + 1,
+        ),
+        team: teams[3]._id,
+        height: 170 + Math.floor(Math.random() * 20),
+        weight: 70 + Math.floor(Math.random() * 20),
+        emergencyContact: {
+          name: "Contacto de Emergencia",
+          relationship: "Familiar",
+          phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        },
+        registrationDate: new Date("2025-01-22"),
+        status: "active",
+      });
+    }
+
+    // Crear jugadores de Troyanos
+    for (const playerData of troyanosPlayers) {
+      players.push({
+        ...playerData,
+        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@troyanos.com`,
+        phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        dateOfBirth: new Date(
+          1995 + Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 12),
+          Math.floor(Math.random() * 28) + 1,
+        ),
+        team: teams[4]._id,
+        height: 170 + Math.floor(Math.random() * 20),
+        weight: 70 + Math.floor(Math.random() * 20),
+        emergencyContact: {
+          name: "Contacto de Emergencia",
+          relationship: "Familiar",
+          phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        },
+        registrationDate: new Date("2025-01-22"),
+        status: "active",
+      });
+    }
+
+    // Crear jugadores de Ulises
+    for (const playerData of ulisesPlayers) {
+      players.push({
+        ...playerData,
+        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@ulises.com`,
+        phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        dateOfBirth: new Date(
+          1995 + Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 12),
+          Math.floor(Math.random() * 28) + 1,
+        ),
+        team: teams[5]._id,
+        height: 170 + Math.floor(Math.random() * 20),
+        weight: 70 + Math.floor(Math.random() * 20),
+        emergencyContact: {
+          name: "Contacto de Emergencia",
+          relationship: "Familiar",
+          phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        },
+        registrationDate: new Date("2025-01-22"),
+        status: "active",
+      });
+    }
+
+    // Crear jugadores de Bats
+    for (const playerData of batsPlayers) {
+      players.push({
+        ...playerData,
+        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@bats.com`,
+        phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        dateOfBirth: new Date(
+          1995 + Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 12),
+          Math.floor(Math.random() * 28) + 1,
+        ),
+        team: teams[6]._id,
         height: 170 + Math.floor(Math.random() * 20),
         weight: 70 + Math.floor(Math.random() * 20),
         emergencyContact: {
@@ -355,7 +544,31 @@ async function seedDatabase() {
           Math.floor(Math.random() * 12),
           Math.floor(Math.random() * 28) + 1,
         ),
-        team: teams[4]._id,
+        team: teams[7]._id,
+        height: 160 + Math.floor(Math.random() * 20),
+        weight: 55 + Math.floor(Math.random() * 20),
+        emergencyContact: {
+          name: "Contacto de Emergencia",
+          relationship: "Familiar",
+          phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        },
+        registrationDate: new Date("2025-01-23"),
+        status: "active",
+      });
+    }
+
+    // Crear jugadoras de Leonas
+    for (const playerData of leonasPlayers) {
+      players.push({
+        ...playerData,
+        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@leonas.com`,
+        phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        dateOfBirth: new Date(
+          1995 + Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 12),
+          Math.floor(Math.random() * 28) + 1,
+        ),
+        team: teams[8]._id,
         height: 160 + Math.floor(Math.random() * 20),
         weight: 55 + Math.floor(Math.random() * 20),
         emergencyContact: {
@@ -430,10 +643,9 @@ async function seedDatabase() {
     📊 Resumen de datos creados:
     - 1 Temporada
     - 1 Torneo
-    - 4 Divisiones
-    - 6 Equipos
-    - 14 Jugadores
-    - 3 Venues
+    - ${divisions.length} Divisiones
+    - ${teams.length} Equipos
+    - ${savedPlayers.length} Jugadores
     `);
   } catch (error) {
     console.error("❌ Error al poblar la base de datos:", error);
