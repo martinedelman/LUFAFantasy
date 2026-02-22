@@ -48,10 +48,23 @@ interface ApiResponse {
   message?: string;
 }
 
+interface TeamOption {
+  _id: string;
+  name: string;
+}
+
+interface TeamsApiResponse {
+  success: boolean;
+  data: TeamOption[];
+}
+
 export default function PlayersPage() {
   const { user } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
+  const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [loadingTeams, setLoadingTeams] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
@@ -97,6 +110,7 @@ export default function PlayersPage() {
         setError("Error de conexión. Por favor, intenta de nuevo.");
       } finally {
         setLoading(false);
+        setInitialLoading(false);
       }
     },
     [filters],
@@ -105,6 +119,27 @@ export default function PlayersPage() {
   useEffect(() => {
     fetchPlayers(1);
   }, [fetchPlayers]);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const response = await fetch("/api/teams?limit=200");
+        const data: TeamsApiResponse = await response.json();
+
+        if (data.success) {
+          setTeams(data.data);
+        } else {
+          setTeams([]);
+        }
+      } catch {
+        setTeams([]);
+      } finally {
+        setLoadingTeams(false);
+      }
+    };
+
+    fetchTeams();
+  }, []);
 
   const handlePageChange = (page: number) => {
     fetchPlayers(page);
@@ -152,7 +187,7 @@ export default function PlayersPage() {
     return age;
   };
 
-  if (loading && players.length === 0) {
+  if (initialLoading && players.length === 0) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <LoadingSpinner size="lg" />
@@ -182,7 +217,7 @@ export default function PlayersPage() {
 
       {/* Filters */}
       <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <label htmlFor="search" className="block text-sm font-medium text-gray-700">
               Buscar
@@ -216,6 +251,25 @@ export default function PlayersPage() {
               <option value="CB">Cornerback</option>
               <option value="FS">Free Safety</option>
               <option value="SS">Strong Safety</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="team" className="block text-sm font-medium text-gray-700">
+              Equipo
+            </label>
+            <select
+              id="team"
+              value={filters.team}
+              onChange={(e) => handleFilterChange("team", e.target.value)}
+              disabled={loadingTeams}
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+            >
+              <option value="">Todos los equipos</option>
+              {teams.map((team) => (
+                <option key={team._id} value={team._id}>
+                  {team.name}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -254,7 +308,12 @@ export default function PlayersPage() {
 
       {/* Players Grid */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        {players.length === 0 && !loading ? (
+        {loading && !initialLoading && (
+          <div className="flex justify-center items-center py-4 ">
+            <LoadingSpinner size="md" />
+          </div>
+        )}
+        {players.length === 0 && !loading && (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -281,7 +340,8 @@ export default function PlayersPage() {
               </div>
             )}
           </div>
-        ) : (
+        )}
+        {players.length > 0 && !loading && (
           <>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-6">
               {players.map((player) => (

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/mongodb";
 import { PlayerModel } from "@/models";
 
@@ -11,13 +12,30 @@ export async function GET(request: NextRequest) {
     const team = searchParams.get("team");
     const position = searchParams.get("position");
     const status = searchParams.get("status");
+    const search = searchParams.get("search");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
 
-    const filter: Record<string, string> = {};
-    if (team) filter.team = team;
+    const filter: Record<string, unknown> = {};
+    if (team) {
+      if (!mongoose.isValidObjectId(team)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Equipo inválido",
+          },
+          { status: 400 },
+        );
+      }
+
+      filter.team = team;
+    }
     if (position) filter.position = position;
     if (status) filter.status = status;
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [{ firstName: searchRegex }, { lastName: searchRegex }, { email: searchRegex }];
+    }
 
     const players = await PlayerModel.find(filter)
       .populate("team")
@@ -45,7 +63,7 @@ export async function GET(request: NextRequest) {
         message: "Error al obtener jugadores",
         error: error instanceof Error ? error.message : "Error desconocido",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -64,7 +82,7 @@ export async function POST(request: NextRequest) {
         data: player,
         message: "Jugador creado exitosamente",
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     return NextResponse.json(
@@ -73,7 +91,7 @@ export async function POST(request: NextRequest) {
         message: "Error al crear jugador",
         error: error instanceof Error ? error.message : "Error desconocido",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
