@@ -18,6 +18,14 @@ const WeatherConditionsSchema = new Schema({
   conditions: { type: String, trim: true },
 });
 
+const GameVenueSchema = new Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    address: { type: String, required: true, trim: true },
+  },
+  { _id: false },
+);
+
 const QuarterScoreSchema = new Schema({
   q1: { type: Number, default: 0 },
   q2: { type: Number, default: 0 },
@@ -93,9 +101,9 @@ const GameSchema = new Schema(
   {
     tournament: { type: Schema.Types.ObjectId, ref: "Tournament", required: true },
     division: { type: Schema.Types.ObjectId, ref: "Division", required: true },
-    homeTeam: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-    awayTeam: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-    venue: { type: Schema.Types.ObjectId, ref: "Venue", required: true },
+    homeTeam: { type: Schema.Types.ObjectId, ref: "Team", default: null },
+    awayTeam: { type: Schema.Types.ObjectId, ref: "Team", default: null },
+    venue: { type: GameVenueSchema, required: true },
     scheduledDate: { type: Date, required: true },
     actualStartTime: { type: Date },
     actualEndTime: { type: Date },
@@ -116,12 +124,21 @@ const GameSchema = new Schema(
   {
     timestamps: true,
     collection: "games",
-  }
+  },
 );
 
 // Índices
 GameSchema.index({ tournament: 1, division: 1 });
-GameSchema.index({ homeTeam: 1, awayTeam: 1, scheduledDate: 1 }, { unique: true });
+GameSchema.index(
+  { homeTeam: 1, awayTeam: 1, scheduledDate: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      homeTeam: { $type: "objectId" },
+      awayTeam: { $type: "objectId" },
+    },
+  },
+);
 GameSchema.index({ scheduledDate: 1 });
 GameSchema.index({ status: 1 });
 GameSchema.index({ week: 1 });

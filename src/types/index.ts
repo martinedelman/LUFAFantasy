@@ -144,9 +144,12 @@ export interface Game {
   _id?: string;
   tournament: string; // Referencia a Tournament
   division: string; // Referencia a Division
-  homeTeam: string; // Referencia a Team
-  awayTeam: string; // Referencia a Team
-  venue: string; // Referencia a Venue
+  homeTeam: string | null; // Referencia a Team o TBD
+  awayTeam: string | null; // Referencia a Team o TBD
+  venue: {
+    name: string;
+    address: string;
+  };
   scheduledDate: Date;
   actualStartTime?: Date;
   actualEndTime?: Date;
