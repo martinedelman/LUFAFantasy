@@ -16,7 +16,14 @@ export class TournamentFactory {
       new Date(doc.endDate),
       doc.status as TournamentStatus,
       doc.format as TournamentFormat,
-      doc.divisions?.map((d: any) => (d.toString ? d.toString() : d)) || [],
+      doc.divisions?.map((d: any) => {
+        // Si es un objeto poblado, extraer su _id
+        if (d && typeof d === "object" && d._id) {
+          return d._id.toString();
+        }
+        // Si ya es un string o ObjectId, convertir a string
+        return d.toString ? d.toString() : d;
+      }) || [],
       doc.description,
       doc.registrationDeadline ? new Date(doc.registrationDeadline) : undefined,
       doc._id?.toString(),
@@ -69,7 +76,7 @@ export class TournamentFactory {
    */
   static toApiResponse(tournament: Tournament): any {
     return {
-      id: tournament.id,
+      _id: tournament.id,
       name: tournament.name,
       description: tournament.description,
       season: tournament.season,

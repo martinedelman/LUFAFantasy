@@ -57,7 +57,7 @@ export class DivisionFactory {
    */
   static toApiResponse(division: Division): any {
     return {
-      id: division.id,
+      _id: division.id,
       name: division.name,
       category: division.category,
       ageGroup: division.ageGroup,

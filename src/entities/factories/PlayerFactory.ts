@@ -78,7 +78,7 @@ export class PlayerFactory {
    */
   static toApiResponse(player: Player): any {
     return {
-      id: player.id,
+      _id: player.id,
       firstName: player.firstName,
       lastName: player.lastName,
       email: player.email,

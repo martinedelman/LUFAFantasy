@@ -97,7 +97,7 @@ export class TeamFactory {
    */
   static toApiResponse(team: Team): any {
     return {
-      id: team.id,
+      _id: team.id,
       name: team.name,
       shortName: team.shortName,
       logo: team.logo,

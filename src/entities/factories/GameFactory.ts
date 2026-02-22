@@ -188,7 +188,6 @@ export class GameFactory {
   static toApiResponse(game: Game): any {
     return {
       _id: game.id,
-      id: game.id,
       tournament: game.tournament,
       division: game.division,
       homeTeam: game.homeTeam,

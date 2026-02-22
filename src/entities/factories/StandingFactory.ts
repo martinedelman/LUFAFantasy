@@ -74,7 +74,7 @@ export class StandingFactory {
    */
   static toApiResponse(standing: Standing): any {
     return {
-      id: standing.id,
+      _id: standing.id,
       division: standing.division,
       team: standing.team,
       tournament: standing.tournament,

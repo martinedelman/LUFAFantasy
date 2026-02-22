@@ -69,7 +69,8 @@ export default function TournamentsPage() {
         const result: ApiResponse = await response.json();
 
         if (result.success) {
-          setTournaments(result.data);
+          // Filtrar torneos sin _id válido para prevenir errores de key
+          setTournaments(result.data.filter((tournament) => tournament._id));
           setPagination(result.pagination);
           setError(null);
         } else {

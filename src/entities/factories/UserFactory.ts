@@ -66,7 +66,7 @@ export class UserFactory {
    * Convierte una entidad User a formato de respuesta API (sin datos sensibles)
    */
   static toApiResponse(user: User): {
-    id: string;
+    _id: string;
     name: string;
     email: string;
     role: UserRole;
@@ -75,7 +75,7 @@ export class UserFactory {
     updatedAt?: Date;
   } {
     return {
-      id: user.id!,
+      _id: user.id!,
       name: user.name,
       email: user.email,
       role: user.role,
