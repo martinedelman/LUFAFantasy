@@ -232,7 +232,7 @@ export async function GET(request: NextRequest) {
       .populate("awayTeam")
       .populate("tournament")
       .populate("division")
-      .sort({ scheduledDate: upcoming ? 1 : -1 })
+      .sort({ scheduledDate: 1 })
       .skip((page - 1) * limit)
       .limit(limit);
 

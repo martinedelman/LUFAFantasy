@@ -109,6 +109,7 @@ function toDateTimeLocal(isoDate: string) {
 export default function GamesPage() {
   const { user } = useAuth();
   const canManageGames = user?.role === "admin";
+
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -191,7 +192,7 @@ export default function GamesPage() {
         setDivisions(divisionsData.data);
       }
     } catch {
-      // Silencioso para no bloquear la página principal
+      // No bloquear la vista por catálogos
     }
   }, []);
 
@@ -424,6 +425,21 @@ export default function GamesPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const formatDateTimeCompact = (date: string) => {
+    const parsedDate = new Date(date);
+    const dayMonth = parsedDate.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+    });
+
+    const hour = parsedDate.toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    return `${dayMonth} · ${hour}`;
   };
 
   if (loading && games.length === 0) {
@@ -749,110 +765,194 @@ export default function GamesPage() {
 
       <div className="space-y-4">
         {games.map((game) => (
-          <div key={game._id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    {getStatusBadge(game.status)}
-                    <span className="text-sm text-gray-500">
-                      {game.week ? `Semana ${game.week}` : "Sin semana"} - {game.division.name}
-                      {game.round ? ` - ${game.round}` : ""}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-500">{formatDate(game.scheduledDate)}</div>
-                </div>
-
-                <div className="flex items-center justify-center space-x-8 mb-4">
-                  <div className="flex items-center space-x-3 flex-1 justify-end">
-                    <div className="text-right">
-                      <div className="font-semibold text-gray-900">{game.homeTeam?.name || "TBD"}</div>
-                      {game.homeTeam && !game.homeTeam.logo && game.homeTeam.shortName && (
-                        <div className="text-sm text-gray-500">{game.homeTeam.shortName}</div>
-                      )}
-                    </div>
-                    {game.homeTeam?.logo ? (
-                      <div
-                        className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${game.homeTeam.logo})` }}
-                      />
-                    ) : (
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: game.homeTeam?.colors.primary || "#9CA3AF" }}
-                      >
-                        {game.homeTeam ? game.homeTeam.shortName || game.homeTeam.name.substring(0, 2) : "TBD"}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    {game.status === "completed" || game.status === "in_progress" ? (
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">
-                          {game.score.home.total} - {game.score.away.total}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <div className="text-lg font-medium text-gray-500">vs</div>
-                        <div className="text-sm text-gray-400">{formatTime(game.scheduledDate)}</div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-3 flex-1">
-                    {game.awayTeam?.logo ? (
-                      <div
-                        className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${game.awayTeam.logo})` }}
-                      />
-                    ) : (
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: game.awayTeam?.colors.primary || "#9CA3AF" }}
-                      >
-                        {game.awayTeam ? game.awayTeam.shortName || game.awayTeam.name.substring(0, 2) : "TBD"}
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-semibold text-gray-900">{game.awayTeam?.name || "TBD"}</div>
-                      {game.awayTeam && !game.awayTeam.logo && game.awayTeam.shortName && (
-                        <div className="text-sm text-gray-500">{game.awayTeam.shortName}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-center text-sm text-gray-500">
-                  <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  {game.venue.name}, {game.venue.address}
+          <div key={game._id} className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow">
+            <div className="sm:hidden">
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-sm text-gray-700 font-medium break-words">{game.venue.name}</div>
+                <div className="text-xs text-gray-500 whitespace-nowrap">
+                  {formatDateTimeCompact(game.scheduledDate)}
                 </div>
               </div>
 
+              <div className="mt-1 text-xs text-gray-500 break-words">{game.venue.address}</div>
+
+              <div className="mt-3 flex justify-center">{getStatusBadge(game.status)}</div>
+
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <div className="w-[36%] flex flex-col items-center text-center">
+                  {game.homeTeam?.logo ? (
+                    <div
+                      className="w-10 h-10 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${game.homeTeam.logo})` }}
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                      style={{ backgroundColor: game.homeTeam?.colors.primary || "#9CA3AF" }}
+                    >
+                      {game.homeTeam ? game.homeTeam.shortName || game.homeTeam.name.substring(0, 2) : "TBD"}
+                    </div>
+                  )}
+                  <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
+                    {game.homeTeam?.name || "TBD"}
+                  </div>
+                </div>
+
+                <div className="w-[28%] text-center">
+                  {game.status === "completed" || game.status === "in_progress" ? (
+                    <div className="text-4xl font-bold text-blue-900 leading-none">
+                      {game.score.home.total}:{game.score.away.total}
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-base font-semibold text-gray-500">vs</div>
+                      <div className="text-xs text-gray-400">{formatTime(game.scheduledDate)}</div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-[36%] flex flex-col items-center text-center">
+                  {game.awayTeam?.logo ? (
+                    <div
+                      className="w-10 h-10 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${game.awayTeam.logo})` }}
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                      style={{ backgroundColor: game.awayTeam?.colors.primary || "#9CA3AF" }}
+                    >
+                      {game.awayTeam ? game.awayTeam.shortName || game.awayTeam.name.substring(0, 2) : "TBD"}
+                    </div>
+                  )}
+                  <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
+                    {game.awayTeam?.name || "TBD"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 text-xs text-gray-500 text-center">
+                {game.week ? `Semana ${game.week}` : "Sin semana"} · {game.division.name}
+                {game.round ? ` · ${game.round}` : ""}
+              </div>
+
               {canManageGames && (
-                <div className="mt-4 lg:mt-0 lg:ml-6 flex space-x-3">
+                <div className="mt-4">
                   <button
                     onClick={() => openEditForm(game)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     Editar
                   </button>
                 </div>
               )}
+            </div>
+
+            <div className="hidden sm:block">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      {getStatusBadge(game.status)}
+                      <span className="text-sm text-gray-500">
+                        {game.week ? `Semana ${game.week}` : "Sin semana"} - {game.division.name}
+                        {game.round ? ` - ${game.round}` : ""}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500">{formatDate(game.scheduledDate)}</div>
+                  </div>
+
+                  <div className="flex items-center justify-center space-x-8 mb-4">
+                    <div className="flex items-center space-x-3 flex-1 justify-end">
+                      <div className="text-right">
+                        <div className="font-semibold text-gray-900">{game.homeTeam?.name || "TBD"}</div>
+                        {game.homeTeam && !game.homeTeam.logo && game.homeTeam.shortName && (
+                          <div className="text-sm text-gray-500">{game.homeTeam.shortName}</div>
+                        )}
+                      </div>
+                      {game.homeTeam?.logo ? (
+                        <div
+                          className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${game.homeTeam.logo})` }}
+                        />
+                      ) : (
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                          style={{ backgroundColor: game.homeTeam?.colors.primary || "#9CA3AF" }}
+                        >
+                          {game.homeTeam ? game.homeTeam.shortName || game.homeTeam.name.substring(0, 2) : "TBD"}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      {game.status === "completed" || game.status === "in_progress" ? (
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-gray-900">
+                            {game.score.home.total} - {game.score.away.total}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <div className="text-lg font-medium text-gray-500">vs</div>
+                          <div className="text-sm text-gray-400">{formatTime(game.scheduledDate)}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-3 flex-1">
+                      {game.awayTeam?.logo ? (
+                        <div
+                          className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${game.awayTeam.logo})` }}
+                        />
+                      ) : (
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                          style={{ backgroundColor: game.awayTeam?.colors.primary || "#9CA3AF" }}
+                        >
+                          {game.awayTeam ? game.awayTeam.shortName || game.awayTeam.name.substring(0, 2) : "TBD"}
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-semibold text-gray-900">{game.awayTeam?.name || "TBD"}</div>
+                        {game.awayTeam && !game.awayTeam.logo && game.awayTeam.shortName && (
+                          <div className="text-sm text-gray-500">{game.awayTeam.shortName}</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-center text-sm text-gray-500">
+                    <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    {game.venue.name}, {game.venue.address}
+                  </div>
+                </div>
+
+                {canManageGames && (
+                  <div className="mt-4 lg:mt-0 lg:ml-6 flex space-x-3">
+                    <button
+                      onClick={() => openEditForm(game)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Editar
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
