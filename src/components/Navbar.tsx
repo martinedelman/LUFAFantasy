@@ -30,8 +30,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-3">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="h-9 w-9 rounded-md overflow-hidden bg-white/95 border border-white/20 shadow-sm">
+          <Link href="/" className="flex items-center gap-2 group min-w-0">
+            <div className="h-8 w-8 md:h-9 md:w-9 rounded-md overflow-hidden bg-white/95 border border-white/20 shadow-sm flex-shrink-0">
               <Image
                 src="/lufa_flag_icon.jpeg"
                 alt="Logo LUFA"
@@ -41,7 +41,7 @@ export default function Navbar() {
                 priority
               />
             </div>
-            <span className="text-3xl font-bold leading-none">LUFA Fantasy</span>
+            <span className="text-xl md:text-3xl font-bold leading-none truncate">LUFA Fantasy</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -170,7 +170,7 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
                     pathname === item.href
                       ? "bg-green-700 text-white"
                       : "text-green-100 hover:bg-green-700 hover:text-white"
