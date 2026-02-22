@@ -14,6 +14,7 @@
   --brand-800: #1176ad;
   --brand-700: #1c8ac3;
   --brand-600: #2a9ed9;
+  --brand-500: #48aee2;
   --brand-100: #dceefa;
 }
 
@@ -39,8 +40,17 @@
     --brand-800: #1683be;
     --brand-700: #2896d0;
     --brand-600: #48aee2;
+    --brand-500: #6db9e8;
     --brand-100: #163b57;
   }
+}
+
+@theme {
+  --color-brand-900: var(--brand-900);
+  --color-brand-800: var(--brand-800);
+  --color-brand-700: var(--brand-700);
+  --color-brand-600: var(--brand-600);
+  --color-brand-100: var(--brand-100);
 }
 
 body {
@@ -61,6 +71,10 @@ textarea {
 input::placeholder,
 textarea::placeholder {
   color: var(--muted-2);
+}
+
+button {
+  cursor: pointer;
 }
 
 /* Overrides globales para clases usadas en pantallas existentes */
