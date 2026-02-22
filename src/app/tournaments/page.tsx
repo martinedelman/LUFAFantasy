@@ -194,7 +194,7 @@ export default function TournamentsPage() {
       )}
 
       {/* Tournaments List */}
-      <Table
+      <Table<Tournament>
         columns={[
           {
             key: "name",

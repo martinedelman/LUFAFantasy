@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
 
-export interface TableColumn {
-  key: string;
+export interface TableColumn<T extends object> {
+  key: keyof T & string;
   label: string;
-  render?: (value: unknown, item: unknown) => React.ReactNode;
+  render?: (value: unknown, item: T) => React.ReactNode;
   sortable?: boolean;
 }
 
@@ -15,18 +15,18 @@ export interface TableAction {
   className?: string;
 }
 
-interface TableProps {
-  columns: TableColumn[];
-  data: Record<string, unknown>[];
+interface TableProps<T extends object> {
+  columns: TableColumn<T>[];
+  data: T[];
   actions?: TableAction[];
-  onRowClick?: (item: Record<string, unknown>) => void;
+  onRowClick?: (item: T) => void;
   emptyMessage?: string;
   emptyIcon?: React.ReactNode;
   loading?: boolean;
-  idKey?: string;
+  idKey?: keyof T & string;
 }
 
-export default function Table({
+export default function Table<T extends object>({
   columns,
   data,
   actions,
@@ -34,8 +34,8 @@ export default function Table({
   emptyMessage = "No hay datos",
   emptyIcon,
   loading = false,
-  idKey = "_id",
-}: TableProps) {
+  idKey = "_id" as keyof T & string,
+}: TableProps<T>) {
   if (loading) {
     return (
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
@@ -87,10 +87,12 @@ export default function Table({
               >
                 {columns.map((column) => (
                   <td
-                    key={`${item[idKey]}-${column.key}`}
+                    key={`${String(item[idKey])}-${column.key}`}
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                   >
-                    {column.render ? column.render(item[column.key], item) : String(item[column.key] || "")}
+                    {column.render
+                      ? column.render((item as unknown as Record<string, unknown>)[column.key], item)
+                      : String((item as unknown as Record<string, unknown>)[column.key] ?? "")}
                   </td>
                 ))}
                 {actions && actions.length > 0 && (
