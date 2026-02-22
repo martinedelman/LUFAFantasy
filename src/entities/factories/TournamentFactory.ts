@@ -26,6 +26,8 @@ export class TournamentFactory {
       }) || [],
       doc.description,
       doc.registrationDeadline ? new Date(doc.registrationDeadline) : undefined,
+      doc.rules,
+      doc.prizes,
       doc._id?.toString(),
       doc.createdAt,
       doc.updatedAt,
@@ -48,6 +50,8 @@ export class TournamentFactory {
       status: tournament.status,
       format: tournament.format,
       divisions: tournament.divisions,
+      rules: tournament.rules,
+      prizes: tournament.prizes,
       createdAt: tournament.createdAt,
       updatedAt: tournament.updatedAt,
     };
@@ -68,6 +72,8 @@ export class TournamentFactory {
       data.divisions || [],
       data.description,
       data.registrationDeadline ? new Date(data.registrationDeadline) : undefined,
+      data.rules,
+      data.prizes,
     );
   }
 
@@ -87,6 +93,8 @@ export class TournamentFactory {
       status: tournament.status,
       format: tournament.format,
       divisions: tournament.divisions,
+      rules: tournament.rules,
+      prizes: tournament.prizes,
       createdAt: tournament.createdAt?.toISOString(),
       updatedAt: tournament.updatedAt?.toISOString(),
     };

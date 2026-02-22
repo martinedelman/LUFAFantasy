@@ -1,4 +1,10 @@
-import { Tournament, TournamentStatus, TournamentFormat } from "../../entities/Tournament";
+import {
+  Tournament,
+  TournamentStatus,
+  TournamentFormat,
+  TournamentRules,
+  TournamentPrize,
+} from "../../entities/Tournament";
 import RepositoryContainer from "../../repositories";
 
 /**
@@ -21,6 +27,8 @@ export class TournamentService {
     description?: string;
     registrationDeadline?: Date;
     divisions?: string[];
+    rules?: TournamentRules;
+    prizes?: TournamentPrize[];
   }): Promise<Tournament> {
     const tournament = new Tournament(
       data.name,
@@ -33,6 +41,8 @@ export class TournamentService {
       data.divisions || [],
       data.description,
       data.registrationDeadline,
+      data.rules,
+      data.prizes,
     );
 
     // Validar
@@ -97,6 +107,8 @@ export class TournamentService {
       description: string;
       registrationDeadline: Date;
       divisions: string[];
+      rules: TournamentRules;
+      prizes: TournamentPrize[];
     }>,
   ): Promise<Tournament> {
     const tournament = await this.tournamentRepo.findById(id);
@@ -115,6 +127,8 @@ export class TournamentService {
       data.divisions || tournament.divisions,
       data.description !== undefined ? data.description : tournament.description,
       data.registrationDeadline !== undefined ? data.registrationDeadline : tournament.registrationDeadline,
+      data.rules !== undefined ? data.rules : tournament.rules,
+      data.prizes !== undefined ? data.prizes : tournament.prizes,
       tournament.id,
       tournament.createdAt,
       tournament.updatedAt,

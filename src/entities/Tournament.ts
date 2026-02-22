@@ -3,6 +3,30 @@ import { AggregateRoot } from "./base/AggregateRoot";
 export type TournamentStatus = "upcoming" | "active" | "completed" | "cancelled";
 export type TournamentFormat = "league" | "playoff" | "tournament";
 
+export interface TournamentRules {
+  gameDuration: number;
+  quarters: number;
+  timeoutsPerTeam: number;
+  playersPerTeam: number;
+  minimumPlayers: number;
+  overtimeRules: string;
+  scoringRules: {
+    touchdown: number;
+    extraPoint1Yard: number;
+    extraPoint5Yard: number;
+    extraPoint10Yard: number;
+    safety: number;
+    fieldGoal: number;
+  };
+}
+
+export interface TournamentPrize {
+  position: number;
+  description: string;
+  amount: number;
+  trophy: string;
+}
+
 /**
  * Entity: Tournament (Torneo)
  * Aggregate Root
@@ -18,6 +42,8 @@ export class Tournament extends AggregateRoot {
   public readonly status: TournamentStatus;
   public readonly format: TournamentFormat;
   public readonly divisions: string[]; // IDs de divisiones
+  public readonly rules?: TournamentRules;
+  public readonly prizes?: TournamentPrize[];
 
   constructor(
     name: string,
@@ -30,6 +56,8 @@ export class Tournament extends AggregateRoot {
     divisions: string[] = [],
     description?: string,
     registrationDeadline?: Date,
+    rules?: TournamentRules,
+    prizes?: TournamentPrize[],
     id?: string,
     createdAt?: Date,
     updatedAt?: Date,
@@ -45,6 +73,8 @@ export class Tournament extends AggregateRoot {
     this.status = status;
     this.format = format;
     this.divisions = divisions;
+    this.rules = rules;
+    this.prizes = prizes;
   }
 
   /**
