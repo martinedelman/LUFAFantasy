@@ -8,10 +8,21 @@ export class DivisionFactory {
    * Crea una entidad Division desde un documento de base de datos
    */
   static fromDatabase(doc: any): Division {
+    // Extraer IDs de teams (pueden venir poblados o como ObjectIds)
+    const teamIds =
+      doc.teams?.map((t: any) => {
+        if (t && typeof t === "object" && "_id" in t) {
+          // Team poblado - extraer el _id
+          return t._id.toString();
+        }
+        // ObjectId simple
+        return t.toString ? t.toString() : t;
+      }) || [];
+
     return new Division(
       doc.name,
       doc.category as DivisionCategory,
-      doc.teams?.map((t: any) => (t.toString ? t.toString() : t)) || [],
+      teamIds,
       doc.ageGroup,
       doc.tournament?.toString() || doc.tournament,
       doc.maxTeams,

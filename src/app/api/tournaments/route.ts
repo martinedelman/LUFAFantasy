@@ -109,6 +109,8 @@ export async function POST(request: NextRequest) {
       description: body.description,
       registrationDeadline: body.registrationDeadline,
       divisions: body.divisions,
+      rules: body.rules,
+      prizes: body.prizes,
     });
 
     return NextResponse.json(
