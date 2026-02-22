@@ -7,6 +7,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
 import Tag from "@/components/Tag";
+import Card from "@/components/Card";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Team {
@@ -278,38 +279,29 @@ function TeamsPageContent() {
           <>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-6">
               {teams.map((team) => (
-                <div
+                <Card
                   key={team._id}
-                  className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
-                >
-                  <div className="p-6">
-                    {/* Team Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        {team.logo ? (
-                          <div
-                            className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                            style={{ backgroundImage: `url(${team.logo})` }}
-                          />
-                        ) : (
-                          <div
-                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                            style={{ backgroundColor: team.colors.primary }}
-                          >
-                            {team.shortName || team.name.substring(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{team.name}</h3>
-                          <p className="text-sm text-gray-500">{team.division.name || "Sin División"}</p>
-                        </div>
-                      </div>
-                      {getStatusTag(team.status)}
-                    </div>
-                    {/* Team Info */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  id={team._id}
+                  title={team.name}
+                  subtitle={team.division.name || "Sin División"}
+                  badge={getStatusTag(team.status)}
+                  icon={
+                    team.logo
+                      ? {
+                          type: "image",
+                          value: team.logo,
+                          alt: team.name,
+                        }
+                      : {
+                          type: "initials",
+                          value: team.shortName || team.name.substring(0, 2).toUpperCase(),
+                          backgroundColor: team.colors.primary,
+                        }
+                  }
+                  info={[
+                    {
+                      icon: (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -317,60 +309,48 @@ function TeamsPageContent() {
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                           />
                         </svg>
-                        {team.players?.length || 0} jugadores
-                      </div>
-                      {team.coach && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          {team.coach.name}
-                        </div>
-                      )}
-                    </div>
-                    {/* Team Colors */}
-                    <div className="flex items-center space-x-2 mb-4">
-                      <span className="text-xs font-medium text-gray-500">Colores:</span>
-                      <div
-                        className="w-4 h-4 rounded border border-gray-300"
-                        style={{ backgroundColor: team.colors.primary }}
-                      ></div>
-                      {team.colors.secondary && (
-                        <div
-                          className="w-4 h-4 rounded border border-gray-300"
-                          style={{ backgroundColor: team.colors.secondary }}
-                        ></div>
-                      )}
-                    </div>{" "}
-                    {/* Actions */}
-                    <div className="flex justify-between items-center">
-                      <div className="flex space-x-2">
-                        <Link
-                          href={`/teams/${team._id}`}
-                          className="text-green-600 hover:text-green-800 text-sm font-medium"
-                        >
-                          Ver detalles
-                        </Link>
-                        {user?.role === "admin" && (
-                          <Link
-                            href={`/teams/${team._id}/edit`}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium ml-2"
-                          >
-                            Editar
-                          </Link>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-400">
-                        Reg: {new Date(team.registrationDate).toLocaleDateString("es-ES")}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                      ),
+                      text: `${team.players?.length || 0} jugadores`,
+                    },
+                    ...(team.coach
+                      ? [
+                          {
+                            icon: (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                            ),
+                            text: team.coach.name,
+                          },
+                        ]
+                      : []),
+                  ]}
+                  colors={team.colors}
+                  footer={{
+                    text: "Registro",
+                    date: `Reg: ${new Date(team.registrationDate).toLocaleDateString("es-ES")}`,
+                  }}
+                  actions={[
+                    {
+                      label: "Ver detalles",
+                      href: `/teams/${team._id}`,
+                    },
+                    ...(user?.role === "admin"
+                      ? [
+                          {
+                            label: "Editar",
+                            href: `/teams/${team._id}/edit`,
+                            className: "text-blue-600 hover:text-blue-800 text-sm font-medium ml-2",
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
               ))}
             </div>
 
