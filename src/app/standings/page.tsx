@@ -1,7 +1,10 @@
 "use client";
+
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import Table, { TableColumn } from "@/components/Table";
 
 interface Standing {
   _id: string;
@@ -49,6 +52,7 @@ interface Tournament {
 }
 
 export default function StandingsPage() {
+  const router = useRouter();
   const [standings, setStandings] = useState<Standing[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,24 +64,32 @@ export default function StandingsPage() {
     try {
       const response = await fetch("/api/tournaments?status=active");
       const data = await response.json();
-      if (data.success) {
+      if (data.success && data.data.length > 0) {
         setTournaments(data.data);
-        if (data.data.length > 0) {
-          setSelectedTournament(data.data[0]._id);
+        const firstTourney = data.data[0];
+        setSelectedTournament(firstTourney._id);
+        // Select first division automatically
+        if (firstTourney.divisions && firstTourney.divisions.length > 0) {
+          setSelectedDivision(firstTourney.divisions[0]._id);
         }
       }
     } catch (err) {
       console.error("Error fetching tournaments:", err);
     }
   };
+
   const fetchStandings = useCallback(async () => {
+    if (!selectedDivision) {
+      setStandings([]);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       const params = new URLSearchParams();
-      if (selectedTournament) params.append("tournament", selectedTournament);
-      if (selectedDivision) params.append("division", selectedDivision);
+      params.append("division", selectedDivision);
 
       const response = await fetch(`/api/standings?${params}`);
       const data = await response.json();
@@ -92,31 +104,24 @@ export default function StandingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedTournament, selectedDivision]);
+  }, [selectedDivision]);
 
   useEffect(() => {
     fetchTournaments();
   }, []);
+
   useEffect(() => {
-    if (selectedTournament) {
+    if (selectedDivision) {
       fetchStandings();
     }
-  }, [selectedTournament, selectedDivision, fetchStandings]);
+  }, [selectedDivision, fetchStandings]);
 
   const selectedTournamentData = tournaments.find((t) => t._id === selectedTournament);
   const availableDivisions = selectedTournamentData?.divisions || [];
 
-  const groupedStandings = standings.reduce(
-    (acc, standing) => {
-      const divisionName = standing.division.name;
-      if (!acc[divisionName]) {
-        acc[divisionName] = [];
-      }
-      acc[divisionName].push(standing);
-      return acc;
-    },
-    {} as Record<string, Standing[]>,
-  );
+  const formatPercentage = (percentage: number) => {
+    return (percentage * 100).toFixed(1);
+  };
 
   const getStreakColor = (streak?: string) => {
     if (!streak) return "bg-gray-100 text-gray-800";
@@ -125,42 +130,135 @@ export default function StandingsPage() {
     return "bg-gray-100 text-gray-800";
   };
 
-  const formatPercentage = (percentage: number) => {
-    return (percentage * 100).toFixed(1);
-  };
+  const columns: TableColumn<Standing>[] = [
+    {
+      key: "position",
+      label: "Pos",
+      align: "center",
+      render: (value) => {
+        const pos = value as number;
+        const icons: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
+        return <div className="flex items-center justify-center">{icons[pos] || pos}</div>;
+      },
+    },
+    {
+      key: "team",
+      label: "Equipo",
+      align: "left",
+      render: (value) => {
+        const team = value as Standing["team"];
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 h-8 w-8">
+              {team.logo ? (
+                <div
+                  className="h-8 w-8 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${team.logo})` }}
+                />
+              ) : (
+                <div
+                  className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                  style={{ backgroundColor: team.colors.primary }}
+                >
+                  {team.shortName || team.name.substring(0, 2)}
+                </div>
+              )}
+            </div>
+            <span className="text-sm font-medium text-gray-900">{team.name}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "wins",
+      label: "G",
+      align: "center",
+      render: (value) => <div className="font-medium">{value as number}</div>,
+    },
+    {
+      key: "losses",
+      label: "P",
+      align: "center",
+      render: (value) => <div>{value as number}</div>,
+    },
+    {
+      key: "ties",
+      label: "E",
+      align: "center",
+      render: (value) => <div>{value as number}</div>,
+    },
+    {
+      key: "percentage",
+      label: "%",
+      align: "center",
+      render: (value) => <div className="font-medium">{formatPercentage(value as number)}%</div>,
+    },
+    {
+      key: "pointsFor",
+      label: "PF",
+      align: "center",
+      render: (value) => <div>{value as number}</div>,
+    },
+    {
+      key: "pointsAgainst",
+      label: "PC",
+      align: "center",
+      render: (value) => <div>{value as number}</div>,
+    },
+    {
+      key: "pointsDifferential",
+      label: "DIF",
+      align: "center",
+      render: (value) => {
+        const diff = value as number;
+        return (
+          <div className={`font-medium ${diff >= 0 ? "text-green-600" : "text-red-600"}`}>
+            {diff >= 0 ? "+" : ""}
+            {diff}
+          </div>
+        );
+      },
+    },
+    {
+      key: "streak",
+      label: "Racha",
+      align: "center",
+      render: (value) => {
+        const streak = value as string | undefined;
+        return streak ? (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStreakColor(streak)}`}
+          >
+            {streak}
+          </span>
+        ) : (
+          <div className="text-gray-400">—</div>
+        );
+      },
+    },
+  ];
 
-  const getPositionIcon = (position: number) => {
-    switch (position) {
-      case 1:
-        return "🥇";
-      case 2:
-        return "🥈";
-      case 3:
-        return "🥉";
-      default:
-        return position.toString();
-    }
-  };
-  if (loading) {
+  if (loading && standings.length === 0) {
     return <LoadingSpinner size="lg" />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">Tabla de Posiciones</h1>
-          <p className="mt-1 text-sm text-gray-600">Consulta las posiciones de los equipos en cada división</p>
-        </div>
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="md:flex md:items-center md:justify-between mb-8">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Tabla de posiciones </h2>
+            <p className="mt-1 text-sm text-gray-500">Gestiona la programación y resultados de los partidos</p>
+          </div>
 
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="mt-4 flex md:mt-0 md:ml-4" />
+        </div>
+
         {/* Filters */}
-        <div className="bg-white p-4 rounded-lg shadow mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div>
-              <label htmlFor="tournament" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="tournament" className="block text-sm font-medium text-gray-700">
                 Torneo
               </label>
               <select
@@ -168,9 +266,12 @@ export default function StandingsPage() {
                 value={selectedTournament}
                 onChange={(e) => {
                   setSelectedTournament(e.target.value);
-                  setSelectedDivision("");
+                  const tourney = tournaments.find((t) => t._id === e.target.value);
+                  if (tourney && tourney.divisions.length > 0) {
+                    setSelectedDivision(tourney.divisions[0]._id);
+                  }
                 }}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
               >
                 <option value="">Seleccionar torneo</option>
                 {tournaments.map((tournament) => (
@@ -180,24 +281,41 @@ export default function StandingsPage() {
                 ))}
               </select>
             </div>
+
             <div>
-              <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="division" className="block text-sm font-medium text-gray-700">
                 División
               </label>
               <select
                 id="division"
                 value={selectedDivision}
                 onChange={(e) => setSelectedDivision(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
                 disabled={!selectedTournament}
+                required
               >
-                <option value="">Todas las divisiones</option>
+                <option value="">Seleccionar división</option>
                 {availableDivisions.map((division) => (
                   <option key={division._id} value={division._id}>
                     {division.name} ({division.category})
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="lg:col-span-2" />
+
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setSelectedTournament("");
+                  setSelectedDivision("");
+                  setStandings([]);
+                }}
+                className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                Limpiar Filtros
+              </button>
             </div>
           </div>
         </div>
@@ -208,8 +326,21 @@ export default function StandingsPage() {
           </div>
         )}
 
-        {/* Standings Tables */}
-        {Object.keys(groupedStandings).length === 0 && !loading ? (
+        {/* Standings Table */}
+        {selectedDivision && (
+          <div>
+            <Table<Standing>
+              columns={columns}
+              data={standings}
+              loading={loading}
+              emptyMessage="No hay equipos en esta división"
+              idKey="_id"
+              onRowClick={(standing) => router.push(`/teams/${standing.team._id}`)}
+            />
+          </div>
+        )}
+
+        {!selectedDivision && !loading && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -220,134 +351,9 @@ export default function StandingsPage() {
               />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No hay datos disponibles</h3>
-            <p className="mt-1 text-sm text-gray-500">Selecciona un torneo para ver la tabla de posiciones.</p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {Object.entries(groupedStandings).map(([divisionName, divisionStandings]) => (
-              <div key={divisionName} className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">División {divisionName}</h3>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Pos
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Equipo
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          JJ
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          G
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          P
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          E
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          %
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          PF
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          PC
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          DIF
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Racha
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {divisionStandings.map((standing) => (
-                        <tr key={standing._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100">
-                              {getPositionIcon(standing.position)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-8 w-8">
-                                {standing.team.logo ? (
-                                  <div
-                                    className="h-8 w-8 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                                    style={{ backgroundImage: `url(${standing.team.logo})` }}
-                                  />
-                                ) : (
-                                  <div
-                                    className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                    style={{ backgroundColor: standing.team.colors.primary }}
-                                  >
-                                    {standing.team.shortName || standing.team.name.substring(0, 2)}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{standing.team.name}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            {standing.wins + standing.losses + standing.ties}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center font-medium">
-                            {standing.wins}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {standing.losses}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {standing.ties}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center font-medium">
-                            {formatPercentage(standing.percentage)}%
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {standing.pointsFor}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {standing.pointsAgainst}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                            <span
-                              className={`font-medium ${
-                                standing.pointsDifferential >= 0 ? "text-green-600" : "text-red-600"
-                              }`}
-                            >
-                              {standing.pointsDifferential >= 0 ? "+" : ""}
-                              {standing.pointsDifferential}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
-                            {standing.streak && (
-                              <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStreakColor(
-                                  standing.streak,
-                                )}`}
-                              >
-                                {standing.streak}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))}
+            <p className="mt-1 text-sm text-gray-500">
+              Selecciona un torneo y una división para ver la tabla de posiciones.
+            </p>
           </div>
         )}
       </div>

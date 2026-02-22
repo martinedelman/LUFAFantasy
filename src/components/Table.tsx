@@ -6,6 +6,7 @@ export interface TableColumn<T extends object> {
   label: string;
   render?: (value: unknown, item: T) => React.ReactNode;
   sortable?: boolean;
+  align?: "left" | "center" | "right";
 }
 
 export interface TableAction {
@@ -63,14 +64,18 @@ export default function Table<T extends object>({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {columns.map((column) => (
-                <th
-                  key={column.key}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {column.label}
-                </th>
-              ))}
+              {columns.map((column) => {
+                const alignClass =
+                  column.align === "center" ? "text-center" : column.align === "right" ? "text-right" : "text-left";
+                return (
+                  <th
+                    key={column.key}
+                    className={`px-6 py-3 ${alignClass} text-xs font-medium text-gray-500 uppercase tracking-wider`}
+                  >
+                    {column.label}
+                  </th>
+                );
+              })}
               {actions && actions.length > 0 && (
                 <th className="relative px-6 py-3">
                   <span className="sr-only">Acciones</span>
@@ -85,16 +90,20 @@ export default function Table<T extends object>({
                 className="hover:bg-slate-50 hover:dark:bg-slate-900 cursor-pointer"
                 onClick={() => onRowClick?.(item)}
               >
-                {columns.map((column) => (
-                  <td
-                    key={`${String(item[idKey])}-${column.key}`}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                  >
-                    {column.render
-                      ? column.render((item as unknown as Record<string, unknown>)[column.key], item)
-                      : String((item as unknown as Record<string, unknown>)[column.key] ?? "")}
-                  </td>
-                ))}
+                {columns.map((column) => {
+                  const alignClass =
+                    column.align === "center" ? "text-center" : column.align === "right" ? "text-right" : "text-left";
+                  return (
+                    <td
+                      key={`${String(item[idKey])}-${column.key}`}
+                      className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${alignClass}`}
+                    >
+                      {column.render
+                        ? column.render((item as unknown as Record<string, unknown>)[column.key], item)
+                        : String((item as unknown as Record<string, unknown>)[column.key] ?? "")}
+                    </td>
+                  );
+                })}
                 {actions && actions.length > 0 && (
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                     {actions.map((action, idx) => (

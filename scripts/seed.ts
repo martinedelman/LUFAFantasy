@@ -10,6 +10,7 @@ import {
   SeasonModel,
   UserModel,
   GameModel,
+  StandingModel,
 } from "../src/models";
 
 async function seedDatabase() {
@@ -26,6 +27,7 @@ async function seedDatabase() {
       SeasonModel.deleteMany({}),
       UserModel.deleteMany({}),
       GameModel.deleteMany({}),
+      StandingModel.deleteMany({}),
     ]);
     console.log("🧹 Datos existentes limpiados");
 
@@ -638,6 +640,155 @@ async function seedDatabase() {
     });
 
     console.log("🔗 Referencias actualizadas");
+
+    // Crear partidos iniciales (Fixture)
+    const games: unknown[] = [];
+    const baseDate = new Date("2025-02-08");
+
+    // Partidos División Masculino
+    const masculinoTeams = teams.filter((t) => t.division.toString() === divisions[0]._id.toString());
+    let gameDate = new Date(baseDate);
+    let week = 1;
+
+    // Crear fixture round-robin para equipos masculinos (algoritmo "circle")
+    const createRoundRobin = (teamList: any[], divisionId: any, startDate: Date, startWeek = 1) => {
+      const teamsArr = teamList.slice();
+      const isOdd = teamsArr.length % 2 === 1;
+      if (isOdd) teamsArr.push(null); // placeholder for bye
+
+      const numRounds = teamsArr.length - 1;
+      const half = teamsArr.length / 2;
+
+      for (let round = 0; round < numRounds; round++) {
+        const roundDate = new Date(startDate.getTime() + round * 7 * 24 * 60 * 60 * 1000); // one week per round
+        const weekNumber = startWeek + round;
+
+        for (let i = 0; i < half; i++) {
+          const home = teamsArr[i];
+          const away = teamsArr[teamsArr.length - 1 - i];
+
+          // If one side is null, it's a bye for the other team
+          if (!home || !away) continue;
+
+          const matchDate = new Date(roundDate.getTime() + i * 2 * 24 * 60 * 60 * 1000);
+
+          games.push({
+            tournament: tournament._id,
+            division: divisionId,
+            homeTeam: home._id,
+            awayTeam: away._id,
+            scheduledDate: matchDate,
+            week: weekNumber,
+            round: `Semana ${weekNumber}`,
+            venue: {
+              name: "Champagneat Rambla",
+              address: "Rambla M. Gandhi y García Cortinas",
+            },
+            status: "scheduled",
+            score: {
+              home: { q1: 0, q2: 0, q3: 0, q4: 0, overtime: 0, total: 0 },
+              away: { q1: 0, q2: 0, q3: 0, q4: 0, overtime: 0, total: 0 },
+            },
+            statistics: {
+              home: {
+                passingYards: 0,
+                rushingYards: 0,
+                totalYards: 0,
+                completions: 0,
+                attempts: 0,
+                interceptions: 0,
+                fumbles: 0,
+                penalties: 0,
+                penaltyYards: 0,
+                thirdDownConversions: { made: 0, attempted: 0 },
+                redZoneEfficiency: { scores: 0, attempts: 0 },
+              },
+              away: {
+                passingYards: 0,
+                rushingYards: 0,
+                totalYards: 0,
+                completions: 0,
+                attempts: 0,
+                interceptions: 0,
+                fumbles: 0,
+                penalties: 0,
+                penaltyYards: 0,
+                thirdDownConversions: { made: 0, attempted: 0 },
+                redZoneEfficiency: { scores: 0, attempts: 0 },
+              },
+            },
+            events: [],
+          });
+        }
+
+        // Rotate teams (keep first fixed)
+        const fixed = teamsArr.shift();
+        const moved = teamsArr.pop();
+        if (fixed !== undefined) teamsArr.unshift(fixed);
+        if (moved !== undefined) teamsArr.splice(1, 0, moved);
+      }
+    };
+
+    createRoundRobin(masculinoTeams, divisions[0]._id, baseDate, 1);
+
+    // Partidos División Femenino
+    const femeninoTeams = teams.filter((t) => t.division.toString() === divisions[1]._id.toString());
+    gameDate = new Date(baseDate.getTime() + 7 * 24 * 60 * 60 * 1000); // Una semana después
+    week = 1;
+
+    // Para femenino usamos el mismo generador, empezando una semana después
+    createRoundRobin(femeninoTeams, divisions[1]._id, new Date(baseDate.getTime() + 7 * 24 * 60 * 60 * 1000), 1);
+
+    await GameModel.insertMany(games);
+    console.log(`⚽ ${games.length} Partidos creados`);
+
+    // Crear posiciones iniciales (Standings)
+    const standings: unknown[] = [];
+
+    // Posiciones para División Masculino
+    for (const team of masculinoTeams) {
+      standings.push({
+        division: divisions[0]._id,
+        team: team._id,
+        position: 0, // Será calculado dinámicamente en GET
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
+        pointsDifferential: 0,
+        percentage: 0,
+        streak: "",
+        lastFiveGames: "",
+        homeRecord: { wins: 0, losses: 0, ties: 0 },
+        awayRecord: { wins: 0, losses: 0, ties: 0 },
+        divisionRecord: { wins: 0, losses: 0, ties: 0 },
+      });
+    }
+
+    // Posiciones para División Femenino
+    for (const team of femeninoTeams) {
+      standings.push({
+        division: divisions[1]._id,
+        team: team._id,
+        position: 0,
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
+        pointsDifferential: 0,
+        percentage: 0,
+        streak: "",
+        lastFiveGames: "",
+        homeRecord: { wins: 0, losses: 0, ties: 0 },
+        awayRecord: { wins: 0, losses: 0, ties: 0 },
+        divisionRecord: { wins: 0, losses: 0, ties: 0 },
+      });
+    }
+
+    await StandingModel.insertMany(standings);
+    console.log(`📊 ${standings.length} Posiciones iniciales creadas`);
     console.log("✅ Base de datos poblada exitosamente");
     console.log(`
     📊 Resumen de datos creados:
@@ -646,6 +797,8 @@ async function seedDatabase() {
     - ${divisions.length} Divisiones
     - ${teams.length} Equipos
     - ${savedPlayers.length} Jugadores
+    - ${games.length} Partidos
+    - ${standings.length} Posiciones iniciales
     `);
   } catch (error) {
     console.error("❌ Error al poblar la base de datos:", error);

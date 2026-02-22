@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectToDatabase from "@/lib/mongodb";
 import { GameModel } from "@/models";
+import { ensureTeamStandingsExist } from "@/lib/gameService";
 
 const GAME_STATUSES = ["scheduled", "in_progress", "completed", "postponed", "cancelled"] as const;
 
@@ -263,13 +264,16 @@ export async function GET(request: NextRequest) {
 
 // POST /api/games - Crear nuevo partido
 export async function POST(request: NextRequest) {
-  try {
-    await connectToDatabase();
+  const db = await connectToDatabase();
+  const session = await db.startSession();
+  session.startTransaction();
 
+  try {
     const body = await request.json();
     const { payload, message } = parseAndValidatePayload(body);
 
     if (message || !payload) {
+      await session.abortTransaction();
       return NextResponse.json(
         {
           success: false,
@@ -281,8 +285,34 @@ export async function POST(request: NextRequest) {
 
     const gameData = getInitialGameData(payload);
 
-    const game = await GameModel.create(gameData);
-    const populatedGame = await GameModel.findById(game._id)
+    // Crear el partido dentro de la transacción
+    const game = await GameModel.create([gameData], { session });
+    if (!game || game.length === 0) {
+      await session.abortTransaction();
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Error al crear el partido",
+        },
+        { status: 400 },
+      );
+    }
+
+    const createdGame = game[0];
+
+    // Crear standings iniciales para ambos equipos dentro de la transacción
+    await ensureTeamStandingsExist(
+      createdGame.homeTeam?.toString() || null,
+      createdGame.awayTeam?.toString() || null,
+      createdGame.division.toString(),
+      session,
+    );
+
+    // Commit de la transacción
+    await session.commitTransaction();
+
+    // Obtener el partido creado con poblaciones
+    const populatedGame = await GameModel.findById(createdGame._id)
       .populate("homeTeam")
       .populate("awayTeam")
       .populate("tournament")
@@ -297,6 +327,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
+    await session.abortTransaction();
     return NextResponse.json(
       {
         success: false,
@@ -305,6 +336,8 @@ export async function POST(request: NextRequest) {
       },
       { status: 400 },
     );
+  } finally {
+    await session.endSession();
   }
 }
 

@@ -50,9 +50,19 @@ type Game = {
   notes?: string;
   score: {
     home: {
+      q1?: number;
+      q2?: number;
+      q3?: number;
+      q4?: number;
+      overtime?: number;
       total: number;
     };
     away: {
+      q1?: number;
+      q2?: number;
+      q3?: number;
+      q4?: number;
+      overtime?: number;
       total: number;
     };
   };
@@ -935,7 +945,7 @@ export default function GamesPage() {
                 </div>
 
                 {canManageGames && (
-                  <div className="mt-4 lg:mt-0 lg:ml-6 flex space-x-3">
+                  <div className="mt-4 lg:mt-0 lg:ml-6 flex gap-3">
                     <button
                       onClick={() => openEditForm(game)}
                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
