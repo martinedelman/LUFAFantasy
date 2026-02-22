@@ -181,4 +181,53 @@ export class GameFactory {
       data.notes,
     );
   }
+
+  /**
+   * Convierte una entidad Game a formato de respuesta API
+   */
+  static toApiResponse(game: Game): any {
+    return {
+      _id: game.id,
+      id: game.id,
+      tournament: game.tournament,
+      division: game.division,
+      homeTeam: game.homeTeam,
+      awayTeam: game.awayTeam,
+      venue: {
+        name: game.venue.name,
+        address: game.venue.address,
+      },
+      scheduledDate: game.scheduledDate,
+      actualStartTime: game.actualStartTime,
+      actualEndTime: game.actualEndTime,
+      status: game.status,
+      week: game.week,
+      round: game.round,
+      score: {
+        home: {
+          q1: game.score.home.q1,
+          q2: game.score.home.q2,
+          q3: game.score.home.q3,
+          q4: game.score.home.q4,
+          overtime: game.score.home.overtime,
+          total: game.score.home.total,
+        },
+        away: {
+          q1: game.score.away.q1,
+          q2: game.score.away.q2,
+          q3: game.score.away.q3,
+          q4: game.score.away.q4,
+          overtime: game.score.away.overtime,
+          total: game.score.away.total,
+        },
+      },
+      statistics: {
+        home: game.statistics.home,
+        away: game.statistics.away,
+      },
+      notes: game.notes,
+      createdAt: game.createdAt,
+      updatedAt: game.updatedAt,
+    };
+  }
 }

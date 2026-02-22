@@ -51,4 +51,21 @@ export class DivisionFactory {
       data.maxTeams,
     );
   }
+
+  /**
+   * Convierte una entidad Division a formato de respuesta API
+   */
+  static toApiResponse(division: Division): any {
+    return {
+      id: division.id,
+      name: division.name,
+      category: division.category,
+      ageGroup: division.ageGroup,
+      tournament: division.tournament,
+      teams: division.teams,
+      maxTeams: division.maxTeams,
+      createdAt: division.createdAt?.toISOString(),
+      updatedAt: division.updatedAt?.toISOString(),
+    };
+  }
 }

@@ -61,4 +61,27 @@ export class UserFactory {
 
     return new User(data.email, passwordHash, data.name, data.role || "user", data.isActive ?? true);
   }
+
+  /**
+   * Convierte una entidad User a formato de respuesta API (sin datos sensibles)
+   */
+  static toApiResponse(user: User): {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    isActive: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+  } {
+    return {
+      id: user.id!,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
 }

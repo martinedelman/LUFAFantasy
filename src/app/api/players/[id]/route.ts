@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
-import { PlayerModel } from "@/models";
+import { PlayerService } from "@/services/backend";
+import { PlayerFactory } from "@/entities/factories/PlayerFactory";
 
-// GET /api/players/[id] - Obtener jugador por ID
+const playerService = new PlayerService();
+
+/**
+ * GET /api/players/:id - Obtiene un jugador por ID
+ */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await connectToDatabase();
-
     const { id } = await params;
-    const player = await PlayerModel.findById(id).populate("team");
+
+    const player = await playerService.getPlayerById(id);
 
     if (!player) {
       return NextResponse.json(
@@ -16,95 +19,89 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           success: false,
           message: "Jugador no encontrado",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     return NextResponse.json({
       success: true,
-      data: player,
+      data: PlayerFactory.toApiResponse(player),
     });
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        message: "Error al obtener jugador",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message: error instanceof Error ? error.message : "Error al obtener jugador",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-// PUT /api/players/[id] - Actualizar jugador
+/**
+ * PUT /api/players/:id - Actualiza un jugador
+ */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await connectToDatabase();
-
     const { id } = await params;
     const body = await request.json();
-    const player = await PlayerModel.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
-    }).populate("team");
 
-    if (!player) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Jugador no encontrado",
-        },
-        { status: 404 }
-      );
-    }
+    const updatedPlayer = await playerService.updatePlayer(id, {
+      firstName: body.firstName,
+      lastName: body.lastName,
+      dateOfBirth: body.dateOfBirth,
+      email: body.email,
+      phone: body.phone,
+      jerseyNumber: body.jerseyNumber,
+      position: body.position,
+      height: body.height,
+      weight: body.weight,
+      experience: body.experience,
+      status: body.status,
+    });
 
     return NextResponse.json({
       success: true,
-      data: player,
       message: "Jugador actualizado exitosamente",
+      data: PlayerFactory.toApiResponse(updatedPlayer),
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Error al actualizar jugador";
+    const status = message.includes("no encontrado") ? 404 : 400;
+
     return NextResponse.json(
       {
         success: false,
-        message: "Error al actualizar jugador",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message,
       },
-      { status: 400 }
+      { status },
     );
   }
 }
 
-// DELETE /api/players/[id] - Eliminar jugador
+/**
+ * DELETE /api/players/:id - Elimina un jugador
+ */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await connectToDatabase();
-
     const { id } = await params;
-    const player = await PlayerModel.findByIdAndDelete(id);
 
-    if (!player) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Jugador no encontrado",
-        },
-        { status: 404 }
-      );
-    }
+    await playerService.deletePlayer(id);
 
     return NextResponse.json({
       success: true,
       message: "Jugador eliminado exitosamente",
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Error al eliminar jugador";
+    const status = message.includes("no encontrado") ? 404 : 500;
+
     return NextResponse.json(
       {
         success: false,
-        message: "Error al eliminar jugador",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message,
       },
-      { status: 500 }
+      { status },
     );
   }
 }

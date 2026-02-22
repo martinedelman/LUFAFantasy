@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import connectToDatabase from "@/lib/mongodb";
-import { UserModel } from "@/models";
+import { AuthService } from "@/services/backend";
+import { UserFactory } from "@/entities/factories";
+
+const authService = new AuthService();
 
 // POST /api/auth/register - Registrar nuevo usuario
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase();
-
     const { name, email, password } = await request.json();
 
     // Validaciones básicas
@@ -17,7 +16,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "Todos los campos son requeridos",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -27,70 +26,36 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "La contraseña debe tener al menos 6 caracteres",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Verificar que el email no esté en uso
-    const existingUser = await UserModel.findOne({
-      email: email.toLowerCase(),
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Este email ya está registrado",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Encriptar contraseña
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Crear usuario (siempre como 'user', nunca como 'admin')
-    const user = await UserModel.create({
+    // Crear usuario a través del servicio (siempre como 'user')
+    const user = await authService.register({
       name: name.trim(),
       email: email.toLowerCase().trim(),
-      password: hashedPassword,
-      role: "user", // Forzamos que siempre sea usuario regular
-      isActive: true,
+      password,
+      role: "user",
     });
 
     return NextResponse.json(
       {
         success: true,
         message: "Usuario registrado exitosamente",
-        data: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
+        data: UserFactory.toApiResponse(user),
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
-    console.error("Error en registro:", error);
-
-    // Manejar errores de validación de mongoose
-    if (error instanceof Error && error.name === "ValidationError") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Datos inválidos",
-        },
-        { status: 400 }
-      );
-    }
+    const message = error instanceof Error ? error.message : "Error desconocido";
+    const status = message.includes("ya está registrado") ? 400 : 500;
 
     return NextResponse.json(
       {
         success: false,
-        message: "Error interno del servidor",
+        message,
       },
-      { status: 500 }
+      { status },
     );
   }
 }

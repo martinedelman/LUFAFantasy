@@ -63,4 +63,25 @@ export class TournamentFactory {
       data.registrationDeadline ? new Date(data.registrationDeadline) : undefined,
     );
   }
+
+  /**
+   * Convierte una entidad Tournament a formato de respuesta API
+   */
+  static toApiResponse(tournament: Tournament): any {
+    return {
+      id: tournament.id,
+      name: tournament.name,
+      description: tournament.description,
+      season: tournament.season,
+      year: tournament.year,
+      startDate: tournament.startDate.toISOString(),
+      endDate: tournament.endDate.toISOString(),
+      registrationDeadline: tournament.registrationDeadline?.toISOString(),
+      status: tournament.status,
+      format: tournament.format,
+      divisions: tournament.divisions,
+      createdAt: tournament.createdAt?.toISOString(),
+      updatedAt: tournament.updatedAt?.toISOString(),
+    };
+  }
 }

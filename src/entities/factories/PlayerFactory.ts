@@ -72,4 +72,28 @@ export class PlayerFactory {
       data.experience,
     );
   }
+
+  /**
+   * Convierte una entidad Player a formato de respuesta API
+   */
+  static toApiResponse(player: Player): any {
+    return {
+      id: player.id,
+      firstName: player.firstName,
+      lastName: player.lastName,
+      email: player.email,
+      phone: player.phone,
+      dateOfBirth: player.dateOfBirth.toISOString(),
+      team: player.team,
+      jerseyNumber: player.jerseyNumber,
+      position: player.position,
+      height: player.height,
+      weight: player.weight,
+      experience: player.experience,
+      registrationDate: player.registrationDate.toISOString(),
+      status: player.status,
+      createdAt: player.createdAt?.toISOString(),
+      updatedAt: player.updatedAt?.toISOString(),
+    };
+  }
 }

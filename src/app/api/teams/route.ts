@@ -1,174 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
-import connectToDatabase from "@/lib/mongodb";
-import { TeamModel, TournamentModel, UserModel } from "@/models";
-import { getSessionTokenFromRequest, verifySessionToken } from "@/lib/auth";
+import { TeamService, AuthService } from "@/services/backend";
+import { TeamFactory } from "@/entities/factories/TeamFactory";
+import { getSessionTokenFromRequest } from "@/lib/auth";
+import { TeamStatus } from "@/entities/Team";
 
-const TEAM_STATUS = ["active", "inactive", "suspended"] as const;
+const teamService = new TeamService();
+const authService = new AuthService();
 
-async function getRequestUserRole(request: NextRequest): Promise<"admin" | "user" | null> {
-  const token = getSessionTokenFromRequest(request);
-  if (!token) return null;
-
-  const payload = verifySessionToken(token);
-  if (!payload) return null;
-
-  const user = await UserModel.findById(payload.userId).select("role isActive");
-  if (!user || !user.isActive) return null;
-
-  return user.role;
-}
-
-async function isAdminRequest(request: NextRequest) {
-  const role = await getRequestUserRole(request);
-  return role === "admin";
-}
-
-function sanitizeTeamForNonAdmin(team: Record<string, unknown>) {
-  const sanitizedTeam: Record<string, unknown> = { ...team };
-
-  if (sanitizedTeam.coach && typeof sanitizedTeam.coach === "object") {
-    const coach = sanitizedTeam.coach as Record<string, unknown>;
-    sanitizedTeam.coach = {
-      name: typeof coach.name === "string" ? coach.name : "",
-      experience: typeof coach.experience === "string" ? coach.experience : "",
-      certifications: Array.isArray(coach.certifications) ? coach.certifications : [],
-    };
-  }
-
-  return sanitizedTeam;
-}
-
-function validateTeamPayload(payload: Record<string, unknown>) {
-  if (!payload.name || typeof payload.name !== "string") {
-    return "El nombre del equipo es requerido";
-  }
-
-  if (!payload.division || typeof payload.division !== "string") {
-    return "La división es requerida";
-  }
-
-  if (!payload.colors || typeof payload.colors !== "object") {
-    return "Los colores del equipo son requeridos";
-  }
-
-  const colors = payload.colors as Record<string, unknown>;
-  if (!colors.primary || typeof colors.primary !== "string") {
-    return "El color primario es requerido";
-  }
-
-  if (payload.status && !TEAM_STATUS.includes(payload.status as (typeof TEAM_STATUS)[number])) {
-    return "Estado de equipo inválido";
-  }
-
-  if (!payload.contact || typeof payload.contact !== "object") {
-    return "La información de contacto es requerida";
-  }
-
-  return null;
-}
-
-// GET /api/teams - Obtener todos los equipos
+/**
+ * GET /api/teams - Obtiene todos los equipos con filtros y paginación
+ */
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase();
-    const role = await getRequestUserRole(request);
-
     const { searchParams } = new URL(request.url);
     const division = searchParams.get("division");
     const tournament = searchParams.get("tournament");
-    const status = searchParams.get("status");
+    const status = searchParams.get("status") as TeamStatus | null;
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
 
-    const filter: Record<string, unknown> = {};
+    // Construir filtros
+    const filters: { tournament?: string; division?: string; status?: TeamStatus } = {};
+    if (tournament) filters.tournament = tournament;
+    if (division) filters.division = division;
+    if (status) filters.status = status;
 
-    if (tournament) {
-      if (!mongoose.isValidObjectId(tournament)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Torneo inválido",
-          },
-          { status: 400 },
-        );
+    // Obtener equipos
+    const allTeams = await teamService.listTeams(filters);
+
+    // Aplicar paginación
+    const total = allTeams.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedTeams = allTeams.slice(startIndex, endIndex);
+
+    // Verificar si el usuario es admin para saber qué datos mostrar
+    const token = getSessionTokenFromRequest(request);
+    const isAdmin = token ? await authService.verifyAdmin(token) : false;
+
+    // Convertir a respuesta API
+    const responseData = paginatedTeams.map((team) => {
+      const apiResponse = TeamFactory.toApiResponse(team);
+
+      // Si no es admin, sanitizar datos sensibles
+      if (!isAdmin && apiResponse.coach) {
+        apiResponse.coach = {
+          name: apiResponse.coach.name || "",
+          experience: apiResponse.coach.experience || "",
+          certifications: apiResponse.coach.certifications || [],
+        };
       }
 
-      const tournamentData = await TournamentModel.findById(tournament)
-        .select("divisions")
-        .lean<{ divisions?: mongoose.Types.ObjectId[] }>();
-      if (!tournamentData) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Torneo no encontrado",
-          },
-          { status: 404 },
-        );
-      }
-
-      const divisionIds = Array.isArray(tournamentData.divisions)
-        ? tournamentData.divisions.map((divisionId) => divisionId.toString())
-        : [];
-
-      filter.division = { $in: divisionIds };
-    }
-
-    if (division) {
-      if (!mongoose.isValidObjectId(division)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "División inválida",
-          },
-          { status: 400 },
-        );
-      }
-
-      if (tournament && typeof filter.division === "object" && filter.division !== null && "$in" in filter.division) {
-        const divisionFilter = filter.division as { $in: string[] };
-        if (!divisionFilter.$in.includes(division)) {
-          return NextResponse.json({
-            success: true,
-            data: [],
-            pagination: {
-              current: page,
-              total: 0,
-              pages: 0,
-              hasNext: false,
-              hasPrev: false,
-            },
-          });
-        }
-      }
-
-      filter.division = division;
-    }
-    if (status) filter.status = status;
-
-    const teams = await TeamModel.find(filter)
-      .populate("division")
-      .populate("players")
-      .sort({ name: 1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
-
-    const total = await TeamModel.countDocuments(filter);
-
-    const sanitizedTeams =
-      role === "admin"
-        ? teams
-        : teams.map((team) => sanitizeTeamForNonAdmin(team as unknown as Record<string, unknown>));
+      return apiResponse;
+    });
 
     return NextResponse.json({
       success: true,
-      data: sanitizedTeams,
+      data: responseData,
       pagination: {
         current: page,
         total: Math.ceil(total / limit),
         pages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
+        hasNext: endIndex < total,
         hasPrev: page > 1,
       },
     });
@@ -176,20 +69,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: "Error al obtener equipos",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message: error instanceof Error ? error.message : "Error al obtener equipos",
       },
       { status: 500 },
     );
   }
 }
 
-// POST /api/teams - Crear nuevo equipo
+/**
+ * POST /api/teams - Crea un nuevo equipo (solo admin)
+ */
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase();
+    const token = getSessionTokenFromRequest(request);
 
-    const isAdmin = await isAdminRequest(request);
+    if (!token) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autenticado",
+        },
+        { status: 401 },
+      );
+    }
+
+    const isAdmin = await authService.verifyAdmin(token);
     if (!isAdmin) {
       return NextResponse.json(
         {
@@ -200,39 +104,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = (await request.json()) as Record<string, unknown>;
-    const payload: Record<string, unknown> = { ...body };
-    delete payload.homeVenue;
+    const body = await request.json();
 
-    const validationError = validateTeamPayload(payload);
-    if (validationError) {
+    // Validación básica
+    if (!body.name || !body.division || !body.colors || !body.contact) {
       return NextResponse.json(
         {
           success: false,
-          message: validationError,
+          message: "Datos incompletos: name, division, colors y contact son requeridos",
         },
         { status: 400 },
       );
     }
 
-    const team = await TeamModel.create(payload);
+    const team = await teamService.createTeam({
+      name: body.name,
+      colors: body.colors,
+      division: body.division,
+      contact: body.contact,
+      shortName: body.shortName,
+      logo: body.logo,
+      tournament: body.tournament,
+      players: body.players,
+      status: body.status,
+    });
 
     return NextResponse.json(
       {
         success: true,
-        data: team,
         message: "Equipo creado exitosamente",
+        data: TeamFactory.toApiResponse(team),
       },
       { status: 201 },
     );
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Error al crear equipo";
+    const status = message.includes("existe") ? 409 : 400;
+
     return NextResponse.json(
       {
         success: false,
-        message: "Error al crear equipo",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message,
       },
-      { status: 400 },
+      { status },
     );
   }
 }

@@ -1,9 +1,9 @@
 // Exportar todas las interfaces de repositorios
-export { IRepository } from "./IRepository";
-export { IUserRepository } from "./IUserRepository";
-export { ITournamentRepository } from "./ITournamentRepository";
-export { ITeamRepository } from "./ITeamRepository";
-export { IPlayerRepository } from "./IPlayerRepository";
-export { IGameRepository } from "./IGameRepository";
-export { IStandingRepository } from "./IStandingRepository";
-export { IDivisionRepository } from "./IDivisionRepository";
+export type { IRepository } from "./IRepository";
+export type { IUserRepository } from "./IUserRepository";
+export type { ITournamentRepository } from "./ITournamentRepository";
+export type { ITeamRepository } from "./ITeamRepository";
+export type { IPlayerRepository } from "./IPlayerRepository";
+export type { IGameRepository } from "./IGameRepository";
+export type { IStandingRepository } from "./IStandingRepository";
+export type { IDivisionRepository } from "./IDivisionRepository";

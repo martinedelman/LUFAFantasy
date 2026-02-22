@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
-import { getOrderedStandingsByDivision } from "@/lib/gameService";
+import { StandingService } from "@/services/backend";
+import { StandingFactory } from "@/entities/factories/StandingFactory";
 
-// GET /api/standings - Obtener tabla de posiciones
+const standingService = new StandingService();
+
+/**
+ * GET /api/standings - Obtiene la tabla de posiciones por división
+ */
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase();
-
     const { searchParams } = new URL(request.url);
     const division = searchParams.get("division");
 
@@ -20,19 +22,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Obtener standings ordenados dinámicamente con posiciones recalculadas
-    const standings = await getOrderedStandingsByDivision(division);
+    // Obtener standings ordenados
+    const standings = await standingService.getStandingsByDivision(division);
+
+    // Convertir a respuesta API
+    const responseData = standings.map((standing) => StandingFactory.toApiResponse(standing));
 
     return NextResponse.json({
       success: true,
-      data: standings,
+      data: responseData,
     });
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        message: "Error al obtener tabla de posiciones",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message: error instanceof Error ? error.message : "Error al obtener tabla de posiciones",
       },
       { status: 500 },
     );

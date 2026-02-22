@@ -1,39 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
-import { DivisionModel } from "@/models";
+import { DivisionService } from "@/services/backend";
+import { DivisionFactory } from "@/entities/factories/DivisionFactory";
+import { DivisionCategory } from "@/entities/Division";
 
-// GET /api/divisions - Obtener todas las divisiones
+const divisionService = new DivisionService();
+
+/**
+ * GET /api/divisions - Obtiene todas las divisiones con filtros y paginación
+ */
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase();
-
     const { searchParams } = new URL(request.url);
     const tournament = searchParams.get("tournament");
-    const category = searchParams.get("category");
+    const category = searchParams.get("category") as DivisionCategory | null;
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
 
-    const filter: Record<string, string> = {};
-    if (tournament) filter.tournament = tournament;
-    if (category) filter.category = category;
+    // Construir filtros
+    const filters: { tournament?: string; category?: DivisionCategory } = {};
+    if (tournament) filters.tournament = tournament;
+    if (category) filters.category = category;
 
-    const divisions = await DivisionModel.find(filter)
-      .populate("tournament", "name")
-      .populate("teams", "name")
-      .sort({ name: 1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    // Obtener divisiones
+    const allDivisions = await divisionService.listDivisions(filters);
 
-    const total = await DivisionModel.countDocuments(filter);
+    // Aplicar paginación
+    const total = allDivisions.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedDivisions = allDivisions.slice(startIndex, endIndex);
+
+    // Convertir a respuesta API
+    const responseData = paginatedDivisions.map((division) => DivisionFactory.toApiResponse(division));
 
     return NextResponse.json({
       success: true,
-      data: divisions,
+      data: responseData,
       pagination: {
         current: page,
         total: Math.ceil(total / limit),
         pages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
+        hasNext: endIndex < total,
         hasPrev: page > 1,
       },
     });
@@ -41,38 +48,58 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: "Error al obtener divisiones",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message: error instanceof Error ? error.message : "Error al obtener divisiones",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-// POST /api/divisions - Crear nueva división
+/**
+ * POST /api/divisions - Crea una nueva división
+ */
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase();
-
     const body = await request.json();
-    const division = await DivisionModel.create(body);
+
+    // Validación básica
+    if (!body.name || !body.category) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Datos incompletos: name y category son requeridos",
+        },
+        { status: 400 },
+      );
+    }
+
+    const division = await divisionService.createDivision({
+      name: body.name,
+      category: body.category,
+      ageGroup: body.ageGroup,
+      tournament: body.tournament,
+      maxTeams: body.maxTeams,
+      teams: body.teams,
+    });
 
     return NextResponse.json(
       {
         success: true,
-        data: division,
         message: "División creada exitosamente",
+        data: DivisionFactory.toApiResponse(division),
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Error al crear división";
+    const status = message.includes("existe") ? 409 : 400;
+
     return NextResponse.json(
       {
         success: false,
-        message: "Error al crear división",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message,
       },
-      { status: 400 }
+      { status },
     );
   }
 }

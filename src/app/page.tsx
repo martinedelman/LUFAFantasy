@@ -458,7 +458,7 @@ export default function Home() {
                   <span className="text-3xl">🇺🇾</span> Flag Football en Uruguay
                 </h3>
 
-                <p className="text-lg text-brand-100 leading-relaxed mb-6 text-white">
+                <p className="text-lg leading-relaxed mb-6 text-white">
                   En Uruguay el deporte viene creciendo año a año, con torneos organizados, equipos competitivos y una
                   comunidad cada vez más fuerte. El camino hacia Los Ángeles 2028 también genera nuevas oportunidades
                   para el desarrollo local y la proyección internacional.

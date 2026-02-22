@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
-import { UserModel } from "@/models";
-import { getSessionTokenFromRequest, verifySessionToken } from "@/lib/auth";
+import { AuthService } from "@/services/backend";
+import { getSessionTokenFromRequest } from "@/lib/auth";
+import { UserFactory } from "@/entities/factories";
+
+const authService = new AuthService();
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,38 +19,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const payload = verifySessionToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Sesión inválida o expirada",
-        },
-        { status: 401 },
-      );
-    }
-
-    await connectToDatabase();
-
-    const user = await UserModel.findById(payload.userId);
-    if (!user || !user.isActive) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Usuario no válido",
-        },
-        { status: 401 },
-      );
-    }
+    const user = await authService.verifyToken(token);
 
     return NextResponse.json({
       success: true,
-      data: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      data: UserFactory.toApiResponse(user),
     });
   } catch (error) {
     return NextResponse.json(

@@ -68,4 +68,29 @@ export class StandingFactory {
       data.lastFiveGames,
     );
   }
+
+  /**
+   * Convierte una entidad Standing a formato de respuesta API
+   */
+  static toApiResponse(standing: Standing): any {
+    return {
+      id: standing.id,
+      division: standing.division,
+      team: standing.team,
+      tournament: standing.tournament,
+      position: standing.position,
+      wins: standing.wins,
+      losses: standing.losses,
+      ties: standing.ties,
+      gamesPlayed: standing.gamesPlayed,
+      pointsFor: standing.pointsFor,
+      pointsAgainst: standing.pointsAgainst,
+      pointsDifferential: standing.pointsDifferential,
+      percentage: standing.percentage,
+      streak: standing.streak,
+      lastFiveGames: standing.lastFiveGames,
+      createdAt: standing.createdAt?.toISOString(),
+      updatedAt: standing.updatedAt?.toISOString(),
+    };
+  }
 }

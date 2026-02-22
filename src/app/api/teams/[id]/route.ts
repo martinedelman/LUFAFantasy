@@ -1,82 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
-import { TeamModel, UserModel } from "@/models";
-import { getSessionTokenFromRequest, verifySessionToken } from "@/lib/auth";
+import { TeamService, AuthService } from "@/services/backend";
+import { TeamFactory } from "@/entities/factories/TeamFactory";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 
-const TEAM_STATUS = ["active", "inactive", "suspended"] as const;
+const teamService = new TeamService();
+const authService = new AuthService();
 
-async function getRequestUserRole(request: NextRequest): Promise<"admin" | "user" | null> {
-  const token = getSessionTokenFromRequest(request);
-  if (!token) return null;
-
-  const payload = verifySessionToken(token);
-  if (!payload) return null;
-
-  const user = await UserModel.findById(payload.userId).select("role isActive");
-  if (!user || !user.isActive) return null;
-
-  return user.role;
-}
-
-async function isAdminRequest(request: NextRequest) {
-  const role = await getRequestUserRole(request);
-  return role === "admin";
-}
-
-function sanitizeTeamForNonAdmin(team: Record<string, unknown>) {
-  const sanitizedTeam: Record<string, unknown> = { ...team };
-
-  if (sanitizedTeam.coach && typeof sanitizedTeam.coach === "object") {
-    const coach = sanitizedTeam.coach as Record<string, unknown>;
-    sanitizedTeam.coach = {
-      name: typeof coach.name === "string" ? coach.name : "",
-      experience: typeof coach.experience === "string" ? coach.experience : "",
-      certifications: Array.isArray(coach.certifications) ? coach.certifications : [],
-    };
-  }
-
-  return sanitizedTeam;
-}
-
-function validateTeamPayload(payload: Record<string, unknown>) {
-  if (payload.name !== undefined && typeof payload.name !== "string") {
-    return "Nombre de equipo inválido";
-  }
-
-  if (payload.division !== undefined && typeof payload.division !== "string") {
-    return "División inválida";
-  }
-
-  if (payload.colors !== undefined) {
-    if (!payload.colors || typeof payload.colors !== "object") {
-      return "Colores de equipo inválidos";
-    }
-
-    const colors = payload.colors as Record<string, unknown>;
-    if (colors.primary !== undefined && typeof colors.primary !== "string") {
-      return "Color primario inválido";
-    }
-  }
-
-  if (payload.status !== undefined && !TEAM_STATUS.includes(payload.status as (typeof TEAM_STATUS)[number])) {
-    return "Estado de equipo inválido";
-  }
-
-  if (payload.contact !== undefined && (payload.contact === null || typeof payload.contact !== "object")) {
-    return "Información de contacto inválida";
-  }
-
-  return null;
-}
-
-// GET /api/teams/[id] - Obtener equipo por ID
+/**
+ * GET /api/teams/:id - Obtiene un equipo por ID
+ */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await connectToDatabase();
-    const role = await getRequestUserRole(request);
-
     const { id } = await params;
-    const team = await TeamModel.findById(id).populate("division").populate("players").lean();
+
+    const team = await teamService.getTeamById(id);
 
     if (!team) {
       return NextResponse.json(
@@ -88,28 +25,54 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
+    // Verificar si el usuario es admin para saber qué datos mostrar
+    const token = getSessionTokenFromRequest(request);
+    const isAdmin = token ? await authService.verifyAdmin(token) : false;
+
+    const apiResponse = TeamFactory.toApiResponse(team);
+
+    // Si no es admin, sanitizar datos sensibles
+    if (!isAdmin && apiResponse.coach) {
+      apiResponse.coach = {
+        name: apiResponse.coach.name || "",
+        experience: apiResponse.coach.experience || "",
+        certifications: apiResponse.coach.certifications || [],
+      };
+    }
+
     return NextResponse.json({
       success: true,
-      data: role === "admin" ? team : sanitizeTeamForNonAdmin(team as unknown as Record<string, unknown>),
+      data: apiResponse,
     });
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        message: "Error al obtener equipo",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message: error instanceof Error ? error.message : "Error al obtener equipo",
       },
       { status: 500 },
     );
   }
 }
 
-// PUT /api/teams/[id] - Actualizar equipo
+/**
+ * PUT /api/teams/:id - Actualiza un equipo (solo admin)
+ */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await connectToDatabase();
+    const token = getSessionTokenFromRequest(request);
 
-    const isAdmin = await isAdminRequest(request);
+    if (!token) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autenticado",
+        },
+        { status: 401 },
+      );
+    }
+
+    const isAdmin = await authService.verifyAdmin(token);
     if (!isAdmin) {
       return NextResponse.json(
         {
@@ -121,56 +84,41 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-    const body = (await request.json()) as Record<string, unknown>;
-    const payload: Record<string, unknown> = { ...body };
-    delete payload.homeVenue;
+    const body = await request.json();
 
-    const validationError = validateTeamPayload(payload);
-    if (validationError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: validationError,
-        },
-        { status: 400 },
-      );
-    }
-
-    const team = await TeamModel.findByIdAndUpdate(id, payload, {
-      new: true,
-      runValidators: true,
-    })
-      .populate("division")
-      .populate("players");
-
-    if (!team) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Equipo no encontrado",
-        },
-        { status: 404 },
-      );
-    }
+    const updatedTeam = await teamService.updateTeam(id, {
+      name: body.name,
+      colors: body.colors,
+      shortName: body.shortName,
+      logo: body.logo,
+      coach: body.coach,
+      contact: body.contact,
+      status: body.status,
+      players: body.players,
+    });
 
     return NextResponse.json({
       success: true,
-      data: team,
       message: "Equipo actualizado exitosamente",
+      data: TeamFactory.toApiResponse(updatedTeam),
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Error al actualizar equipo";
+    const status = message.includes("no encontrado") ? 404 : 400;
+
     return NextResponse.json(
       {
         success: false,
-        message: "Error al actualizar equipo",
-        error: error instanceof Error ? error.message : "Error desconocido",
+        message,
       },
-      { status: 400 },
+      { status },
     );
   }
 }
 
-// DELETE /api/teams/[id] - Eliminar equipo
+/**
+ * DELETE /api/teams/:id - Eliminar equipo (no permitido)
+ */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   void request;
   void params;
