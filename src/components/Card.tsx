@@ -94,8 +94,8 @@ export default function Card({ title, subtitle, icon, badge, info, colors, foote
         {/* Info */}
         {info && info.length > 0 && (
           <div className="space-y-2 mb-4">
-            {info.map((item, idx) => (
-              <div key={idx} className="flex items-center text-sm text-gray-600">
+            {info.map((item) => (
+              <div key={item.text} className="flex items-center text-sm text-gray-600">
                 {item.icon && <div className="mr-2">{item.icon}</div>}
                 <span>{item.text}</span>
               </div>
@@ -120,8 +120,8 @@ export default function Card({ title, subtitle, icon, badge, info, colors, foote
         {/* Actions */}
         <div className="flex justify-between items-center">
           <div className="flex space-x-2">
-            {actions?.map((action, idx) => (
-              <React.Fragment key={idx}>
+            {actions?.map((action) => (
+              <React.Fragment key={action.label}>
                 {action.href ? (
                   <Link
                     href={action.href}

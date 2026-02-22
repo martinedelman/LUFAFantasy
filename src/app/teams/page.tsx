@@ -100,7 +100,8 @@ function TeamsPageContent() {
         const result: ApiResponse = await response.json();
 
         if (result.success) {
-          setTeams(result.data);
+          // Filtrar equipos sin _id válido para prevenir errores de key
+          setTeams(result.data.filter((team) => team._id));
           setPagination(result.pagination);
           setError(null);
         } else {
@@ -127,7 +128,8 @@ function TeamsPageContent() {
           const result: DivisionsApiResponse = await response.json();
 
           if (result.success) {
-            setDivisions(result.data);
+            // Filtrar divisiones sin _id válido para prevenir errores de key
+            setDivisions(result.data.filter((div) => div._id));
           } else {
             setDivisions([]);
           }
@@ -136,7 +138,8 @@ function TeamsPageContent() {
           const result: DivisionsApiResponse = await response.json();
 
           if (result.success) {
-            setDivisions(result.data);
+            // Filtrar divisiones sin _id válido para prevenir errores de key
+            setDivisions(result.data.filter((div) => div._id));
           }
         }
       } catch {

@@ -106,8 +106,8 @@ export default function Table<T extends object>({
                 })}
                 {actions && actions.length > 0 && (
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                    {actions.map((action, idx) => (
-                      <React.Fragment key={idx}>
+                    {actions.map((action) => (
+                      <React.Fragment key={action.label}>
                         {action.href ? (
                           <Link
                             href={action.href(String(item[idKey]))}
