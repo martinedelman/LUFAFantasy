@@ -3,6 +3,7 @@ import { Division } from "../../entities/Division";
 import { DivisionModel } from "../../models/Division";
 import { DivisionFactory } from "../../entities/factories/DivisionFactory";
 import connectToDatabase from "../../lib/mongodb";
+import { TournamentModel } from "@/models";
 
 export class MongoDivisionRepository implements IDivisionRepository {
   async findById(id: string): Promise<Division | null> {
@@ -59,8 +60,12 @@ export class MongoDivisionRepository implements IDivisionRepository {
 
   async findByTournament(tournamentId: string): Promise<Division[]> {
     await connectToDatabase();
-    const docs = await DivisionModel.find({ tournament: tournamentId }).populate("teams").exec();
-    return docs.map((doc) => DivisionFactory.fromDatabase(doc));
+    const tournament = await TournamentModel.findById(tournamentId);
+    const divisionIds = tournament?.divisions || [];
+    const divisions = await DivisionModel.find({ _id: { $in: divisionIds } })
+      .populate("teams")
+      .exec();
+    return divisions.map((doc) => DivisionFactory.fromDatabase(doc));
   }
 
   async findByCategory(category: string): Promise<Division[]> {

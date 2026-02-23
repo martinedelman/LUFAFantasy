@@ -3,12 +3,13 @@ import { Team } from "../../entities/Team";
 import { TeamModel } from "../../models/Team";
 import { TeamFactory } from "../../entities/factories/TeamFactory";
 import connectToDatabase from "../../lib/mongodb";
+import { TournamentModel } from "@/models";
 
 export class MongoTeamRepository implements ITeamRepository {
   async findById(id: string): Promise<Team | null> {
     await connectToDatabase();
     const doc = await TeamModel.findById(id).populate("division").populate("players").exec();
-    return doc ? TeamFactory.fromDatabase(doc) : null;
+    return doc ? doc : null;
   }
 
   async findAll(filters?: Record<string, unknown>): Promise<Team[]> {
@@ -16,7 +17,7 @@ export class MongoTeamRepository implements ITeamRepository {
     const docs = await TeamModel.find(filters || {})
       .populate("division")
       .exec();
-    return docs.map((doc) => TeamFactory.fromDatabase(doc));
+    return docs;
   }
 
   async create(data: Partial<Team>): Promise<Team> {
@@ -59,14 +60,26 @@ export class MongoTeamRepository implements ITeamRepository {
 
   async findByTournament(tournamentId: string): Promise<Team[]> {
     await connectToDatabase();
-    const docs = await TeamModel.find({ tournament: tournamentId }).populate("division").exec();
-    return docs.map((doc) => TeamFactory.fromDatabase(doc));
+
+    // Primero encontrar todas las divisiones del torneo
+    const tournament = await TournamentModel.findById(tournamentId).exec();
+    const divisionIds = tournament ? tournament.divisions : [];
+
+    // Luego buscar todos los equipos de esas divisiones
+    if (divisionIds.length === 0) {
+      return [];
+    }
+
+    const docs = await TeamModel.find({ division: { $in: divisionIds } })
+      .populate("division")
+      .exec();
+    return docs;
   }
 
   async findByDivision(divisionId: string): Promise<Team[]> {
     await connectToDatabase();
     const docs = await TeamModel.find({ division: divisionId }).exec();
-    return docs.map((doc) => TeamFactory.fromDatabase(doc));
+    return docs;
   }
 
   async existsWithName(name: string, tournamentId?: string): Promise<boolean> {
@@ -82,6 +95,6 @@ export class MongoTeamRepository implements ITeamRepository {
   async findActiveTeams(): Promise<Team[]> {
     await connectToDatabase();
     const docs = await TeamModel.find({ status: "active" }).populate("division").exec();
-    return docs.map((doc) => TeamFactory.fromDatabase(doc));
+    return docs;
   }
 }

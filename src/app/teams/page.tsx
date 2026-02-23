@@ -62,6 +62,7 @@ function TeamsPageContent() {
   const searchParams = useSearchParams();
   const tournamentId = searchParams.get("tournament") || "";
   const [teams, setTeams] = useState<Team[]>([]);
+  const [unfilteredTeams, setUnfilteredTeams] = useState<Team[]>([]);
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [loadingDivisions, setLoadingDivisions] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -83,25 +84,32 @@ function TeamsPageContent() {
     setFilters((prev) => ({ ...prev, division: "" }));
     setCurrentPage(1);
   }, [tournamentId]);
+
   const fetchTeams = useCallback(
     async (page = 1) => {
       try {
         setLoading(true);
+        if (filters.division) {
+          console.log("Filtrando por división:", filters.division);
+          console.log("Equipos antes del filtro:", teams);
+          setTeams(unfilteredTeams.filter((team) => team.division._id === filters.division));
+          return;
+        }
+        if (filters.status) {
+        }
         const params = new URLSearchParams({
           page: page.toString(),
-          limit: "12",
+          limit: "20",
         });
 
-        if (filters.division) params.append("division", filters.division);
-        if (filters.status) params.append("status", filters.status);
         if (tournamentId) params.append("tournament", tournamentId);
 
         const response = await fetch(`/api/teams?${params}`);
         const result: ApiResponse = await response.json();
 
         if (result.success) {
-          // Filtrar equipos sin _id válido para prevenir errores de key
-          setTeams(result.data.filter((team) => team._id));
+          setTeams(result.data);
+          setUnfilteredTeams(result.data);
           setPagination(result.pagination);
           setError(null);
         } else {
@@ -113,7 +121,7 @@ function TeamsPageContent() {
         setLoading(false);
       }
     },
-    [filters.division, filters.status, tournamentId],
+    [filters.division, filters.status, tournamentId, teams, unfilteredTeams],
   );
   useEffect(() => {
     fetchTeams(currentPage);
