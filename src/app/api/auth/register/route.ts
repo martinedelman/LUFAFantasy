@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/services/backend";
-import { UserFactory } from "@/entities/factories";
 
 const authService = new AuthService();
 
@@ -42,7 +41,15 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Usuario registrado exitosamente",
-        data: UserFactory.toApiResponse(user),
+        data: {
+          _id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          isActive: user.isActive,
+          createdAt: user.createdAt?.toISOString(),
+          updatedAt: user.updatedAt?.toISOString(),
+        },
       },
       { status: 201 },
     );

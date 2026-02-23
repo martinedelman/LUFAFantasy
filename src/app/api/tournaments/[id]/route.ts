@@ -1,14 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TournamentService, AuthService, DivisionService, TeamService } from "@/services/backend";
-import { TournamentFactory } from "@/entities/factories/TournamentFactory";
-import { DivisionFactory } from "@/entities/factories/DivisionFactory";
-import { TeamFactory } from "@/entities/factories/TeamFactory";
+import { Tournament } from "@/entities/Tournament";
+import { Division } from "@/entities/Division";
+import { Team } from "@/entities/Team";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 
 const tournamentService = new TournamentService();
 const authService = new AuthService();
 const divisionService = new DivisionService();
 const teamService = new TeamService();
+
+// Helper para serializar Tournament a respuesta API
+function tournamentToApiResponse(tournament: Tournament) {
+  return {
+    _id: tournament.id,
+    name: tournament.name,
+    description: tournament.description,
+    season: tournament.season,
+    year: tournament.year,
+    startDate: tournament.startDate.toISOString(),
+    endDate: tournament.endDate.toISOString(),
+    registrationDeadline: tournament.registrationDeadline?.toISOString(),
+    status: tournament.status,
+    format: tournament.format,
+    divisions: tournament.divisions,
+    rules: tournament.rules,
+    prizes: tournament.prizes,
+    createdAt: tournament.createdAt?.toISOString(),
+    updatedAt: tournament.updatedAt?.toISOString(),
+  };
+}
+
+// Helper para serializar Division a respuesta API
+function divisionToApiResponse(division: Division) {
+  return {
+    _id: division.id,
+    name: division.name,
+    category: division.category,
+    ageGroup: division.ageGroup,
+    tournament: division.tournament,
+    teams: division.teams,
+    maxTeams: division.maxTeams,
+    createdAt: division.createdAt?.toISOString(),
+    updatedAt: division.updatedAt?.toISOString(),
+  };
+}
+
+// Helper para serializar Team a respuesta API
+function teamToApiResponse(team: Team) {
+  return {
+    _id: team.id,
+    name: team.name,
+    shortName: team.shortName,
+    logo: team.logo,
+    colors: {
+      primary: team.colors.primary,
+      secondary: team.colors.secondary,
+    },
+    division: team.division,
+    tournament: team.tournament,
+    players: team.players,
+    contact: {
+      email: team.contact.email,
+      phone: team.contact.phone,
+      address: team.contact.address,
+      socialMedia: team.contact.socialMedia,
+    },
+    registrationDate: team.registrationDate.toISOString(),
+    status: team.status,
+    createdAt: team.createdAt?.toISOString(),
+    updatedAt: team.updatedAt?.toISOString(),
+  };
+}
 
 /**
  * GET /api/tournaments/:id - Obtiene un torneo por ID con divisiones pobladas
@@ -24,7 +87,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Obtener las divisiones pobladas
-    const tournamentData = TournamentFactory.toApiResponse(tournament);
+    const tournamentData = tournamentToApiResponse(tournament);
 
     if (tournament.divisions && tournament.divisions.length > 0) {
       const populatedDivisions = await Promise.all(
@@ -32,14 +95,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           const division = await divisionService.getDivisionById(divisionId);
           if (!division) return null;
 
-          const divisionData = DivisionFactory.toApiResponse(division);
+          const divisionData = divisionToApiResponse(division);
 
           // Popular los teams de cada división
           if (division.teams && division.teams.length > 0) {
             const populatedTeams = await Promise.all(
               division.teams.map(async (teamId) => {
                 const team = await teamService.getTeamById(teamId);
-                return team ? TeamFactory.toApiResponse(team) : null;
+                return team ? teamToApiResponse(team) : null;
               }),
             );
             divisionData.teams = populatedTeams.filter((t) => t !== null);
@@ -127,7 +190,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({
       success: true,
       message: "Torneo actualizado exitosamente",
-      data: TournamentFactory.toApiResponse(updatedTournament),
+      data: tournamentToApiResponse(updatedTournament),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar torneo";

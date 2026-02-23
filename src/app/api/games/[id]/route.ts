@@ -1,8 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
-import { GameFactory } from "@/entities/factories/GameFactory";
+import { Game } from "@/entities/Game";
 
 const gameService = new GameService();
+
+// Helper para serializar Game a respuesta API
+function gameToApiResponse(game: Game) {
+  return {
+    _id: game.id,
+    tournament: game.tournament,
+    division: game.division,
+    homeTeam: game.homeTeam,
+    awayTeam: game.awayTeam,
+    venue: {
+      name: game.venue.name,
+      city: game.venue.city,
+      capacity: game.venue.capacity,
+      coordinates: game.venue.coordinates,
+    },
+    scheduledDate: game.scheduledDate.toISOString(),
+    actualStartTime: game.actualStartTime?.toISOString(),
+    actualEndTime: game.actualEndTime?.toISOString(),
+    status: game.status,
+    week: game.week,
+    round: game.round,
+    score: {
+      home: game.score.home,
+      away: game.score.away,
+    },
+    statistics: game.statistics,
+    notes: game.notes,
+    createdAt: game.createdAt?.toISOString(),
+    updatedAt: game.updatedAt?.toISOString(),
+  };
+}
 
 /**
  * GET /api/games/:id - Obtiene un partido por ID
@@ -25,7 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({
       success: true,
-      data: GameFactory.toApiResponse(game),
+      data: gameToApiResponse(game),
     });
   } catch (error) {
     return NextResponse.json(
@@ -81,7 +112,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({
       success: true,
       message: "Score actualizado exitosamente",
-      data: GameFactory.toApiResponse(updatedGame),
+      data: gameToApiResponse(updatedGame),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar score";

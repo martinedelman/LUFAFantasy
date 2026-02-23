@@ -1,9 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
-import { GameFactory } from "@/entities/factories/GameFactory";
 import { GameStatus } from "@/entities/Game";
+import { Game } from "@/entities/Game";
 
 const gameService = new GameService();
+
+// Helper para serializar Game a respuesta API
+function gameToApiResponse(game: Game) {
+  return {
+    _id: game.id,
+    tournament: game.tournament,
+    division: game.division,
+    homeTeam: game.homeTeam,
+    awayTeam: game.awayTeam,
+    venue: {
+      name: game.venue.name,
+      city: game.venue.city,
+      capacity: game.venue.capacity,
+      coordinates: game.venue.coordinates,
+    },
+    scheduledDate: game.scheduledDate.toISOString(),
+    actualStartTime: game.actualStartTime?.toISOString(),
+    actualEndTime: game.actualEndTime?.toISOString(),
+    status: game.status,
+    week: game.week,
+    round: game.round,
+    score: {
+      home: game.score.home,
+      away: game.score.away,
+    },
+    statistics: game.statistics,
+    notes: game.notes,
+    createdAt: game.createdAt?.toISOString(),
+    updatedAt: game.updatedAt?.toISOString(),
+  };
+}
 
 // GET /api/games - Obtener todos los partidos
 export async function GET(request: NextRequest) {
@@ -22,7 +53,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Convertir entities a formato API
-    const gamesData = games.map((game) => GameFactory.toApiResponse(game));
+    const gamesData = games.map((game) => gameToApiResponse(game));
 
     return NextResponse.json({
       success: true,
@@ -71,7 +102,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        data: GameFactory.toApiResponse(game),
+        data: gameToApiResponse(game),
         message: "Partido creado exitosamente",
       },
       { status: 201 },
@@ -114,7 +145,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: GameFactory.toApiResponse(game),
+      data: gameToApiResponse(game),
       message: "Partido actualizado exitosamente",
     });
   } catch (error) {

@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TournamentService, AuthService } from "@/services/backend";
-import { TournamentFactory } from "@/entities/factories/TournamentFactory";
+import { Tournament, TournamentStatus } from "@/entities/Tournament";
 import { getSessionTokenFromRequest } from "@/lib/auth";
-import { TournamentStatus } from "@/entities/Tournament";
 
 const tournamentService = new TournamentService();
 const authService = new AuthService();
+
+// Helper para serializar Tournament a respuesta API
+function tournamentToApiResponse(tournament: Tournament) {
+  return {
+    _id: tournament.id,
+    name: tournament.name,
+    description: tournament.description,
+    season: tournament.season,
+    year: tournament.year,
+    startDate: tournament.startDate.toISOString(),
+    endDate: tournament.endDate.toISOString(),
+    registrationDeadline: tournament.registrationDeadline?.toISOString(),
+    status: tournament.status,
+    format: tournament.format,
+    divisions: tournament.divisions,
+    rules: tournament.rules,
+    prizes: tournament.prizes,
+    createdAt: tournament.createdAt?.toISOString(),
+    updatedAt: tournament.updatedAt?.toISOString(),
+  };
+}
 
 /**
  * GET /api/tournaments - Obtiene todos los torneos con filtros y paginación
@@ -33,7 +53,7 @@ export async function GET(request: NextRequest) {
     const paginatedTournaments = allTournaments.slice(startIndex, endIndex);
 
     // Convertir a respuesta API
-    const responseData = paginatedTournaments.map((tournament) => TournamentFactory.toApiResponse(tournament));
+    const responseData = paginatedTournaments.map((tournament) => tournamentToApiResponse(tournament));
 
     return NextResponse.json({
       success: true,
@@ -117,7 +137,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Torneo creado exitosamente",
-        data: TournamentFactory.toApiResponse(tournament),
+        data: tournamentToApiResponse(tournament),
       },
       { status: 201 },
     );

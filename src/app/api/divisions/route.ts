@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DivisionService } from "@/services/backend";
-import { DivisionFactory } from "@/entities/factories/DivisionFactory";
-import { DivisionCategory } from "@/entities/Division";
+import { DivisionCategory, Division } from "@/entities/Division";
 
 const divisionService = new DivisionService();
+
+// Helper para serializar Division a respuesta API
+function divisionToApiResponse(division: Division) {
+  return {
+    _id: division.id,
+    name: division.name,
+    category: division.category,
+    ageGroup: division.ageGroup,
+    tournament: division.tournament,
+    teams: division.teams,
+    maxTeams: division.maxTeams,
+    createdAt: division.createdAt?.toISOString(),
+    updatedAt: division.updatedAt?.toISOString(),
+  };
+}
 
 /**
  * GET /api/divisions - Obtiene todas las divisiones con filtros y paginación
@@ -31,7 +45,7 @@ export async function GET(request: NextRequest) {
     const paginatedDivisions = allDivisions.slice(startIndex, endIndex);
 
     // Convertir a respuesta API
-    const responseData = paginatedDivisions.map((division) => DivisionFactory.toApiResponse(division));
+    const responseData = paginatedDivisions.map((division) => divisionToApiResponse(division));
 
     return NextResponse.json({
       success: true,
@@ -86,7 +100,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "División creada exitosamente",
-        data: DivisionFactory.toApiResponse(division),
+        data: divisionToApiResponse(division),
       },
       { status: 201 },
     );

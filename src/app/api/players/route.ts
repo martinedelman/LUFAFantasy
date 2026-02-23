@@ -1,9 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PlayerService } from "@/services/backend";
-import { PlayerFactory } from "@/entities/factories/PlayerFactory";
 import { PlayerPosition, PlayerStatus } from "@/entities/Player";
+import { Player } from "@/entities/Player";
 
 const playerService = new PlayerService();
+
+// Helper para serializar Player a respuesta API
+function playerToApiResponse(player: Player) {
+  return {
+    _id: player.id,
+    firstName: player.firstName,
+    lastName: player.lastName,
+    email: player.email,
+    phone: player.phone,
+    dateOfBirth: player.dateOfBirth.toISOString(),
+    team: player.team,
+    jerseyNumber: player.jerseyNumber,
+    position: player.position,
+    height: player.height,
+    weight: player.weight,
+    experience: player.experience,
+    registrationDate: player.registrationDate.toISOString(),
+    status: player.status,
+    createdAt: player.createdAt?.toISOString(),
+    updatedAt: player.updatedAt?.toISOString(),
+  };
+}
 
 /**
  * GET /api/players - Obtiene todos los jugadores con filtros y paginación
@@ -40,7 +62,7 @@ export async function GET(request: NextRequest) {
     const paginatedPlayers = allPlayers.slice(startIndex, endIndex);
 
     // Convertir a respuesta API
-    const responseData = paginatedPlayers.map((player) => PlayerFactory.toApiResponse(player));
+    const responseData = paginatedPlayers.map((player) => playerToApiResponse(player));
 
     return NextResponse.json({
       success: true,
@@ -101,7 +123,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Jugador creado exitosamente",
-        data: PlayerFactory.toApiResponse(player),
+        data: playerToApiResponse(player),
       },
       { status: 201 },
     );

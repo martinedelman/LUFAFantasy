@@ -1,7 +1,6 @@
 import { IDivisionRepository } from "../contracts/IDivisionRepository";
 import { Division } from "../../entities/Division";
 import { DivisionModel } from "../../models/Division";
-import { DivisionFactory } from "../../entities/factories/DivisionFactory";
 import connectToDatabase from "../../lib/mongodb";
 import { TournamentModel } from "@/models";
 
@@ -9,7 +8,7 @@ export class MongoDivisionRepository implements IDivisionRepository {
   async findById(id: string): Promise<Division | null> {
     await connectToDatabase();
     const doc = await DivisionModel.findById(id).populate("teams").exec();
-    return doc ? DivisionFactory.fromDatabase(doc) : null;
+    return doc ? doc : null;
   }
 
   async findAll(filters?: Record<string, unknown>): Promise<Division[]> {
@@ -17,20 +16,20 @@ export class MongoDivisionRepository implements IDivisionRepository {
     const docs = await DivisionModel.find(filters || {})
       .populate("teams")
       .exec();
-    return docs.map((doc) => DivisionFactory.fromDatabase(doc));
+    return docs;
   }
 
   async create(data: Partial<Division>): Promise<Division> {
     await connectToDatabase();
-    const persistenceData = DivisionFactory.toPersistence(data as Division);
+    const persistenceData = data as Division;
     const doc = await DivisionModel.create(persistenceData);
     const populatedDoc = await DivisionModel.findById(doc._id).populate("teams").exec();
-    return DivisionFactory.fromDatabase(populatedDoc);
+    return populatedDoc;
   }
 
   async update(id: string, data: Partial<Division>): Promise<Division> {
     await connectToDatabase();
-    const persistenceData = DivisionFactory.toPersistence(data as Division);
+    const persistenceData = data as Division;
     const doc = await DivisionModel.findByIdAndUpdate(id, persistenceData, {
       new: true,
       runValidators: true,
@@ -42,7 +41,7 @@ export class MongoDivisionRepository implements IDivisionRepository {
       throw new Error("División no encontrada");
     }
 
-    return DivisionFactory.fromDatabase(doc);
+    return doc;
   }
 
   async delete(id: string): Promise<void> {
@@ -65,13 +64,13 @@ export class MongoDivisionRepository implements IDivisionRepository {
     const divisions = await DivisionModel.find({ _id: { $in: divisionIds } })
       .populate("teams")
       .exec();
-    return divisions.map((doc) => DivisionFactory.fromDatabase(doc));
+    return divisions;
   }
 
   async findByCategory(category: string): Promise<Division[]> {
     await connectToDatabase();
     const docs = await DivisionModel.find({ category }).populate("teams").exec();
-    return docs.map((doc) => DivisionFactory.fromDatabase(doc));
+    return docs;
   }
 
   async existsWithName(name: string, tournamentId?: string): Promise<boolean> {

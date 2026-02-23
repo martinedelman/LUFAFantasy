@@ -1,10 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TeamService, AuthService } from "@/services/backend";
-import { TeamFactory } from "@/entities/factories/TeamFactory";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { Team } from "@/entities/Team";
 
 const teamService = new TeamService();
 const authService = new AuthService();
+
+// Helper para serializar Team a respuesta API
+function teamToApiResponse(team: Team) {
+  return {
+    _id: team.id,
+    name: team.name,
+    shortName: team.shortName,
+    logo: team.logo,
+    colors: {
+      primary: team.colors.primary,
+      secondary: team.colors.secondary,
+    },
+    division: team.division,
+    tournament: team.tournament,
+    players: team.players,
+    contact: {
+      email: team.contact.email,
+      phone: team.contact.phone,
+      address: team.contact.address,
+      socialMedia: team.contact.socialMedia,
+    },
+    registrationDate: team.registrationDate.toISOString(),
+    status: team.status,
+    createdAt: team.createdAt?.toISOString(),
+    updatedAt: team.updatedAt?.toISOString(),
+  };
+}
 
 /**
  * GET /api/teams/:id - Obtiene un equipo por ID
@@ -29,7 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const token = getSessionTokenFromRequest(request);
     const isAdmin = token ? await authService.verifyAdmin(token) : false;
 
-    const apiResponse = TeamFactory.toApiResponse(team);
+    const apiResponse = teamToApiResponse(team);
 
     // Si no es admin, sanitizar datos sensibles
     if (!isAdmin && apiResponse.coach) {
@@ -100,7 +127,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({
       success: true,
       message: "Equipo actualizado exitosamente",
-      data: TeamFactory.toApiResponse(updatedTeam),
+      data: teamToApiResponse(updatedTeam),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar equipo";

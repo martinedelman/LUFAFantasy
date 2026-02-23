@@ -1,11 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TeamService, AuthService } from "@/services/backend";
-import { TeamFactory } from "@/entities/factories/TeamFactory";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { TeamStatus } from "@/entities/Team";
+import { Team } from "@/entities/Team";
 
 const teamService = new TeamService();
 const authService = new AuthService();
+
+// Helper para serializar Team a respuesta API
+function teamToApiResponse(team: Team) {
+  return {
+    _id: team.id,
+    name: team.name,
+    shortName: team.shortName,
+    logo: team.logo,
+    colors: {
+      primary: team.colors.primary,
+      secondary: team.colors.secondary,
+    },
+    division: team.division,
+    tournament: team.tournament,
+    players: team.players,
+    contact: {
+      email: team.contact.email,
+      phone: team.contact.phone,
+      address: team.contact.address,
+      socialMedia: team.contact.socialMedia,
+    },
+    registrationDate: team.registrationDate.toISOString(),
+    status: team.status,
+    createdAt: team.createdAt?.toISOString(),
+    updatedAt: team.updatedAt?.toISOString(),
+  };
+}
 
 /**
  * GET /api/teams - Obtiene todos los equipos con filtros y paginación
@@ -40,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     // Convertir a respuesta API
     const responseData = paginatedTeams.map((team) => {
-      const apiResponse = TeamFactory.toApiResponse(team);
+      const apiResponse = teamToApiResponse(team);
 
       // Si no es admin, sanitizar datos sensibles
       if (!isAdmin && apiResponse.coach) {
@@ -133,7 +160,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Equipo creado exitosamente",
-        data: TeamFactory.toApiResponse(team),
+        data: teamToApiResponse(team),
       },
       { status: 201 },
     );

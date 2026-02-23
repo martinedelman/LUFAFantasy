@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
-import { UserFactory } from "@/entities/factories";
 
 const authService = new AuthService();
 
@@ -23,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: UserFactory.toApiResponse(user),
+      data: user,
     });
   } catch (error) {
     return NextResponse.json(

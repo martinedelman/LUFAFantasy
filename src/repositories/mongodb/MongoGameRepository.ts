@@ -2,14 +2,13 @@ import { IGameRepository } from "../contracts/IGameRepository";
 import { Game, GameStatus } from "../../entities/Game";
 import { GameScore } from "../../entities/valueObjects/Score";
 import { GameModel } from "../../models/Game";
-import { GameFactory } from "../../entities/factories/GameFactory";
 import connectToDatabase from "../../lib/mongodb";
 
 export class MongoGameRepository implements IGameRepository {
   async findById(id: string): Promise<Game | null> {
     await connectToDatabase();
     const doc = await GameModel.findById(id).populate("homeTeam").populate("awayTeam").populate("tournament").exec();
-    return doc ? GameFactory.fromDatabase(doc) : null;
+    return doc ? doc : null;
   }
 
   async findAll(filters?: Record<string, unknown>): Promise<Game[]> {
@@ -18,20 +17,20 @@ export class MongoGameRepository implements IGameRepository {
       .populate("homeTeam")
       .populate("awayTeam")
       .exec();
-    return docs.map((doc) => GameFactory.fromDatabase(doc));
+    return docs;
   }
 
   async create(data: Partial<Game>): Promise<Game> {
     await connectToDatabase();
-    const persistenceData = GameFactory.toPersistence(data as Game);
+    const persistenceData = data as Game;
     const doc = await GameModel.create(persistenceData);
     const populatedDoc = await GameModel.findById(doc._id).populate("homeTeam").populate("awayTeam").exec();
-    return GameFactory.fromDatabase(populatedDoc);
+    return populatedDoc;
   }
 
   async update(id: string, data: Partial<Game>): Promise<Game> {
     await connectToDatabase();
-    const persistenceData = GameFactory.toPersistence(data as Game);
+    const persistenceData = data as Game;
     const doc = await GameModel.findByIdAndUpdate(id, persistenceData, {
       new: true,
       runValidators: true,
@@ -44,7 +43,7 @@ export class MongoGameRepository implements IGameRepository {
       throw new Error("Partido no encontrado");
     }
 
-    return GameFactory.fromDatabase(doc);
+    return doc;
   }
 
   async delete(id: string): Promise<void> {
@@ -63,7 +62,7 @@ export class MongoGameRepository implements IGameRepository {
   async findByTournament(tournamentId: string): Promise<Game[]> {
     await connectToDatabase();
     const docs = await GameModel.find({ tournament: tournamentId }).populate("homeTeam").populate("awayTeam").exec();
-    return docs.map((doc) => GameFactory.fromDatabase(doc));
+    return docs;
   }
 
   async findByTeam(teamId: string): Promise<Game[]> {
@@ -74,13 +73,13 @@ export class MongoGameRepository implements IGameRepository {
       .populate("homeTeam")
       .populate("awayTeam")
       .exec();
-    return docs.map((doc) => GameFactory.fromDatabase(doc));
+    return docs;
   }
 
   async findByStatus(status: GameStatus): Promise<Game[]> {
     await connectToDatabase();
     const docs = await GameModel.find({ status }).populate("homeTeam").populate("awayTeam").exec();
-    return docs.map((doc) => GameFactory.fromDatabase(doc));
+    return docs;
   }
 
   async findCompletedByTeam(teamId: string, tournamentId: string): Promise<Game[]> {
@@ -93,13 +92,13 @@ export class MongoGameRepository implements IGameRepository {
       .populate("homeTeam")
       .populate("awayTeam")
       .exec();
-    return docs.map((doc) => GameFactory.fromDatabase(doc));
+    return docs;
   }
 
   async findByDivision(divisionId: string): Promise<Game[]> {
     await connectToDatabase();
     const docs = await GameModel.find({ division: divisionId }).populate("homeTeam").populate("awayTeam").exec();
-    return docs.map((doc) => GameFactory.fromDatabase(doc));
+    return docs;
   }
 
   async updateScore(id: string, score: GameScore): Promise<Game> {
@@ -132,7 +131,7 @@ export class MongoGameRepository implements IGameRepository {
       throw new Error("Partido no encontrado");
     }
 
-    return GameFactory.fromDatabase(doc);
+    return doc;
   }
 
   async updateStatus(id: string, status: GameStatus): Promise<Game> {
@@ -146,7 +145,7 @@ export class MongoGameRepository implements IGameRepository {
       throw new Error("Partido no encontrado");
     }
 
-    return GameFactory.fromDatabase(doc);
+    return doc;
   }
 
   async findScheduledForDate(date: Date): Promise<Game[]> {
@@ -167,6 +166,6 @@ export class MongoGameRepository implements IGameRepository {
       .populate("awayTeam")
       .exec();
 
-    return docs.map((doc) => GameFactory.fromDatabase(doc));
+    return docs;
   }
 }

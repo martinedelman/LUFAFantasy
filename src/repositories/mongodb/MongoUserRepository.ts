@@ -1,32 +1,31 @@
 import { IUserRepository } from "../contracts/IUserRepository";
 import { User } from "../../entities/User";
 import { UserModel } from "../../models/User";
-import { UserFactory } from "../../entities/factories/UserFactory";
 import connectToDatabase from "../../lib/mongodb";
 
 export class MongoUserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {
     await connectToDatabase();
     const doc = await UserModel.findById(id).exec();
-    return doc ? UserFactory.fromDatabase(doc) : null;
+    return doc ? doc : null;
   }
 
   async findAll(filters?: Record<string, unknown>): Promise<User[]> {
     await connectToDatabase();
     const docs = await UserModel.find(filters || {}).exec();
-    return docs.map((doc) => UserFactory.fromDatabase(doc));
+    return docs;
   }
 
   async create(data: Partial<User>): Promise<User> {
     await connectToDatabase();
-    const persistenceData = UserFactory.toPersistence(data as User);
+    const persistenceData = data as User;
     const doc = await UserModel.create(persistenceData);
-    return UserFactory.fromDatabase(doc);
+    return doc;
   }
 
   async update(id: string, data: Partial<User>): Promise<User> {
     await connectToDatabase();
-    const persistenceData = UserFactory.toPersistence(data as User);
+    const persistenceData = data as User;
     const doc = await UserModel.findByIdAndUpdate(id, persistenceData, {
       new: true,
       runValidators: true,
@@ -36,7 +35,7 @@ export class MongoUserRepository implements IUserRepository {
       throw new Error("Usuario no encontrado");
     }
 
-    return UserFactory.fromDatabase(doc);
+    return doc;
   }
 
   async delete(id: string): Promise<void> {
@@ -55,13 +54,13 @@ export class MongoUserRepository implements IUserRepository {
   async findByEmail(email: string): Promise<User | null> {
     await connectToDatabase();
     const doc = await UserModel.findOne({ email }).exec();
-    return doc ? UserFactory.fromDatabase(doc) : null;
+    return doc ? doc : null;
   }
 
   async findActiveAdmins(): Promise<User[]> {
     await connectToDatabase();
     const docs = await UserModel.find({ role: "admin", isActive: true }).exec();
-    return docs.map((doc) => UserFactory.fromDatabase(doc));
+    return docs;
   }
 
   async updateActiveStatus(id: string, isActive: boolean): Promise<User> {
@@ -72,6 +71,6 @@ export class MongoUserRepository implements IUserRepository {
       throw new Error("Usuario no encontrado");
     }
 
-    return UserFactory.fromDatabase(doc);
+    return doc;
   }
 }

@@ -1,7 +1,6 @@
 import { ITeamRepository } from "../contracts/ITeamRepository";
 import { Team } from "../../entities/Team";
 import { TeamModel } from "../../models/Team";
-import { TeamFactory } from "../../entities/factories/TeamFactory";
 import connectToDatabase from "../../lib/mongodb";
 import { TournamentModel } from "@/models";
 
@@ -22,15 +21,15 @@ export class MongoTeamRepository implements ITeamRepository {
 
   async create(data: Partial<Team>): Promise<Team> {
     await connectToDatabase();
-    const persistenceData = TeamFactory.toPersistence(data as Team);
+    const persistenceData = data as Team;
     const doc = await TeamModel.create(persistenceData);
     const populatedDoc = await TeamModel.findById(doc._id).populate("division").exec();
-    return TeamFactory.fromDatabase(populatedDoc);
+    return populatedDoc;
   }
 
   async update(id: string, data: Partial<Team>): Promise<Team> {
     await connectToDatabase();
-    const persistenceData = TeamFactory.toPersistence(data as Team);
+    const persistenceData = data as Team;
     const doc = await TeamModel.findByIdAndUpdate(id, persistenceData, {
       new: true,
       runValidators: true,
@@ -42,7 +41,7 @@ export class MongoTeamRepository implements ITeamRepository {
       throw new Error("Equipo no encontrado");
     }
 
-    return TeamFactory.fromDatabase(doc);
+    return doc;
   }
 
   async delete(id: string): Promise<void> {

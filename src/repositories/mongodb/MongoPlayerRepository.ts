@@ -1,14 +1,13 @@
 import { IPlayerRepository } from "../contracts/IPlayerRepository";
 import { Player } from "../../entities/Player";
 import { PlayerModel } from "../../models/Player";
-import { PlayerFactory } from "../../entities/factories/PlayerFactory";
 import connectToDatabase from "../../lib/mongodb";
 
 export class MongoPlayerRepository implements IPlayerRepository {
   async findById(id: string): Promise<Player | null> {
     await connectToDatabase();
     const doc = await PlayerModel.findById(id).populate("team").exec();
-    return doc ? PlayerFactory.fromDatabase(doc) : null;
+    return doc ? doc : null;
   }
 
   async findAll(filters?: Record<string, unknown>): Promise<Player[]> {
@@ -16,20 +15,20 @@ export class MongoPlayerRepository implements IPlayerRepository {
     const docs = await PlayerModel.find(filters || {})
       .populate("team")
       .exec();
-    return docs.map((doc) => PlayerFactory.fromDatabase(doc));
+    return docs;
   }
 
   async create(data: Partial<Player>): Promise<Player> {
     await connectToDatabase();
-    const persistenceData = PlayerFactory.toPersistence(data as Player);
+    const persistenceData = data as Player;
     const doc = await PlayerModel.create(persistenceData);
     const populatedDoc = await PlayerModel.findById(doc._id).populate("team").exec();
-    return PlayerFactory.fromDatabase(populatedDoc);
+    return populatedDoc;
   }
 
   async update(id: string, data: Partial<Player>): Promise<Player> {
     await connectToDatabase();
-    const persistenceData = PlayerFactory.toPersistence(data as Player);
+    const persistenceData = data as Player;
     const doc = await PlayerModel.findByIdAndUpdate(id, persistenceData, {
       new: true,
       runValidators: true,
@@ -41,7 +40,7 @@ export class MongoPlayerRepository implements IPlayerRepository {
       throw new Error("Jugador no encontrado");
     }
 
-    return PlayerFactory.fromDatabase(doc);
+    return doc;
   }
 
   async delete(id: string): Promise<void> {
@@ -60,19 +59,19 @@ export class MongoPlayerRepository implements IPlayerRepository {
   async findByTeam(teamId: string): Promise<Player[]> {
     await connectToDatabase();
     const docs = await PlayerModel.find({ team: teamId }).exec();
-    return docs.map((doc) => PlayerFactory.fromDatabase(doc));
+    return docs;
   }
 
   async findByPosition(position: string): Promise<Player[]> {
     await connectToDatabase();
     const docs = await PlayerModel.find({ position }).exec();
-    return docs.map((doc) => PlayerFactory.fromDatabase(doc));
+    return docs;
   }
 
   async findActivePlayers(): Promise<Player[]> {
     await connectToDatabase();
     const docs = await PlayerModel.find({ status: "active" }).exec();
-    return docs.map((doc) => PlayerFactory.fromDatabase(doc));
+    return docs;
   }
 
   async existsWithJerseyNumber(jerseyNumber: number, teamId: string): Promise<boolean> {
@@ -92,6 +91,6 @@ export class MongoPlayerRepository implements IPlayerRepository {
     })
       .populate("team")
       .exec();
-    return docs.map((doc) => PlayerFactory.fromDatabase(doc));
+    return docs;
   }
 }

@@ -1,8 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PlayerService } from "@/services/backend";
-import { PlayerFactory } from "@/entities/factories/PlayerFactory";
+import { Player } from "@/entities/Player";
 
 const playerService = new PlayerService();
+
+// Helper para serializar Player a respuesta API
+function playerToApiResponse(player: Player) {
+  return {
+    _id: player.id,
+    firstName: player.firstName,
+    lastName: player.lastName,
+    email: player.email,
+    phone: player.phone,
+    dateOfBirth: player.dateOfBirth.toISOString(),
+    team: player.team,
+    jerseyNumber: player.jerseyNumber,
+    position: player.position,
+    height: player.height,
+    weight: player.weight,
+    experience: player.experience,
+    registrationDate: player.registrationDate.toISOString(),
+    status: player.status,
+    createdAt: player.createdAt?.toISOString(),
+    updatedAt: player.updatedAt?.toISOString(),
+  };
+}
 
 /**
  * GET /api/players/:id - Obtiene un jugador por ID
@@ -25,7 +47,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({
       success: true,
-      data: PlayerFactory.toApiResponse(player),
+      data: playerToApiResponse(player),
     });
   } catch (error) {
     return NextResponse.json(
@@ -63,7 +85,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({
       success: true,
       message: "Jugador actualizado exitosamente",
-      data: PlayerFactory.toApiResponse(updatedPlayer),
+      data: playerToApiResponse(updatedPlayer),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar jugador";
