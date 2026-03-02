@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService } from "@/services/backend";
+import { AuthService, UserFactory } from "@/services/backend";
 import { setSessionCookie } from "@/lib/auth";
 
 const authService = new AuthService();
@@ -23,15 +23,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       message: "Sesión iniciada correctamente",
-      data: {
-        _id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt?.toISOString(),
-        updatedAt: user.updatedAt?.toISOString(),
-      },
+      data: UserFactory.toApiResponse(user),
     });
 
     setSessionCookie(response, token);

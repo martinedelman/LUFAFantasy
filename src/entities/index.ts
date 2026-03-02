@@ -3,11 +3,10 @@ export { Entity } from "./base/Entity";
 export { ValueObject } from "./base/ValueObject";
 export { AggregateRoot } from "./base/AggregateRoot";
 
-// Value Objects
-export { Venue } from "./valueObjects/Venue";
-export { QuarterScore, GameScore } from "./valueObjects/Score";
-export { TeamStatistics } from "./valueObjects/TeamStatistics";
-export { Colors } from "./valueObjects/Colors";
+// Factories
+export { UserFactory } from "./factories/UserFactory";
+export type { UserRegistrationDto, UserApiResponse, UserPersistenceDto } from "./factories/UserFactory";
+
 export { ContactInfo } from "./valueObjects/ContactInfo";
 
 // Entities
