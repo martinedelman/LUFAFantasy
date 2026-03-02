@@ -240,41 +240,60 @@ async function seedDatabase() {
       },
       // División Femenino
       {
-        name: "Panteras",
-        shortName: "PAN",
-        colors: { primary: "#FF1493", secondary: "#000000" },
+        name: "Emperatrices",
+        shortName: "EMP",
+        colors: { primary: "#FF0000", secondary: "#000000" },
         division: divisions[1]._id,
         coach: {
-          name: "María Fernández",
-          email: "maria@panteras.com",
+          name: "Valentina González",
+          email: "valentina@emperatrices.com",
           phone: "555-2001",
-          experience: "7 años",
+          experience: "8 años",
         },
 
         contact: {
-          email: "info@panteras.com",
+          email: "info@emperatrices.com",
           phone: "555-2000",
         },
         registrationDate: new Date("2025-01-19"),
         status: "active",
       },
       {
-        name: "Leonas",
-        shortName: "LEO",
-        colors: { primary: "#FFD700", secondary: "#8B4513" },
+        name: "Condesas",
+        shortName: "CON",
+        colors: { primary: "#000000", secondary: "#FF0000" },
         division: divisions[1]._id,
         coach: {
-          name: "Patricia Ruiz",
-          email: "patricia@leonas.com",
+          name: "Alejandra Rodríguez",
+          email: "alejandra@condesas.com",
           phone: "555-2002",
-          experience: "2 años",
+          experience: "6 años",
         },
 
         contact: {
-          email: "info@leonas.com",
+          email: "info@condesas.com",
           phone: "555-2010",
         },
         registrationDate: new Date("2025-01-20"),
+        status: "active",
+      },
+      {
+        name: "Barbaras",
+        shortName: "BAR",
+        colors: { primary: "#228B22", secondary: "#000000" },
+        division: divisions[1]._id,
+        coach: {
+          name: "Catalina Moreno",
+          email: "catalina@barbaras.com",
+          phone: "555-2003",
+          experience: "5 años",
+        },
+
+        contact: {
+          email: "info@barbaras.com",
+          phone: "555-2011",
+        },
+        registrationDate: new Date("2025-01-21"),
         status: "active",
       },
     ]);
@@ -283,15 +302,40 @@ async function seedDatabase() {
     // Crear jugadores para cada equipo
     const players = [];
 
-    // Jugadoras de Panteras
-    const panterasPlayers = [
-      { firstName: "Ana María", lastName: "López", position: "WR", jerseyNumber: 15 },
-      { firstName: "Carmen", lastName: "Mendoza", position: "QB", jerseyNumber: 10 },
-      { firstName: "Sofía", lastName: "Torres", position: "RB", jerseyNumber: 30 },
-      { firstName: "Isabella", lastName: "Morales", position: "WR", jerseyNumber: 85 },
-      { firstName: "Valentina", lastName: "Jiménez", position: "LB", jerseyNumber: 50 },
-      { firstName: "Camila", lastName: "Vargas", position: "CB", jerseyNumber: 24 },
-      { firstName: "Gabriela", lastName: "Castro", position: "FS", jerseyNumber: 33 },
+    // Jugadoras de Emperatrices
+    const emperatricesPlayers = [
+      { firstName: "Antonia", lastName: "Acosta", position: "QB", jerseyNumber: 10 },
+      { firstName: "Beatriz", lastName: "Blanco", position: "WR", jerseyNumber: 15 },
+      { firstName: "Constanza", lastName: "Chávez", position: "WR", jerseyNumber: 18 },
+      { firstName: "Daniela", lastName: "Díaz", position: "RB", jerseyNumber: 25 },
+      { firstName: "Esperanza", lastName: "Espinoza", position: "LB", jerseyNumber: 50 },
+      { firstName: "Francisca", lastName: "Fernández", position: "CB", jerseyNumber: 24 },
+      { firstName: "Graciela", lastName: "García", position: "FS", jerseyNumber: 33 },
+      { firstName: "Helena", lastName: "Hernández", position: "WR", jerseyNumber: 88 },
+    ];
+
+    // Jugadoras de Condesas
+    const condesesPlayers = [
+      { firstName: "Irene", lastName: "Ibáñez", position: "QB", jerseyNumber: 11 },
+      { firstName: "Juana", lastName: "Jiménez", position: "WR", jerseyNumber: 16 },
+      { firstName: "Karina", lastName: "Kinast", position: "WR", jerseyNumber: 19 },
+      { firstName: "Leticia", lastName: "López", position: "RB", jerseyNumber: 26 },
+      { firstName: "Marisol", lastName: "Mendoza", position: "LB", jerseyNumber: 51 },
+      { firstName: "Natalia", lastName: "Neves", position: "CB", jerseyNumber: 23 },
+      { firstName: "Olivia", lastName: "Ortiz", position: "FS", jerseyNumber: 34 },
+      { firstName: "Patricia", lastName: "Pérez", position: "WR", jerseyNumber: 87 },
+    ];
+
+    // Jugadoras de Barbaras
+    const barbarasPlayers = [
+      { firstName: "Priscila", lastName: "Pulido", position: "QB", jerseyNumber: 12 },
+      { firstName: "Querida", lastName: "Quintero", position: "WR", jerseyNumber: 17 },
+      { firstName: "Rosa", lastName: "Ruiz", position: "WR", jerseyNumber: 20 },
+      { firstName: "Sandra", lastName: "Saavedra", position: "RB", jerseyNumber: 27 },
+      { firstName: "Tatiana", lastName: "Torres", position: "LB", jerseyNumber: 52 },
+      { firstName: "Úrsula", lastName: "Urbina", position: "CB", jerseyNumber: 22 },
+      { firstName: "Verónica", lastName: "Valenzuela", position: "FS", jerseyNumber: 35 },
+      { firstName: "Ximena", lastName: "Xerez", position: "WR", jerseyNumber: 86 },
     ];
 
     // Jugadores de Dark Demons (reales)
@@ -352,17 +396,6 @@ async function seedDatabase() {
       { firstName: "Lucas", lastName: "Torrado", position: "WR", jerseyNumber: 9 },
       { firstName: "Agustín", lastName: "Barboza", position: "RB", jerseyNumber: 12 },
       { firstName: "Kevin", lastName: "Rivero", position: "CB", jerseyNumber: 21 },
-    ];
-
-    // Jugadoras de Leonas
-    const leonasPlayers = [
-      { firstName: "Marcela", lastName: "Ponce", position: "WR", jerseyNumber: 16 },
-      { firstName: "Yolanda", lastName: "Quiñones", position: "QB", jerseyNumber: 11 },
-      { firstName: "Roxana", lastName: "Ramírez", position: "RB", jerseyNumber: 32 },
-      { firstName: "Selena", lastName: "Sánchez", position: "WR", jerseyNumber: 88 },
-      { firstName: "Tamara", lastName: "Toscano", position: "LB", jerseyNumber: 52 },
-      { firstName: "Una", lastName: "Urbano", position: "CB", jerseyNumber: 28 },
-      { firstName: "Verónica", lastName: "Vega", position: "FS", jerseyNumber: 35 },
     ];
 
     // Crear jugadores de Dark Demons
@@ -533,13 +566,13 @@ async function seedDatabase() {
       });
     }
 
-    // Crear jugadoras de Panteras
-    for (const playerData of panterasPlayers) {
+    // Crear jugadoras de Emperatrices
+    for (const playerData of emperatricesPlayers) {
       players.push({
         ...playerData,
         email: `${playerData.firstName
           .toLowerCase()
-          .replace(" ", "")}.${playerData.lastName.toLowerCase()}@panteras.com`,
+          .replace(" ", "")}.${playerData.lastName.toLowerCase()}@emperatrices.com`,
         phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
         dateOfBirth: new Date(
           1995 + Math.floor(Math.random() * 10),
@@ -559,11 +592,13 @@ async function seedDatabase() {
       });
     }
 
-    // Crear jugadoras de Leonas
-    for (const playerData of leonasPlayers) {
+    // Crear jugadoras de Condesas
+    for (const playerData of condesesPlayers) {
       players.push({
         ...playerData,
-        email: `${playerData.firstName.toLowerCase()}.${playerData.lastName.toLowerCase()}@leonas.com`,
+        email: `${playerData.firstName
+          .toLowerCase()
+          .replace(" ", "")}.${playerData.lastName.toLowerCase()}@condesas.com`,
         phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
         dateOfBirth: new Date(
           1995 + Math.floor(Math.random() * 10),
@@ -571,6 +606,32 @@ async function seedDatabase() {
           Math.floor(Math.random() * 28) + 1,
         ),
         team: teams[8]._id,
+        height: 160 + Math.floor(Math.random() * 20),
+        weight: 55 + Math.floor(Math.random() * 20),
+        emergencyContact: {
+          name: "Contacto de Emergencia",
+          relationship: "Familiar",
+          phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        },
+        registrationDate: new Date("2025-01-23"),
+        status: "active",
+      });
+    }
+
+    // Crear jugadoras de Barbaras
+    for (const playerData of barbarasPlayers) {
+      players.push({
+        ...playerData,
+        email: `${playerData.firstName
+          .toLowerCase()
+          .replace(" ", "")}.${playerData.lastName.toLowerCase()}@barbaras.com`,
+        phone: `555-${Math.floor(Math.random() * 9000) + 1000}`,
+        dateOfBirth: new Date(
+          1995 + Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 12),
+          Math.floor(Math.random() * 28) + 1,
+        ),
+        team: teams[9]._id,
         height: 160 + Math.floor(Math.random() * 20),
         weight: 55 + Math.floor(Math.random() * 20),
         emergencyContact: {
