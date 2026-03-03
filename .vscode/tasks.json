@@ -1,14 +1,57 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "Dev Server",
-      "type": "shell",
-      "command": "npm",
-      "args": ["run", "dev"],
-      "group": "build",
-      "isBackground": true,
-      "problemMatcher": []
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Dev Server",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build Once",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Once",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Once",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build With Exit",
+			"type": "shell",
+			"command": "npm run build; echo BUILD_EXIT:$?",
+			"isBackground": false,
+			"group": "build"
+		}
+	]
 }
