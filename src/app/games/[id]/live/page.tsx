@@ -5,64 +5,20 @@ import { useParams, useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
-
-interface Player {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  jerseyNumber: number;
-  position: string;
-  status: "active" | "inactive" | "injured" | "suspended";
-}
-
-interface Team {
-  _id: string;
-  name: string;
-  shortName?: string;
-  colors: {
-    primary: string;
-    secondary?: string;
-  };
-}
-
-interface Game {
-  _id: string;
-  status: "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
-  homeTeam: Team | null;
-  awayTeam: Team | null;
-  tournament: {
-    _id: string;
-    name: string;
-  };
-  division: {
-    _id: string;
-    name: string;
-  };
-  venue: {
-    name: string;
-    address: string;
-  };
-  scheduledDate: string;
-  presentPlayers?: {
-    home: string[];
-    away: string[];
-  };
-}
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
+import type { 
+  ApiResponse, 
+  GameApiResponse, 
+  PlayerApiResponse
+} from "@/types";
 
 export default function LiveMatchPage() {
   const params = useParams();
   const router = useRouter();
   const gameId = params?.id as string;
 
-  const [game, setGame] = useState<Game | null>(null);
-  const [homePlayers, setHomePlayers] = useState<Player[]>([]);
-  const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
+  const [game, setGame] = useState<GameApiResponse | null>(null);
+  const [homePlayers, setHomePlayers] = useState<PlayerApiResponse[]>([]);
+  const [awayPlayers, setAwayPlayers] = useState<PlayerApiResponse[]>([]);
   const [selectedHomePlayers, setSelectedHomePlayers] = useState<Set<string>>(new Set());
   const [selectedAwayPlayers, setSelectedAwayPlayers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -76,7 +32,7 @@ export default function LiveMatchPage() {
 
       // Fetch game data
       const gameRes = await fetch(`/api/games/${gameId}`);
-      const gameData: ApiResponse<Game> = await gameRes.json();
+      const gameData: ApiResponse<GameApiResponse> = await gameRes.json();
 
       if (!gameData.success || !gameData.data) {
         setError(gameData.message || "No se pudo cargar el partido");
@@ -93,16 +49,16 @@ export default function LiveMatchPage() {
       // Fetch players for both teams
       if (gameData.data.homeTeam) {
         const homePlayersRes = await fetch(`/api/players?team=${gameData.data.homeTeam._id}&limit=50`);
-        const homePlayersData: ApiResponse<Player[]> = await homePlayersRes.json();
-        if (homePlayersData.success) {
+        const homePlayersData: ApiResponse<PlayerApiResponse[]> = await homePlayersRes.json();
+        if (homePlayersData.success && homePlayersData.data) {
           setHomePlayers(homePlayersData.data.filter((p) => p.status === "active"));
         }
       }
 
       if (gameData.data.awayTeam) {
         const awayPlayersRes = await fetch(`/api/players?team=${gameData.data.awayTeam._id}&limit=50`);
-        const awayPlayersData: ApiResponse<Player[]> = await awayPlayersRes.json();
-        if (awayPlayersData.success) {
+        const awayPlayersData: ApiResponse<PlayerApiResponse[]> = await awayPlayersRes.json();
+        if (awayPlayersData.success && awayPlayersData.data) {
           setAwayPlayers(awayPlayersData.data.filter((p) => p.status === "active"));
         }
       }
@@ -179,7 +135,7 @@ export default function LiveMatchPage() {
         }),
       });
 
-      const data: ApiResponse<Game> = await response.json();
+      const data: ApiResponse<GameApiResponse> = await response.json();
 
       if (!data.success) {
         setError(data.message || "Error al iniciar partido");
@@ -187,7 +143,9 @@ export default function LiveMatchPage() {
       }
 
       // Actualizar el estado del juego
-      setGame(data.data);
+      if (data.data) {
+        setGame(data.data);
+      }
     } catch {
       setError("Error de conexión al iniciar partido");
     } finally {

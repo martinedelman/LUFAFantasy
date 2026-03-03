@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GameService } from "@/services/backend";
+import { GameService, AuthService } from "@/services/backend";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 import { Game } from "@/entities/Game";
 
 const gameService = new GameService();
+const authService = new AuthService();
 
 function gameToApiResponse(game: Game) {
   return {
@@ -34,6 +36,23 @@ function gameToApiResponse(game: Game) {
 }
 
 /**
+ * Validates that all items in an array are non-empty strings (valid ObjectId candidates)
+ */
+function validatePlayerIds(players: unknown[]): boolean {
+  return players.every(
+    (id) => typeof id === "string" && id.length > 0 && /^[a-fA-F0-9]{24}$/.test(id)
+  );
+}
+
+/**
+ * Checks for duplicates within an array or across two arrays
+ */
+function hasDuplicates(arr1: string[], arr2: string[]): boolean {
+  const all = [...arr1, ...arr2];
+  return new Set(all).size !== all.length;
+}
+
+/**
  * PATCH /api/games/:id/start - Inicia un partido con jugadores presentes
  */
 export async function PATCH(
@@ -41,6 +60,30 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    // Auth check - only admin can start games
+    const token = getSessionTokenFromRequest(request);
+
+    if (!token) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autenticado",
+        },
+        { status: 401 },
+      );
+    }
+
+    const isAdmin = await authService.verifyAdmin(token);
+    if (!isAdmin) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo administradores pueden iniciar partidos",
+        },
+        { status: 403 },
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
 
@@ -71,6 +114,38 @@ export async function PATCH(
         {
           success: false,
           message: "presentPlayers.home y presentPlayers.away deben ser arrays",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate that all player IDs are valid ObjectId strings
+    if (!validatePlayerIds(body.presentPlayers.home)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Todos los IDs de jugadores locales deben ser ObjectIds válidos",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!validatePlayerIds(body.presentPlayers.away)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Todos los IDs de jugadores visitantes deben ser ObjectIds válidos",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Check for duplicates
+    if (hasDuplicates(body.presentPlayers.home, body.presentPlayers.away)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No se permiten jugadores duplicados",
         },
         { status: 400 },
       );
@@ -110,7 +185,8 @@ export async function PATCH(
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al iniciar partido";
-    const status = message.includes("no encontrado") ? 404 : 400;
+    const status = message.includes("no encontrado") ? 404 : 
+                   message.includes("no puede iniciar") ? 409 : 400;
 
     return NextResponse.json(
       {

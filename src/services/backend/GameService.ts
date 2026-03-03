@@ -118,15 +118,16 @@ export class GameService {
     id: string,
     presentPlayers: { home: string[]; away: string[] },
   ): Promise<Game> {
-    const game = await this.gameRepo.findById(id);
-    if (!game) {
-      throw new Error("Partido no encontrado");
+    // Validar mínimo de jugadores antes de intentar la actualización atómica
+    if (presentPlayers.home.length < 4) {
+      throw new Error("Se requieren al menos 4 jugadores del equipo local");
     }
 
-    // Validar usando el método del entity (valida estado y mínimo de jugadores)
-    game.start(presentPlayers);
+    if (presentPlayers.away.length < 4) {
+      throw new Error("Se requieren al menos 4 jugadores del equipo visitante");
+    }
 
-    // Actualizar en DB
+    // Actualizar en DB con validación atómica del estado
     const updatedGame = await this.gameRepo.startGame(id, presentPlayers);
 
     return updatedGame;

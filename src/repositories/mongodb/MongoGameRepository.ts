@@ -174,8 +174,14 @@ export class MongoGameRepository implements IGameRepository {
     presentPlayers: { home: string[]; away: string[] },
   ): Promise<Game> {
     await connectToDatabase();
-    const doc = await GameModel.findByIdAndUpdate(
-      id,
+    // Atomic update: only update if status is scheduled and both teams are set
+    const doc = await GameModel.findOneAndUpdate(
+      {
+        _id: id,
+        status: "scheduled",
+        homeTeam: { $ne: null },
+        awayTeam: { $ne: null },
+      },
       {
         $set: {
           status: "in_progress",
@@ -190,7 +196,12 @@ export class MongoGameRepository implements IGameRepository {
       .exec();
 
     if (!doc) {
-      throw new Error("Partido no encontrado");
+      // Check if game exists but doesn't match preconditions
+      const game = await GameModel.findById(id).exec();
+      if (!game) {
+        throw new Error("Partido no encontrado");
+      }
+      throw new Error("El partido no puede iniciar en su estado actual");
     }
 
     return doc;
