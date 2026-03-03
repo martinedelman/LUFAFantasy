@@ -45,4 +45,12 @@ export interface IGameRepository extends IRepository<Game> {
    * Busca partidos programados para una fecha
    */
   findScheduledForDate(date: Date): Promise<Game[]>;
+
+  /**
+   * Inicia un partido con jugadores presentes
+   */
+  startGame(
+    id: string,
+    presentPlayers: { home: string[]; away: string[] },
+  ): Promise<Game>;
 }

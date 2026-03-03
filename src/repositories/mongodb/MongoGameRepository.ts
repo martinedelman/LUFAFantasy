@@ -168,4 +168,31 @@ export class MongoGameRepository implements IGameRepository {
 
     return docs;
   }
+
+  async startGame(
+    id: string,
+    presentPlayers: { home: string[]; away: string[] },
+  ): Promise<Game> {
+    await connectToDatabase();
+    const doc = await GameModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          status: "in_progress",
+          actualStartTime: new Date(),
+          presentPlayers: presentPlayers,
+        },
+      },
+      { new: true },
+    )
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .exec();
+
+    if (!doc) {
+      throw new Error("Partido no encontrado");
+    }
+
+    return doc;
+  }
 }

@@ -29,6 +29,10 @@ export class Game extends AggregateRoot {
   public readonly score: GameScore;
   public readonly statistics: GameStatistics;
   public readonly notes?: string;
+  public readonly presentPlayers?: {
+    home: string[];
+    away: string[];
+  };
 
   constructor(
     tournament: string,
@@ -45,6 +49,7 @@ export class Game extends AggregateRoot {
     actualStartTime?: Date,
     actualEndTime?: Date,
     notes?: string,
+    presentPlayers?: { home: string[]; away: string[] },
     id?: string,
     createdAt?: Date,
     updatedAt?: Date,
@@ -67,6 +72,7 @@ export class Game extends AggregateRoot {
       away: TeamStatistics.empty(),
     };
     this.notes = notes;
+    this.presentPlayers = presentPlayers;
   }
 
   /**
@@ -105,11 +111,19 @@ export class Game extends AggregateRoot {
   }
 
   /**
-   * Marca el partido como iniciado
+   * Marca el partido como iniciado con jugadores presentes
    */
-  public start(): Game {
+  public start(presentPlayers: { home: string[]; away: string[] }): Game {
     if (!this.canStart()) {
       throw new Error("El partido no puede iniciar en su estado actual");
+    }
+
+    if (presentPlayers.home.length < 4) {
+      throw new Error("Se requieren al menos 4 jugadores del equipo local");
+    }
+
+    if (presentPlayers.away.length < 4) {
+      throw new Error("Se requieren al menos 4 jugadores del equipo visitante");
     }
 
     return new Game(
@@ -127,6 +141,7 @@ export class Game extends AggregateRoot {
       new Date(),
       this.actualEndTime,
       this.notes,
+      presentPlayers,
       this.id,
       this.createdAt,
       this.updatedAt,
@@ -156,6 +171,7 @@ export class Game extends AggregateRoot {
       this.actualStartTime,
       new Date(),
       this.notes,
+      this.presentPlayers,
       this.id,
       this.createdAt,
       this.updatedAt,

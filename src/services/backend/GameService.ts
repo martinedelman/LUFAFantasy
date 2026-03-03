@@ -63,9 +63,13 @@ export class GameService {
       data.homeTeam,
       data.awayTeam,
       GameScore.zero(),
-      undefined,
+      undefined, // statistics
       data.week,
       data.round,
+      undefined, // actualStartTime
+      undefined, // actualEndTime
+      undefined, // notes
+      undefined, // presentPlayers
     );
 
     // Validar
@@ -103,6 +107,27 @@ export class GameService {
     if (updatedGame.status === "completed") {
       await this.recalculateStandingsForGame(updatedGame);
     }
+
+    return updatedGame;
+  }
+
+  /**
+   * Inicia un partido con jugadores presentes
+   */
+  async startGame(
+    id: string,
+    presentPlayers: { home: string[]; away: string[] },
+  ): Promise<Game> {
+    const game = await this.gameRepo.findById(id);
+    if (!game) {
+      throw new Error("Partido no encontrado");
+    }
+
+    // Validar usando el método del entity (valida estado y mínimo de jugadores)
+    game.start(presentPlayers);
+
+    // Actualizar en DB
+    const updatedGame = await this.gameRepo.startGame(id, presentPlayers);
 
     return updatedGame;
   }
@@ -212,6 +237,7 @@ export class GameService {
       game.actualStartTime,
       game.actualEndTime,
       game.notes,
+      game.presentPlayers,
       game.id,
       game.createdAt,
       game.updatedAt,

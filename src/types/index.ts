@@ -176,6 +176,10 @@ export interface Game {
   statistics: GameStatistics;
   events: GameEvent[];
   notes?: string;
+  presentPlayers?: {
+    home: string[];
+    away: string[];
+  };
   createdAt: Date;
   updatedAt: Date;
 }

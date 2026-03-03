@@ -31,6 +31,7 @@ function gameToApiResponse(game: Game) {
     },
     statistics: game.statistics,
     notes: game.notes,
+    presentPlayers: game.presentPlayers,
     createdAt: game.createdAt?.toISOString(),
     updatedAt: game.updatedAt?.toISOString(),
   };
