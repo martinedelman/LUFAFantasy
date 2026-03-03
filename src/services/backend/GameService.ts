@@ -114,10 +114,7 @@ export class GameService {
   /**
    * Inicia un partido con jugadores presentes
    */
-  async startGame(
-    id: string,
-    presentPlayers: { home: string[]; away: string[] },
-  ): Promise<Game> {
+  async startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game> {
     // Validar mínimo de jugadores antes de intentar la actualización atómica
     if (presentPlayers.home.length < 4) {
       throw new Error("Se requieren al menos 4 jugadores del equipo local");
@@ -183,24 +180,31 @@ export class GameService {
     team?: string;
     division?: string;
     status?: GameStatus;
+    upcoming?: boolean;
   }): Promise<Game[]> {
+    const queryFilters: Record<string, unknown> = {};
+
     if (filters.tournament) {
-      return await this.gameRepo.findByTournament(filters.tournament);
+      queryFilters.tournament = filters.tournament;
     }
 
     if (filters.team) {
-      return await this.gameRepo.findByTeam(filters.team);
+      queryFilters.$or = [{ homeTeam: filters.team }, { awayTeam: filters.team }];
     }
 
     if (filters.division) {
-      return await this.gameRepo.findByDivision(filters.division);
+      queryFilters.division = filters.division;
     }
 
     if (filters.status) {
-      return await this.gameRepo.findByStatus(filters.status);
+      queryFilters.status = filters.status;
     }
 
-    return await this.gameRepo.findAll(filters);
+    if (filters.upcoming) {
+      queryFilters.scheduledDate = { $gte: new Date() };
+    }
+
+    return await this.gameRepo.findAll(queryFilters);
   }
 
   /**

@@ -841,14 +841,14 @@ export default function GamesPage() {
 
               {canManageGames && (
                 <div className="mt-4 flex gap-2">
-                  {game.status === "scheduled" && (
+                  {game.status === "scheduled" || game.status === "in_progress" ? (
                     <Link
                       href={`/games/${game._id}/live`}
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors text-center"
                     >
                       Live Match
                     </Link>
-                  )}
+                  ) : null}
                   <button
                     onClick={() => openEditForm(game)}
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"

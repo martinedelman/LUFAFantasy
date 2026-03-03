@@ -16,6 +16,7 @@ export class MongoGameRepository implements IGameRepository {
     const docs = await GameModel.find(filters || {})
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("division")
       .exec();
     return docs;
   }
@@ -169,10 +170,7 @@ export class MongoGameRepository implements IGameRepository {
     return docs;
   }
 
-  async startGame(
-    id: string,
-    presentPlayers: { home: string[]; away: string[] },
-  ): Promise<Game> {
+  async startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game> {
     await connectToDatabase();
     // Atomic update: only update if status is scheduled and both teams are set
     const doc = await GameModel.findOneAndUpdate(

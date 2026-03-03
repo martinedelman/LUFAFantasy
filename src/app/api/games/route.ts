@@ -43,12 +43,14 @@ export async function GET(request: NextRequest) {
     const division = searchParams.get("division") || undefined;
     const status = searchParams.get("status") as GameStatus | undefined;
     const team = searchParams.get("team") || undefined;
+    const upcoming = searchParams.get("upcoming") === "true";
 
     const games = await gameService.listGames({
       tournament,
       team,
       division,
       status,
+      upcoming,
     });
 
     // Convertir entities a formato API
