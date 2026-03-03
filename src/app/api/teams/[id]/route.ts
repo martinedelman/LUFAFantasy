@@ -54,8 +54,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const apiResponse = teamToApiResponse(team);
 
-    // Note: Team entity doesn't have coach property, so no sanitization needed
-
     return NextResponse.json({
       success: true,
       data: apiResponse,
