@@ -105,14 +105,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                 return team ? teamToApiResponse(team) : null;
               }),
             );
-            divisionData.teams = populatedTeams.filter((t) => t !== null);
+            divisionData.teams = populatedTeams
+              .filter((team): team is NonNullable<typeof team> => team !== null)
+              .map((team) => team._id)
+              .filter((teamId): teamId is string => Boolean(teamId));
           }
 
           return divisionData;
         }),
       );
 
-      tournamentData.divisions = populatedDivisions.filter((d) => d !== null);
+      tournamentData.divisions = populatedDivisions
+        .filter((division): division is NonNullable<typeof division> => division !== null)
+        .map((division) => division._id)
+        .filter((divisionId): divisionId is string => Boolean(divisionId));
     }
 
     return NextResponse.json({

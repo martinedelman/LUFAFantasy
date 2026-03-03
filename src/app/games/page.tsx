@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
@@ -839,10 +840,18 @@ export default function GamesPage() {
               </div>
 
               {canManageGames && (
-                <div className="mt-4">
+                <div className="mt-4 flex gap-2">
+                  {game.status === "scheduled" || game.status === "in_progress" ? (
+                    <Link
+                      href={`/games/${game._id}/live`}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors text-center"
+                    >
+                      Live Match
+                    </Link>
+                  ) : null}
                   <button
                     onClick={() => openEditForm(game)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     Editar
                   </button>
@@ -946,6 +955,14 @@ export default function GamesPage() {
 
                 {canManageGames && (
                   <div className="mt-4 lg:mt-0 lg:ml-6 flex gap-3">
+                    {game.status === "scheduled" && (
+                      <Link
+                        href={`/games/${game._id}/live`}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                      >
+                        Live Match
+                      </Link>
+                    )}
                     <button
                       onClick={() => openEditForm(game)}
                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"

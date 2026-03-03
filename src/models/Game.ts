@@ -120,6 +120,10 @@ const GameSchema = new Schema(
     statistics: { type: GameStatisticsSchema, required: true },
     events: [{ type: GameEventSchema }],
     notes: { type: String, trim: true },
+    presentPlayers: {
+      home: [{ type: Schema.Types.ObjectId, ref: "Player" }],
+      away: [{ type: Schema.Types.ObjectId, ref: "Player" }],
+    },
   },
   {
     timestamps: true,

@@ -14,9 +14,7 @@ function gameToApiResponse(game: Game) {
     awayTeam: game.awayTeam,
     venue: {
       name: game.venue.name,
-      city: game.venue.city,
-      capacity: game.venue.capacity,
-      coordinates: game.venue.coordinates,
+      address: game.venue.address,
     },
     scheduledDate: game.scheduledDate.toISOString(),
     actualStartTime: game.actualStartTime?.toISOString(),
@@ -30,6 +28,7 @@ function gameToApiResponse(game: Game) {
     },
     statistics: game.statistics,
     notes: game.notes,
+    presentPlayers: game.presentPlayers,
     createdAt: game.createdAt?.toISOString(),
     updatedAt: game.updatedAt?.toISOString(),
   };

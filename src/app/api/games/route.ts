@@ -15,9 +15,7 @@ function gameToApiResponse(game: Game) {
     awayTeam: game.awayTeam,
     venue: {
       name: game.venue.name,
-      city: game.venue.city,
-      capacity: game.venue.capacity,
-      coordinates: game.venue.coordinates,
+      address: game.venue.address,
     },
     scheduledDate: game.scheduledDate.toISOString(),
     actualStartTime: game.actualStartTime?.toISOString(),
@@ -31,6 +29,7 @@ function gameToApiResponse(game: Game) {
     },
     statistics: game.statistics,
     notes: game.notes,
+    presentPlayers: game.presentPlayers,
     createdAt: game.createdAt?.toISOString(),
     updatedAt: game.updatedAt?.toISOString(),
   };
@@ -44,12 +43,14 @@ export async function GET(request: NextRequest) {
     const division = searchParams.get("division") || undefined;
     const status = searchParams.get("status") as GameStatus | undefined;
     const team = searchParams.get("team") || undefined;
+    const upcoming = searchParams.get("upcoming") === "true";
 
     const games = await gameService.listGames({
       tournament,
       team,
       division,
       status,
+      upcoming,
     });
 
     // Convertir entities a formato API

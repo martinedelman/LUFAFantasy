@@ -176,6 +176,10 @@ export interface Game {
   statistics: GameStatistics;
   events: GameEvent[];
   notes?: string;
+  presentPlayers?: {
+    home: string[];
+    away: string[];
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -507,4 +511,60 @@ export interface ApiResponse<T> {
   data?: T;
   message?: string;
   errors?: string[];
+}
+
+// API Response types for populated data
+
+/**
+ * Team response with populated colors for API responses
+ */
+export interface TeamApiResponse {
+  _id: string;
+  name: string;
+  shortName?: string;
+  logo?: string;
+  colors: {
+    primary: string;
+    secondary?: string;
+  };
+}
+
+/**
+ * Player response for Live Match player selection
+ */
+export interface PlayerApiResponse {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  jerseyNumber: number;
+  position: PlayerPosition | string;
+  status: "active" | "inactive" | "injured" | "suspended";
+}
+
+/**
+ * Game response with populated teams for Live Match
+ */
+export interface GameApiResponse {
+  _id: string;
+  status: GameStatus;
+  homeTeam: TeamApiResponse | null;
+  awayTeam: TeamApiResponse | null;
+  tournament: {
+    _id: string;
+    name: string;
+  };
+  division: {
+    _id: string;
+    name: string;
+  };
+  venue: {
+    name: string;
+    address: string;
+  };
+  scheduledDate: string;
+  actualStartTime?: string;
+  presentPlayers?: {
+    home: string[];
+    away: string[];
+  };
 }

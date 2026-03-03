@@ -61,24 +61,9 @@ export async function GET(request: NextRequest) {
     const endIndex = startIndex + limit;
     const paginatedTeams = allTeams.slice(startIndex, endIndex);
 
-    // Verificar si el usuario es admin para saber qué datos mostrar
-    const token = getSessionTokenFromRequest(request);
-    const isAdmin = token ? await authService.verifyAdmin(token) : false;
-
     // Convertir a respuesta API
     const responseData = paginatedTeams.map((team) => {
-      const apiResponse = teamToApiResponse(team);
-
-      // Si no es admin, sanitizar datos sensibles
-      if (!isAdmin && apiResponse.coach) {
-        apiResponse.coach = {
-          name: apiResponse.coach.name || "",
-          experience: apiResponse.coach.experience || "",
-          certifications: apiResponse.coach.certifications || [],
-        };
-      }
-
-      return apiResponse;
+      return teamToApiResponse(team);
     });
 
     return NextResponse.json({
