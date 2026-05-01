@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LUFA Fantasy - Sistema de Gestión de Flag Football",
   description: "Plataforma completa para la gestión de ligas de Flag Football",
+  icons: {
+    icon: "/lufa_flag_icon.jpeg",
+    shortcut: "/lufa_flag_icon.jpeg",
+    apple: "/lufa_flag_icon.jpeg",
+  },
 };
 
 export default function RootLayout({
