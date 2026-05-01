@@ -1,8 +1,9 @@
 import { IUserRepository } from "../contracts/IUserRepository";
 import { User } from "../../entities/User";
-import { UserFactory, UserPersistenceDto } from "../../entities/factories/UserFactory";
+import { UserFactory } from "../../entities/factories/UserFactory";
 import { UserModel, IUser } from "../../models/User";
 import connectToDatabase from "../../lib/mongodb";
+import type { UserPersistenceDto } from "../DTOs";
 
 export class MongoUserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {

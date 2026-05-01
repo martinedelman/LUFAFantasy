@@ -1,37 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
-import { Game } from "@/entities/Game";
+import { toGameResponseDto } from "@/app/DTOs";
+import type { UpdateGameScoreRequestDto } from "@/app/DTOs";
 
 const gameService = new GameService();
-
-// Helper para serializar Game a respuesta API
-function gameToApiResponse(game: Game) {
-  return {
-    _id: game.id,
-    tournament: game.tournament,
-    division: game.division,
-    homeTeam: game.homeTeam,
-    awayTeam: game.awayTeam,
-    venue: {
-      name: game.venue.name,
-      address: game.venue.address,
-    },
-    scheduledDate: game.scheduledDate.toISOString(),
-    actualStartTime: game.actualStartTime?.toISOString(),
-    actualEndTime: game.actualEndTime?.toISOString(),
-    status: game.status,
-    week: game.week,
-    round: game.round,
-    score: {
-      home: game.score.home,
-      away: game.score.away,
-    },
-    statistics: game.statistics,
-    notes: game.notes,
-    createdAt: game.createdAt?.toISOString(),
-    updatedAt: game.updatedAt?.toISOString(),
-  };
-}
 
 /**
  * GET /api/games/:id - Obtiene un partido por ID
@@ -54,7 +26,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({
       success: true,
-      data: gameToApiResponse(game),
+      data: toGameResponseDto(game),
     });
   } catch (error) {
     return NextResponse.json(
@@ -73,7 +45,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const body = (await request.json()) as UpdateGameScoreRequestDto;
 
     if (!body.score) {
       return NextResponse.json(
@@ -110,7 +82,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({
       success: true,
       message: "Score actualizado exitosamente",
-      data: gameToApiResponse(updatedGame),
+      data: toGameResponseDto(updatedGame),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar score";

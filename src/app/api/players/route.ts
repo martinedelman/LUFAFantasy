@@ -1,31 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PlayerService } from "@/services/backend";
 import { PlayerPosition, PlayerStatus } from "@/entities/Player";
-import { Player } from "@/entities/Player";
+import { toPlayerResponseDto } from "@/app/DTOs";
+import type { CreatePlayerRequestDto } from "@/app/DTOs";
 
 const playerService = new PlayerService();
-
-// Helper para serializar Player a respuesta API
-function playerToApiResponse(player: Player) {
-  return {
-    _id: player.id,
-    firstName: player.firstName,
-    lastName: player.lastName,
-    email: player.email,
-    phone: player.phone,
-    dateOfBirth: player.dateOfBirth.toISOString(),
-    team: player.team,
-    jerseyNumber: player.jerseyNumber,
-    position: player.position,
-    height: player.height,
-    weight: player.weight,
-    experience: player.experience,
-    registrationDate: player.registrationDate.toISOString(),
-    status: player.status,
-    createdAt: player.createdAt?.toISOString(),
-    updatedAt: player.updatedAt?.toISOString(),
-  };
-}
 
 /**
  * GET /api/players - Obtiene todos los jugadores con filtros y paginación
@@ -62,7 +41,7 @@ export async function GET(request: NextRequest) {
     const paginatedPlayers = allPlayers.slice(startIndex, endIndex);
 
     // Convertir a respuesta API
-    const responseData = paginatedPlayers.map((player) => playerToApiResponse(player));
+    const responseData = paginatedPlayers.map((player) => toPlayerResponseDto(player));
 
     return NextResponse.json({
       success: true,
@@ -91,7 +70,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as CreatePlayerRequestDto;
 
     // Validación básica
     if (!body.firstName || !body.lastName || !body.dateOfBirth || !body.team || !body.position) {
@@ -107,7 +86,7 @@ export async function POST(request: NextRequest) {
     const player = await playerService.createPlayer({
       firstName: body.firstName,
       lastName: body.lastName,
-      dateOfBirth: body.dateOfBirth,
+      dateOfBirth: new Date(body.dateOfBirth),
       team: body.team,
       jerseyNumber: body.jerseyNumber,
       position: body.position,
@@ -123,7 +102,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Jugador creado exitosamente",
-        data: playerToApiResponse(player),
+        data: toPlayerResponseDto(player),
       },
       { status: 201 },
     );

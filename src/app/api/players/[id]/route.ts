@@ -1,30 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PlayerService } from "@/services/backend";
-import { Player } from "@/entities/Player";
+import { toPlayerResponseDto } from "@/app/DTOs";
+import type { UpdatePlayerRequestDto } from "@/app/DTOs";
 
 const playerService = new PlayerService();
-
-// Helper para serializar Player a respuesta API
-function playerToApiResponse(player: Player) {
-  return {
-    _id: player.id,
-    firstName: player.firstName,
-    lastName: player.lastName,
-    email: player.email,
-    phone: player.phone,
-    dateOfBirth: player.dateOfBirth.toISOString(),
-    team: player.team,
-    jerseyNumber: player.jerseyNumber,
-    position: player.position,
-    height: player.height,
-    weight: player.weight,
-    experience: player.experience,
-    registrationDate: player.registrationDate.toISOString(),
-    status: player.status,
-    createdAt: player.createdAt?.toISOString(),
-    updatedAt: player.updatedAt?.toISOString(),
-  };
-}
 
 /**
  * GET /api/players/:id - Obtiene un jugador por ID
@@ -47,7 +26,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({
       success: true,
-      data: playerToApiResponse(player),
+      data: toPlayerResponseDto(player),
     });
   } catch (error) {
     return NextResponse.json(
@@ -66,12 +45,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const body = (await request.json()) as UpdatePlayerRequestDto;
 
     const updatedPlayer = await playerService.updatePlayer(id, {
       firstName: body.firstName,
       lastName: body.lastName,
-      dateOfBirth: body.dateOfBirth,
+      dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : undefined,
       email: body.email,
       phone: body.phone,
       jerseyNumber: body.jerseyNumber,
@@ -85,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({
       success: true,
       message: "Jugador actualizado exitosamente",
-      data: playerToApiResponse(updatedPlayer),
+      data: toPlayerResponseDto(updatedPlayer),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar jugador";

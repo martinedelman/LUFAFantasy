@@ -1,30 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { StandingService } from "@/services/backend";
-import { Standing } from "@/entities/Standing";
+import { toStandingResponseDto } from "@/app/DTOs";
 
 const standingService = new StandingService();
-
-// Helper para serializar Standing a respuesta API
-function standingToApiResponse(standing: Standing) {
-  return {
-    _id: standing.id,
-    division: standing.division,
-    team: standing.team,
-    tournament: standing.tournament,
-    position: standing.position,
-    wins: standing.wins,
-    losses: standing.losses,
-    ties: standing.ties,
-    pointsFor: standing.pointsFor,
-    pointsAgainst: standing.pointsAgainst,
-    pointsDifferential: standing.pointsDifferential,
-    percentage: standing.percentage,
-    streak: standing.streak,
-    lastFiveGames: standing.lastFiveGames,
-    createdAt: standing.createdAt?.toISOString(),
-    updatedAt: standing.updatedAt?.toISOString(),
-  };
-}
 
 /**
  * GET /api/standings - Obtiene la tabla de posiciones por división
@@ -48,7 +26,7 @@ export async function GET(request: NextRequest) {
     const standings = await standingService.getStandingsByDivision(division);
 
     // Convertir a respuesta API
-    const responseData = standings.map((standing) => standingToApiResponse(standing));
+    const responseData = standings.map((standing) => toStandingResponseDto(standing));
 
     return NextResponse.json({
       success: true,

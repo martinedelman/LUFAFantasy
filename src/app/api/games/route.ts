@@ -1,38 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
 import { GameStatus } from "@/entities/Game";
-import { Game } from "@/entities/Game";
+import { toGameResponseDto } from "@/app/DTOs";
+import type { CreateGameRequestDto, UpdateGameRequestDto } from "@/app/DTOs";
 
 const gameService = new GameService();
-
-// Helper para serializar Game a respuesta API
-function gameToApiResponse(game: Game) {
-  return {
-    _id: game.id,
-    tournament: game.tournament,
-    division: game.division,
-    homeTeam: game.homeTeam,
-    awayTeam: game.awayTeam,
-    venue: {
-      name: game.venue.name,
-      address: game.venue.address,
-    },
-    scheduledDate: game.scheduledDate.toISOString(),
-    actualStartTime: game.actualStartTime?.toISOString(),
-    actualEndTime: game.actualEndTime?.toISOString(),
-    status: game.status,
-    week: game.week,
-    round: game.round,
-    score: {
-      home: game.score.home,
-      away: game.score.away,
-    },
-    statistics: game.statistics,
-    notes: game.notes,
-    createdAt: game.createdAt?.toISOString(),
-    updatedAt: game.updatedAt?.toISOString(),
-  };
-}
 
 // GET /api/games - Obtener todos los partidos
 export async function GET(request: NextRequest) {
@@ -51,7 +23,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Convertir entities a formato API
-    const gamesData = games.map((game) => gameToApiResponse(game));
+    const gamesData = games.map((game) => toGameResponseDto(game));
 
     return NextResponse.json({
       success: true,
@@ -72,7 +44,7 @@ export async function GET(request: NextRequest) {
 // POST /api/games - Crear nuevo partido
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as CreateGameRequestDto;
 
     // Validaciones básicas
     if (!body.tournament || !body.division || !body.venue || !body.scheduledDate) {
@@ -100,7 +72,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        data: gameToApiResponse(game),
+        data: toGameResponseDto(game),
         message: "Partido creado exitosamente",
       },
       { status: 201 },
@@ -119,7 +91,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/games - Actualizar partido existente
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as UpdateGameRequestDto;
     const gameId = body.id;
 
     if (!gameId) {
@@ -133,8 +105,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const game = await gameService.updateGame(gameId, {
-      homeTeam: body.homeTeam,
-      awayTeam: body.awayTeam,
+      homeTeam: body.homeTeam ?? undefined,
+      awayTeam: body.awayTeam ?? undefined,
       scheduledDate: body.scheduledDate ? new Date(body.scheduledDate) : undefined,
       status: body.status,
       week: body.week,
@@ -143,7 +115,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: gameToApiResponse(game),
+      data: toGameResponseDto(game),
       message: "Partido actualizado exitosamente",
     });
   } catch (error) {

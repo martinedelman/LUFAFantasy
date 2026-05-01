@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/services/backend";
+import { toRegisteredUserResponseDto } from "@/app/DTOs";
+import type { UserRegistrationRequestDto } from "@/app/DTOs";
 
 const authService = new AuthService();
 
 // POST /api/auth/register - Registrar nuevo usuario
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json();
+    const { name, email, password } = (await request.json()) as UserRegistrationRequestDto;
 
     // Validaciones básicas
     if (!name || !email || !password) {
@@ -41,15 +43,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Usuario registrado exitosamente",
-        data: {
-          _id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          isActive: user.isActive,
-          createdAt: user.createdAt?.toISOString(),
-          updatedAt: user.updatedAt?.toISOString(),
-        },
+        data: toRegisteredUserResponseDto(user),
       },
       { status: 201 },
     );

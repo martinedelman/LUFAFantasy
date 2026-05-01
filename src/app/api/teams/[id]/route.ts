@@ -1,37 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TeamService, AuthService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
-import { Team } from "@/entities/Team";
+import { toTeamResponseDto } from "@/app/DTOs";
+import type { UpdateTeamRequestDto } from "@/app/DTOs";
 
 const teamService = new TeamService();
 const authService = new AuthService();
-
-// Helper para serializar Team a respuesta API
-function teamToApiResponse(team: Team) {
-  return {
-    _id: team.id,
-    name: team.name,
-    shortName: team.shortName,
-    logo: team.logo,
-    colors: {
-      primary: team.colors.primary,
-      secondary: team.colors.secondary,
-    },
-    division: team.division,
-    tournament: team.tournament,
-    players: team.players,
-    contact: {
-      email: team.contact.email,
-      phone: team.contact.phone,
-      address: team.contact.address,
-      socialMedia: team.contact.socialMedia,
-    },
-    registrationDate: team.registrationDate.toISOString(),
-    status: team.status,
-    createdAt: team.createdAt?.toISOString(),
-    updatedAt: team.updatedAt?.toISOString(),
-  };
-}
 
 /**
  * GET /api/teams/:id - Obtiene un equipo por ID
@@ -52,7 +26,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const apiResponse = teamToApiResponse(team);
+    const apiResponse = toTeamResponseDto(team);
 
     return NextResponse.json({
       success: true,
@@ -98,7 +72,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-    const body = await request.json();
+    const body = (await request.json()) as UpdateTeamRequestDto;
 
     const updatedTeam = await teamService.updateTeam(id, {
       name: body.name,
@@ -113,7 +87,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({
       success: true,
       message: "Equipo actualizado exitosamente",
-      data: teamToApiResponse(updatedTeam),
+      data: toTeamResponseDto(updatedTeam),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar equipo";

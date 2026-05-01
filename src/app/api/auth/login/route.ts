@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService, UserFactory } from "@/services/backend";
+import { AuthService } from "@/services/backend";
 import { setSessionCookie } from "@/lib/auth";
+import { toUserResponseDto } from "@/app/DTOs";
+import type { LoginRequestDto } from "@/app/DTOs";
 
 const authService = new AuthService();
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password } = (await request.json()) as LoginRequestDto;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       message: "Sesión iniciada correctamente",
-      data: UserFactory.toApiResponse(user),
+      data: toUserResponseDto(user),
     });
 
     setSessionCookie(response, token);

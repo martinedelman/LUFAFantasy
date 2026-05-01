@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TournamentService, AuthService, DivisionService, TeamService } from "@/services/backend";
-import { Tournament } from "@/entities/Tournament";
-import { Division } from "@/entities/Division";
-import { Team } from "@/entities/Team";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { toDivisionResponseDto, toTeamResponseDto, toTournamentResponseDto } from "@/app/DTOs";
+import type { TournamentResponseDto, UpdateTournamentRequestDto } from "@/app/DTOs";
 
 const tournamentService = new TournamentService();
 const authService = new AuthService();
@@ -22,69 +21,6 @@ function getReferenceId(reference: unknown): string {
   return reference.toString();
 }
 
-// Helper para serializar Tournament a respuesta API
-function tournamentToApiResponse(tournament: Tournament) {
-  return {
-    _id: tournament.id,
-    name: tournament.name,
-    description: tournament.description,
-    season: tournament.season,
-    year: tournament.year,
-    startDate: tournament.startDate.toISOString(),
-    endDate: tournament.endDate.toISOString(),
-    registrationDeadline: tournament.registrationDeadline?.toISOString(),
-    status: tournament.status,
-    format: tournament.format,
-    divisions: tournament.divisions,
-    rules: tournament.rules,
-    prizes: tournament.prizes,
-    createdAt: tournament.createdAt?.toISOString(),
-    updatedAt: tournament.updatedAt?.toISOString(),
-  };
-}
-
-// Helper para serializar Division a respuesta API
-function divisionToApiResponse(division: Division) {
-  return {
-    _id: division.id,
-    name: division.name,
-    category: division.category,
-    ageGroup: division.ageGroup,
-    tournament: division.tournament,
-    teams: division.teams as unknown[],
-    maxTeams: division.maxTeams,
-    createdAt: division.createdAt?.toISOString(),
-    updatedAt: division.updatedAt?.toISOString(),
-  };
-}
-
-// Helper para serializar Team a respuesta API
-function teamToApiResponse(team: Team) {
-  return {
-    _id: team.id,
-    name: team.name,
-    shortName: team.shortName,
-    logo: team.logo,
-    colors: {
-      primary: team.colors.primary,
-      secondary: team.colors.secondary,
-    },
-    division: team.division,
-    tournament: team.tournament,
-    players: team.players,
-    contact: {
-      email: team.contact.email,
-      phone: team.contact.phone,
-      address: team.contact.address,
-      socialMedia: team.contact.socialMedia,
-    },
-    registrationDate: team.registrationDate.toISOString(),
-    status: team.status,
-    createdAt: team.createdAt?.toISOString(),
-    updatedAt: team.updatedAt?.toISOString(),
-  };
-}
-
 /**
  * GET /api/tournaments/:id - Obtiene un torneo por ID con divisiones pobladas
  */
@@ -99,8 +35,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Obtener las divisiones pobladas
-    const tournamentData: Omit<ReturnType<typeof tournamentToApiResponse>, "divisions"> & { divisions: unknown[] } = {
-      ...tournamentToApiResponse(tournament),
+    const tournamentData: Omit<TournamentResponseDto, "divisions"> & { divisions: unknown[] } = {
+      ...toTournamentResponseDto(tournament),
       divisions: tournament.divisions,
     };
 
@@ -110,7 +46,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           const division = await divisionService.getDivisionById(divisionId);
           if (!division) return null;
 
-          const divisionData = divisionToApiResponse(division);
+          const divisionData = toDivisionResponseDto(division);
 
           // Popular los teams de cada división
           if (division.teams && division.teams.length > 0) {
@@ -120,7 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                 if (!teamId) return null;
 
                 const team = await teamService.getTeamById(teamId);
-                return team ? teamToApiResponse(team) : null;
+                return team ? toTeamResponseDto(team) : null;
               }),
             );
             divisionData.teams = populatedTeams.filter((team): team is NonNullable<typeof team> => team !== null);
@@ -179,7 +115,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-    const body = await request.json();
+    const body = (await request.json()) as UpdateTournamentRequestDto;
 
     // Validación básica
     if (!body.name || !body.season || !body.year || !body.startDate || !body.endDate || !body.status || !body.format) {
@@ -196,12 +132,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       name: body.name,
       season: body.season,
       year: body.year,
-      startDate: body.startDate,
-      endDate: body.endDate,
+      startDate: new Date(body.startDate),
+      endDate: new Date(body.endDate),
       status: body.status,
       format: body.format,
       description: body.description,
-      registrationDeadline: body.registrationDeadline,
+      registrationDeadline: body.registrationDeadline ? new Date(body.registrationDeadline) : undefined,
       divisions: body.divisions,
       rules: body.rules,
       prizes: body.prizes,
@@ -210,7 +146,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({
       success: true,
       message: "Torneo actualizado exitosamente",
-      data: tournamentToApiResponse(updatedTournament),
+      data: toTournamentResponseDto(updatedTournament),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar torneo";

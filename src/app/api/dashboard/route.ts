@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import { TournamentModel, TeamModel, PlayerModel, GameModel } from "@/models";
+import type { DashboardStatsResponseDto, NextGameResponseDto } from "@/app/DTOs";
 
 interface PlayerAggregateData {
   _id: string;
@@ -11,32 +12,6 @@ interface PlayerAggregateData {
   totalTouchdowns: number;
   totalReceptions: number;
   totalInterceptions: number;
-}
-
-interface NextGame {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  division: string;
-  venue: string;
-  scheduledDate: string;
-  status: string;
-}
-
-interface DashboardStats {
-  activeTournaments: number;
-  totalTeams: number;
-  totalPlayers: number;
-  completedGames: number;
-  nextGames: NextGame[];
-  topPlayers: Array<{
-    id: string;
-    name: string;
-    position: string;
-    team: string;
-    stat: number;
-    statLabel: string;
-  }>;
 }
 
 export async function GET(): Promise<NextResponse> {
@@ -81,7 +56,7 @@ export async function GET(): Promise<NextResponse> {
         scheduledDate:
           scheduledDate instanceof Date ? scheduledDate.toISOString() : new Date(scheduledDate as string).toISOString(),
         status: String(game.status),
-      } as NextGame;
+      } as NextGameResponseDto;
     });
 
     // Obtener mejores jugadores por touchdowns (basado en estadísticas)
@@ -133,7 +108,7 @@ export async function GET(): Promise<NextResponse> {
       },
     ])) as PlayerAggregateData[];
 
-    const stats: DashboardStats = {
+    const stats: DashboardStatsResponseDto = {
       activeTournaments,
       totalTeams,
       totalPlayers,

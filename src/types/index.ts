@@ -491,78 +491,14 @@ export interface PaginationParams {
   sortOrder?: "asc" | "desc";
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    current: number;
-    total: number;
-    pages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-}
+export type PaginatedResponse<T> = import("@/app/DTOs").PaginatedResponseDto<T>;
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  errors?: string[];
-}
+export type ApiResponse<T> = import("@/app/DTOs").ApiResponseDto<T>;
 
 // API Response types for populated data
 
-/**
- * Team response with populated colors for API responses
- */
-export interface TeamApiResponse {
-  _id: string;
-  name: string;
-  shortName?: string;
-  logo?: string;
-  colors: {
-    primary: string;
-    secondary?: string;
-  };
-}
+export type TeamApiResponse = import("@/app/DTOs").TeamSummaryResponseDto;
 
-/**
- * Player response for Live Match player selection
- */
-export interface PlayerApiResponse {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  jerseyNumber: number;
-  position: PlayerPosition | string;
-  status: "active" | "inactive" | "injured" | "suspended";
-}
+export type PlayerApiResponse = import("@/app/DTOs").PlayerSummaryResponseDto;
 
-/**
- * Game response with populated teams for Live Match
- */
-export interface GameApiResponse {
-  _id: string;
-  status: GameStatus;
-  homeTeam: TeamApiResponse | null;
-  awayTeam: TeamApiResponse | null;
-  tournament: {
-    _id: string;
-    name: string;
-  };
-  division: {
-    _id: string;
-    name: string;
-  };
-  venue: {
-    name: string;
-    address: string;
-  };
-  scheduledDate: string;
-  actualStartTime?: string;
-  actualEndTime?: string;
-  score: GameScore;
-  presentPlayers?: {
-    home: string[];
-    away: string[];
-  };
-}
+export type GameApiResponse = import("@/app/DTOs").GameLiveResponseDto;

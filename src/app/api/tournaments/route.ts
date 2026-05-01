@@ -1,31 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TournamentService, AuthService } from "@/services/backend";
-import { Tournament, TournamentStatus } from "@/entities/Tournament";
+import { TournamentStatus } from "@/entities/Tournament";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { toTournamentResponseDto } from "@/app/DTOs";
+import type { CreateTournamentRequestDto } from "@/app/DTOs";
 
 const tournamentService = new TournamentService();
 const authService = new AuthService();
-
-// Helper para serializar Tournament a respuesta API
-function tournamentToApiResponse(tournament: Tournament) {
-  return {
-    _id: tournament.id,
-    name: tournament.name,
-    description: tournament.description,
-    season: tournament.season,
-    year: tournament.year,
-    startDate: tournament.startDate.toISOString(),
-    endDate: tournament.endDate.toISOString(),
-    registrationDeadline: tournament.registrationDeadline?.toISOString(),
-    status: tournament.status,
-    format: tournament.format,
-    divisions: tournament.divisions,
-    rules: tournament.rules,
-    prizes: tournament.prizes,
-    createdAt: tournament.createdAt?.toISOString(),
-    updatedAt: tournament.updatedAt?.toISOString(),
-  };
-}
 
 /**
  * GET /api/tournaments - Obtiene todos los torneos con filtros y paginación
@@ -53,7 +34,7 @@ export async function GET(request: NextRequest) {
     const paginatedTournaments = allTournaments.slice(startIndex, endIndex);
 
     // Convertir a respuesta API
-    const responseData = paginatedTournaments.map((tournament) => tournamentToApiResponse(tournament));
+    const responseData = paginatedTournaments.map((tournament) => toTournamentResponseDto(tournament));
 
     return NextResponse.json({
       success: true,
@@ -105,7 +86,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as CreateTournamentRequestDto;
 
     // Validación básica
     if (!body.name || !body.season || !body.year || !body.startDate || !body.endDate || !body.status || !body.format) {
@@ -122,12 +103,12 @@ export async function POST(request: NextRequest) {
       name: body.name,
       season: body.season,
       year: body.year,
-      startDate: body.startDate,
-      endDate: body.endDate,
+      startDate: new Date(body.startDate),
+      endDate: new Date(body.endDate),
       status: body.status,
       format: body.format,
       description: body.description,
-      registrationDeadline: body.registrationDeadline,
+      registrationDeadline: body.registrationDeadline ? new Date(body.registrationDeadline) : undefined,
       divisions: body.divisions,
       rules: body.rules,
       prizes: body.prizes,
@@ -137,7 +118,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Torneo creado exitosamente",
-        data: tournamentToApiResponse(tournament),
+        data: toTournamentResponseDto(tournament),
       },
       { status: 201 },
     );

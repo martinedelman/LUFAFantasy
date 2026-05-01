@@ -1,43 +1,13 @@
-import { User, UserRole } from "../User";
-import { IUser } from "../../models/User";
+import { User } from "../User";
+import type { UserRole } from "../User";
+import type { IUser } from "../../models/User";
+import type { UserRegistrationRequestDto } from "@/app/DTOs/Requests";
+import type { UserResponseDto } from "@/app/DTOs/Responses";
+import type { UserPersistenceDto } from "@/repositories/DTOs";
 
-/**
- * DTO para registro de usuario desde API
- */
-export interface UserRegistrationDto {
-  email: string;
-  password: string;
-  name: string;
-  role?: UserRole;
-}
-
-/**
- * DTO para response de usuario en API
- */
-export interface UserApiResponse {
-  id?: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  isActive: boolean;
-  isAdmin: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-/**
- * DTO para persistencia en MongoDB
- */
-export interface UserPersistenceDto {
-  _id?: string;
-  email: string;
-  password: string;
-  name: string;
-  role: UserRole;
-  isActive: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export type UserRegistrationDto = UserRegistrationRequestDto;
+export type UserApiResponse = UserResponseDto;
+export type { UserPersistenceDto };
 
 /**
  * Factory para conversión de User entre capas
@@ -90,7 +60,7 @@ export class UserFactory {
    * @param data DTO de registro del API
    * @returns Partial<User> con los datos del request
    */
-  static fromApiRequest(data: UserRegistrationDto): Partial<User> {
+  static fromApiRequest(data: UserRegistrationRequestDto): Partial<User> {
     return {
       email: data.email,
       name: data.name,
@@ -105,7 +75,7 @@ export class UserFactory {
    * @param user Instancia de User
    * @returns DTO para response del API
    */
-  static toApiResponse(user: User): UserApiResponse {
+  static toApiResponse(user: User): UserResponseDto {
     return {
       id: user.id,
       email: user.email,

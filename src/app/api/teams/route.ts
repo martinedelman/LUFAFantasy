@@ -2,37 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { TeamService, AuthService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { TeamStatus } from "@/entities/Team";
-import { Team } from "@/entities/Team";
+import { toTeamResponseDto } from "@/app/DTOs";
+import type { CreateTeamRequestDto } from "@/app/DTOs";
 
 const teamService = new TeamService();
 const authService = new AuthService();
-
-// Helper para serializar Team a respuesta API
-function teamToApiResponse(team: Team) {
-  return {
-    _id: team.id,
-    name: team.name,
-    shortName: team.shortName,
-    logo: team.logo,
-    colors: {
-      primary: team.colors.primary,
-      secondary: team.colors.secondary,
-    },
-    division: team.division,
-    tournament: team.tournament,
-    players: team.players,
-    contact: {
-      email: team.contact.email,
-      phone: team.contact.phone,
-      address: team.contact.address,
-      socialMedia: team.contact.socialMedia,
-    },
-    registrationDate: team.registrationDate.toISOString(),
-    status: team.status,
-    createdAt: team.createdAt?.toISOString(),
-    updatedAt: team.updatedAt?.toISOString(),
-  };
-}
 
 /**
  * GET /api/teams - Obtiene todos los equipos con filtros y paginación
@@ -62,7 +36,7 @@ export async function GET(request: NextRequest) {
     const paginatedTeams = allTeams.slice(startIndex, endIndex);
 
     // Convertir a respuesta API
-    const responseData = paginatedTeams.map((team) => teamToApiResponse(team));
+    const responseData = paginatedTeams.map((team) => toTeamResponseDto(team));
 
     return NextResponse.json({
       success: true,
@@ -114,7 +88,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as CreateTeamRequestDto;
 
     // Validación básica
     if (!body.name || !body.division || !body.colors || !body.contact) {
@@ -143,7 +117,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Equipo creado exitosamente",
-        data: teamToApiResponse(team),
+        data: toTeamResponseDto(team),
       },
       { status: 201 },
     );
