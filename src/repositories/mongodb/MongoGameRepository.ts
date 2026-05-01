@@ -134,6 +134,41 @@ export class MongoGameRepository implements IGameRepository {
     return doc;
   }
 
+  async startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game> {
+    await connectToDatabase();
+
+    // Asegura transición atómica de estado para evitar dobles inicios.
+    const doc = await GameModel.findOneAndUpdate(
+      {
+        _id: id,
+        status: "scheduled",
+      },
+      {
+        $set: {
+          status: "in_progress",
+          actualStartTime: new Date(),
+        },
+      },
+      { new: true },
+    )
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .exec();
+
+    if (!doc) {
+      const existing = await GameModel.findById(id).select("_id").exec();
+      if (!existing) {
+        throw new Error("Partido no encontrado");
+      }
+      throw new Error("Solo se pueden iniciar partidos programados");
+    }
+
+    // El esquema actual no persiste presentPlayers, pero se valida en servicio.
+    void presentPlayers;
+
+    return doc;
+  }
+
   async updateStatus(id: string, status: GameStatus): Promise<Game> {
     await connectToDatabase();
     const doc = await GameModel.findByIdAndUpdate(id, { $set: { status } }, { new: true })

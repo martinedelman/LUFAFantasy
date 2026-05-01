@@ -52,20 +52,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    // Verificar si el usuario es admin para saber qué datos mostrar
-    const token = getSessionTokenFromRequest(request);
-    const isAdmin = token ? await authService.verifyAdmin(token) : false;
-
     const apiResponse = teamToApiResponse(team);
-
-    // Si no es admin, sanitizar datos sensibles
-    if (!isAdmin && apiResponse.coach) {
-      apiResponse.coach = {
-        name: apiResponse.coach.name || "",
-        experience: apiResponse.coach.experience || "",
-        certifications: apiResponse.coach.certifications || [],
-      };
-    }
 
     return NextResponse.json({
       success: true,
@@ -118,7 +105,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       colors: body.colors,
       shortName: body.shortName,
       logo: body.logo,
-      coach: body.coach,
       contact: body.contact,
       status: body.status,
       players: body.players,
