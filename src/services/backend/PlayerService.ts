@@ -73,20 +73,47 @@ export class PlayerService {
   /**
    * Lista jugadores con filtros
    */
-  async listPlayers(filters?: { team?: string; position?: PlayerPosition; status?: PlayerStatus }): Promise<Player[]> {
-    if (filters?.team) {
-      return await this.playerRepo.findByTeam(filters.team);
+  async listPlayers(filters?: {
+    team?: string;
+    position?: PlayerPosition;
+    status?: PlayerStatus;
+    search?: string;
+  }): Promise<Player[]> {
+    if (!filters) {
+      return await this.playerRepo.findAll();
     }
 
-    if (filters?.position) {
-      return await this.playerRepo.findByPosition(filters.position);
+    const { search, team, position, status } = filters;
+
+    if (search) {
+      const searchResults = await this.playerRepo.searchByName(search);
+      return searchResults.filter((player) => {
+        if (team && String((player.team as unknown as { _id?: string })?._id || player.team) !== team) {
+          return false;
+        }
+
+        if (position && player.position !== position) {
+          return false;
+        }
+
+        if (status && player.status !== status) {
+          return false;
+        }
+
+        return true;
+      });
     }
 
-    if (filters?.status === "active") {
-      return await this.playerRepo.findActivePlayers();
-    }
+    const queryFilters: {
+      team?: string;
+      position?: PlayerPosition;
+      status?: PlayerStatus;
+    } = {};
+    if (team) queryFilters.team = team;
+    if (position) queryFilters.position = position;
+    if (status) queryFilters.status = status;
 
-    return await this.playerRepo.findAll(filters);
+    return await this.playerRepo.findAll(queryFilters);
   }
 
   /**

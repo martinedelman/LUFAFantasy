@@ -69,18 +69,6 @@ export class TournamentService {
     year?: number;
     season?: string;
   }): Promise<Tournament[]> {
-    if (filters?.status) {
-      return await this.tournamentRepo.findByStatus(filters.status);
-    }
-
-    if (filters?.year && filters?.season) {
-      return await this.tournamentRepo.findBySeasonAndYear(filters.season, filters.year);
-    }
-
-    if (filters?.year) {
-      return await this.tournamentRepo.findByYear(filters.year);
-    }
-
     return await this.tournamentRepo.findAll(filters);
   }
 

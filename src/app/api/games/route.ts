@@ -14,13 +14,19 @@ export async function GET(request: NextRequest) {
     const division = searchParams.get("division") || undefined;
     const status = searchParams.get("status") as GameStatus | undefined;
     const team = searchParams.get("team") || undefined;
+    const upcoming = searchParams.get("upcoming") === "true";
 
-    const games = await gameService.listGames({
+    let games = await gameService.listGames({
       tournament,
       team,
       division,
       status,
     });
+
+    if (upcoming) {
+      const now = Date.now();
+      games = games.filter((game) => new Date(game.scheduledDate).getTime() >= now);
+    }
 
     // Convertir entities a formato API
     const gamesData = games.map((game) => toGameResponseDto(game));

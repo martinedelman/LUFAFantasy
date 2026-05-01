@@ -47,10 +47,6 @@ export class DivisionService {
    * Lista divisiones con filtros
    */
   async listDivisions(filters?: { tournament?: string; category?: DivisionCategory }): Promise<Division[]> {
-    if (filters?.tournament) {
-      return await this.divisionRepo.findByTournament(filters.tournament);
-    }
-
     return await this.divisionRepo.findAll(filters);
   }
 

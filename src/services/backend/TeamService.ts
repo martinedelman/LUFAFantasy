@@ -75,19 +75,36 @@ export class TeamService {
    * Lista equipos con filtros
    */
   async listTeams(filters?: { tournament?: string; division?: string; status?: TeamStatus }): Promise<Team[]> {
-    if (filters?.tournament) {
-      return await this.teamRepo.findByTournament(filters.tournament);
+    if (!filters) {
+      return await this.teamRepo.findAll();
     }
 
-    if (filters?.division) {
-      return await this.teamRepo.findByDivision(filters.division);
+    if (filters.tournament) {
+      const teamsByTournament = await this.teamRepo.findByTournament(filters.tournament);
+      return teamsByTournament.filter((team) => {
+        if (filters.division && (team.division as unknown as { _id?: string })?._id !== filters.division) {
+          const divisionReference = team.division as unknown;
+          const divisionId =
+            typeof divisionReference === "string" ? divisionReference : (divisionReference as { _id?: string })?._id;
+
+          if (divisionId !== filters.division) {
+            return false;
+          }
+        }
+
+        if (filters.status && team.status !== filters.status) {
+          return false;
+        }
+
+        return true;
+      });
     }
 
-    if (filters?.status === "active") {
-      return await this.teamRepo.findActiveTeams();
-    }
+    const queryFilters: { division?: string; status?: TeamStatus } = {};
+    if (filters.division) queryFilters.division = filters.division;
+    if (filters.status) queryFilters.status = filters.status;
 
-    return await this.teamRepo.findAll(filters);
+    return await this.teamRepo.findAll(queryFilters);
   }
 
   /**

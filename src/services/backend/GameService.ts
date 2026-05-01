@@ -212,23 +212,36 @@ export class GameService {
     division?: string;
     status?: GameStatus;
   }): Promise<Game[]> {
-    if (filters.tournament) {
-      return await this.gameRepo.findByTournament(filters.tournament);
-    }
-
     if (filters.team) {
-      return await this.gameRepo.findByTeam(filters.team);
+      const gamesByTeam = await this.gameRepo.findByTeam(filters.team);
+      return gamesByTeam.filter((game) => {
+        if (filters.tournament && this.getReferenceId(game.tournament) !== filters.tournament) {
+          return false;
+        }
+
+        if (filters.division && this.getReferenceId(game.division) !== filters.division) {
+          return false;
+        }
+
+        if (filters.status && game.status !== filters.status) {
+          return false;
+        }
+
+        return true;
+      });
     }
 
-    if (filters.division) {
-      return await this.gameRepo.findByDivision(filters.division);
-    }
+    const queryFilters: {
+      tournament?: string;
+      division?: string;
+      status?: GameStatus;
+    } = {};
 
-    if (filters.status) {
-      return await this.gameRepo.findByStatus(filters.status);
-    }
+    if (filters.tournament) queryFilters.tournament = filters.tournament;
+    if (filters.division) queryFilters.division = filters.division;
+    if (filters.status) queryFilters.status = filters.status;
 
-    return await this.gameRepo.findAll(filters);
+    return await this.gameRepo.findAll(queryFilters);
   }
 
   /**

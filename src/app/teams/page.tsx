@@ -62,7 +62,6 @@ function TeamsPageContent() {
   const searchParams = useSearchParams();
   const tournamentId = searchParams.get("tournament") || "";
   const [teams, setTeams] = useState<Team[]>([]);
-  const [unfilteredTeams, setUnfilteredTeams] = useState<Team[]>([]);
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [loadingDivisions, setLoadingDivisions] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -89,27 +88,20 @@ function TeamsPageContent() {
     async (page = 1) => {
       try {
         setLoading(true);
-        if (filters.division) {
-          console.log("Filtrando por división:", filters.division);
-          console.log("Equipos antes del filtro:", teams);
-          setTeams(unfilteredTeams.filter((team) => team.division._id === filters.division));
-          return;
-        }
-        if (filters.status) {
-        }
         const params = new URLSearchParams({
           page: page.toString(),
           limit: "20",
         });
 
         if (tournamentId) params.append("tournament", tournamentId);
+        if (filters.division) params.append("division", filters.division);
+        if (filters.status) params.append("status", filters.status);
 
         const response = await fetch(`/api/teams?${params}`);
         const result: ApiResponse = await response.json();
 
         if (result.success) {
           setTeams(result.data);
-          setUnfilteredTeams(result.data);
           setPagination(result.pagination);
           setError(null);
         } else {
@@ -121,7 +113,7 @@ function TeamsPageContent() {
         setLoading(false);
       }
     },
-    [filters.division, filters.status, tournamentId, teams, unfilteredTeams],
+    [filters.division, filters.status, tournamentId],
   );
   useEffect(() => {
     fetchTeams(currentPage);
