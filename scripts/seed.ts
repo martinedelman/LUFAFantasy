@@ -659,7 +659,7 @@ async function seedDatabase() {
         role: "admin",
         isActive: true,
         profile: {
-          bio: "Administrador principal del sistema LUFA Fantasy",
+          bio: "Administrador principal de LUFA Flag Football",
           phone: "+525512345678",
         },
       },

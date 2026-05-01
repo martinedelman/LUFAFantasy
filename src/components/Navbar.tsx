@@ -41,7 +41,7 @@ export default function Navbar() {
                 priority
               />
             </div>
-            <span className="text-xl md:text-3xl font-bold leading-none truncate">LUFA Fantasy</span>
+            <span className="text-xl md:text-3xl font-bold leading-none truncate">LUFA Flag</span>
           </Link>
 
           {/* Desktop Navigation */}

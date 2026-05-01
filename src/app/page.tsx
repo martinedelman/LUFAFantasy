@@ -89,7 +89,7 @@ export default function Home() {
         {/* Welcome Hero Section */}
         <div className="mb-12 p-8 ">
           <h1 className="text-5xl font-bold mb-2">Liga Uruguaya de Football Americano</h1>
-          <p className="text-brand-800 text-lg">Bienvenido a LUFA Fantasy - Gestión de Flag Football</p>
+          <p className="text-brand-800 text-lg">Bienvenido a LUFA Flag - Flag Football en Uruguay</p>
         </div>
 
         {/* Stats Grid - Enhanced */}
@@ -495,7 +495,7 @@ export default function Home() {
               onClick={() => (window.location.href = "/tournaments")}
               className="bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-bold py-4 px-8 rounded-lg transition-all transform hover:scale-105 shadow-lg text-lg"
             >
-              Explorar LUFA Fantasy →
+              Explorar LUFA Flag →
             </button>
           </div>
         </div>

@@ -24,7 +24,7 @@ export default function ProfilePage() {
         name: user.name || "",
         email: user.email || "",
         phone: "",
-        bio: "Fanático del Flag Football y usuario del sistema LUFA Fantasy.",
+        bio: "Fanático del Flag Football y usuario del sistema LUFA Flag.",
       });
     }
   }, [user, router]);
@@ -62,9 +62,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Mi Perfil</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Gestiona tu información personal y configuración de cuenta
-              </p>
+              <p className="mt-1 text-sm text-gray-600">Gestiona tu información personal y configuración de cuenta</p>
             </div>
             <Link
               href="/"
@@ -133,12 +131,7 @@ export default function ProfilePage() {
                     href="/admin/users"
                     className="flex items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
                   >
-                    <svg
-                      className="w-5 h-5 text-gray-400 mr-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                    <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -152,12 +145,7 @@ export default function ProfilePage() {
                     href="/admin/system"
                     className="flex items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
                   >
-                    <svg
-                      className="w-5 h-5 text-gray-400 mr-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                    <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"

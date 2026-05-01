@@ -95,14 +95,12 @@ export default function SignUpPage() {
             <span className="text-4xl">🏈</span>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Crear Cuenta</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">Únete a LUFA Fantasy</p>
+          <p className="mt-2 text-center text-sm text-gray-600">Únete a LUFA Flag</p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-              {error}
-            </div>
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{error}</div>
           )}
 
           <div className="space-y-4">
@@ -188,8 +186,8 @@ export default function SignUpPage() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-blue-700">
-                  <strong>Nota:</strong> Solo se pueden registrar usuarios regulares. Los administradores son
-                  creados directamente en la base de datos.
+                  <strong>Nota:</strong> Solo se pueden registrar usuarios regulares. Los administradores son creados
+                  directamente en la base de datos.
                 </p>
               </div>
             </div>
