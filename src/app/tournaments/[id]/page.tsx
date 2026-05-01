@@ -44,13 +44,17 @@ interface Tournament {
     _id: string;
     name: string;
     category: string;
-    ageGroup: string;
-    maxTeams: number;
+    ageGroup?: string;
+    maxTeams?: number;
     teams?: Array<{
       _id: string;
       name: string;
       shortName: string;
       logo?: string;
+      colors?: {
+        primary: string;
+        secondary?: string;
+      };
     }>;
   }>;
 }
@@ -121,6 +125,15 @@ export default function TournamentDetailPage() {
       style: "currency",
       currency: "MXN",
     }).format(amount);
+  };
+
+  const formatDivisionCategory = (category: string) => {
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  };
+
+  const getDivisionCapacity = (division: NonNullable<Tournament["divisions"]>[number]) => {
+    const registeredTeams = division.teams?.length || 0;
+    return division.maxTeams ? `${registeredTeams}/${division.maxTeams}` : `${registeredTeams}`;
   };
 
   if (loading) {
@@ -319,39 +332,87 @@ export default function TournamentDetailPage() {
             {/* Divisiones */}
             {tournament.divisions && tournament.divisions.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Divisiones</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">Divisiones</h2>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Categorías del torneo y equipos inscritos en cada una.
+                    </p>
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">
+                    {tournament.divisions.length} {tournament.divisions.length === 1 ? "división" : "divisiones"}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
                   {tournament.divisions.map((division) => (
                     <div key={division._id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium text-gray-900">{division.name}</h3>
-                        <span className="text-sm text-gray-500 capitalize">{division.category}</span>
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-base font-semibold text-gray-900">
+                              {division.name || formatDivisionCategory(division.category)}
+                            </h3>
+                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                              {formatDivisionCategory(division.category)}
+                            </span>
+                            {division.ageGroup && (
+                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                                {division.ageGroup}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                            <span>
+                              <span className="font-medium text-gray-900">{division.teams?.length || 0}</span> equipos
+                              registrados
+                            </span>
+                            {division.maxTeams && (
+                              <span>
+                                <span className="font-medium text-gray-900">{division.maxTeams}</span> cupos máximos
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 rounded-md bg-gray-50 px-3 py-2 text-center">
+                          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Cupos</p>
+                          <p className="mt-1 text-lg font-semibold text-gray-900">{getDivisionCapacity(division)}</p>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600">{division.ageGroup}</p>
-                      <p className="text-sm text-gray-500 mt-1">Máximo {division.maxTeams} equipos</p>
+
                       {division.teams && division.teams.length > 0 && (
-                        <div className="mt-3">
-                          <p className="text-xs font-medium text-gray-500 mb-1">Equipos Registrados:</p>
-                          <div className="flex flex-wrap gap-1">
+                        <div className="mt-4 border-t border-gray-100 pt-4">
+                          <div className="flex flex-wrap gap-2">
                             {division.teams.map((team) => (
                               <span
                                 key={team._id}
-                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                                className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-900"
                               >
                                 {team.logo ? (
-                                  <>
-                                    <span
-                                      className="w-4 h-4 rounded-full bg-white border border-gray-200 bg-cover bg-center mr-1"
-                                      style={{ backgroundImage: `url(${team.logo})` }}
-                                    />
-                                    {team.name}
-                                  </>
+                                  <span
+                                    className="h-5 w-5 rounded-full border border-gray-200 bg-white bg-cover bg-center"
+                                    style={{ backgroundImage: `url(${team.logo})` }}
+                                  />
                                 ) : (
-                                  team.shortName || team.name
+                                  <span
+                                    className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                                    style={{ backgroundColor: team.colors?.primary || "#16a34a" }}
+                                  >
+                                    {(team.shortName || team.name).substring(0, 2)}
+                                  </span>
                                 )}
+                                {team.name}
                               </span>
                             ))}
                           </div>
+                        </div>
+                      )}
+
+                      {(!division.teams || division.teams.length === 0) && (
+                        <div className="mt-4 border-t border-gray-100 pt-4">
+                          <p className="text-sm text-gray-500">Todavía no hay equipos registrados en esta división.</p>
                         </div>
                       )}
                     </div>

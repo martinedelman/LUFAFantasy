@@ -89,7 +89,7 @@ export class MongoStandingRepository implements IStandingRepository {
     const doc = await StandingModel.findOneAndUpdate(
       {
         team: standing.team,
-        tournament: standing.tournament,
+        division: standing.division,
       },
       persistenceData,
       {

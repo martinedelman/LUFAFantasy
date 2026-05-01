@@ -6,6 +6,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
 import Tag from "@/components/Tag";
 import { useAuth } from "@/hooks/useAuth";
+import Link from "next/link";
 
 type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
 
@@ -946,6 +947,14 @@ export default function GamesPage() {
 
                 {canManageGames && (
                   <div className="mt-4 lg:mt-0 lg:ml-6 flex gap-3">
+                    {(game.status === "scheduled" || game.status === "in_progress") && (
+                      <Link
+                        href={`/games/${game._id}/live`}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                      >
+                        Live Match
+                      </Link>
+                    )}
                     <button
                       onClick={() => openEditForm(game)}
                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"

@@ -10,6 +10,18 @@ const authService = new AuthService();
 const divisionService = new DivisionService();
 const teamService = new TeamService();
 
+function getReferenceId(reference: unknown): string {
+  if (!reference) return "";
+  if (typeof reference === "string") return reference;
+
+  if (typeof reference === "object" && "_id" in reference) {
+    const id = (reference as { _id?: unknown })._id;
+    return id ? id.toString() : "";
+  }
+
+  return reference.toString();
+}
+
 // Helper para serializar Tournament a respuesta API
 function tournamentToApiResponse(tournament: Tournament) {
   return {
@@ -39,7 +51,7 @@ function divisionToApiResponse(division: Division) {
     category: division.category,
     ageGroup: division.ageGroup,
     tournament: division.tournament,
-    teams: division.teams,
+    teams: division.teams as unknown[],
     maxTeams: division.maxTeams,
     createdAt: division.createdAt?.toISOString(),
     updatedAt: division.updatedAt?.toISOString(),
@@ -87,7 +99,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Obtener las divisiones pobladas
-    const tournamentData = tournamentToApiResponse(tournament);
+    const tournamentData: Omit<ReturnType<typeof tournamentToApiResponse>, "divisions"> & { divisions: unknown[] } = {
+      ...tournamentToApiResponse(tournament),
+      divisions: tournament.divisions,
+    };
 
     if (tournament.divisions && tournament.divisions.length > 0) {
       const populatedDivisions = await Promise.all(
@@ -100,19 +115,24 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           // Popular los teams de cada división
           if (division.teams && division.teams.length > 0) {
             const populatedTeams = await Promise.all(
-              division.teams.map(async (teamId) => {
+              division.teams.map(async (teamReference) => {
+                const teamId = getReferenceId(teamReference);
+                if (!teamId) return null;
+
                 const team = await teamService.getTeamById(teamId);
                 return team ? teamToApiResponse(team) : null;
               }),
             );
-            divisionData.teams = populatedTeams.filter((t) => t !== null);
+            divisionData.teams = populatedTeams.filter((team): team is NonNullable<typeof team> => team !== null);
           }
 
           return divisionData;
         }),
       );
 
-      tournamentData.divisions = populatedDivisions.filter((d) => d !== null);
+      tournamentData.divisions = populatedDivisions.filter(
+        (division): division is NonNullable<typeof division> => division !== null,
+      );
     }
 
     return NextResponse.json({

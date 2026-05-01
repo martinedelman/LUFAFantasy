@@ -1,5 +1,5 @@
 import { Game, GameStatus } from "../../entities/Game";
-import { GameScore } from "../../entities/valueObjects/Score";
+import { GameScore, QuarterScore } from "../../entities/valueObjects/Score";
 import { Venue } from "../../entities/valueObjects/Venue";
 import RepositoryContainer from "../../repositories";
 import { StandingService } from "./StandingService";
@@ -87,8 +87,24 @@ export class GameService {
       throw new Error("Partido no encontrado");
     }
 
-    // Calcular nuevo score
-    const newScore = game.calculateScore(scoreData.home, scoreData.away);
+    // Calcular nuevo score. Los repositorios Mongo devuelven documentos poblados,
+    // así que no dependemos de métodos de entidad en este punto.
+    const newScore = new GameScore(
+      new QuarterScore(
+        scoreData.home.q1,
+        scoreData.home.q2,
+        scoreData.home.q3,
+        scoreData.home.q4,
+        scoreData.home.overtime || 0,
+      ),
+      new QuarterScore(
+        scoreData.away.q1,
+        scoreData.away.q2,
+        scoreData.away.q3,
+        scoreData.away.q4,
+        scoreData.away.overtime || 0,
+      ),
+    );
 
     // Validar score
     const scoreValidation = newScore.validate();
@@ -99,10 +115,30 @@ export class GameService {
     // Actualizar score
     const updatedGame = await this.gameRepo.updateScore(id, newScore);
 
-    // Si el partido está completado, recalcular standings
-    if (updatedGame.status === "completed") {
+    // Mantener standings vivos para partidos en curso y finales.
+    if (updatedGame.status === "in_progress" || updatedGame.status === "completed") {
       await this.recalculateStandingsForGame(updatedGame);
     }
+
+    return updatedGame;
+  }
+
+  /**
+   * Inicia un partido con jugadores presentes
+   */
+  async startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game> {
+    // Validar mínimo de jugadores antes de intentar la actualización atómica
+    if (presentPlayers.home.length < 4) {
+      throw new Error("Se requieren al menos 4 jugadores del equipo local");
+    }
+
+    if (presentPlayers.away.length < 4) {
+      throw new Error("Se requieren al menos 4 jugadores del equipo visitante");
+    }
+
+    // Actualizar en DB con validación atómica del estado
+    const updatedGame = await this.gameRepo.startGame(id, presentPlayers);
+    await this.recalculateStandingsForGame(updatedGame);
 
     return updatedGame;
   }
@@ -116,8 +152,9 @@ export class GameService {
       throw new Error("Partido no encontrado");
     }
 
-    // Marcar como completado (valida estado)
-    game.complete();
+    if (game.status !== "in_progress") {
+      throw new Error("Solo se pueden completar partidos en progreso");
+    }
 
     // Actualizar en DB
     const updatedGame = await this.gameRepo.updateStatus(id, "completed");
@@ -136,10 +173,27 @@ export class GameService {
       return;
     }
 
+    const homeTeamId = this.getReferenceId(game.homeTeam);
+    const awayTeamId = this.getReferenceId(game.awayTeam);
+    const tournamentId = this.getReferenceId(game.tournament);
+    const divisionId = this.getReferenceId(game.division);
+
     await Promise.all([
-      this.standingService.recalculateForTeam(game.homeTeam, game.tournament, game.division),
-      this.standingService.recalculateForTeam(game.awayTeam, game.tournament, game.division),
+      this.standingService.recalculateForTeam(homeTeamId, tournamentId, divisionId),
+      this.standingService.recalculateForTeam(awayTeamId, tournamentId, divisionId),
     ]);
+  }
+
+  private getReferenceId(reference: unknown): string {
+    if (!reference) return "";
+    if (typeof reference === "string") return reference;
+
+    if (typeof reference === "object" && "_id" in reference) {
+      const id = (reference as { _id?: unknown })._id;
+      return id ? id.toString() : "";
+    }
+
+    return reference.toString();
   }
 
   /**
@@ -197,15 +251,33 @@ export class GameService {
     }
 
     // Crear nuevo game con datos actualizados
+    const normalizedVenue = new Venue(game.venue.name, game.venue.address);
+    const normalizedScore = new GameScore(
+      new QuarterScore(
+        game.score.home.q1,
+        game.score.home.q2,
+        game.score.home.q3,
+        game.score.home.q4,
+        game.score.home.overtime || 0,
+      ),
+      new QuarterScore(
+        game.score.away.q1,
+        game.score.away.q2,
+        game.score.away.q3,
+        game.score.away.q4,
+        game.score.away.overtime || 0,
+      ),
+    );
+
     const updatedGame = new Game(
-      game.tournament,
-      game.division,
-      game.venue,
+      this.getReferenceId(game.tournament),
+      this.getReferenceId(game.division),
+      normalizedVenue,
       data.scheduledDate || game.scheduledDate,
       data.status || game.status,
-      data.homeTeam || game.homeTeam,
-      data.awayTeam || game.awayTeam,
-      game.score,
+      data.homeTeam || this.getReferenceId(game.homeTeam),
+      data.awayTeam || this.getReferenceId(game.awayTeam),
+      normalizedScore,
       game.statistics,
       data.week !== undefined ? data.week : game.week,
       data.round || game.round,
@@ -223,7 +295,13 @@ export class GameService {
       throw new Error(validation.errors.join(", "));
     }
 
-    return await this.gameRepo.update(id, updatedGame);
+    const savedGame = await this.gameRepo.update(id, updatedGame);
+
+    if (savedGame.status === "in_progress" || savedGame.status === "completed") {
+      await this.recalculateStandingsForGame(savedGame);
+    }
+
+    return savedGame;
   }
 
   /**

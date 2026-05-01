@@ -4,6 +4,7 @@ import { Standing } from "../types";
 const StandingSchema = new Schema(
   {
     division: { type: Schema.Types.ObjectId, ref: "Division", required: true },
+    tournament: { type: Schema.Types.ObjectId, ref: "Tournament" },
     team: { type: Schema.Types.ObjectId, ref: "Team", required: true },
     position: { type: Number, required: true },
     wins: { type: Number, default: 0 },
@@ -39,6 +40,7 @@ const StandingSchema = new Schema(
 
 // Índices
 StandingSchema.index({ division: 1, team: 1 }, { unique: true });
+StandingSchema.index({ tournament: 1 });
 StandingSchema.index({ division: 1, position: 1 });
 StandingSchema.index({ division: 1, percentage: -1 });
 

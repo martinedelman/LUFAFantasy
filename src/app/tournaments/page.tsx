@@ -7,7 +7,6 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
 import Tag from "@/components/Tag";
-import Table from "@/components/Table";
 
 interface Tournament {
   _id: string;
@@ -38,6 +37,7 @@ interface ApiResponse {
 export default function TournamentsPage() {
   const { user } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,6 +85,27 @@ export default function TournamentsPage() {
     [filters.status, filters.year],
   );
 
+  const fetchAvailableYears = useCallback(async () => {
+    try {
+      const response = await fetch("/api/tournaments?page=1&limit=1000");
+      const result: ApiResponse = await response.json();
+
+      if (result.success) {
+        const years = Array.from(new Set(result.data.map((tournament) => tournament.year)))
+          .filter((year) => Number.isFinite(year))
+          .sort((a, b) => b - a);
+
+        setAvailableYears(years);
+      }
+    } catch {
+      setAvailableYears([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAvailableYears();
+  }, [fetchAvailableYears]);
+
   useEffect(() => {
     fetchTournaments(currentPage);
   }, [currentPage, fetchTournaments, filters]);
@@ -116,6 +137,16 @@ export default function TournamentsPage() {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const formatTournamentFormat = (format: Tournament["format"]) => {
+    const formatMap: Record<Tournament["format"], string> = {
+      league: "Liga",
+      playoff: "Playoff",
+      tournament: "Torneo",
+    };
+
+    return formatMap[format] || format;
   };
 
   if (loading && tournaments.length === 0) {
@@ -180,9 +211,11 @@ export default function TournamentsPage() {
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
             >
               <option value="">Todos los años</option>
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -195,76 +228,77 @@ export default function TournamentsPage() {
       )}
 
       {/* Tournaments List */}
-      <Table<Tournament>
-        columns={[
-          {
-            key: "name",
-            label: "Torneo",
-            render: (_, tournament: unknown) => {
-              const t = tournament as Tournament;
-              return (
-                <div>
-                  <div className="text-sm font-medium text-gray-900">{t.name}</div>
-                  <div className="text-sm text-gray-500">{t.description}</div>
+      {loading && tournaments.length === 0 ? (
+        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+          <div className="flex justify-center items-center min-h-[300px]">
+            <div className="text-gray-500">Cargando...</div>
+          </div>
+        </div>
+      ) : tournaments.length === 0 ? (
+        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+          <div className="text-center py-12">
+            <div className="flex justify-center mb-4">
+              <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-sm font-medium text-gray-900">No hay torneos</h3>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {tournaments.map((tournament) => (
+            <Link
+              key={tournament._id}
+              href={`/tournaments/${tournament._id}`}
+              className="group flex min-h-[260px] flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:border-blue-500 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-500">
+                    {tournament.season} {tournament.year}
+                  </p>
+                  <h3 className="mt-1 text-lg font-semibold text-gray-900 group-hover:text-blue-700">
+                    {tournament.name}
+                  </h3>
                 </div>
-              );
-            },
-          },
-          {
-            key: "season",
-            label: "Temporada",
-            render: (_, tournament: unknown) => {
-              const t = tournament as Tournament;
-              return `${t.season} ${t.year}`;
-            },
-          },
-          {
-            key: "startDate",
-            label: "Fechas",
-            render: (_, tournament: unknown) => {
-              const t = tournament as Tournament;
-              return (
-                <div>
-                  <div>{formatDate(t.startDate)}</div>
-                  <div className="text-gray-500">al {formatDate(t.endDate)}</div>
+                <div className="shrink-0">{getStatusTag(tournament.status)}</div>
+              </div>
+
+              <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-600">{tournament.description}</p>
+
+              <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-md bg-gray-50 px-3 py-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Formato</p>
+                  <p className="mt-1 font-medium text-gray-900">{formatTournamentFormat(tournament.format)}</p>
                 </div>
-              );
-            },
-          },
-          {
-            key: "status",
-            label: "Estado",
-            render: (status) => getStatusTag(status as string),
-          },
-          {
-            key: "divisions",
-            label: "Divisiones",
-            render: (_, tournament: unknown) => {
-              const t = tournament as Tournament;
-              return `${t.divisions?.length || 0} divisiones`;
-            },
-          },
-        ]}
-        data={tournaments}
-        actions={[
-          {
-            label: "Ver detalles",
-            href: (id) => `/tournaments/${id}`,
-          },
-        ]}
-        emptyMessage="No hay torneos"
-        emptyIcon={
-          <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        }
-        loading={loading && tournaments.length === 0}
-      />
+                <div className="rounded-md bg-gray-50 px-3 py-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Divisiones</p>
+                  <p className="mt-1 font-medium text-gray-900">{tournament.divisions?.length || 0}</p>
+                </div>
+              </div>
+
+              <div className="mt-auto pt-5">
+                <div className="flex items-center justify-between gap-4 border-t border-gray-200 pt-4 text-sm">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Inicio</p>
+                    <p className="mt-1 font-medium text-gray-900">{formatDate(tournament.startDate)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Final</p>
+                    <p className="mt-1 font-medium text-gray-900">{formatDate(tournament.endDate)}</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {tournaments.length > 0 && (
         <Pagination
