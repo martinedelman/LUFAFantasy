@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useMemo, useState } from "react";
+import Avatar from "@/components/Avatar";
 
 type UploadAssetType = "team_logo" | "player_profile_picture";
 
@@ -69,18 +70,18 @@ export default function ImageUploader({ label, assetType, value, onUploaded, dis
         {label}
       </label>
 
-      {value ? (
-        <div
-          className="w-20 h-20 rounded-lg border border-gray-200 bg-cover bg-center mb-2"
-          style={{ backgroundImage: `url(${value})` }}
-          role="img"
-          aria-label={label}
+      <div className="mb-2">
+        <Avatar
+          imageUrl={value}
+          alt={label}
+          fallback="IMG"
+          size="xl"
+          shape="rounded"
+          backgroundColor="transparent"
+          className={!value ? "border border-dashed border-gray-300" : undefined}
+          fallbackClassName="text-xs font-medium text-gray-500"
         />
-      ) : (
-        <div className="w-20 h-20 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-500 mb-2">
-          Sin imagen
-        </div>
-      )}
+      </div>
 
       <input
         id={inputId}

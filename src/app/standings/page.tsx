@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Table, { TableColumn } from "@/components/Table";
+import Avatar from "@/components/Avatar";
 
 interface Standing {
   _id: string;
@@ -150,19 +151,14 @@ export default function StandingsPage() {
         return (
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0 h-8 w-8">
-              {team.logo ? (
-                <div
-                  className="h-8 w-8 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${team.logo})` }}
-                />
-              ) : (
-                <div
-                  className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                  style={{ backgroundColor: team.colors.primary }}
-                >
-                  {team.shortName || team.name.substring(0, 2)}
-                </div>
-              )}
+              <Avatar
+                imageUrl={team.logo}
+                alt={team.name}
+                fallback={(team.shortName || team.name.substring(0, 2)).toUpperCase()}
+                backgroundColor={team.colors.primary}
+                size="sm"
+                fallbackClassName="text-xs"
+              />
             </div>
             <span className="text-sm font-medium text-gray-900">{team.name}</span>
           </div>

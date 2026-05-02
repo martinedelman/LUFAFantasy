@@ -7,6 +7,7 @@ import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Tag from "@/components/Tag";
+import Avatar from "@/components/Avatar";
 
 interface Player {
   _id: string;
@@ -195,19 +196,14 @@ export default function PlayerProfilePage() {
                 </svg>
               </button>
               <div className="flex items-center space-x-4">
-                {player.profilePicture ? (
-                  <div
-                    className="w-16 h-16 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${player.profilePicture})` }}
-                  />
-                ) : (
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl"
-                    style={{ backgroundColor: player.team.colors.primary }}
-                  >
-                    #{player.jerseyNumber}
-                  </div>
-                )}
+                <Avatar
+                  imageUrl={player.profilePicture}
+                  alt={`${player.firstName} ${player.lastName}`}
+                  fallback={`#${player.jerseyNumber}`}
+                  backgroundColor={player.team.colors.primary}
+                  size="lg"
+                  fallbackClassName="text-xl"
+                />
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">
                     {player.firstName} {player.lastName}
@@ -413,19 +409,13 @@ export default function PlayerProfilePage() {
                   href={`/teams/${player.team._id}`}
                   className="flex items-center space-x-3 hover:bg-gray-50 p-3 rounded-lg transition-colors"
                 >
-                  {player.team.logo ? (
-                    <div
-                      className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${player.team.logo})` }}
-                    />
-                  ) : (
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                      style={{ backgroundColor: player.team.colors.primary }}
-                    >
-                      {player.team.shortName || player.team.name.substring(0, 2).toUpperCase()}
-                    </div>
-                  )}
+                  <Avatar
+                    imageUrl={player.team.logo}
+                    alt={player.team.name}
+                    fallback={player.team.shortName || player.team.name.substring(0, 2).toUpperCase()}
+                    backgroundColor={player.team.colors.primary}
+                    size="md"
+                  />
                   <div className="flex-1">
                     <div className="text-sm font-medium text-gray-900">{player.team.name}</div>
                     <div className="text-xs text-gray-500">{player.team.division.name}</div>

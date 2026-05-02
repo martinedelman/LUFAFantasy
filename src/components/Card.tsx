@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
 
 interface CardAction {
   label: string;
@@ -39,36 +40,22 @@ export default function Card({ title, subtitle, icon, badge, info, colors, foote
   const getIcon = () => {
     if (!icon) return null;
 
-    const baseClasses = "w-12 h-12 flex items-center justify-center text-white font-bold";
-
     switch (icon.type) {
       case "image":
-        return (
-          <div
-            className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-            style={{ backgroundImage: `url(${icon.value})` }}
-            role="img"
-            aria-label={icon.alt || "Icon"}
-          />
-        );
+        return <Avatar imageUrl={icon.value} alt={icon.alt || "Icono"} size="md" />;
       case "jersey":
         return (
-          <div
-            className={`${baseClasses} rounded-full text-lg`}
-            style={{ backgroundColor: icon.backgroundColor || "#666" }}
-          >
-            {icon.value}
-          </div>
+          <Avatar
+            fallback={icon.value}
+            backgroundColor={icon.backgroundColor || "#666"}
+            size="md"
+            fallbackClassName="text-lg"
+          />
         );
       case "initials":
       default:
         return (
-          <div
-            className={`${baseClasses} rounded-full`}
-            style={{ backgroundColor: icon.backgroundColor || colors?.primary || "#666" }}
-          >
-            {icon.value}
-          </div>
+          <Avatar fallback={icon.value} backgroundColor={icon.backgroundColor || colors?.primary || "#666"} size="md" />
         );
     }
   };

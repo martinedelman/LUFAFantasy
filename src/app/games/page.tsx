@@ -5,6 +5,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
 import Tag from "@/components/Tag";
+import Avatar from "@/components/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 
@@ -441,6 +442,22 @@ export default function GamesPage() {
     return `${dayMonth} · ${hour}`;
   };
 
+  const getTeamAvatarFallback = (team: TeamOption | null) => {
+    if (!team) return "TBD";
+    return (team.shortName || team.name.substring(0, 2)).toUpperCase();
+  };
+
+  const renderTeamAvatar = (team: TeamOption | null, size: "sm" | "md") => (
+    <Avatar
+      imageUrl={team?.logo}
+      alt={team?.name || "Equipo TBD"}
+      fallback={getTeamAvatarFallback(team)}
+      backgroundColor={team?.colors.primary || "#9CA3AF"}
+      size={size}
+      fallbackClassName={size === "sm" ? "text-xs" : "text-sm"}
+    />
+  );
+
   if (loading && games.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -783,19 +800,7 @@ export default function GamesPage() {
 
               <div className="mt-3 flex items-center justify-between gap-2">
                 <div className="w-[36%] flex flex-col items-center text-center">
-                  {game.homeTeam?.logo ? (
-                    <div
-                      className="w-10 h-10 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${game.homeTeam.logo})` }}
-                    />
-                  ) : (
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                      style={{ backgroundColor: game.homeTeam?.colors.primary || "#9CA3AF" }}
-                    >
-                      {game.homeTeam ? game.homeTeam.shortName || game.homeTeam.name.substring(0, 2) : "TBD"}
-                    </div>
-                  )}
+                  {renderTeamAvatar(game.homeTeam, "sm")}
                   <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
                     {game.homeTeam?.name || "TBD"}
                   </div>
@@ -815,19 +820,7 @@ export default function GamesPage() {
                 </div>
 
                 <div className="w-[36%] flex flex-col items-center text-center">
-                  {game.awayTeam?.logo ? (
-                    <div
-                      className="w-10 h-10 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${game.awayTeam.logo})` }}
-                    />
-                  ) : (
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                      style={{ backgroundColor: game.awayTeam?.colors.primary || "#9CA3AF" }}
-                    >
-                      {game.awayTeam ? game.awayTeam.shortName || game.awayTeam.name.substring(0, 2) : "TBD"}
-                    </div>
-                  )}
+                  {renderTeamAvatar(game.awayTeam, "sm")}
                   <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
                     {game.awayTeam?.name || "TBD"}
                   </div>
@@ -873,19 +866,7 @@ export default function GamesPage() {
                           <div className="text-sm text-gray-500">{game.homeTeam.shortName}</div>
                         )}
                       </div>
-                      {game.homeTeam?.logo ? (
-                        <div
-                          className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                          style={{ backgroundImage: `url(${game.homeTeam.logo})` }}
-                        />
-                      ) : (
-                        <div
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                          style={{ backgroundColor: game.homeTeam?.colors.primary || "#9CA3AF" }}
-                        >
-                          {game.homeTeam ? game.homeTeam.shortName || game.homeTeam.name.substring(0, 2) : "TBD"}
-                        </div>
-                      )}
+                      {renderTeamAvatar(game.homeTeam, "md")}
                     </div>
 
                     <div className="flex items-center space-x-4">
@@ -904,19 +885,7 @@ export default function GamesPage() {
                     </div>
 
                     <div className="flex items-center space-x-3 flex-1">
-                      {game.awayTeam?.logo ? (
-                        <div
-                          className="w-12 h-12 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                          style={{ backgroundImage: `url(${game.awayTeam.logo})` }}
-                        />
-                      ) : (
-                        <div
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                          style={{ backgroundColor: game.awayTeam?.colors.primary || "#9CA3AF" }}
-                        >
-                          {game.awayTeam ? game.awayTeam.shortName || game.awayTeam.name.substring(0, 2) : "TBD"}
-                        </div>
-                      )}
+                      {renderTeamAvatar(game.awayTeam, "md")}
                       <div>
                         <div className="font-semibold text-gray-900">{game.awayTeam?.name || "TBD"}</div>
                         {game.awayTeam && !game.awayTeam.logo && game.awayTeam.shortName && (

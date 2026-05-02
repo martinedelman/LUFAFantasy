@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Tag from "@/components/Tag";
+import Avatar from "@/components/Avatar";
 
 interface Tournament {
   _id: string;
@@ -335,9 +336,7 @@ export default function TournamentDetailPage() {
                 <div className="flex items-center justify-between gap-4 mb-4">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">Divisiones</h2>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Categorías del torneo y equipos inscritos en cada una.
-                    </p>
+                    <p className="mt-1 text-sm text-gray-500">Categorías del torneo y equipos inscritos en cada una.</p>
                   </div>
                   <span className="text-sm font-medium text-gray-600">
                     {tournament.divisions.length} {tournament.divisions.length === 1 ? "división" : "divisiones"}
@@ -390,19 +389,14 @@ export default function TournamentDetailPage() {
                                 key={team._id}
                                 className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-900"
                               >
-                                {team.logo ? (
-                                  <span
-                                    className="h-5 w-5 rounded-full border border-gray-200 bg-white bg-cover bg-center"
-                                    style={{ backgroundImage: `url(${team.logo})` }}
-                                  />
-                                ) : (
-                                  <span
-                                    className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                                    style={{ backgroundColor: team.colors?.primary || "#16a34a" }}
-                                  >
-                                    {(team.shortName || team.name).substring(0, 2)}
-                                  </span>
-                                )}
+                                <Avatar
+                                  imageUrl={team.logo}
+                                  alt={team.name}
+                                  fallback={(team.shortName || team.name).substring(0, 2).toUpperCase()}
+                                  backgroundColor={team.colors?.primary || "#16a34a"}
+                                  size="xs"
+                                  fallbackClassName="text-[10px]"
+                                />
                                 {team.name}
                               </span>
                             ))}

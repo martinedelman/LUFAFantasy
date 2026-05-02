@@ -6,6 +6,7 @@ import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Tag from "@/components/Tag";
+import Avatar from "@/components/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Player {
@@ -264,19 +265,14 @@ export default function TeamViewerPage() {
                 </svg>
               </button>
               <div className="flex items-center space-x-4">
-                {team.logo ? (
-                  <div
-                    className="w-16 h-16 rounded-full bg-white border border-gray-200 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${team.logo})` }}
-                  />
-                ) : (
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl"
-                    style={{ backgroundColor: team.colors.primary }}
-                  >
-                    {team.shortName || team.name.substring(0, 2).toUpperCase()}
-                  </div>
-                )}
+                <Avatar
+                  imageUrl={team.logo}
+                  alt={team.name}
+                  fallback={team.shortName || team.name.substring(0, 2).toUpperCase()}
+                  backgroundColor={team.colors.primary}
+                  size="lg"
+                  fallbackClassName="text-xl"
+                />
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">{team.name}</h1>
                   <div className="flex items-center space-x-4 mt-1">
