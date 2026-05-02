@@ -833,7 +833,15 @@ export default function GamesPage() {
               </div>
 
               {canManageGames && (
-                <div className="mt-4">
+                <div className="mt-4 grid gap-2">
+                  {(game.status === "scheduled" || game.status === "in_progress") && (
+                    <Link
+                      href={`/games/${game._id}/live`}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center transition-colors"
+                    >
+                      Live Match
+                    </Link>
+                  )}
                   <button
                     onClick={() => openEditForm(game)}
                     className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
