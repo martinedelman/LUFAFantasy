@@ -68,7 +68,7 @@ const GameStatisticsSchema = new Schema({
 
 const GameEventSchema = new Schema({
   quarter: { type: Number, required: true, min: 1, max: 5 },
-  time: { type: String, required: true }, // MM:SS format
+  time: { type: String }, // MM:SS format
   type: {
     type: String,
     enum: [
@@ -90,8 +90,8 @@ const GameEventSchema = new Schema({
     required: true,
   },
   team: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-  player: { type: Schema.Types.ObjectId, ref: "Player" },
-  description: { type: String, required: true, trim: true },
+  player: { type: Schema.Types.ObjectId, ref: "Player", required: true },
+  description: { type: String, trim: true },
   yards: { type: Number },
   points: { type: Number },
   details: { type: Schema.Types.Mixed },

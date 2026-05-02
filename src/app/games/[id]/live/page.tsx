@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
-import type { ApiResponse, GameApiResponse, PlayerApiResponse } from "@/types";
+import type { ApiResponse, GameApiResponse, GameEventType, PlayerApiResponse } from "@/types";
 
 type QuarterKey = "q1" | "q2" | "q3" | "q4" | "overtime";
 type TeamSide = "home" | "away";
@@ -30,6 +30,32 @@ const SCORING_ACTIONS = [
   { label: "Safety", points: 2 },
 ];
 
+const EVENT_TYPES: { value: GameEventType; label: string; points?: number }[] = [
+  { value: "touchdown", label: "TD", points: 6 },
+  { value: "extra_point", label: "Extra +1", points: 1 },
+  { value: "extra_point", label: "Conversión +2", points: 2 },
+  { value: "safety", label: "Safety", points: 2 },
+  { value: "interception", label: "Intercepción" },
+  { value: "fumble", label: "Fumble" },
+  { value: "sack", label: "Sack" },
+  { value: "penalty", label: "Castigo" },
+  { value: "timeout", label: "Timeout" },
+  { value: "first_down", label: "1st Down" },
+];
+
+const highContrastControlStyle = {
+  backgroundColor: "var(--surface-soft)",
+  borderColor: "var(--border)",
+  color: "var(--foreground)",
+};
+
+type EventDraft = {
+  teamSide: TeamSide;
+  type: GameEventType;
+  player: string;
+  points: string;
+};
+
 const emptyScoreSide = (): ScoreSide => ({
   q1: 0,
   q2: 0,
@@ -40,6 +66,19 @@ const emptyScoreSide = (): ScoreSide => ({
 });
 
 const calculateTotal = (side: ScoreSide) => side.q1 + side.q2 + side.q3 + side.q4 + side.overtime;
+
+const getReadableTextColor = (backgroundColor?: string) => {
+  if (!backgroundColor || !/^#[0-9A-Fa-f]{6}$/.test(backgroundColor)) {
+    return "#ffffff";
+  }
+
+  const red = parseInt(backgroundColor.slice(1, 3), 16);
+  const green = parseInt(backgroundColor.slice(3, 5), 16);
+  const blue = parseInt(backgroundColor.slice(5, 7), 16);
+  const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+
+  return luminance > 0.62 ? "#111827" : "#ffffff";
+};
 
 const normalizeScoreSide = (side?: Partial<ScoreSide>): ScoreSide => {
   const normalized = {
@@ -77,6 +116,15 @@ export default function LiveMatchPage() {
   const [scoreDirty, setScoreDirty] = useState(false);
   const [scoreMessage, setScoreMessage] = useState<string | null>(null);
   const [scoreError, setScoreError] = useState<string | null>(null);
+  const [eventDraft, setEventDraft] = useState<EventDraft>({
+    teamSide: "home",
+    type: "touchdown",
+    player: "",
+    points: "6",
+  });
+  const [savingEvent, setSavingEvent] = useState(false);
+  const [eventMessage, setEventMessage] = useState<string | null>(null);
+  const [eventError, setEventError] = useState<string | null>(null);
 
   const fetchGameData = useCallback(async () => {
     try {
@@ -95,11 +143,6 @@ export default function LiveMatchPage() {
       setGame(gameData.data);
       setScoreDraft(getInitialScore(gameData.data));
       setScoreDirty(false);
-
-      // If game is not scheduled, we can't start it
-      if (gameData.data.status !== "scheduled") {
-        return;
-      }
 
       // Fetch players for both teams
       if (gameData.data.homeTeam) {
@@ -218,6 +261,20 @@ export default function LiveMatchPage() {
     [game],
   );
 
+  const teamColors = useMemo(
+    () => ({
+      home: {
+        background: game?.homeTeam?.colors.primary || "#1f2937",
+        text: getReadableTextColor(game?.homeTeam?.colors.primary || "#1f2937"),
+      },
+      away: {
+        background: game?.awayTeam?.colors.primary || "#1f2937",
+        text: getReadableTextColor(game?.awayTeam?.colors.primary || "#1f2937"),
+      },
+    }),
+    [game],
+  );
+
   const changeQuarterScore = (side: TeamSide, quarter: QuarterKey, value: number) => {
     const safeValue = Math.max(0, Number.isFinite(value) ? value : 0);
 
@@ -304,6 +361,114 @@ export default function LiveMatchPage() {
 
   const handleCompleteGame = async () => {
     await persistScore("completed");
+  };
+
+  const currentQuarterNumber = useMemo(() => {
+    if (currentQuarter === "overtime") return 5;
+    return Number(currentQuarter.replace("q", ""));
+  }, [currentQuarter]);
+
+  const eventPlayers = eventDraft.teamSide === "home" ? homePlayers : awayPlayers;
+
+  const setEventTeamSide = (teamSide: TeamSide) => {
+    setEventDraft((prev) => ({
+      ...prev,
+      teamSide,
+      player: "",
+    }));
+    setEventMessage(null);
+    setEventError(null);
+  };
+
+  const selectEventType = (type: GameEventType, points?: number) => {
+    setEventDraft((prev) => ({
+      ...prev,
+      type,
+      points: points === undefined ? "" : String(points),
+    }));
+    setEventMessage(null);
+    setEventError(null);
+  };
+
+  const handleAddGameEvent = async () => {
+    if (!game) return;
+
+    const team = game[`${eventDraft.teamSide}Team`]?._id;
+    if (!team) {
+      setEventError("Selecciona un equipo válido");
+      return;
+    }
+
+    if (!eventDraft.player) {
+      setEventError("Selecciona el jugador del evento");
+      return;
+    }
+
+    const points = eventDraft.points === "" ? undefined : Number(eventDraft.points);
+    if (points !== undefined && (!Number.isFinite(points) || points < 0)) {
+      setEventError("Los puntos deben ser 0 o más");
+      return;
+    }
+
+    try {
+      setSavingEvent(true);
+      setEventError(null);
+      setEventMessage(null);
+      setScoreError(null);
+      setScoreMessage(null);
+
+      const response = await fetch(`/api/games/${gameId}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quarter: currentQuarterNumber,
+          type: eventDraft.type,
+          team,
+          player: eventDraft.player,
+          points,
+        }),
+      });
+
+      const data: ApiResponse<GameApiResponse> = await response.json();
+
+      if (!response.ok || !data.success || !data.data) {
+        setEventError(data.message || "No se pudo registrar el evento");
+        return;
+      }
+
+      setGame(data.data);
+      setScoreDraft(getInitialScore(data.data));
+      setScoreDirty(false);
+      setEventDraft((prev) => ({
+        ...prev,
+        player: "",
+      }));
+      setEventMessage(points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.");
+    } catch {
+      setEventError("Error de conexión al registrar el evento");
+    } finally {
+      setSavingEvent(false);
+    }
+  };
+
+  const getEventTypeLabel = (type: GameEventType) => {
+    const option = EVENT_TYPES.find((eventType) => eventType.value === type && eventType.points === undefined);
+    if (option) return option.label;
+
+    const scoringOption = EVENT_TYPES.find((eventType) => eventType.value === type);
+    return scoringOption?.label || type;
+  };
+
+  const getEventTeamName = (team: GameApiResponse["events"][number]["team"]) => {
+    return typeof team === "string" ? "Equipo" : team.name;
+  };
+
+  const getEventPlayerName = (player: GameApiResponse["events"][number]["player"]) => {
+    return typeof player === "string"
+      ? "Jugador"
+      : `#${player.jerseyNumber} ${player.firstName} ${player.lastName}`;
   };
 
   if (loading) {
@@ -414,8 +579,11 @@ export default function LiveMatchPage() {
             <div className="flex items-center justify-center gap-4">
               <div className="text-center flex-1">
                 <div
-                  className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold text-lg"
-                  style={{ backgroundColor: game.homeTeam?.colors.primary || "#6b7280" }}
+                  className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center font-bold text-lg"
+                  style={{
+                    backgroundColor: teamColors.home.background,
+                    color: teamColors.home.text,
+                  }}
                 >
                   {game.homeTeam?.shortName?.substring(0, 2) || "LO"}
                 </div>
@@ -425,8 +593,11 @@ export default function LiveMatchPage() {
               <div className="text-2xl font-bold text-gray-400">VS</div>
               <div className="text-center flex-1">
                 <div
-                  className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold text-lg"
-                  style={{ backgroundColor: game.awayTeam?.colors.primary || "#6b7280" }}
+                  className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center font-bold text-lg"
+                  style={{
+                    backgroundColor: teamColors.away.background,
+                    color: teamColors.away.text,
+                  }}
                 >
                   {game.awayTeam?.shortName?.substring(0, 2) || "VI"}
                 </div>
@@ -460,9 +631,12 @@ export default function LiveMatchPage() {
                   <div className="border-b md:border-b-0 md:border-r">
                     <div
                       className="p-3 flex items-center justify-between"
-                      style={{ backgroundColor: game.homeTeam?.colors.primary || "#f3f4f6" }}
+                      style={{
+                        backgroundColor: teamColors.home.background,
+                        color: teamColors.home.text,
+                      }}
                     >
-                      <span className="font-semibold text-white">{game.homeTeam?.name || "Equipo Local"}</span>
+                      <span className="font-semibold">{game.homeTeam?.name || "Equipo Local"}</span>
                       <span
                         className={`text-sm px-2 py-1 rounded-full ${
                           selectedHomePlayers.size >= 4 ? "bg-green-500 text-white" : "bg-white text-gray-700"
@@ -518,9 +692,12 @@ export default function LiveMatchPage() {
                   <div>
                     <div
                       className="p-3 flex items-center justify-between"
-                      style={{ backgroundColor: game.awayTeam?.colors.primary || "#f3f4f6" }}
+                      style={{
+                        backgroundColor: teamColors.away.background,
+                        color: teamColors.away.text,
+                      }}
                     >
-                      <span className="font-semibold text-white">{game.awayTeam?.name || "Equipo Visitante"}</span>
+                      <span className="font-semibold">{game.awayTeam?.name || "Equipo Visitante"}</span>
                       <span
                         className={`text-sm px-2 py-1 rounded-full ${
                           selectedAwayPlayers.size >= 4 ? "bg-green-500 text-white" : "bg-white text-gray-700"
@@ -661,17 +838,162 @@ export default function LiveMatchPage() {
                 </div>
               )}
 
+              <div className="bg-white rounded-lg shadow">
+                <div className="border-b border-gray-100 p-4">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="font-bold text-gray-900">Registrar evento</h2>
+                      <p className="text-sm text-gray-500">
+                        Cuarto {currentQuarter === "overtime" ? "TE" : currentQuarterNumber}
+                      </p>
+                    </div>
+                    <div className="grid w-full grid-cols-2 rounded-md bg-gray-100 p-1 sm:w-auto sm:min-w-80">
+                      {(["home", "away"] as TeamSide[]).map((side) => (
+                        <button
+                          key={`event-${side}`}
+                          onClick={() => setEventTeamSide(side)}
+                          className={`min-w-0 truncate rounded px-3 py-2 text-sm font-semibold transition-colors ${
+                            eventDraft.teamSide === side ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
+                          }`}
+                        >
+                          {teamNames[side]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 p-4">
+                  {(eventError || eventMessage) && (
+                    <div
+                      className={`rounded-lg p-3 text-sm ${
+                        eventError ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
+                      }`}
+                    >
+                      {eventError || eventMessage}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">Tipo</label>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                      {EVENT_TYPES.map((eventType) => {
+                        const isSelected =
+                          eventDraft.type === eventType.value &&
+                          eventDraft.points === (eventType.points === undefined ? "" : String(eventType.points));
+
+                        return (
+                          <button
+                            key={`${eventType.value}-${eventType.label}`}
+                            onClick={() => selectEventType(eventType.value, eventType.points)}
+                            className={`rounded-md border px-3 py-3 text-sm font-bold transition-colors ${
+                              isSelected
+                                ? "border-blue-600 bg-blue-600 text-white"
+                                : "hover:brightness-110"
+                            }`}
+                            style={isSelected ? undefined : highContrastControlStyle}
+                          >
+                            {eventType.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-700">Jugador</label>
+                      <select
+                        value={eventDraft.player}
+                        onChange={(event) =>
+                          setEventDraft((prev) => ({
+                            ...prev,
+                            player: event.target.value,
+                          }))
+                        }
+                        className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      >
+                        <option value="">Seleccionar jugador</option>
+                        {eventPlayers.map((player) => (
+                          <option key={player._id} value={player._id}>
+                            #{player.jerseyNumber} {player.firstName} {player.lastName} · {player.position}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-700">Puntos</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={eventDraft.points}
+                        onChange={(event) =>
+                          setEventDraft((prev) => ({
+                            ...prev,
+                            points: event.target.value,
+                          }))
+                        }
+                        className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleAddGameEvent}
+                    disabled={savingEvent}
+                    className="w-full rounded-lg bg-blue-600 px-4 py-4 text-base font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+                  >
+                    {savingEvent ? "Registrando..." : "Registrar evento"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="font-bold text-gray-900">Historial del partido</h2>
+                  <span className="text-sm text-gray-500">{game.events?.length || 0} eventos</span>
+                </div>
+                <div className="mt-3 divide-y divide-gray-100">
+                  {game.events && game.events.length > 0 ? (
+                    [...game.events].reverse().slice(0, 8).map((event, index) => (
+                      <div key={event._id || `${event.quarter}-${event.type}-${index}`} className="py-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {event.description || getEventTypeLabel(event.type)}
+                              {!event.description && event.points ? ` +${event.points}` : ""}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              C{event.quarter === 5 ? "TE" : event.quarter} · {getEventTeamName(event.team)} ·{" "}
+                              {getEventPlayerName(event.player)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-6 text-center text-sm text-gray-500">
+                      Todavía no hay eventos registrados.
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 {(["home", "away"] as TeamSide[]).map((side) => (
                   <div key={side} className="bg-white rounded-lg shadow overflow-hidden">
                     <div
                       className="p-4"
-                      style={{ backgroundColor: game[`${side}Team`]?.colors.primary || "#1f2937" }}
+                      style={{
+                        backgroundColor: teamColors[side].background,
+                        color: teamColors[side].text,
+                      }}
                     >
-                      <p className="text-sm text-white/80">{side === "home" ? "Local" : "Visitante"}</p>
+                      <p className="text-sm opacity-80">{side === "home" ? "Local" : "Visitante"}</p>
                       <div className="mt-1 flex items-center justify-between gap-3">
-                        <h3 className="text-lg font-bold text-white">{teamNames[side]}</h3>
-                        <span className="rounded-md bg-white/15 px-3 py-1 text-2xl font-bold text-white">
+                        <h3 className="text-lg font-bold">{teamNames[side]}</h3>
+                        <span className="rounded-md bg-black/10 px-3 py-1 text-2xl font-bold">
                           {scoreDraft[side].total}
                         </span>
                       </div>
@@ -748,7 +1070,7 @@ export default function LiveMatchPage() {
                 </div>
               </div>
 
-              <div className="sticky bottom-0 rounded-lg border border-gray-200 bg-white p-4 shadow-lg md:static">
+              <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
                     onClick={handleSaveScore}
@@ -760,7 +1082,7 @@ export default function LiveMatchPage() {
                   <button
                     onClick={handleCompleteGame}
                     disabled={savingScore}
-                    className="flex-1 rounded-lg bg-green-600 px-4 py-3 font-bold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                    className="flex-1 rounded-lg bg-green-600 px-4 py-3 font-bold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
                   >
                     Finalizar partido
                   </button>

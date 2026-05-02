@@ -5,6 +5,34 @@ import { TeamStatistics } from "./valueObjects/TeamStatistics";
 
 export type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
 
+export type GameEventType =
+  | "touchdown"
+  | "extra_point"
+  | "field_goal"
+  | "safety"
+  | "interception"
+  | "fumble"
+  | "penalty"
+  | "timeout"
+  | "quarter_end"
+  | "game_end"
+  | "substitution"
+  | "injury"
+  | "first_down"
+  | "sack";
+
+export interface GameEvent {
+  quarter: number;
+  time?: string;
+  type: GameEventType;
+  team: string;
+  player: string;
+  description?: string;
+  yards?: number;
+  points?: number;
+  details?: unknown;
+}
+
 export interface GameStatistics {
   home: TeamStatistics;
   away: TeamStatistics;

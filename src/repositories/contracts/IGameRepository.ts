@@ -1,5 +1,5 @@
 import { IRepository } from "./IRepository";
-import { Game, GameStatus } from "../../entities/Game";
+import { Game, GameEvent, GameStatus } from "../../entities/Game";
 import { GameScore } from "../../entities/valueObjects/Score";
 
 /**
@@ -35,6 +35,11 @@ export interface IGameRepository extends IRepository<Game> {
    * Actualiza el score de un partido
    */
   updateScore(id: string, score: GameScore): Promise<Game>;
+
+  /**
+   * Agrega un evento al partido y, opcionalmente, actualiza el score en la misma operación.
+   */
+  addEvent(id: string, event: GameEvent, score?: GameScore): Promise<Game>;
 
   /**
    * Inicia un partido programado

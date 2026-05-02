@@ -129,6 +129,178 @@ interface TeamStats {
   penaltyYards: number;
 }
 
+type GameEventType =
+  | "touchdown"
+  | "extra_point"
+  | "field_goal"
+  | "safety"
+  | "interception"
+  | "fumble"
+  | "penalty"
+  | "timeout"
+  | "quarter_end"
+  | "game_end"
+  | "substitution"
+  | "injury"
+  | "first_down"
+  | "sack";
+
+interface GameEvent {
+  type: GameEventType;
+  team: string | { _id: string };
+  points?: number;
+  yards?: number;
+}
+
+interface TeamGame {
+  _id: string;
+  status: "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
+  homeTeam: string | { _id: string } | null;
+  awayTeam: string | { _id: string } | null;
+  tournament: string | { _id: string; name?: string; year?: number };
+  division: string | { _id: string; name?: string; category?: string };
+  score: {
+    home: { total: number };
+    away: { total: number };
+  };
+  events?: GameEvent[];
+}
+
+const emptyTeamStats = (team: Team): TeamStats => ({
+  _id: `derived-${team._id}`,
+  team: {
+    _id: team._id,
+    name: team.name,
+    shortName: team.shortName,
+    colors: {
+      primary: team.colors.primary,
+    },
+  },
+  tournament: {
+    _id: team.division.tournament?._id || "",
+    name: team.division.tournament?.name || "Torneo",
+    year: team.division.tournament?.year || new Date().getFullYear(),
+  },
+  division: {
+    _id: team.division._id,
+    name: team.division.name,
+    category: team.division.category,
+  },
+  wins: 0,
+  losses: 0,
+  ties: 0,
+  pointsFor: 0,
+  pointsAgainst: 0,
+  pointsDifferential: 0,
+  offensiveStats: {
+    totalYards: 0,
+    passingYards: 0,
+    rushingYards: 0,
+    touchdowns: 0,
+    fieldGoals: 0,
+    firstDowns: 0,
+    thirdDownConversions: { made: 0, attempted: 0 },
+    redZoneEfficiency: { scores: 0, attempts: 0 },
+    averageYardsPerGame: 0,
+    averagePointsPerGame: 0,
+  },
+  defensiveStats: {
+    totalYardsAllowed: 0,
+    passingYardsAllowed: 0,
+    rushingYardsAllowed: 0,
+    touchdownsAllowed: 0,
+    interceptions: 0,
+    fumbleRecoveries: 0,
+    sacks: 0,
+    safeties: 0,
+    averageYardsAllowedPerGame: 0,
+    averagePointsAllowedPerGame: 0,
+  },
+  turnovers: 0,
+  turnoverDifferential: 0,
+  penalties: 0,
+  penaltyYards: 0,
+});
+
+const getReferenceId = (reference: string | { _id?: string } | null | undefined) => {
+  if (!reference) return "";
+  return typeof reference === "string" ? reference : reference._id || "";
+};
+
+const getTeamScoreFromGame = (game: TeamGame, teamId: string) => {
+  const homeTeamId = getReferenceId(game.homeTeam);
+  const awayTeamId = getReferenceId(game.awayTeam);
+
+  if (homeTeamId === teamId) {
+    return {
+      for: game.score?.home?.total || 0,
+      against: game.score?.away?.total || 0,
+      side: "home" as const,
+    };
+  }
+
+  if (awayTeamId === teamId) {
+    return {
+      for: game.score?.away?.total || 0,
+      against: game.score?.home?.total || 0,
+      side: "away" as const,
+    };
+  }
+
+  return null;
+};
+
+const deriveTeamStatsFromGames = (team: Team, games: TeamGame[]): TeamStats => {
+  const stats = emptyTeamStats(team);
+  const countedGames = games.filter((game) => game.status === "in_progress" || game.status === "completed");
+
+  countedGames.forEach((game) => {
+    const score = getTeamScoreFromGame(game, team._id);
+    if (!score) return;
+
+    stats.pointsFor += score.for;
+    stats.pointsAgainst += score.against;
+
+    if (score.for > score.against) {
+      stats.wins += 1;
+    } else if (score.for < score.against) {
+      stats.losses += 1;
+    } else {
+      stats.ties += 1;
+    }
+
+    (game.events || []).forEach((event) => {
+      const eventTeamId = getReferenceId(event.team);
+      const yards = event.yards || 0;
+
+      if (eventTeamId === team._id) {
+        stats.offensiveStats.totalYards += yards;
+
+        if (event.type === "touchdown") stats.offensiveStats.touchdowns += 1;
+        if (event.type === "field_goal") stats.offensiveStats.fieldGoals += 1;
+        if (event.type === "first_down") stats.offensiveStats.firstDowns += 1;
+        if (event.type === "interception") stats.defensiveStats.interceptions += 1;
+        if (event.type === "fumble") stats.defensiveStats.fumbleRecoveries += 1;
+        if (event.type === "sack") stats.defensiveStats.sacks += 1;
+        if (event.type === "safety") stats.defensiveStats.safeties += 1;
+        if (event.type === "penalty") stats.penalties += 1;
+      } else if (event.type === "touchdown") {
+        stats.defensiveStats.touchdownsAllowed += 1;
+      }
+    });
+  });
+
+  const gamesPlayed = stats.wins + stats.losses + stats.ties;
+  stats.pointsDifferential = stats.pointsFor - stats.pointsAgainst;
+  stats.offensiveStats.averagePointsPerGame = gamesPlayed > 0 ? stats.pointsFor / gamesPlayed : 0;
+  stats.defensiveStats.averagePointsAllowedPerGame = gamesPlayed > 0 ? stats.pointsAgainst / gamesPlayed : 0;
+  stats.offensiveStats.averageYardsPerGame = gamesPlayed > 0 ? stats.offensiveStats.totalYards / gamesPlayed : 0;
+  stats.defensiveStats.averageYardsAllowedPerGame =
+    gamesPlayed > 0 ? stats.defensiveStats.totalYardsAllowed / gamesPlayed : 0;
+
+  return stats;
+};
+
 export default function TeamViewerPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -174,19 +346,29 @@ export default function TeamViewerPage() {
           return;
         }
 
-        setTeam(teamData.data);
+        const loadedTeam = teamData.data as Team;
+        setTeam(loadedTeam);
 
-        // Fetch team statistics
+        // Fetch team statistics. If the aggregate collection is empty, derive a
+        // live MVP version from games and GameEvents so the team page is useful.
         try {
-          const statsResponse = await fetch(`/api/statistics/teams?team=${teamId}`);
+          const [statsResponse, gamesResponse] = await Promise.all([
+            fetch(`/api/statistics/teams?team=${teamId}`),
+            fetch(`/api/games?team=${teamId}`),
+          ]);
           const statsData = await statsResponse.json();
+          const gamesData = await gamesResponse.json();
 
-          if (statsData.success && statsData.data.length > 0) {
+          if (gamesData.success) {
+            setTeamStats(deriveTeamStatsFromGames(loadedTeam, gamesData.data || []));
+          } else if (statsData.success && statsData.data.length > 0) {
             setTeamStats(statsData.data[0]);
+          } else {
+            setTeamStats(emptyTeamStats(loadedTeam));
           }
         } catch (statsError) {
-          // Stats are optional, don't show error if they fail
           console.log("Stats not available:", statsError);
+          setTeamStats(emptyTeamStats(loadedTeam));
         }
       } catch {
         setError("Error de conexión. Por favor, intenta de nuevo.");
@@ -218,6 +400,8 @@ export default function TeamViewerPage() {
     if (totalGames === 0) return 0;
     return Math.round(((stats.wins + stats.ties * 0.5) / totalGames) * 100);
   };
+
+  const formatDecimal = (value: number) => value.toFixed(1);
 
   if (loading) {
     return (
@@ -801,23 +985,82 @@ export default function TeamViewerPage() {
                           <div className="flex justify-between">
                             <span className="text-sm text-gray-600">Puntos por Juego</span>
                             <span className="text-sm font-medium text-gray-900">
-                              {teamStats.wins + teamStats.losses + teamStats.ties > 0
-                                ? (teamStats.pointsFor / (teamStats.wins + teamStats.losses + teamStats.ties)).toFixed(
-                                    1,
-                                  )
-                                : "0.0"}
+                              {formatDecimal(teamStats.offensiveStats.averagePointsPerGame)}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-sm text-gray-600">Puntos Permitidos</span>
                             <span className="text-sm font-medium text-gray-900">
-                              {teamStats.wins + teamStats.losses + teamStats.ties > 0
-                                ? (
-                                    teamStats.pointsAgainst /
-                                    (teamStats.wins + teamStats.losses + teamStats.ties)
-                                  ).toFixed(1)
-                                : "0.0"}
+                              {formatDecimal(teamStats.defensiveStats.averagePointsAllowedPerGame)}
                             </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="bg-gray-50 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Ofensiva</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Touchdowns</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.touchdowns}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Field Goals</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.fieldGoals}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Primeros downs</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.firstDowns}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Yardas totales</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.totalYards}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Yardas pase</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.passingYards}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Yardas carrera</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.rushingYards}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Defensiva</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Intercepciones</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {teamStats.defensiveStats.interceptions}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Fumbles recuperados</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {teamStats.defensiveStats.fumbleRecoveries}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Sacks</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.sacks}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Safeties</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.safeties}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">TD permitidos</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {teamStats.defensiveStats.touchdownsAllowed}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Castigos</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.penalties}</p>
                           </div>
                         </div>
                       </div>

@@ -1,5 +1,6 @@
 import type { GameStatus, GameStatistics } from "@/entities/Game";
 import type { GameScore } from "@/entities/valueObjects/Score";
+import type { GameEventResponseDto } from "./GameLiveResponseDto";
 
 export interface GameResponseDto {
   _id?: string;
@@ -19,6 +20,7 @@ export interface GameResponseDto {
   round?: string;
   score: GameScore;
   statistics: GameStatistics;
+  events: GameEventResponseDto[];
   notes?: string;
   createdAt?: string;
   updatedAt?: string;

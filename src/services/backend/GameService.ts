@@ -1,4 +1,4 @@
-import { Game, GameStatus } from "../../entities/Game";
+import { Game, GameEvent, GameEventType, GameStatus } from "../../entities/Game";
 import { GameScore, QuarterScore } from "../../entities/valueObjects/Score";
 import { Venue } from "../../entities/valueObjects/Venue";
 import RepositoryContainer from "../../repositories";
@@ -7,6 +7,14 @@ import { StandingService } from "./StandingService";
 interface ScoreUpdate {
   home: { q1: number; q2: number; q3: number; q4: number; overtime?: number };
   away: { q1: number; q2: number; q3: number; q4: number; overtime?: number };
+}
+
+interface CreateGameEventInput {
+  quarter: number;
+  type: GameEventType;
+  team: string;
+  player: string;
+  points?: number;
 }
 
 /**
@@ -124,6 +132,62 @@ export class GameService {
   }
 
   /**
+   * Registra un evento de Live Match y actualiza el marcador si corresponde.
+   */
+  async addGameEvent(id: string, eventData: CreateGameEventInput): Promise<Game> {
+    const game = await this.gameRepo.findById(id);
+    if (!game) {
+      throw new Error("Partido no encontrado");
+    }
+
+    if (game.status !== "in_progress") {
+      throw new Error("Solo se pueden agregar eventos a partidos en progreso");
+    }
+
+    if (!Number.isInteger(eventData.quarter) || eventData.quarter < 1 || eventData.quarter > 5) {
+      throw new Error("El cuarto debe estar entre 1 y 5");
+    }
+
+    if (!eventData.type) {
+      throw new Error("El tipo de evento es requerido");
+    }
+
+    if (!eventData.team) {
+      throw new Error("El equipo es requerido");
+    }
+
+    if (!eventData.player) {
+      throw new Error("El jugador es requerido");
+    }
+
+    const homeTeamId = this.getReferenceId(game.homeTeam);
+    const awayTeamId = this.getReferenceId(game.awayTeam);
+
+    if (eventData.team !== homeTeamId && eventData.team !== awayTeamId) {
+      throw new Error("El equipo del evento no participa en este partido");
+    }
+
+    const safePoints = eventData.points === undefined ? undefined : Math.max(0, eventData.points);
+    const event: GameEvent = {
+      quarter: eventData.quarter,
+      type: eventData.type,
+      team: eventData.team,
+      player: eventData.player,
+      points: safePoints,
+      description: this.getEventDescription(eventData.type, safePoints),
+    };
+
+    const nextScore = safePoints && safePoints > 0 ? this.addEventPointsToScore(game, eventData.team, eventData.quarter, safePoints) : undefined;
+    const updatedGame = await this.gameRepo.addEvent(id, event, nextScore);
+
+    if (nextScore) {
+      await this.recalculateStandingsForGame(updatedGame);
+    }
+
+    return updatedGame;
+  }
+
+  /**
    * Inicia un partido con jugadores presentes
    */
   async startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game> {
@@ -194,6 +258,61 @@ export class GameService {
     }
 
     return reference.toString();
+  }
+
+  private addEventPointsToScore(game: Game, teamId: string, quarter: number, points: number): GameScore {
+    const homeTeamId = this.getReferenceId(game.homeTeam);
+    const isHome = teamId === homeTeamId;
+    const target = isHome ? game.score.home : game.score.away;
+    const quarterKey = quarter === 5 ? "overtime" : (`q${quarter}` as "q1" | "q2" | "q3" | "q4");
+    const nextTarget = {
+      q1: target.q1,
+      q2: target.q2,
+      q3: target.q3,
+      q4: target.q4,
+      overtime: target.overtime || 0,
+      [quarterKey]: (target[quarterKey] || 0) + points,
+    };
+
+    const other = isHome ? game.score.away : game.score.home;
+
+    return new GameScore(
+      new QuarterScore(
+        isHome ? nextTarget.q1 : other.q1,
+        isHome ? nextTarget.q2 : other.q2,
+        isHome ? nextTarget.q3 : other.q3,
+        isHome ? nextTarget.q4 : other.q4,
+        isHome ? nextTarget.overtime : other.overtime || 0,
+      ),
+      new QuarterScore(
+        isHome ? other.q1 : nextTarget.q1,
+        isHome ? other.q2 : nextTarget.q2,
+        isHome ? other.q3 : nextTarget.q3,
+        isHome ? other.q4 : nextTarget.q4,
+        isHome ? other.overtime || 0 : nextTarget.overtime,
+      ),
+    );
+  }
+
+  private getEventDescription(type: GameEventType, points?: number): string {
+    const labels: Record<GameEventType, string> = {
+      touchdown: "Touchdown",
+      extra_point: "Punto extra",
+      field_goal: "Field goal",
+      safety: "Safety",
+      interception: "Intercepción",
+      fumble: "Fumble",
+      penalty: "Castigo",
+      timeout: "Tiempo fuera",
+      quarter_end: "Fin de cuarto",
+      game_end: "Fin del partido",
+      substitution: "Sustitución",
+      injury: "Lesión",
+      first_down: "Primero y diez",
+      sack: "Sack",
+    };
+
+    return points && points > 0 ? `${labels[type]} (+${points})` : labels[type];
   }
 
   /**

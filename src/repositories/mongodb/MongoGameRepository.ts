@@ -1,5 +1,5 @@
 import { IGameRepository } from "../contracts/IGameRepository";
-import { Game, GameStatus } from "../../entities/Game";
+import { Game, GameEvent, GameStatus } from "../../entities/Game";
 import { GameScore } from "../../entities/valueObjects/Score";
 import { GameModel } from "../../models/Game";
 import connectToDatabase from "../../lib/mongodb";
@@ -7,7 +7,14 @@ import connectToDatabase from "../../lib/mongodb";
 export class MongoGameRepository implements IGameRepository {
   async findById(id: string): Promise<Game | null> {
     await connectToDatabase();
-    const doc = await GameModel.findById(id).populate("homeTeam").populate("awayTeam").populate("tournament").exec();
+    const doc = await GameModel.findById(id)
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("events.team")
+      .populate("events.player")
+      .exec();
     return doc ? doc : null;
   }
 
@@ -16,6 +23,8 @@ export class MongoGameRepository implements IGameRepository {
     const docs = await GameModel.find(filters || {})
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("events.team")
+      .populate("events.player")
       .exec();
     return docs;
   }
@@ -61,7 +70,12 @@ export class MongoGameRepository implements IGameRepository {
 
   async findByTournament(tournamentId: string): Promise<Game[]> {
     await connectToDatabase();
-    const docs = await GameModel.find({ tournament: tournamentId }).populate("homeTeam").populate("awayTeam").exec();
+    const docs = await GameModel.find({ tournament: tournamentId })
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .populate("events.team")
+      .populate("events.player")
+      .exec();
     return docs;
   }
 
@@ -72,6 +86,8 @@ export class MongoGameRepository implements IGameRepository {
     })
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("events.team")
+      .populate("events.player")
       .exec();
     return docs;
   }
@@ -97,7 +113,12 @@ export class MongoGameRepository implements IGameRepository {
 
   async findByDivision(divisionId: string): Promise<Game[]> {
     await connectToDatabase();
-    const docs = await GameModel.find({ division: divisionId }).populate("homeTeam").populate("awayTeam").exec();
+    const docs = await GameModel.find({ division: divisionId })
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .populate("events.team")
+      .populate("events.player")
+      .exec();
     return docs;
   }
 
@@ -125,6 +146,52 @@ export class MongoGameRepository implements IGameRepository {
     )
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("events.team")
+      .populate("events.player")
+      .exec();
+
+    if (!doc) {
+      throw new Error("Partido no encontrado");
+    }
+
+    return doc;
+  }
+
+  async addEvent(id: string, event: GameEvent, score?: GameScore): Promise<Game> {
+    await connectToDatabase();
+
+    const update: Record<string, unknown> = {
+      $push: {
+        events: event,
+      },
+    };
+
+    if (score) {
+      update.$set = {
+        "score.home.q1": score.home.q1,
+        "score.home.q2": score.home.q2,
+        "score.home.q3": score.home.q3,
+        "score.home.q4": score.home.q4,
+        "score.home.overtime": score.home.overtime,
+        "score.home.total": score.home.total,
+        "score.away.q1": score.away.q1,
+        "score.away.q2": score.away.q2,
+        "score.away.q3": score.away.q3,
+        "score.away.q4": score.away.q4,
+        "score.away.overtime": score.away.overtime,
+        "score.away.total": score.away.total,
+      };
+    }
+
+    const doc = await GameModel.findByIdAndUpdate(id, update, { new: true, runValidators: true })
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("events.team")
+      .populate("events.player")
       .exec();
 
     if (!doc) {
@@ -153,6 +220,10 @@ export class MongoGameRepository implements IGameRepository {
     )
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("events.team")
+      .populate("events.player")
       .exec();
 
     if (!doc) {
@@ -171,9 +242,18 @@ export class MongoGameRepository implements IGameRepository {
 
   async updateStatus(id: string, status: GameStatus): Promise<Game> {
     await connectToDatabase();
-    const doc = await GameModel.findByIdAndUpdate(id, { $set: { status } }, { new: true })
+    const nextState: Record<string, unknown> = { status };
+    if (status === "completed") {
+      nextState.actualEndTime = new Date();
+    }
+
+    const doc = await GameModel.findByIdAndUpdate(id, { $set: nextState }, { new: true })
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("events.team")
+      .populate("events.player")
       .exec();
 
     if (!doc) {

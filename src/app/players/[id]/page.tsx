@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -42,18 +42,69 @@ interface Player {
 }
 
 interface PlayerStats {
-  player: string;
-  season: string;
   gamesPlayed: number;
+  totalPoints: number;
   touchdowns: number;
-  passingYards?: number;
-  rushingYards?: number;
-  receivingYards?: number;
-  interceptions?: number;
-  sacks?: number;
-  tackles?: number;
-  fieldGoals?: number;
-  extraPoints?: number;
+  extraPoints: number;
+  safeties: number;
+  fieldGoals: number;
+  firstDowns: number;
+  penalties: number;
+  passing: {
+    attempts: number;
+    completions: number;
+    yards: number;
+    touchdowns: number;
+    interceptions: number;
+  };
+  rushing: {
+    attempts: number;
+    yards: number;
+    touchdowns: number;
+    fumbles: number;
+  };
+  receiving: {
+    receptions: number;
+    yards: number;
+    touchdowns: number;
+    fumbles: number;
+  };
+  defensive: {
+    tackles: number;
+    sacks: number;
+    interceptions: number;
+    fumbleRecoveries: number;
+    safeties: number;
+  };
+}
+
+type GameEventType =
+  | "touchdown"
+  | "extra_point"
+  | "field_goal"
+  | "safety"
+  | "interception"
+  | "fumble"
+  | "penalty"
+  | "timeout"
+  | "quarter_end"
+  | "game_end"
+  | "substitution"
+  | "injury"
+  | "first_down"
+  | "sack";
+
+interface GameEvent {
+  type: GameEventType;
+  player: string | { _id: string };
+  points?: number;
+  yards?: number;
+}
+
+interface PlayerGame {
+  _id: string;
+  status: "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
+  events?: GameEvent[];
 }
 
 export default function PlayerProfilePage() {
@@ -66,6 +117,109 @@ export default function PlayerProfilePage() {
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const getReferenceId = useCallback((reference: string | { _id?: string } | null | undefined) => {
+    if (!reference) return "";
+    return typeof reference === "string" ? reference : reference._id || "";
+  }, []);
+
+  const emptyPlayerStats = useCallback((): PlayerStats => ({
+    gamesPlayed: 0,
+    totalPoints: 0,
+    touchdowns: 0,
+    extraPoints: 0,
+    safeties: 0,
+    fieldGoals: 0,
+    firstDowns: 0,
+    penalties: 0,
+    passing: {
+      attempts: 0,
+      completions: 0,
+      yards: 0,
+      touchdowns: 0,
+      interceptions: 0,
+    },
+    rushing: {
+      attempts: 0,
+      yards: 0,
+      touchdowns: 0,
+      fumbles: 0,
+    },
+    receiving: {
+      receptions: 0,
+      yards: 0,
+      touchdowns: 0,
+      fumbles: 0,
+    },
+    defensive: {
+      tackles: 0,
+      sacks: 0,
+      interceptions: 0,
+      fumbleRecoveries: 0,
+      safeties: 0,
+    },
+  }), []);
+
+  const normalizeStoredStats = useCallback(
+    (stats: Partial<PlayerStats>): PlayerStats => {
+      const emptyStats = emptyPlayerStats();
+
+      return {
+        ...emptyStats,
+        ...stats,
+        totalPoints:
+          stats.totalPoints ??
+          ((stats.touchdowns || 0) * 6 +
+            (stats.extraPoints || 0) +
+            (stats.safeties || 0) * 2 +
+            (stats.fieldGoals || 0) * 3),
+        passing: { ...emptyStats.passing, ...stats.passing },
+        rushing: { ...emptyStats.rushing, ...stats.rushing },
+        receiving: { ...emptyStats.receiving, ...stats.receiving },
+        defensive: { ...emptyStats.defensive, ...stats.defensive },
+      };
+    },
+    [emptyPlayerStats],
+  );
+
+  const derivePlayerStatsFromGames = useCallback((games: PlayerGame[]): PlayerStats => {
+    const stats = emptyPlayerStats();
+    const gamesWithEvents = new Set<string>();
+
+    games
+      .filter((game) => game.status === "in_progress" || game.status === "completed")
+      .forEach((game) => {
+        (game.events || []).forEach((event) => {
+          if (getReferenceId(event.player) !== playerId) return;
+
+          gamesWithEvents.add(game._id);
+          stats.totalPoints += event.points || 0;
+
+          if (event.type === "touchdown") {
+            stats.touchdowns += 1;
+            stats.receiving.touchdowns += 1;
+          }
+          if (event.type === "extra_point") stats.extraPoints += 1;
+          if (event.type === "field_goal") stats.fieldGoals += 1;
+          if (event.type === "safety") {
+            stats.safeties += 1;
+            stats.defensive.safeties += 1;
+          }
+          if (event.type === "first_down") stats.firstDowns += 1;
+          if (event.type === "penalty") stats.penalties += 1;
+          if (event.type === "interception") stats.defensive.interceptions += 1;
+          if (event.type === "sack") stats.defensive.sacks += 1;
+          if (event.type === "fumble") stats.defensive.fumbleRecoveries += 1;
+
+          if (event.yards) {
+            stats.receiving.yards += event.yards;
+          }
+        });
+      });
+
+    stats.gamesPlayed = gamesWithEvents.size;
+    return stats;
+  }, [emptyPlayerStats, getReferenceId, playerId]);
 
   useEffect(() => {
     const fetchPlayerData = async () => {
@@ -82,19 +236,37 @@ export default function PlayerProfilePage() {
           return;
         }
 
-        setPlayer(playerData.data);
+        const loadedPlayer = playerData.data as Player;
+        setPlayer(loadedPlayer);
 
-        // Fetch player statistics (optional)
+        // Fetch player statistics. Prefer the live-derived stats from GameEvents
+        // so this page updates as soon as Live Match records events.
         try {
-          const statsResponse = await fetch(`/api/statistics/players?player=${playerId}`);
+          const [statsResponse, gamesResponse] = await Promise.all([
+            fetch(`/api/statistics/players?player=${playerId}`),
+            fetch(`/api/games?team=${loadedPlayer.team._id}`),
+          ]);
           const statsData = await statsResponse.json();
+          const gamesData = await gamesResponse.json();
 
-          if (statsData.success && statsData.data.length > 0) {
-            setPlayerStats(statsData.data[0]);
+          if (gamesData.success) {
+            const derivedStats = derivePlayerStatsFromGames(gamesData.data || []);
+            const hasLiveStats = derivedStats.gamesPlayed > 0 || derivedStats.totalPoints > 0;
+            setPlayerStats(
+              hasLiveStats
+                ? derivedStats
+                : statsData.success && statsData.data.length > 0
+                  ? normalizeStoredStats(statsData.data[0])
+                  : emptyPlayerStats(),
+            );
+          } else if (statsData.success && statsData.data.length > 0) {
+            setPlayerStats(normalizeStoredStats(statsData.data[0]));
+          } else {
+            setPlayerStats(emptyPlayerStats());
           }
         } catch (statsError) {
-          // Stats are optional, don't show error if they fail
           console.log("Stats not available:", statsError);
+          setPlayerStats(emptyPlayerStats());
         }
       } catch {
         setError("Error de conexión. Por favor, intenta de nuevo.");
@@ -106,7 +278,7 @@ export default function PlayerProfilePage() {
     if (playerId) {
       fetchPlayerData();
     }
-  }, [playerId]);
+  }, [derivePlayerStatsFromGames, emptyPlayerStats, normalizeStoredStats, playerId]);
 
   const getStatusTag = (status: string) => {
     const statusMap: Record<string, { label: string; type: "info" | "warning" | "success" | "error" }> = {
@@ -153,6 +325,11 @@ export default function PlayerProfilePage() {
       day: "numeric",
     });
   };
+
+  const formatDecimal = (value: number) => value.toFixed(1);
+
+  const pointsPerGame =
+    playerStats && playerStats.gamesPlayed > 0 ? playerStats.totalPoints / playerStats.gamesPlayed : 0;
 
   if (loading) {
     return <LoadingSpinner size="lg" />;
@@ -329,51 +506,81 @@ export default function PlayerProfilePage() {
               </div>
               <div className="p-6">
                 {playerStats ? (
-                  <div className="space-y-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">{playerStats.gamesPlayed}</div>
-                      <div className="text-sm text-gray-600">Juegos Jugados</div>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-lg bg-gray-50 p-4">
+                        <div className="text-2xl font-bold text-gray-900">{playerStats.gamesPlayed}</div>
+                        <div className="text-sm text-gray-600">Juegos</div>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 p-4">
+                        <div className="text-2xl font-bold text-gray-900">{playerStats.totalPoints}</div>
+                        <div className="text-sm text-gray-600">Puntos</div>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 p-4">
+                        <div className="text-2xl font-bold text-gray-900">{playerStats.touchdowns}</div>
+                        <div className="text-sm text-gray-600">Touchdowns</div>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 p-4">
+                        <div className="text-2xl font-bold text-gray-900">{formatDecimal(pointsPerGame)}</div>
+                        <div className="text-sm text-gray-600">Pts/Juego</div>
+                      </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">{playerStats.touchdowns}</div>
-                      <div className="text-sm text-gray-600">Touchdowns</div>
+
+                    <div>
+                      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Ofensiva</h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Recepciones</span>
+                          <span className="text-sm font-medium text-gray-900">{playerStats.receiving.receptions}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Yardas recepción</span>
+                          <span className="text-sm font-medium text-gray-900">{playerStats.receiving.yards}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Primeros downs</span>
+                          <span className="text-sm font-medium text-gray-900">{playerStats.firstDowns}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Extra points</span>
+                          <span className="text-sm font-medium text-gray-900">{playerStats.extraPoints}</span>
+                        </div>
+                      </div>
                     </div>
-                    {playerStats.passingYards && (
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-blue-600">{playerStats.passingYards}</div>
-                        <div className="text-sm text-gray-600">Yardas de Pase</div>
+
+                    <div>
+                      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Defensiva</h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Intercepciones</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {playerStats.defensive.interceptions}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Sacks</span>
+                          <span className="text-sm font-medium text-gray-900">{playerStats.defensive.sacks}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Fumbles recuperados</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {playerStats.defensive.fumbleRecoveries}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Safeties</span>
+                          <span className="text-sm font-medium text-gray-900">{playerStats.defensive.safeties}</span>
+                        </div>
                       </div>
-                    )}
-                    {playerStats.rushingYards && (
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-purple-600">{playerStats.rushingYards}</div>
-                        <div className="text-sm text-gray-600">Yardas Terrestres</div>
+                    </div>
+
+                    <div>
+                      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Disciplina</h3>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Castigos</span>
+                        <span className="text-sm font-medium text-gray-900">{playerStats.penalties}</span>
                       </div>
-                    )}
-                    {playerStats.receivingYards && (
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-orange-600">{playerStats.receivingYards}</div>
-                        <div className="text-sm text-gray-600">Yardas de Recepción</div>
-                      </div>
-                    )}
-                    {playerStats.interceptions && (
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-red-600">{playerStats.interceptions}</div>
-                        <div className="text-sm text-gray-600">Intercepciones</div>
-                      </div>
-                    )}
-                    {playerStats.sacks && (
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-gray-700">{playerStats.sacks}</div>
-                        <div className="text-sm text-gray-600">Sacks</div>
-                      </div>
-                    )}
-                    {playerStats.tackles && (
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-yellow-600">{playerStats.tackles}</div>
-                        <div className="text-sm text-gray-600">Tackles</div>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -419,7 +626,8 @@ export default function PlayerProfilePage() {
                   <div className="flex-1">
                     <div className="text-sm font-medium text-gray-900">{player.team.name}</div>
                     <div className="text-xs text-gray-500">{player.team.division.name}</div>
-                    {player.team.division.category && (
+                    {player.team.division.category &&
+                      player.team.division.category.toLowerCase() !== player.team.division.name.toLowerCase() && (
                       <div className="text-xs text-gray-400">
                         {player.team.division.category.charAt(0).toUpperCase() + player.team.division.category.slice(1)}
                       </div>

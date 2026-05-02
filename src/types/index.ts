@@ -230,11 +230,11 @@ export interface TeamGameStats {
 
 export interface GameEvent {
   quarter: number;
-  time: string; // MM:SS format
+  time?: string; // MM:SS format
   type: GameEventType;
   team: string; // Referencia a Team
   player: string; // Referencia a Player
-  description: string;
+  description?: string;
   yards?: number;
   points?: number;
   details?: string;

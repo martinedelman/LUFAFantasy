@@ -6,7 +6,15 @@ import connectToDatabase from "../../lib/mongodb";
 export class MongoPlayerRepository implements IPlayerRepository {
   async findById(id: string): Promise<Player | null> {
     await connectToDatabase();
-    const doc = await PlayerModel.findById(id).populate("team").exec();
+    const doc = await PlayerModel.findById(id)
+      .populate({
+        path: "team",
+        populate: {
+          path: "division",
+          select: "name category",
+        },
+      })
+      .exec();
     return doc ? doc : null;
   }
 
