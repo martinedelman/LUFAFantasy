@@ -12,6 +12,7 @@ interface Player {
   _id: string;
   firstName: string;
   lastName: string;
+  profilePicture?: string;
   dateOfBirth: string;
   team: {
     _id: string;
@@ -194,12 +195,19 @@ export default function PlayerProfilePage() {
                 </svg>
               </button>
               <div className="flex items-center space-x-4">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl"
-                  style={{ backgroundColor: player.team.colors.primary }}
-                >
-                  #{player.jerseyNumber}
-                </div>
+                {player.profilePicture ? (
+                  <div
+                    className="w-16 h-16 rounded-full bg-white border border-gray-200 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${player.profilePicture})` }}
+                  />
+                ) : (
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl"
+                    style={{ backgroundColor: player.team.colors.primary }}
+                  >
+                    #{player.jerseyNumber}
+                  </div>
+                )}
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">
                     {player.firstName} {player.lastName}

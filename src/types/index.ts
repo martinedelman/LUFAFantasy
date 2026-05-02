@@ -112,6 +112,7 @@ export interface Player {
   _id?: string;
   firstName: string;
   lastName: string;
+  profilePicture?: string;
   email?: string;
   phone?: string;
   dateOfBirth: Date;

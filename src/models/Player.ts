@@ -19,6 +19,7 @@ const PlayerSchema = new Schema(
   {
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
+    profilePicture: { type: String, trim: true },
     email: { type: String, trim: true, lowercase: true },
     phone: { type: String, trim: true },
     dateOfBirth: { type: Date, required: true },

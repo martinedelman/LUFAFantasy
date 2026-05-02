@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
+import ImageUploader from "@/components/ImageUploader";
 
 interface Team {
   _id: string;
@@ -20,6 +21,7 @@ export default function EditPlayerPage() {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
+    profilePicture: "",
     email: "",
     phone: "",
     dateOfBirth: "",
@@ -62,6 +64,7 @@ export default function EditPlayerPage() {
             setForm({
               firstName: player.firstName || "",
               lastName: player.lastName || "",
+              profilePicture: player.profilePicture || "",
               email: player.email || "",
               phone: player.phone || "",
               dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth).toISOString().split("T")[0] : "",
@@ -150,14 +153,29 @@ export default function EditPlayerPage() {
           <h1 className="text-3xl font-bold mb-6">Editar Jugador</h1>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6">
-              {error}
-            </div>
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6">{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <h2 className="text-xl font-semibold mb-4">Información Personal</h2>
+            </div>
+            <div className="col-span-2">
+              <ImageUploader
+                label="Foto de Perfil"
+                assetType="player_profile_picture"
+                value={form.profilePicture}
+                onUploaded={(url) => setForm((prev) => ({ ...prev, profilePicture: url }))}
+                disabled={loading}
+              />
+              <input
+                name="profilePicture"
+                type="text"
+                value={form.profilePicture}
+                readOnly
+                className="mt-2 w-full border px-3 py-2 rounded bg-gray-100 text-gray-600"
+                placeholder="URL generada automáticamente"
+              />
             </div>
             <input
               name="firstName"

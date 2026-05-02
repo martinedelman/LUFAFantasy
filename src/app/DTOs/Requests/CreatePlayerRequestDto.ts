@@ -3,6 +3,7 @@ import type { PlayerPosition, PlayerStatus } from "@/entities/Player";
 export interface CreatePlayerRequestDto {
   firstName: string;
   lastName: string;
+  profilePicture?: string;
   dateOfBirth: string;
   team: string;
   jerseyNumber: number;

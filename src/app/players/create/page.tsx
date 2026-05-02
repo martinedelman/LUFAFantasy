@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
+import ImageUploader from "@/components/ImageUploader";
 
 interface Team {
   _id: string;
@@ -18,6 +19,7 @@ export default function CreatePlayerPage() {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
+    profilePicture: "",
     email: "",
     phone: "",
     dateOfBirth: "",
@@ -93,6 +95,7 @@ export default function CreatePlayerPage() {
 
       if (form.email.trim()) payload.email = form.email.trim();
       if (form.phone.trim()) payload.phone = form.phone.trim();
+      if (form.profilePicture.trim()) payload.profilePicture = form.profilePicture.trim();
       if (form.registrationDate) payload.registrationDate = form.registrationDate;
       if (form.height !== "") payload.height = Number(form.height);
       if (form.weight !== "") payload.weight = Number(form.weight);
@@ -147,6 +150,23 @@ export default function CreatePlayerPage() {
               <div className="bg-gray-50 p-6 rounded-lg">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Información Personal</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <ImageUploader
+                      label="Foto de Perfil"
+                      assetType="player_profile_picture"
+                      value={form.profilePicture}
+                      onUploaded={(url) => setForm((prev) => ({ ...prev, profilePicture: url }))}
+                      disabled={loading}
+                    />
+                    <input
+                      name="profilePicture"
+                      type="text"
+                      value={form.profilePicture}
+                      readOnly
+                      className="mt-2 w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 text-gray-600"
+                      placeholder="URL generada automáticamente"
+                    />
+                  </div>
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
                       Nombre *

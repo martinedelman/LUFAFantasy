@@ -11,6 +11,7 @@ interface Player {
   _id: string;
   firstName: string;
   lastName: string;
+  profilePicture?: string;
   jerseyNumber: number;
   position: string;
   email: string;
@@ -326,9 +327,10 @@ export default function PlayersPage() {
                   title={`${player.firstName} ${player.lastName}`}
                   subtitle={player.position}
                   icon={{
-                    type: "jersey",
-                    value: player.jerseyNumber.toString(),
+                    type: player.profilePicture ? "image" : "jersey",
+                    value: player.profilePicture || player.jerseyNumber.toString(),
                     backgroundColor: player.team.colors.primary,
+                    alt: `${player.firstName} ${player.lastName}`,
                   }}
                   info={[
                     {

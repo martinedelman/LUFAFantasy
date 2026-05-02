@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
+import ImageUploader from "@/components/ImageUploader";
 
 interface Division {
   _id: string;
@@ -201,10 +202,7 @@ export default function CreateTeamPage() {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="colors.secondary"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="colors.secondary" className="block text-sm font-medium text-gray-700 mb-1">
                       Color Secundario
                     </label>
                     <input
@@ -309,10 +307,7 @@ export default function CreateTeamPage() {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="coach.experience"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="coach.experience" className="block text-sm font-medium text-gray-700 mb-1">
                       Experiencia
                     </label>
                     <input
@@ -333,24 +328,25 @@ export default function CreateTeamPage() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Información Adicional</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-1">
-                      URL del Logo
-                    </label>
+                    <ImageUploader
+                      label="Logo del Equipo"
+                      assetType="team_logo"
+                      value={form.logo}
+                      onUploaded={(url) => setForm((prev) => ({ ...prev, logo: url }))}
+                      disabled={loading}
+                    />
                     <input
                       id="logo"
                       name="logo"
-                      type="url"
+                      type="text"
                       value={form.logo}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="https://..."
+                      readOnly
+                      className="mt-2 w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 text-gray-600"
+                      placeholder="URL generada automáticamente"
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="registrationDate"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="registrationDate" className="block text-sm font-medium text-gray-700 mb-1">
                       Fecha de Registro
                     </label>
                     <input

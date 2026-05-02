@@ -7,3 +7,4 @@ export type { IPlayerRepository } from "./IPlayerRepository";
 export type { IGameRepository } from "./IGameRepository";
 export type { IStandingRepository } from "./IStandingRepository";
 export type { IDivisionRepository } from "./IDivisionRepository";
+export type { IFileStorageRepository, FileUploadInput, StoredFileMetadata } from "./IFileStorageRepository";

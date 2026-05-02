@@ -14,6 +14,7 @@ export class PlayerService {
   async createPlayer(data: {
     firstName: string;
     lastName: string;
+    profilePicture?: string;
     dateOfBirth: Date;
     team: string;
     jerseyNumber: number;
@@ -52,6 +53,10 @@ export class PlayerService {
       data.height,
       data.weight,
       data.experience,
+      undefined,
+      undefined,
+      undefined,
+      data.profilePicture,
     );
 
     // Validar
@@ -131,6 +136,7 @@ export class PlayerService {
     data: Partial<{
       firstName: string;
       lastName: string;
+      profilePicture: string;
       dateOfBirth: Date;
       team: string;
       jerseyNumber: number;
@@ -178,6 +184,7 @@ export class PlayerService {
       player.id,
       player.createdAt,
       player.updatedAt,
+      data.profilePicture !== undefined ? data.profilePicture : player.profilePicture,
     );
 
     // Validar

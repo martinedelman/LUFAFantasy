@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
     const player = await playerService.createPlayer({
       firstName: body.firstName,
       lastName: body.lastName,
+      profilePicture: body.profilePicture,
       dateOfBirth: new Date(body.dateOfBirth),
       team: body.team,
       jerseyNumber: body.jerseyNumber,

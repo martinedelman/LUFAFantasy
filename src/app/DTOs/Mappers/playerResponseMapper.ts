@@ -6,6 +6,7 @@ export function toPlayerResponseDto(player: Player): PlayerResponseDto {
     _id: player.id,
     firstName: player.firstName,
     lastName: player.lastName,
+    profilePicture: player.profilePicture,
     email: player.email,
     phone: player.phone,
     dateOfBirth: player.dateOfBirth.toISOString(),

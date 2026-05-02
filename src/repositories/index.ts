@@ -7,6 +7,7 @@ import {
   IGameRepository,
   IStandingRepository,
   IDivisionRepository,
+  IFileStorageRepository,
 } from "./contracts";
 
 // MongoDB implementations
@@ -17,6 +18,7 @@ import { MongoPlayerRepository } from "./mongodb/MongoPlayerRepository";
 import { MongoGameRepository } from "./mongodb/MongoGameRepository";
 import { MongoStandingRepository } from "./mongodb/MongoStandingRepository";
 import { MongoDivisionRepository } from "./mongodb/MongoDivisionRepository";
+import { VercelBlobFileStorageRepository } from "./blob/VercelBlobFileStorageRepository";
 
 /**
  * Dependency Injection Container para repositorios
@@ -30,6 +32,7 @@ class RepositoryContainer {
   private static gameRepo: IGameRepository | null = null;
   private static standingRepo: IStandingRepository | null = null;
   private static divisionRepo: IDivisionRepository | null = null;
+  private static fileStorageRepo: IFileStorageRepository | null = null;
 
   /**
    * Obtiene el repositorio de usuarios
@@ -102,6 +105,17 @@ class RepositoryContainer {
   }
 
   /**
+   * Obtiene el repositorio de archivos
+   */
+  static getFileStorageRepository(): IFileStorageRepository {
+    if (!this.fileStorageRepo) {
+      this.fileStorageRepo = new VercelBlobFileStorageRepository();
+    }
+
+    return this.fileStorageRepo;
+  }
+
+  /**
    * Resetea todas las instancias (útil para testing)
    */
   static reset(): void {
@@ -112,6 +126,7 @@ class RepositoryContainer {
     this.gameRepo = null;
     this.standingRepo = null;
     this.divisionRepo = null;
+    this.fileStorageRepo = null;
   }
 }
 

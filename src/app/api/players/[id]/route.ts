@@ -50,6 +50,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const updatedPlayer = await playerService.updatePlayer(id, {
       firstName: body.firstName,
       lastName: body.lastName,
+      profilePicture: body.profilePicture,
       dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : undefined,
       email: body.email,
       phone: body.phone,

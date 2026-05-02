@@ -20,6 +20,7 @@ export type PlayerStatus = "active" | "inactive" | "injured" | "suspended";
 export class Player extends AggregateRoot {
   public readonly firstName: string;
   public readonly lastName: string;
+  public readonly profilePicture?: string;
   public readonly email?: string;
   public readonly phone?: string;
   public readonly dateOfBirth: Date;
@@ -49,10 +50,12 @@ export class Player extends AggregateRoot {
     id?: string,
     createdAt?: Date,
     updatedAt?: Date,
+    profilePicture?: string,
   ) {
     super(id, createdAt, updatedAt);
     this.firstName = firstName;
     this.lastName = lastName;
+    this.profilePicture = profilePicture;
     this.email = email;
     this.phone = phone;
     this.dateOfBirth = dateOfBirth;
