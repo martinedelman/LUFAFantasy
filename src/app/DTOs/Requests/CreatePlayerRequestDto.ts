@@ -6,7 +6,7 @@ export interface CreatePlayerRequestDto {
   profilePicture?: string;
   dateOfBirth: string;
   team: string;
-  jerseyNumber: number;
+  jerseyNumber?: number | null;
   position: PlayerPosition;
   email?: string;
   phone?: string;

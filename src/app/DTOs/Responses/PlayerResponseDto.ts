@@ -9,7 +9,7 @@ export interface PlayerResponseDto {
   phone?: string;
   dateOfBirth: string;
   team: string;
-  jerseyNumber: number;
+  jerseyNumber?: number | null;
   position: PlayerPosition;
   height?: number;
   weight?: number;

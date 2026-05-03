@@ -25,7 +25,7 @@ export class Player extends AggregateRoot {
   public readonly phone?: string;
   public readonly dateOfBirth: Date;
   public readonly team: string; // ID del equipo
-  public readonly jerseyNumber: number;
+  public readonly jerseyNumber?: number | null;
   public readonly position: PlayerPosition;
   public readonly height?: number; // cm
   public readonly weight?: number; // kg
@@ -38,7 +38,7 @@ export class Player extends AggregateRoot {
     lastName: string,
     dateOfBirth: Date,
     team: string,
-    jerseyNumber: number,
+    jerseyNumber: number | null | undefined,
     position: PlayerPosition,
     registrationDate: Date,
     status: PlayerStatus = "active",
@@ -128,7 +128,11 @@ export class Player extends AggregateRoot {
       errors.push("El equipo es requerido");
     }
 
-    if (this.jerseyNumber < 0 || this.jerseyNumber > 99) {
+    if (
+      this.jerseyNumber !== undefined &&
+      this.jerseyNumber !== null &&
+      (this.jerseyNumber < 0 || this.jerseyNumber > 99)
+    ) {
       errors.push("El número de camiseta debe estar entre 0 y 99");
     }
 

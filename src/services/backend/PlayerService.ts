@@ -17,7 +17,7 @@ export class PlayerService {
     profilePicture?: string;
     dateOfBirth: Date;
     team: string;
-    jerseyNumber: number;
+    jerseyNumber?: number | null;
     position: PlayerPosition;
     email?: string;
     phone?: string;
@@ -34,9 +34,11 @@ export class PlayerService {
     }
 
     // Verificar que el número de camiseta no esté en uso en el equipo
-    const numberExists = await this.playerRepo.existsWithJerseyNumber(data.jerseyNumber, data.team);
-    if (numberExists) {
-      throw new Error("El número de camiseta ya está en uso en este equipo");
+    if (data.jerseyNumber !== undefined && data.jerseyNumber !== null) {
+      const numberExists = await this.playerRepo.existsWithJerseyNumber(data.jerseyNumber, data.team);
+      if (numberExists) {
+        throw new Error("El número de camiseta ya está en uso en este equipo");
+      }
     }
 
     const player = new Player(
@@ -139,7 +141,7 @@ export class PlayerService {
       profilePicture: string;
       dateOfBirth: Date;
       team: string;
-      jerseyNumber: number;
+      jerseyNumber?: number | null;
       position: PlayerPosition;
       email: string;
       phone: string;
@@ -155,11 +157,15 @@ export class PlayerService {
     }
 
     // Si cambia el número o equipo, verificar que no esté en uso
-    if (data.jerseyNumber || data.team) {
-      const jerseyNumber = data.jerseyNumber || player.jerseyNumber;
+    if (data.jerseyNumber !== undefined || data.team) {
+      const jerseyNumber = data.jerseyNumber !== undefined ? data.jerseyNumber : player.jerseyNumber;
       const teamId = data.team || player.team;
 
-      if (jerseyNumber !== player.jerseyNumber || teamId !== player.team) {
+      if (
+        jerseyNumber !== undefined &&
+        jerseyNumber !== null &&
+        (jerseyNumber !== player.jerseyNumber || teamId !== player.team)
+      ) {
         const numberExists = await this.playerRepo.existsWithJerseyNumber(jerseyNumber, teamId);
         if (numberExists) {
           throw new Error("El número de camiseta ya está en uso en este equipo");

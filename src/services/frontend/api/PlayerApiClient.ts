@@ -35,7 +35,7 @@ export class PlayerApiClient extends BaseApiClient {
   async createPlayer(data: {
     name: string;
     team: string;
-    jerseyNumber: number;
+    jerseyNumber?: number | null;
     position: string;
     dateOfBirth?: Date;
   }): Promise<Player> {
@@ -50,7 +50,7 @@ export class PlayerApiClient extends BaseApiClient {
     data: Partial<{
       name: string;
       team: string;
-      jerseyNumber: number;
+      jerseyNumber?: number | null;
       position: string;
       dateOfBirth: Date;
       status: "active" | "inactive";

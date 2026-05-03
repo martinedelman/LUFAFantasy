@@ -4,7 +4,7 @@ export interface PlayerSummaryResponseDto {
   _id: string;
   firstName: string;
   lastName: string;
-  jerseyNumber: number;
+  jerseyNumber?: number | null;
   position: PlayerPosition | string;
   status: PlayerStatus;
 }

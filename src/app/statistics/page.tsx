@@ -11,7 +11,7 @@ interface PlayerStatistic {
     _id: string;
     firstName: string;
     lastName: string;
-    jerseyNumber: number;
+    jerseyNumber?: number | null;
     position: string;
     team: {
       _id: string;
@@ -380,7 +380,7 @@ export default function StatisticsPage() {
                               className="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
                               style={{ backgroundColor: stat.player.team.colors.primary }}
                             >
-                              {stat.player.jerseyNumber}
+                              {stat.player.jerseyNumber ?? "S/N"}
                             </div>
                           </div>
                           <div className="ml-4">

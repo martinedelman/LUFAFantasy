@@ -24,7 +24,7 @@ const PlayerSchema = new Schema(
     phone: { type: String, trim: true },
     dateOfBirth: { type: Date, required: true },
     team: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-    jerseyNumber: { type: Number, required: true },
+    jerseyNumber: { type: Number },
     position: {
       type: String,
       enum: ["QB", "WR", "RB", "C", "G", "T", "DE", "DT", "LB", "CB", "FS", "SS", "K", "P", "FLEX"],
@@ -49,7 +49,13 @@ const PlayerSchema = new Schema(
 );
 
 // Índices
-PlayerSchema.index({ team: 1, jerseyNumber: 1 }, { unique: true });
+PlayerSchema.index(
+  { team: 1, jerseyNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { jerseyNumber: { $type: "number" } },
+  },
+);
 PlayerSchema.index({ firstName: 1, lastName: 1 });
 PlayerSchema.index({ team: 1 });
 PlayerSchema.index({ position: 1 });

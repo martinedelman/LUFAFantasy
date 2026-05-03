@@ -8,7 +8,7 @@ interface PopulatedRef {
   name?: string;
   firstName?: string;
   lastName?: string;
-  jerseyNumber?: number;
+  jerseyNumber?: number | null;
   position?: string;
   status?: PlayerStatus;
   shortName?: string;
@@ -103,7 +103,7 @@ function toPlayerRef(player: string | PopulatedRef): GameEventResponseDto["playe
     _id: stringifyId(player._id || player.id),
     firstName: player.firstName || "",
     lastName: player.lastName || "",
-    jerseyNumber: player.jerseyNumber || 0,
+    jerseyNumber: player.jerseyNumber ?? null,
     position: player.position || "",
     status: player.status || "active",
   };

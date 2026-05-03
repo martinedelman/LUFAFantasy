@@ -117,7 +117,7 @@ export interface Player {
   phone?: string;
   dateOfBirth: Date;
   team: string; // Referencia a Team
-  jerseyNumber: number;
+  jerseyNumber?: number | null;
   position: PlayerPosition;
   height?: number; // cm
   weight?: number; // kg

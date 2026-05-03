@@ -30,7 +30,7 @@ interface Player {
       category: string;
     };
   };
-  jerseyNumber: number;
+  jerseyNumber?: number | null;
   position: string;
   height?: number;
   weight?: number;
@@ -376,7 +376,7 @@ export default function PlayerProfilePage() {
                 <Avatar
                   imageUrl={player.profilePicture}
                   alt={`${player.firstName} ${player.lastName}`}
-                  fallback={`#${player.jerseyNumber}`}
+                  fallback={player.jerseyNumber != null ? `#${player.jerseyNumber}` : player.firstName}
                   backgroundColor={player.team.colors.primary}
                   size="lg"
                   fallbackClassName="text-xl"
@@ -464,7 +464,9 @@ export default function PlayerProfilePage() {
                     <div className="mt-3 space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Número de camiseta:</span>
-                        <span className="text-sm font-medium text-gray-900">#{player.jerseyNumber}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Posición:</span>

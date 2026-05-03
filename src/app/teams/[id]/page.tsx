@@ -13,7 +13,7 @@ interface Player {
   _id: string;
   firstName: string;
   lastName: string;
-  jerseyNumber: number;
+  jerseyNumber?: number | null;
   position: string;
   email: string;
   phone: string;
@@ -856,7 +856,7 @@ export default function TeamViewerPage() {
                                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
                                 style={{ backgroundColor: team.colors.primary }}
                               >
-                                {player.jerseyNumber}
+                                {player.jerseyNumber ?? "S/N"}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">

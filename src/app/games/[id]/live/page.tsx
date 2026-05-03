@@ -468,7 +468,7 @@ export default function LiveMatchPage() {
   const getEventPlayerName = (player: GameApiResponse["events"][number]["player"]) => {
     return typeof player === "string"
       ? "Jugador"
-      : `#${player.jerseyNumber} ${player.firstName} ${player.lastName}`;
+      : `${player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} ${player.firstName} ${player.lastName}`;
   };
 
   if (loading) {
@@ -675,7 +675,9 @@ export default function LiveMatchPage() {
                             />
                             <div className="ml-3 flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-gray-700">#{player.jerseyNumber}</span>
+                                <span className="font-bold text-gray-700">
+                                  {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"}
+                                </span>
                                 <span className="text-gray-900">
                                   {player.firstName} {player.lastName}
                                 </span>
@@ -736,7 +738,9 @@ export default function LiveMatchPage() {
                             />
                             <div className="ml-3 flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-gray-700">#{player.jerseyNumber}</span>
+                                <span className="font-bold text-gray-700">
+                                  {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"}
+                                </span>
                                 <span className="text-gray-900">
                                   {player.firstName} {player.lastName}
                                 </span>
@@ -916,7 +920,8 @@ export default function LiveMatchPage() {
                         <option value="">Seleccionar jugador</option>
                         {eventPlayers.map((player) => (
                           <option key={player._id} value={player._id}>
-                            #{player.jerseyNumber} {player.firstName} {player.lastName} · {player.position}
+                            {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} {player.firstName}{" "}
+                            {player.lastName} · {player.position}
                           </option>
                         ))}
                       </select>

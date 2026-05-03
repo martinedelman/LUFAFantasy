@@ -7,7 +7,7 @@ export interface UpdatePlayerRequestDto {
   dateOfBirth?: string;
   email?: string;
   phone?: string;
-  jerseyNumber?: number;
+  jerseyNumber?: number | null;
   position?: PlayerPosition;
   height?: number;
   weight?: number;
