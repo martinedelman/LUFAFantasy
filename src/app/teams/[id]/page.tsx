@@ -862,11 +862,11 @@ export default function TeamViewerPage() {
                     <p className="mt-1 text-sm text-gray-500">Este equipo aún no tiene jugadores registrados.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                    <table className="min-w-[720px] divide-y divide-gray-300">
+                  <div className="overflow-x-auto w-full shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table className="min-w-[720px] w-full divide-y divide-gray-300">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 z-10 bg-gray-50">
                             #
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -889,7 +889,7 @@ export default function TeamViewerPage() {
                       <tbody className="bg-white divide-y divide-gray-200">
                         {players.map((player) => (
                           <tr key={player._id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-6 py-4 whitespace-nowrap sticky left-0 z-10 bg-white">
                               <div
                                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
                                 style={{ backgroundColor: team.colors.primary }}
