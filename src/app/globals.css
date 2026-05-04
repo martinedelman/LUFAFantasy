@@ -25,25 +25,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --background: #061521;
-    --surface: #0d2233;
-    --surface-soft: #163145;
-    --foreground: #e7f4ff;
-    --muted: #abc2d3;
-    --muted-2: #88a3b7;
-    --border: #2d4f68;
-
-    --brand-900: #0f6ea4;
-    --brand-800: #1683be;
-    --brand-700: #2896d0;
-    --brand-600: #48aee2;
-    --brand-500: #6db9e8;
-    --brand-100: #163b57;
-  }
-}
+/* ...existing code... */
 
 @theme {
   --color-brand-900: var(--brand-900);
@@ -206,4 +188,18 @@ button {
 .focus\:border-green-500:focus,
 .focus\:border-blue-500:focus {
   border-color: var(--brand-700) !important;
+}
+
+/* Hero2: shift subject into view on mobile (subject is ~75% from left) */
+.hero-2 {
+  background-image: linear-gradient(to bottom, rgba(30, 30, 30, 0.46), rgba(30, 30, 30, 0.46)), url(/Hero2.JPG);
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+@media (max-width: 639px) {
+  .hero-2 {
+    background-position: 70% center;
+  }
 }

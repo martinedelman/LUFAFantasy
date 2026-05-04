@@ -87,7 +87,7 @@ export default function Table<T extends object>({
             {data.map((item) => (
               <tr
                 key={String(item[idKey])}
-                className="hover:bg-slate-50 hover:dark:bg-slate-900 cursor-pointer"
+                className="hover:bg-slate-50 cursor-pointer"
                 onClick={() => onRowClick?.(item)}
               >
                 {columns.map((column) => {
