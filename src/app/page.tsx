@@ -85,8 +85,7 @@ export default function Home() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("es-ES", {
-      weekday: "short",
-      month: "short",
+      month: "long",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
@@ -155,25 +154,30 @@ export default function Home() {
                   <LoadingSpinner />
                 </div>
               ) : stats?.nextGames && stats.nextGames.length > 0 ? (
-                stats.nextGames.map((game, idx) => (
-                  <div key={game.id} className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
+                stats.nextGames.map((game) => (
+                  <div
+                    key={game.id}
+                    className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 w-full min-h-[116px] flex items-center"
+                  >
+                    <div className="flex flex-col-reverse md:flex-row md:justify-between items-center gap-4 w-full">
+                      <div className="min-w-0 flex-1 text-center md:text-left">
                         <p className="font-semibold text-slate-950">
-                          {idx + 1}. {game.homeTeam} <span className="text-slate-500">vs</span> {game.awayTeam}
+                          {game.homeTeam} <span className="text-slate-500">vs</span> {game.awayTeam}
                         </p>
-                        <p className="text-sm text-slate-600 mt-1">
+                        <p className="text-sm text-slate-600 mt-3">
                           {game.division} • {game.venue}
                         </p>
-                        <p className="text-sm text-slate-700 mt-2">⏰ {formatDate(game.scheduledDate)}</p>
                       </div>
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                          game.status === "scheduled" ? "bg-slate-200 text-slate-700" : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {game.status === "scheduled" ? "📋 Programado" : "🔴 En vivo"}
-                      </span>
+                      <div className="flex flex-col items-center md:items-end gap-2 shrink-0 text-center md:text-right w-full md:w-auto">
+                        <span
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                            game.status === "scheduled" ? "bg-slate-200 text-slate-700" : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {game.status === "scheduled" ? "📋 Programado" : "🔴 En vivo"}
+                        </span>
+                        <p className="text-xs mt-2 text-slate-700">⏰ {formatDate(game.scheduledDate)}</p>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -196,8 +200,11 @@ export default function Home() {
                 </div>
               ) : stats?.topPlayers && stats.topPlayers.length > 0 ? (
                 stats.topPlayers.map((player, idx) => (
-                  <div key={player.id} className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4">
-                    <div className="flex items-center justify-between gap-3">
+                  <div
+                    key={player.id}
+                    className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 min-h-[116px] flex items-center justify-between w-full"
+                  >
+                    <div className="flex items-center justify-between gap-3 w-full">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="relative shrink-0">
                           <div className="w-11 h-11 rounded-full border border-slate-300 bg-[rgb(255,255,255)] text-xs font-semibold text-slate-700 flex items-center justify-center">
@@ -235,8 +242,8 @@ export default function Home() {
       <section className="mx-auto py-12">
         <article className="py-2">
           <div className="flex items-center justify-center flex-col gap-3 p-6">
-            <h3 className="text-2xl text-center font-bold text-slate-950 px-6">Equipos Actuales</h3>
-            <p>
+            <h3 className="text-2xl font-bold text-slate-950 px-6">Equipos Actuales</h3>
+            <p className="text-justify">
               Actualmente la LUFA cuenta con{" "}
               <span className="font-semibold">{stats?.totalTeams || 0} equipos activos</span> compitiendo en la liga.
               Cada equipo representa una comunidad apasionada por el Flag Football y la competencia.
