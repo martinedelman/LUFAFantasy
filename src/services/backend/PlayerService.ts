@@ -8,6 +8,24 @@ export class PlayerService {
   private playerRepo = RepositoryContainer.getPlayerRepository();
   private teamRepo = RepositoryContainer.getTeamRepository();
 
+  private normalizeJerseyNumber(value: unknown): number | null | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    if (value === null || value === "") {
+      return null;
+    }
+
+    const parsedValue = typeof value === "number" ? value : Number(value);
+
+    if (Number.isNaN(parsedValue)) {
+      throw new Error("Número de camiseta inválido");
+    }
+
+    return parsedValue;
+  }
+
   /**
    * Crea un nuevo jugador
    */
@@ -27,6 +45,8 @@ export class PlayerService {
     status?: PlayerStatus;
     registrationDate?: Date;
   }): Promise<Player> {
+    const jerseyNumber = this.normalizeJerseyNumber(data.jerseyNumber);
+
     // Verificar que el equipo existe
     const team = await this.teamRepo.findById(data.team);
     if (!team) {
@@ -34,8 +54,8 @@ export class PlayerService {
     }
 
     // Verificar que el número de camiseta no esté en uso en el equipo
-    if (data.jerseyNumber !== undefined && data.jerseyNumber !== null) {
-      const numberExists = await this.playerRepo.existsWithJerseyNumber(data.jerseyNumber, data.team);
+    if (jerseyNumber !== undefined && jerseyNumber !== null) {
+      const numberExists = await this.playerRepo.existsWithJerseyNumber(jerseyNumber, data.team);
       if (numberExists) {
         throw new Error("El número de camiseta ya está en uso en este equipo");
       }
@@ -46,7 +66,7 @@ export class PlayerService {
       data.lastName,
       data.dateOfBirth,
       data.team,
-      data.jerseyNumber,
+      jerseyNumber,
       data.position,
       data.registrationDate || new Date(),
       data.status || "active",
@@ -156,20 +176,19 @@ export class PlayerService {
       throw new Error("Jugador no encontrado");
     }
 
-    // Si cambia el número o equipo, verificar que no esté en uso
-    if (data.jerseyNumber !== undefined || data.team) {
-      const jerseyNumber = data.jerseyNumber !== undefined ? data.jerseyNumber : player.jerseyNumber;
-      const teamId = data.team || player.team;
+    const requestedJerseyNumber = this.normalizeJerseyNumber(data.jerseyNumber);
+    const jerseyNumber = requestedJerseyNumber !== undefined ? requestedJerseyNumber : player.jerseyNumber;
+    const teamId = data.team || player.team;
 
-      if (
-        jerseyNumber !== undefined &&
-        jerseyNumber !== null &&
-        (jerseyNumber !== player.jerseyNumber || teamId !== player.team)
-      ) {
-        const numberExists = await this.playerRepo.existsWithJerseyNumber(jerseyNumber, teamId);
-        if (numberExists) {
-          throw new Error("El número de camiseta ya está en uso en este equipo");
-        }
+    // Si cambia el número o equipo, verificar que no esté en uso
+    if (
+      jerseyNumber !== undefined &&
+      jerseyNumber !== null &&
+      (jerseyNumber !== player.jerseyNumber || teamId !== player.team)
+    ) {
+      const numberExists = await this.playerRepo.existsWithJerseyNumber(jerseyNumber, teamId);
+      if (numberExists) {
+        throw new Error("El número de camiseta ya está en uso en este equipo");
       }
     }
 
@@ -177,8 +196,8 @@ export class PlayerService {
       data.firstName || player.firstName,
       data.lastName || player.lastName,
       data.dateOfBirth || player.dateOfBirth,
-      data.team || player.team,
-      data.jerseyNumber !== undefined ? data.jerseyNumber : player.jerseyNumber,
+      teamId,
+      jerseyNumber,
       data.position || player.position,
       player.registrationDate,
       data.status || player.status,
