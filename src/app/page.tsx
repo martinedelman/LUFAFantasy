@@ -111,8 +111,6 @@ export default function Home() {
 
   const carouselTeams = teams.length > 0 ? [...teams, ...teams] : [];
 
-  if (loading) return <LoadingSpinner />;
-
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -152,7 +150,11 @@ export default function Home() {
               <h2 className="text-2xl font-semibold text-slate-950">Próximos Partidos</h2>
             </header>
             <div className="p-6 space-y-4">
-              {stats?.nextGames && stats.nextGames.length > 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <LoadingSpinner />
+                </div>
+              ) : stats?.nextGames && stats.nextGames.length > 0 ? (
                 stats.nextGames.map((game, idx) => (
                   <div key={game.id} className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4">
                     <div className="flex items-start justify-between gap-4">
@@ -188,7 +190,11 @@ export default function Home() {
               <h2 className="text-2xl font-semibold text-slate-950">Top Jugadores</h2>
             </header>
             <div className="p-6 space-y-4">
-              {stats?.topPlayers && stats.topPlayers.length > 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <LoadingSpinner />
+                </div>
+              ) : stats?.topPlayers && stats.topPlayers.length > 0 ? (
                 stats.topPlayers.map((player, idx) => (
                   <div key={player.id} className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4">
                     <div className="flex items-center justify-between gap-3">
