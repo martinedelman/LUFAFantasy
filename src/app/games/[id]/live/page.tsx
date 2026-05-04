@@ -9,11 +9,6 @@ import type { ApiResponse, GameApiResponse, GameEventType, PlayerApiResponse } f
 
 type QuarterKey = "q1" | "q2" | "q3" | "q4" | "overtime";
 type TeamSide = "home" | "away";
-type ScoreSide = Record<QuarterKey, number> & { total: number };
-type ScoreDraft = {
-  home: ScoreSide;
-  away: ScoreSide;
-};
 
 const QUARTERS: { key: QuarterKey; label: string }[] = [
   { key: "q1", label: "1T" },
@@ -23,23 +18,16 @@ const QUARTERS: { key: QuarterKey; label: string }[] = [
   { key: "overtime", label: "ET" },
 ];
 
-const SCORING_ACTIONS = [
-  { label: "TD", points: 6 },
-  { label: "+1", points: 1 },
-  { label: "+2", points: 2 },
-  { label: "Safety", points: 2 },
-];
-
 const EVENT_TYPES: { value: GameEventType; label: string; points?: number }[] = [
   { value: "touchdown", label: "TD", points: 6 },
   { value: "extra_point", label: "Extra +1", points: 1 },
   { value: "extra_point", label: "Conversión +2", points: 2 },
   { value: "safety", label: "Safety", points: 2 },
   { value: "interception", label: "Intercepción" },
-  { value: "fumble", label: "Fumble" },
+  { value: "pick_six", label: "PICK SIX", points: 6 },
   { value: "sack", label: "Sack" },
   { value: "penalty", label: "Castigo" },
-  { value: "timeout", label: "Timeout" },
+  { value: "unsportsmanlike", label: "Actitud Antideportiva" },
   { value: "first_down", label: "1st Down" },
 ];
 
@@ -67,23 +55,6 @@ const getReadableTextColor = (backgroundColor?: string) => {
   const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
 
   return luminance > 0.62 ? "#111827" : "#ffffff";
-};
-
-const normalizeScoreSide = (side?: Partial<ScoreSide>): ScoreSide => {
-  const normalized = {
-    q1: 0,
-    q2: 0,
-    q3: 0,
-    q4: 0,
-    overtime: 0,
-    total: 0,
-    ...side,
-  };
-
-  return {
-    ...normalized,
-    total: normalized.q1 + normalized.q2 + normalized.q3 + normalized.q4 + normalized.overtime,
-  };
 };
 
 const sortPlayersByJerseyNumber = (players: PlayerApiResponse[]) => {
