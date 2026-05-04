@@ -104,7 +104,10 @@ function TeamsPageContent() {
         const result: ApiResponse = await response.json();
 
         if (result.success) {
-          setTeams(result.data);
+          const orderedTeams = [...result.data].sort((a, b) =>
+            a.name.localeCompare(b.name, "es", { sensitivity: "base" }),
+          );
+          setTeams(orderedTeams);
           setPagination(result.pagination);
           setError(null);
         } else {
