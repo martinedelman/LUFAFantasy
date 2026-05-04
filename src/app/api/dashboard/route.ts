@@ -9,9 +9,7 @@ interface PlayerAggregateData {
   lastName: string;
   position: string;
   teamName?: string;
-  totalTouchdowns: number;
-  totalReceptions: number;
-  totalInterceptions: number;
+  totalPoints: number;
 }
 
 export async function GET(): Promise<NextResponse> {
@@ -59,36 +57,36 @@ export async function GET(): Promise<NextResponse> {
       } as NextGameResponseDto;
     });
 
-    // Obtener mejores jugadores por touchdowns (basado en estadísticas)
-    const topPlayersData = (await PlayerModel.aggregate([
-      { $match: { status: "active" } },
+    // Obtener mejores jugadores por puntos anotados en eventos de partidos
+    const topPlayersData = (await GameModel.aggregate([
+      { $unwind: "$events" },
       {
-        $lookup: {
-          from: "playerstatistics",
-          localField: "_id",
-          foreignField: "player",
-          as: "stats",
+        $match: {
+          "events.player": { $exists: true, $ne: null },
+          "events.points": { $gt: 0 },
         },
       },
-      { $unwind: { path: "$stats", preserveNullAndEmptyArrays: true } },
       {
         $group: {
-          _id: "$_id",
-          firstName: { $first: "$firstName" },
-          lastName: { $first: "$lastName" },
-          position: { $first: "$position" },
-          team: { $first: "$team" },
-          totalTouchdowns: { $sum: "$stats.touchdowns" },
-          totalReceptions: { $sum: "$stats.receptions" },
-          totalInterceptions: { $sum: "$stats.interceptions" },
+          _id: "$events.player",
+          totalPoints: { $sum: "$events.points" },
         },
       },
-      { $sort: { totalTouchdowns: -1 } },
+      { $sort: { totalPoints: -1 } },
       { $limit: 3 },
       {
         $lookup: {
+          from: "players",
+          localField: "_id",
+          foreignField: "_id",
+          as: "playerInfo",
+        },
+      },
+      { $unwind: "$playerInfo" },
+      {
+        $lookup: {
           from: "teams",
-          localField: "team",
+          localField: "playerInfo.team",
           foreignField: "_id",
           as: "teamInfo",
         },
@@ -96,14 +94,12 @@ export async function GET(): Promise<NextResponse> {
       { $unwind: { path: "$teamInfo", preserveNullAndEmptyArrays: true } },
       {
         $project: {
-          _id: 1,
-          firstName: 1,
-          lastName: 1,
-          position: 1,
-          totalTouchdowns: { $ifNull: ["$totalTouchdowns", 0] },
-          totalReceptions: { $ifNull: ["$totalReceptions", 0] },
-          totalInterceptions: { $ifNull: ["$totalInterceptions", 0] },
+          _id: { $toString: "$_id" },
+          firstName: "$playerInfo.firstName",
+          lastName: "$playerInfo.lastName",
+          position: "$playerInfo.position",
           teamName: "$teamInfo.name",
+          totalPoints: { $ifNull: ["$totalPoints", 0] },
         },
       },
     ])) as PlayerAggregateData[];
@@ -119,8 +115,8 @@ export async function GET(): Promise<NextResponse> {
         name: `${player.firstName} ${player.lastName}`,
         position: player.position,
         team: player.teamName || "N/A",
-        stat: player.totalTouchdowns,
-        statLabel: "TD",
+        stat: player.totalPoints,
+        statLabel: "PTS",
       })),
     };
 

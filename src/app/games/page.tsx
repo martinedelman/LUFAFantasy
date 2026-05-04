@@ -119,6 +119,25 @@ function toDateTimeLocal(isoDate: string) {
   return localDate.toISOString().slice(0, 16);
 }
 
+function getRefId(value: unknown): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && "_id" in value) {
+    const id = (value as { _id?: unknown })._id;
+    return id ? String(id) : "";
+  }
+  return "";
+}
+
+function getTeamDisplayName(value: unknown): string {
+  if (!value) return "TBD";
+  if (typeof value === "string") return "TBD";
+  if (typeof value === "object" && "name" in value) {
+    return String((value as { name?: unknown }).name || "TBD");
+  }
+  return "TBD";
+}
+
 export default function GamesPage() {
   const { user } = useAuth();
   const canManageGames = user?.role === "admin";
@@ -145,6 +164,7 @@ export default function GamesPage() {
 
   const [form, setForm] = useState<GameFormState>(INITIAL_FORM);
   const [showForm, setShowForm] = useState(false);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
 
   const [tournaments, setTournaments] = useState<TournamentOption[]>([]);
   const [divisions, setDivisions] = useState<DivisionOption[]>([]);
@@ -301,18 +321,32 @@ export default function GamesPage() {
   const openCreateForm = () => {
     if (!canManageGames) return;
     setForm(INITIAL_FORM);
+    setEditingGame(null);
+    setTeams([]);
     setFormError(null);
     setShowForm(true);
   };
 
-  const openEditForm = (game: Game) => {
+  const openEditForm = async (game: Game) => {
     if (!canManageGames) return;
+
+    const tournamentId = getRefId(game.tournament);
+    const divisionId = getRefId(game.division);
+    const homeTeamId = getRefId(game.homeTeam);
+    const awayTeamId = getRefId(game.awayTeam);
+
+    if (divisionId) {
+      await fetchTeamsForDivision(divisionId);
+    } else {
+      setTeams([]);
+    }
+
     setForm({
       id: game._id,
-      tournament: game.tournament._id,
-      division: game.division._id,
-      homeTeam: game.homeTeam?._id || "",
-      awayTeam: game.awayTeam?._id || "",
+      tournament: tournamentId,
+      division: divisionId,
+      homeTeam: homeTeamId,
+      awayTeam: awayTeamId,
       scheduledDate: toDateTimeLocal(game.scheduledDate),
       status: game.status,
       week: game.week ? String(game.week) : "",
@@ -321,6 +355,7 @@ export default function GamesPage() {
       venueAddress: game.venue?.address || "",
       notes: game.notes || "",
     });
+    setEditingGame(game);
     setFormError(null);
     setShowForm(true);
   };
@@ -328,6 +363,7 @@ export default function GamesPage() {
   const closeForm = () => {
     setShowForm(false);
     setForm(INITIAL_FORM);
+    setEditingGame(null);
     setFormError(null);
   };
 
@@ -494,202 +530,243 @@ export default function GamesPage() {
       </div>
 
       {canManageGames && showForm && (
-        <form onSubmit={handleSubmit} className="bg-white shadow-sm rounded-lg p-6 mb-6 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">{form.id ? "Editar Partido" : "Nuevo Partido"}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeForm}>
+          <div
+            className="w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-lg bg-white shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="game-form-title"
+          >
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 id="game-form-title" className="text-lg font-semibold text-gray-900">
+                  {form.id ? "Editar Partido" : "Nuevo Partido"}
+                </h2>
+                <button
+                  type="button"
+                  onClick={closeForm}
+                  className="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cerrar
+                </button>
+              </div>
 
-          {formError && <ErrorMessage message={formError} />}
+              {editingGame && (
+                <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                  <p className="font-semibold">Información actual</p>
+                  <p className="mt-1">
+                    {getTeamDisplayName(editingGame.homeTeam)} vs {getTeamDisplayName(editingGame.awayTeam)} ·{" "}
+                    {formatDate(editingGame.scheduledDate)} · {formatTime(editingGame.scheduledDate)}
+                  </p>
+                  <p className="mt-1">
+                    {editingGame.venue.name}, {editingGame.venue.address}
+                  </p>
+                </div>
+              )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="tournament" className="block text-sm font-medium text-gray-700 mb-1">
-                Torneo
-              </label>
-              <select
-                id="tournament"
-                value={form.tournament}
-                onChange={(e) => handleFormChange("tournament", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              >
-                <option value="">Seleccionar torneo</option>
-                {tournaments.map((tournament) => (
-                  <option key={tournament._id} value={tournament._id}>
-                    {tournament.name} ({tournament.year})
-                  </option>
-                ))}
-              </select>
-            </div>
+              {formError && <ErrorMessage message={formError} />}
 
-            <div>
-              <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
-                División
-              </label>
-              <select
-                id="division"
-                value={form.division}
-                onChange={(e) => handleFormChange("division", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              >
-                <option value="">Seleccionar división</option>
-                {filteredDivisionsForForm.map((division) => (
-                  <option key={division._id} value={division._id}>
-                    {division.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label htmlFor="tournament" className="block text-sm font-medium text-gray-700 mb-1">
+                    Torneo
+                  </label>
+                  <select
+                    id="tournament"
+                    value={form.tournament}
+                    onChange={(e) => handleFormChange("tournament", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Seleccionar torneo</option>
+                    {tournaments.map((tournament) => (
+                      <option key={tournament._id} value={tournament._id}>
+                        {tournament.name} ({tournament.year})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha y hora
-              </label>
-              <input
-                id="scheduledDate"
-                type="datetime-local"
-                value={form.scheduledDate}
-                onChange={(e) => handleFormChange("scheduledDate", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
+                <div>
+                  <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
+                    División
+                  </label>
+                  <select
+                    id="division"
+                    value={form.division}
+                    onChange={(e) => handleFormChange("division", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Seleccionar división</option>
+                    {filteredDivisionsForForm.map((division) => (
+                      <option key={division._id} value={division._id}>
+                        {division.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <label htmlFor="homeTeam" className="block text-sm font-medium text-gray-700 mb-1">
-                Equipo local
-              </label>
-              <select
-                id="homeTeam"
-                value={form.homeTeam}
-                onChange={(e) => handleFormChange("homeTeam", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">TBD</option>
-                {teams.map((team) => (
-                  <option key={team._id} value={team._id}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha y hora
+                  </label>
+                  <input
+                    id="scheduledDate"
+                    type="datetime-local"
+                    value={form.scheduledDate}
+                    onChange={(e) => handleFormChange("scheduledDate", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="awayTeam" className="block text-sm font-medium text-gray-700 mb-1">
-                Equipo visitante
-              </label>
-              <select
-                id="awayTeam"
-                value={form.awayTeam}
-                onChange={(e) => handleFormChange("awayTeam", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">TBD</option>
-                {teams.map((team) => (
-                  <option key={team._id} value={team._id}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <label htmlFor="homeTeam" className="block text-sm font-medium text-gray-700 mb-1">
+                    Equipo local
+                  </label>
+                  <select
+                    id="homeTeam"
+                    value={form.homeTeam}
+                    onChange={(e) => handleFormChange("homeTeam", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">TBD</option>
+                    {teams.map((team) => (
+                      <option key={team._id} value={team._id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                Estado
-              </label>
-              <select
-                id="status"
-                value={form.status}
-                onChange={(e) => handleFormChange("status", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="scheduled">Programado</option>
-                <option value="in_progress">En Curso</option>
-                <option value="completed">Completado</option>
-                <option value="postponed">Pospuesto</option>
-                <option value="cancelled">Cancelado</option>
-              </select>
-            </div>
+                <div>
+                  <label htmlFor="awayTeam" className="block text-sm font-medium text-gray-700 mb-1">
+                    Equipo visitante
+                  </label>
+                  <select
+                    id="awayTeam"
+                    value={form.awayTeam}
+                    onChange={(e) => handleFormChange("awayTeam", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">TBD</option>
+                    {teams.map((team) => (
+                      <option key={team._id} value={team._id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <label htmlFor="week" className="block text-sm font-medium text-gray-700 mb-1">
-                Semana
-              </label>
-              <input
-                id="week"
-                type="number"
-                min={1}
-                value={form.week}
-                onChange={(e) => handleFormChange("week", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+                <div>
+                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                    Estado
+                  </label>
+                  <select
+                    id="status"
+                    value={form.status}
+                    onChange={(e) => handleFormChange("status", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="scheduled">Programado</option>
+                    <option value="in_progress">En Curso</option>
+                    <option value="completed">Completado</option>
+                    <option value="postponed">Pospuesto</option>
+                    <option value="cancelled">Cancelado</option>
+                  </select>
+                </div>
 
-            <div>
-              <label htmlFor="round" className="block text-sm font-medium text-gray-700 mb-1">
-                Ronda
-              </label>
-              <input
-                id="round"
-                type="text"
-                value={form.round}
-                onChange={(e) => handleFormChange("round", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ej. Cuartos de final"
-              />
-            </div>
+                <div>
+                  <label htmlFor="week" className="block text-sm font-medium text-gray-700 mb-1">
+                    Semana
+                  </label>
+                  <input
+                    id="week"
+                    type="number"
+                    min={1}
+                    value={form.week}
+                    onChange={(e) => handleFormChange("week", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="venueName" className="block text-sm font-medium text-gray-700 mb-1">
-                Venue (nombre)
-              </label>
-              <input
-                id="venueName"
-                type="text"
-                value={form.venueName}
-                onChange={(e) => handleFormChange("venueName", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
+                <div>
+                  <label htmlFor="round" className="block text-sm font-medium text-gray-700 mb-1">
+                    Ronda
+                  </label>
+                  <input
+                    id="round"
+                    type="text"
+                    value={form.round}
+                    onChange={(e) => handleFormChange("round", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Ej. Cuartos de final"
+                  />
+                </div>
 
-            <div className="md:col-span-2">
-              <label htmlFor="venueAddress" className="block text-sm font-medium text-gray-700 mb-1">
-                Venue (dirección)
-              </label>
-              <input
-                id="venueAddress"
-                type="text"
-                value={form.venueAddress}
-                onChange={(e) => handleFormChange("venueAddress", e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
+                <div>
+                  <label htmlFor="venueName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Venue (nombre)
+                  </label>
+                  <input
+                    id="venueName"
+                    type="text"
+                    value={form.venueName}
+                    onChange={(e) => handleFormChange("venueName", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label htmlFor="venueAddress" className="block text-sm font-medium text-gray-700 mb-1">
+                    Venue (dirección)
+                  </label>
+                  <input
+                    id="venueAddress"
+                    type="text"
+                    value={form.venueAddress}
+                    onChange={(e) => handleFormChange("venueAddress", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                  Notas
+                </label>
+                <textarea
+                  id="notes"
+                  value={form.notes}
+                  onChange={(e) => handleFormChange("notes", e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={closeForm}
+                  className="border border-gray-300 bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  {saving ? "Guardando..." : form.id ? "Actualizar Partido" : "Crear Partido"}
+                </button>
+              </div>
+            </form>
           </div>
-
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-              Notas
-            </label>
-            <textarea
-              id="notes"
-              value={form.notes}
-              onChange={(e) => handleFormChange("notes", e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              rows={3}
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              {saving ? "Guardando..." : form.id ? "Actualizar Partido" : "Crear Partido"}
-            </button>
-          </div>
-        </form>
+        </div>
       )}
 
       <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
