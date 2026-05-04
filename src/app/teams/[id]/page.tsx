@@ -40,6 +40,7 @@ interface Team {
   name: string;
   shortName: string;
   logo?: string;
+  backgroundImage?: string;
   colors: {
     primary: string;
     secondary: string;
@@ -436,14 +437,37 @@ export default function TeamViewerPage() {
     );
   }
 
+  const hasHeaderImage = Boolean(team.backgroundImage);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div
+        className={`shadow ${hasHeaderImage ? "relative overflow-hidden" : "bg-white"}`}
+        style={
+          hasHeaderImage
+            ? {
+                backgroundImage: `url(${team.backgroundImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : undefined
+        }
+      >
+        {hasHeaderImage && <div className="absolute inset-0 bg-black/55" />}
+        <div
+          className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${hasHeaderImage ? "relative z-10 py-16 lg:py-20" : "py-6"}`}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button onClick={() => router.back()} className="text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => router.back()}
+                className={
+                  hasHeaderImage
+                    ? "text-white/80 hover:text-white transition-colors"
+                    : "text-gray-400 hover:text-gray-600"
+                }
+              >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
@@ -458,9 +482,15 @@ export default function TeamViewerPage() {
                   fallbackClassName="text-xl"
                 />
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{team.name}</h1>
+                  <h1
+                    className={`font-bold ${hasHeaderImage ? "text-4xl md:text-5xl text-white" : "text-3xl text-gray-900"}`}
+                  >
+                    {team.name}
+                  </h1>
                   <div className="flex items-center space-x-4 mt-1">
-                    <p className="text-sm text-gray-600">{team.division.name}</p>
+                    <p className={`text-sm ${hasHeaderImage ? "text-white/90" : "text-gray-600"}`}>
+                      {team.division.name}
+                    </p>
                     {getStatusTag(team.status)}
                   </div>
                 </div>
@@ -469,7 +499,11 @@ export default function TeamViewerPage() {
             {user?.role === "admin" && (
               <Link
                 href={`/teams/${team._id}/edit`}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className={`inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  hasHeaderImage
+                    ? "border-white/20 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm focus:ring-blue-300"
+                    : "border-transparent bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+                }`}
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -1034,9 +1068,7 @@ export default function TeamViewerPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-gray-500">Intercepciones</p>
-                            <p className="text-2xl font-bold text-gray-900">
-                              {teamStats.defensiveStats.interceptions}
-                            </p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.interceptions}</p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Fumbles recuperados</p>
