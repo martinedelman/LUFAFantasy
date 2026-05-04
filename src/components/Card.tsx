@@ -54,8 +54,7 @@ export default function Card({
   infoPlacement = "content",
 }: CardProps) {
   const hasBackground = Boolean(backgroundImage);
-  const aspectClass =
-    aspectRatio === "16:9" ? "aspect-video" : aspectRatio === "3:2" ? "aspect-[3/2]" : "";
+  const aspectClass = aspectRatio === "16:9" ? "aspect-video" : aspectRatio === "3:2" ? "aspect-[3/2]" : "";
 
   const getIcon = () => {
     if (!icon) return null;
@@ -82,7 +81,7 @@ export default function Card({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-lg shadow-xs hover:shadow-md transition-shadow cursor-pointer ${
+      className={`relative overflow-hidden rounded-lg shadow-xs hover:shadow-md hover:scale-103 transition-all cursor-pointer ${
         hasBackground ? "bg-gray-900" : "bg-slate-50"
       } ${aspectClass}`}
       onClick={onCardClick}
@@ -91,7 +90,7 @@ export default function Card({
       {hasBackground && (
         <>
           <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }} />
-          <div className="absolute inset-0 bg-black/70" />
+          <div className="absolute inset-0 bg-black/55" />
         </>
       )}
 
@@ -112,7 +111,10 @@ export default function Card({
         {info && info.length > 0 && infoPlacement === "content" && (
           <div className="space-y-2 mb-4">
             {info.map((item) => (
-              <div key={item.text} className={`flex items-center text-sm ${hasBackground ? "text-gray-100" : "text-gray-600"}`}>
+              <div
+                key={item.text}
+                className={`flex items-center text-sm ${hasBackground ? "text-gray-100" : "text-gray-600"}`}
+              >
                 {item.icon && <div className="mr-2">{item.icon}</div>}
                 <span>{item.text}</span>
               </div>
@@ -137,7 +139,10 @@ export default function Card({
         {info && info.length > 0 && infoPlacement === "bottom" && (
           <div className="mt-auto space-y-2">
             {info.map((item) => (
-              <div key={item.text} className={`flex items-center text-sm ${hasBackground ? "text-gray-100" : "text-gray-600"}`}>
+              <div
+                key={item.text}
+                className={`flex items-center text-sm ${hasBackground ? "text-gray-100" : "text-gray-600"}`}
+              >
                 {item.icon && <div className="mr-2">{item.icon}</div>}
                 <span>{item.text}</span>
               </div>
@@ -146,34 +151,38 @@ export default function Card({
         )}
 
         {/* Actions */}
-        {(actions?.length || footer?.date) && <div className="mt-auto flex justify-between items-center">
-          <div className="flex space-x-2">
-            {actions?.map((action) => (
-              <React.Fragment key={action.label}>
-                {action.href ? (
-                  <Link
-                    href={action.href}
-                    className={action.className || "text-green-600 hover:text-green-800 text-sm font-medium"}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {action.label}
-                  </Link>
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      action.onClick?.();
-                    }}
-                    className={action.className || "text-green-600 hover:text-green-800 text-sm font-medium"}
-                  >
-                    {action.label}
-                  </button>
-                )}
-              </React.Fragment>
-            ))}
+        {(actions?.length || footer?.date) && (
+          <div className="mt-auto flex justify-between items-center">
+            <div className="flex space-x-2">
+              {actions?.map((action) => (
+                <React.Fragment key={action.label}>
+                  {action.href ? (
+                    <Link
+                      href={action.href}
+                      className={action.className || "text-green-600 hover:text-green-800 text-sm font-medium"}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {action.label}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        action.onClick?.();
+                      }}
+                      className={action.className || "text-green-600 hover:text-green-800 text-sm font-medium"}
+                    >
+                      {action.label}
+                    </button>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+            {footer?.date && (
+              <span className={`text-xs ${hasBackground ? "text-gray-200" : "text-gray-400"}`}>{footer.date}</span>
+            )}
           </div>
-          {footer?.date && <span className={`text-xs ${hasBackground ? "text-gray-200" : "text-gray-400"}`}>{footer.date}</span>}
-        </div>}
+        )}
       </div>
     </div>
   );
