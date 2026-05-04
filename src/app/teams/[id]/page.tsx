@@ -99,6 +99,8 @@ interface TeamStats {
     passingYards: number;
     rushingYards: number;
     touchdowns: number;
+    extraPointOne: number;
+    extraPointTwo: number;
     fieldGoals: number;
     firstDowns: number;
     thirdDownConversions: {
@@ -136,9 +138,9 @@ type GameEventType =
   | "field_goal"
   | "safety"
   | "interception"
-  | "fumble"
+  | "pick_six"
   | "penalty"
-  | "timeout"
+  | "unsportsmanlike"
   | "quarter_end"
   | "game_end"
   | "substitution"
@@ -198,6 +200,8 @@ const emptyTeamStats = (team: Team): TeamStats => ({
     passingYards: 0,
     rushingYards: 0,
     touchdowns: 0,
+    extraPointOne: 0,
+    extraPointTwo: 0,
     fieldGoals: 0,
     firstDowns: 0,
     thirdDownConversions: { made: 0, attempted: 0 },
@@ -278,13 +282,13 @@ const deriveTeamStatsFromGames = (team: Team, games: TeamGame[]): TeamStats => {
         stats.offensiveStats.totalYards += yards;
 
         if (event.type === "touchdown") stats.offensiveStats.touchdowns += 1;
+        if (event.type === "extra_point" && event.points === 1) stats.offensiveStats.extraPointOne += 1;
+        if (event.type === "extra_point" && event.points === 2) stats.offensiveStats.extraPointTwo += 1;
         if (event.type === "field_goal") stats.offensiveStats.fieldGoals += 1;
         if (event.type === "first_down") stats.offensiveStats.firstDowns += 1;
         if (event.type === "interception") stats.defensiveStats.interceptions += 1;
-        if (event.type === "fumble") stats.defensiveStats.fumbleRecoveries += 1;
         if (event.type === "sack") stats.defensiveStats.sacks += 1;
         if (event.type === "safety") stats.defensiveStats.safeties += 1;
-        if (event.type === "penalty") stats.penalties += 1;
       } else if (event.type === "touchdown") {
         stats.defensiveStats.touchdownsAllowed += 1;
       }
@@ -858,8 +862,8 @@ export default function TeamViewerPage() {
                     <p className="mt-1 text-sm text-gray-500">Este equipo aún no tiene jugadores registrados.</p>
                   </div>
                 ) : (
-                  <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-300">
+                  <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table className="min-w-[720px] divide-y divide-gray-300">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1041,24 +1045,20 @@ export default function TeamViewerPage() {
                             <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.touchdowns}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">Field Goals</p>
-                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.fieldGoals}</p>
+                            <p className="text-sm text-gray-500">Puntos extra (+1)</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {teamStats.offensiveStats.extraPointOne ?? 0}
+                            </p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">Primeros downs</p>
+                            <p className="text-sm text-gray-500">Puntos extra (+2)</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {teamStats.offensiveStats.extraPointTwo ?? 0}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Primeros down</p>
                             <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.firstDowns}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Yardas totales</p>
-                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.totalYards}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Yardas pase</p>
-                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.passingYards}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Yardas carrera</p>
-                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.rushingYards}</p>
                           </div>
                         </div>
                       </div>
@@ -1069,12 +1069,6 @@ export default function TeamViewerPage() {
                           <div>
                             <p className="text-sm text-gray-500">Intercepciones</p>
                             <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.interceptions}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Fumbles recuperados</p>
-                            <p className="text-2xl font-bold text-gray-900">
-                              {teamStats.defensiveStats.fumbleRecoveries}
-                            </p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Sacks</p>
@@ -1089,10 +1083,6 @@ export default function TeamViewerPage() {
                             <p className="text-2xl font-bold text-gray-900">
                               {teamStats.defensiveStats.touchdownsAllowed}
                             </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Castigos</p>
-                            <p className="text-2xl font-bold text-gray-900">{teamStats.penalties}</p>
                           </div>
                         </div>
                       </div>
