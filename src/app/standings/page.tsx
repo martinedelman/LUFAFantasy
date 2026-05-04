@@ -241,15 +241,6 @@ export default function StandingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="md:flex md:items-center md:justify-between mb-8">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Tabla de posiciones </h2>
-            <p className="mt-1 text-sm text-gray-500">Gestiona la programación y resultados de los partidos</p>
-          </div>
-
-          <div className="mt-4 flex md:mt-0 md:ml-4" />
-        </div>
-
         {/* Filters */}
         <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">

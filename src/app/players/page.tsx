@@ -176,11 +176,7 @@ export default function PlayersPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="md:flex md:items-center md:justify-between mb-8">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Jugadores</h2>
-          <p className="mt-1 text-sm text-gray-500">Gestiona todos los jugadores registrados en la liga</p>
-        </div>
+      <div className="md:flex md:items-center md:justify-end mb-8">
         <div className="mt-4 flex md:mt-0 md:ml-4">
           {user?.role === "admin" && (
             <Link
