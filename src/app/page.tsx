@@ -124,7 +124,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[rgb(248,250,252)] text-slate-950">
       <section
-        className="relative flex min-h-[calc(100vh-72px)] items-center justify-center"
+        className="relative flex min-h-[calc(100dvh-70px)] items-center justify-center"
         aria-label="LUFA Flag"
         style={heroStyle("/Hero1.JPG")}
       >

@@ -29,9 +29,9 @@ export default function Navbar() {
     "px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200 border border-transparent";
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10 bg-blue-900/70 text-white backdrop-blur-xl shadow-2xl">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-blue-900/70 text-white backdrop-blur-xl shadow-2xl h-[70px]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-3">
+        <div className="flex justify-between items-center h-[70px]">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group min-w-0">
             <div className="h-8 w-8 md:h-9 md:w-9 rounded-lg overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10">
@@ -131,7 +131,7 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link href="/auth/signin" className="text-green-50/90 hover:text-white transition-colors">
+                <Link href="/auth/signin" className="text-green-50/90 hover:text-white transition-colors text-sm">
                   Iniciar Sesión
                 </Link>
                 <Link
