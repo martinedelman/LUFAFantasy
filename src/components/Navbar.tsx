@@ -25,13 +25,16 @@ export default function Navbar() {
     setIsUserMenuOpen(false);
   };
 
+  const linkBaseClass =
+    "px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200 border border-transparent";
+
   return (
-    <nav className="bg-green-800 text-white shadow-lg border-b border-green-700/40">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-blue-900/70 text-white backdrop-blur-xl shadow-2xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-3">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group min-w-0">
-            <div className="h-8 w-8 md:h-9 md:w-9 rounded-md overflow-hidden bg-white/95 border border-white/20 shadow-sm flex-shrink-0">
+            <div className="h-8 w-8 md:h-9 md:w-9 rounded-lg overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10">
               <Image
                 src="/lufa_flag_icon.jpeg"
                 alt="Logo LUFA"
@@ -50,10 +53,10 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`${linkBaseClass} ${
                     pathname === item.href
-                      ? "bg-green-700 text-white"
-                      : "text-green-100 hover:bg-green-700 hover:text-white"
+                      ? "bg-white/16 text-white border-white/20 shadow-sm"
+                      : "text-green-50/90 hover:bg-white/10 hover:text-white hover:border-white/10"
                   }`}
                 >
                   <span>{item.name}</span>
@@ -66,9 +69,9 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-green-100 hover:bg-green-700 hover:text-white transition-colors"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium text-green-50/90 border border-transparent hover:bg-white/10 hover:text-white hover:border-white/10 transition-colors duration-200"
                 >
-                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-white/14 rounded-full flex items-center justify-center border border-white/15">
                     {user.name?.charAt(0).toUpperCase()}
                   </div>
                   <span>{user.name}</span>
@@ -78,8 +81,8 @@ export default function Navbar() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                  <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-md shadow-[0_18px_40px_rgba(15,23,42,0.18)] py-2 z-50 overflow-hidden">
+                    <div className="px-4 py-3 text-sm text-gray-700 border-b border-slate-200">
                       <div className="font-medium">{user.name}</div>
                       <div className="text-gray-500">{user.email}</div>
                       {user.role === "admin" && (
@@ -88,38 +91,38 @@ export default function Navbar() {
                         </span>
                       )}
                     </div>{" "}
-                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100">
                       Mi Perfil
                     </Link>
                     {user.role === "admin" && (
                       <>
-                        <div className="border-t my-1"></div>
+                        <div className="border-t border-slate-200 my-1"></div>
                         <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Administración
                         </div>
-                        <Link href="/teams/create" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <Link href="/teams/create" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100">
                           Crear Equipo
                         </Link>
                         <Link
                           href="/players/create"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
                         >
                           Crear Jugador
                         </Link>
                         <Link
                           href="/tournaments/new"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
                         >
                           Crear Torneo
                         </Link>
-                        <Link href="/admin" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <Link href="/admin" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100">
                           Panel Admin
                         </Link>
                       </>
                     )}
                     <button
                       onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
                     >
                       Cerrar Sesión
                     </button>
@@ -128,12 +131,12 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link href="/auth/signin" className="text-green-100 hover:text-white transition-colors">
+                <Link href="/auth/signin" className="text-green-50/90 hover:text-white transition-colors">
                   Iniciar Sesión
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="bg-white/12 hover:bg-white/18 border border-white/15 px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm"
                 >
                   Registrarse
                 </Link>
@@ -145,7 +148,7 @@ export default function Navbar() {
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-green-100 hover:text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              className="inline-flex items-center justify-center p-2 rounded-full text-green-50/90 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white/60"
             >
               <span className="sr-only">Abrir menú principal</span>
               {!isMenuOpen ? (
@@ -164,15 +167,15 @@ export default function Navbar() {
         {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 rounded-2xl border border-white/10 bg-green-950/40 backdrop-blur-md mb-3 shadow-[0_12px_32px_rgba(15,23,42,0.22)]">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  className={`block px-3 py-2 rounded-xl text-base font-medium transition-colors ${
                     pathname === item.href
-                      ? "bg-green-700 text-white"
-                      : "text-green-100 hover:bg-green-700 hover:text-white"
+                      ? "bg-white/16 text-white"
+                      : "text-green-50/90 hover:bg-white/10 hover:text-white"
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -182,18 +185,18 @@ export default function Navbar() {
 
               {/* Mobile auth buttons */}
               {!user && (
-                <div className="pt-4 pb-3 border-t border-green-700">
+                <div className="pt-4 pb-3 border-t border-white/10">
                   <div className="space-y-1">
                     <Link
                       href="/auth/signin"
-                      className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
+                      className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Iniciar Sesión
                     </Link>
                     <Link
                       href="/auth/signup"
-                      className="block px-3 py-2 rounded-md text-base font-medium bg-green-600 hover:bg-green-500"
+                      className="block px-3 py-2 rounded-xl text-base font-medium bg-white/12 border border-white/15 hover:bg-white/18"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Registrarse
@@ -204,9 +207,9 @@ export default function Navbar() {
 
               {/* Mobile user menu */}
               {user && (
-                <div className="pt-4 pb-3 border-t border-green-700">
+                <div className="pt-4 pb-3 border-t border-white/10">
                   <div className="flex items-center px-3">
-                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-white/14 rounded-full flex items-center justify-center border border-white/15">
                       {user.name?.charAt(0).toUpperCase()}
                     </div>
                     <div className="ml-3">
@@ -218,41 +221,41 @@ export default function Navbar() {
                     {" "}
                     <Link
                       href="/profile"
-                      className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
+                      className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Mi Perfil
                     </Link>
                     {user.role === "admin" && (
                       <>
-                        <div className="border-t border-green-700 my-2"></div>
+                        <div className="border-t border-white/10 my-2"></div>
                         <div className="px-3 py-1 text-xs font-medium text-green-300 uppercase tracking-wider">
                           Administración
                         </div>
                         <Link
                           href="/teams/create"
-                          className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
+                          className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Crear Equipo
                         </Link>
                         <Link
                           href="/players/create"
-                          className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
+                          className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Crear Jugador
                         </Link>
                         <Link
                           href="/tournaments/new"
-                          className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
+                          className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Crear Torneo
                         </Link>
                         <Link
                           href="/admin"
-                          className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
+                          className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Panel Admin
@@ -264,7 +267,7 @@ export default function Navbar() {
                         handleSignOut();
                         setIsMenuOpen(false);
                       }}
-                      className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-green-100 hover:text-white hover:bg-green-700"
+                      className="block w-full text-left px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                     >
                       Cerrar Sesión
                     </button>
