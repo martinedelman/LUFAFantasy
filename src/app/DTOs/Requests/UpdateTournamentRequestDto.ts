@@ -11,6 +11,7 @@ export interface UpdateTournamentRequestDto {
   description?: string;
   registrationDeadline?: string;
   divisions?: string[];
+  participatingTeams?: string[];
   rules?: TournamentRules;
   prizes?: TournamentPrize[];
 }

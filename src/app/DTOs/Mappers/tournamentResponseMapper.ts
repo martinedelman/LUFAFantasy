@@ -14,6 +14,7 @@ export function toTournamentResponseDto(tournament: Tournament): TournamentRespo
     status: tournament.status,
     format: tournament.format,
     divisions: tournament.divisions,
+    participatingTeams: tournament.participatingTeams,
     rules: tournament.rules,
     prizes: tournament.prizes,
     createdAt: tournament.createdAt?.toISOString(),

@@ -50,13 +50,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
           // Popular los teams de cada división
           if (division.teams && division.teams.length > 0) {
+            const divisionId = getReferenceId(division.id);
             const populatedTeams = await Promise.all(
               division.teams.map(async (teamReference) => {
                 const teamId = getReferenceId(teamReference);
                 if (!teamId) return null;
 
                 const team = await teamService.getTeamById(teamId);
-                return team ? toTeamResponseDto(team) : null;
+                if (!team) return null;
+
+                const teamDivisionId = getReferenceId(team.division);
+                if (teamDivisionId !== divisionId) {
+                  return null;
+                }
+
+                return toTeamResponseDto(team);
               }),
             );
             divisionData.teams = populatedTeams.filter((team): team is NonNullable<typeof team> => team !== null);
@@ -139,6 +147,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       description: body.description,
       registrationDeadline: body.registrationDeadline ? new Date(body.registrationDeadline) : undefined,
       divisions: body.divisions,
+      participatingTeams: body.participatingTeams,
       rules: body.rules,
       prizes: body.prizes,
     });

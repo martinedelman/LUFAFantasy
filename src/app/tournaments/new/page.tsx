@@ -11,6 +11,13 @@ interface DivisionOption {
   ageGroup?: string;
 }
 
+interface TeamOption {
+  _id: string;
+  name: string;
+  shortName?: string;
+  division: string | { _id: string };
+}
+
 interface TournamentFormData {
   name: string;
   description: string;
@@ -44,6 +51,7 @@ interface TournamentFormData {
     trophy: string;
   }>;
   divisions: string[];
+  participatingTeams: string[];
 }
 
 export default function NewTournamentPage() {
@@ -51,8 +59,10 @@ export default function NewTournamentPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [loadingDivisions, setLoadingDivisions] = useState(true);
+  const [loadingTeams, setLoadingTeams] = useState(true);
   const [error, setError] = useState("");
   const [availableDivisions, setAvailableDivisions] = useState<DivisionOption[]>([]);
+  const [availableTeams, setAvailableTeams] = useState<TeamOption[]>([]);
 
   const [formData, setFormData] = useState<TournamentFormData>({
     name: "",
@@ -86,6 +96,7 @@ export default function NewTournamentPage() {
       { position: 3, description: "Tercer Lugar", amount: 2500, trophy: "Copa de Bronce" },
     ],
     divisions: [],
+    participatingTeams: [],
   });
 
   useEffect(() => {
@@ -105,6 +116,25 @@ export default function NewTournamentPage() {
     };
 
     fetchDivisions();
+  }, []);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const response = await fetch("/api/teams?limit=500");
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          setAvailableTeams(result.data);
+        }
+      } catch {
+        setAvailableTeams([]);
+      } finally {
+        setLoadingTeams(false);
+      }
+    };
+
+    fetchTeams();
   }, []);
 
   if (isLoading) {
@@ -155,6 +185,17 @@ export default function NewTournamentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.divisions.length === 0) {
+      setError("Debes seleccionar al menos una división");
+      return;
+    }
+
+    if (formData.participatingTeams.length === 0) {
+      setError("Debes seleccionar al menos un equipo participante");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -242,13 +283,45 @@ export default function NewTournamentPage() {
   };
 
   const handleDivisionToggle = (divisionId: string) => {
+    setFormData((prev) => {
+      const nextDivisions = prev.divisions.includes(divisionId)
+        ? prev.divisions.filter((id) => id !== divisionId)
+        : [...prev.divisions, divisionId];
+
+      const nextParticipatingTeams = prev.participatingTeams.filter((teamId) => {
+        const team = availableTeams.find((availableTeam) => availableTeam._id === teamId);
+        if (!team) return false;
+
+        const teamDivisionId = typeof team.division === "string" ? team.division : team.division?._id;
+        return nextDivisions.includes(teamDivisionId);
+      });
+
+      return {
+        ...prev,
+        divisions: nextDivisions,
+        participatingTeams: nextParticipatingTeams,
+      };
+    });
+  };
+
+  const handleTeamToggle = (teamId: string) => {
     setFormData((prev) => ({
       ...prev,
-      divisions: prev.divisions.includes(divisionId)
-        ? prev.divisions.filter((id) => id !== divisionId)
-        : [...prev.divisions, divisionId],
+      participatingTeams: prev.participatingTeams.includes(teamId)
+        ? prev.participatingTeams.filter((id) => id !== teamId)
+        : [...prev.participatingTeams, teamId],
     }));
   };
+
+  const filteredTeamsByDivision = availableDivisions
+    .filter((division) => formData.divisions.includes(division._id))
+    .map((division) => ({
+      division,
+      teams: availableTeams.filter((team) => {
+        const teamDivisionId = typeof team.division === "string" ? team.division : team.division?._id;
+        return teamDivisionId === division._id;
+      }),
+    }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -713,6 +786,50 @@ export default function NewTournamentPage() {
                     </label>
                   );
                 })}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Equipos Participantes</h2>
+            {loadingTeams ? (
+              <p className="text-sm text-gray-500">Cargando equipos...</p>
+            ) : formData.divisions.length === 0 ? (
+              <p className="text-sm text-gray-500">Selecciona divisiones para habilitar la selección de equipos.</p>
+            ) : (
+              <div className="space-y-4">
+                {filteredTeamsByDivision.map(({ division, teams }) => (
+                  <div key={division._id} className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-3">{division.name}</h3>
+                    {teams.length === 0 ? (
+                      <p className="text-sm text-gray-500">No hay equipos disponibles en esta división.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {teams.map((team) => {
+                          const checked = formData.participatingTeams.includes(team._id);
+
+                          return (
+                            <label
+                              key={team._id}
+                              className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => handleTeamToggle(team._id)}
+                                className="h-4 w-4 text-green-600 border-gray-300 rounded"
+                              />
+                              <div className="ml-3">
+                                <p className="text-sm font-medium text-gray-900">{team.name}</p>
+                                {team.shortName ? <p className="text-xs text-gray-500">{team.shortName}</p> : null}
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>

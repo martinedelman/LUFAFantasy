@@ -42,6 +42,7 @@ export class Tournament extends AggregateRoot {
   public readonly status: TournamentStatus;
   public readonly format: TournamentFormat;
   public readonly divisions: string[]; // IDs de divisiones
+  public readonly participatingTeams: string[]; // IDs de equipos participantes
   public readonly rules?: TournamentRules;
   public readonly prizes?: TournamentPrize[];
 
@@ -54,6 +55,7 @@ export class Tournament extends AggregateRoot {
     status: TournamentStatus,
     format: TournamentFormat,
     divisions: string[] = [],
+    participatingTeams: string[] = [],
     description?: string,
     registrationDeadline?: Date,
     rules?: TournamentRules,
@@ -73,6 +75,7 @@ export class Tournament extends AggregateRoot {
     this.status = status;
     this.format = format;
     this.divisions = divisions;
+    this.participatingTeams = participatingTeams;
     this.rules = rules;
     this.prizes = prizes;
   }

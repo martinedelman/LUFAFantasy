@@ -110,6 +110,7 @@ export async function POST(request: NextRequest) {
       description: body.description,
       registrationDeadline: body.registrationDeadline ? new Date(body.registrationDeadline) : undefined,
       divisions: body.divisions,
+      participatingTeams: body.participatingTeams,
       rules: body.rules,
       prizes: body.prizes,
     });

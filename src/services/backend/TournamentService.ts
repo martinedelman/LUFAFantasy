@@ -12,6 +12,52 @@ import RepositoryContainer from "../../repositories";
  */
 export class TournamentService {
   private tournamentRepo = RepositoryContainer.getTournamentRepository();
+  private divisionRepo = RepositoryContainer.getDivisionRepository();
+  private teamRepo = RepositoryContainer.getTeamRepository();
+
+  private getReferenceId(reference: unknown): string {
+    if (!reference) return "";
+    if (typeof reference === "string") return reference;
+
+    if (typeof reference === "object" && "_id" in reference) {
+      const id = (reference as { _id?: unknown })._id;
+      return id ? id.toString() : "";
+    }
+
+    return reference.toString();
+  }
+
+  private async validateParticipatingTeams(divisions: string[], participatingTeams: string[]): Promise<void> {
+    for (const divisionId of divisions) {
+      const division = await this.divisionRepo.findById(divisionId);
+      if (!division) {
+        throw new Error(`División no encontrada: ${divisionId}`);
+      }
+    }
+
+    if (participatingTeams.length === 0) {
+      throw new Error("Debes seleccionar al menos un equipo participante");
+    }
+
+    if (divisions.length === 0) {
+      throw new Error("Debes seleccionar al menos una división para asignar equipos participantes");
+    }
+
+    const selectedDivisionIds = new Set(divisions.map((divisionId) => divisionId.toString()));
+
+    for (const teamId of participatingTeams) {
+      const team = await this.teamRepo.findById(teamId);
+
+      if (!team) {
+        throw new Error(`Equipo no encontrado: ${teamId}`);
+      }
+
+      const teamDivisionId = this.getReferenceId(team.division);
+      if (!selectedDivisionIds.has(teamDivisionId)) {
+        throw new Error(`El equipo ${team.name} no pertenece a las divisiones seleccionadas`);
+      }
+    }
+  }
 
   /**
    * Crea un nuevo torneo
@@ -27,9 +73,15 @@ export class TournamentService {
     description?: string;
     registrationDeadline?: Date;
     divisions?: string[];
+    participatingTeams?: string[];
     rules?: TournamentRules;
     prizes?: TournamentPrize[];
   }): Promise<Tournament> {
+    const divisionIds = data.divisions || [];
+    const participatingTeams = data.participatingTeams || [];
+
+    await this.validateParticipatingTeams(divisionIds, participatingTeams);
+
     const tournament = new Tournament(
       data.name,
       data.season,
@@ -38,7 +90,8 @@ export class TournamentService {
       data.endDate,
       data.status || "upcoming",
       data.format || "league",
-      data.divisions || [],
+      divisionIds,
+      participatingTeams,
       data.description,
       data.registrationDeadline,
       data.rules,
@@ -95,6 +148,7 @@ export class TournamentService {
       description: string;
       registrationDeadline: Date;
       divisions: string[];
+      participatingTeams: string[];
       rules: TournamentRules;
       prizes: TournamentPrize[];
     }>,
@@ -104,6 +158,18 @@ export class TournamentService {
       throw new Error("Torneo no encontrado");
     }
 
+    const nextDivisionIds =
+      data.divisions !== undefined
+        ? data.divisions
+        : (tournament.divisions || []).map((divisionRef) => this.getReferenceId(divisionRef));
+
+    const nextParticipatingTeams =
+      data.participatingTeams !== undefined
+        ? data.participatingTeams
+        : (tournament.participatingTeams || []).map((teamRef) => this.getReferenceId(teamRef));
+
+    await this.validateParticipatingTeams(nextDivisionIds, nextParticipatingTeams);
+
     const updatedTournament = new Tournament(
       data.name || tournament.name,
       data.season || tournament.season,
@@ -112,7 +178,8 @@ export class TournamentService {
       data.endDate || tournament.endDate,
       data.status || tournament.status,
       data.format || tournament.format,
-      data.divisions || tournament.divisions,
+      nextDivisionIds,
+      nextParticipatingTeams,
       data.description !== undefined ? data.description : tournament.description,
       data.registrationDeadline !== undefined ? data.registrationDeadline : tournament.registrationDeadline,
       data.rules !== undefined ? data.rules : tournament.rules,

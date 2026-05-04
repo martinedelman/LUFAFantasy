@@ -47,13 +47,14 @@ const TournamentSchema = new Schema<Tournament>(
       default: "league",
     },
     divisions: [{ type: Schema.Types.ObjectId, ref: "Division" }],
+    participatingTeams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
     rules: { type: TournamentRulesSchema },
     prizes: [PrizeSchema],
   },
   {
     timestamps: true,
     collection: "tournaments",
-  }
+  },
 );
 
 // Índices
@@ -61,5 +62,4 @@ TournamentSchema.index({ name: 1, year: 1 }, { unique: true });
 TournamentSchema.index({ status: 1 });
 TournamentSchema.index({ startDate: 1 });
 
-export const TournamentModel =
-  mongoose.models.Tournament || mongoose.model<Tournament>("Tournament", TournamentSchema);
+export const TournamentModel = mongoose.models.Tournament || mongoose.model<Tournament>("Tournament", TournamentSchema);

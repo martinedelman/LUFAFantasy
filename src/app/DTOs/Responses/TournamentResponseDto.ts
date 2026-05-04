@@ -12,6 +12,7 @@ export interface TournamentResponseDto {
   status: TournamentStatus;
   format: TournamentFormat;
   divisions: unknown[];
+  participatingTeams?: unknown[];
   rules?: TournamentRules;
   prizes?: TournamentPrize[];
   createdAt?: string;

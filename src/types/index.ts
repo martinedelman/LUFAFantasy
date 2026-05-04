@@ -26,6 +26,7 @@ export interface Tournament {
   status: "upcoming" | "active" | "completed" | "cancelled";
   format: "league" | "playoff" | "tournament";
   divisions: string[]; // Referencias a Division
+  participatingTeams?: string[]; // Referencias a Team
   rules?: TournamentRules;
   prizes?: Prize[];
   createdAt: Date;
