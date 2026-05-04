@@ -158,7 +158,7 @@ export default function TournamentsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="md:flex md:items-center md:justify-end mb-8">
         <div className="mt-4 flex md:mt-0 md:ml-4">
