@@ -70,7 +70,7 @@ export default function Home() {
   };
 
   const heroStyle = (image: string): React.CSSProperties => ({
-    backgroundImage: `linear-gradient(to bottom, rgba(30, 30, 30, 0.46), rgba(30, 30, 30, 0.46)), url(${image})`,
+    backgroundImage: `linear-gradient(to bottom, rgba(10, 10, 10, 0.46), rgba(10, 10, 10, 0.46)), url(${image})`,
     backgroundPosition: "center",
     backgroundSize: "cover",
     backgroundAttachment: "fixed",
@@ -91,36 +91,24 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[rgb(248,250,252)] text-slate-950">
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14">
-        <h1 className="text-4xl sm:text-5xl lg:text-5xl font-bold leading-tight max-w-5xl">
-          Liga Uruguaya de Football Americano
-        </h1>
-        <p className="mt-5 text-base sm:text-lg text-brand-800 max-w-3xl">
-          Bienvenido a LUFA Flag - Flag Football en Uruguay
-        </p>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: "Torneos Activos", value: stats?.activeTournaments || 0, href: "/tournaments" },
-            { label: "Equipos", value: stats?.totalTeams || 0, href: "/teams" },
-            { label: "Jugadores", value: stats?.totalPlayers || 0, href: "/players" },
-            { label: "Partidos Jugados", value: stats?.completedGames || 0, href: "/games" },
-          ].map((card) => (
-            <button
-              key={card.label}
-              onClick={() => (window.location.href = card.href)}
-              className="text-left rounded-xl border border-slate-200 bg-[rgb(255,255,255)] p-5 transition hover:border-brand-600 hover:shadow-md"
-            >
-              <p className="text-sm text-slate-500">{card.label}</p>
-              <p className="mt-2 text-4xl font-semibold text-slate-950">{card.value}</p>
-            </button>
-          ))}
+      <section
+        className="relative flex min-h-[calc(100vh-72px)] items-center justify-center"
+        aria-label="LUFA Flag"
+        style={heroStyle("/Hero1.JPG")}
+      >
+        <div className="px-4 text-center text-white">
+          <p className="text-sm sm:text-base font-semibold tracking-[0.35em] uppercase">Bienvenidos</p>
+          <h1 className="mt-5 text-5xl sm:text-7xl lg:text-8xl font-bold  leading-[0.95] tracking-tight">
+            <span className="italic">LUFA</span> Flag
+          </h1>
+          <p className="mt-6 text-lg sm:text-xl lg:text-2xl font-medium tracking-[0.12em] uppercase">
+            Flag football en Uruguay
+          </p>
+          <p className="mt-6 text-lg sm:text-xl lg:text-2xl font-medium tracking-[0.12em] uppercase">
+            ¡Únete a la revolución deportiva!
+          </p>
         </div>
       </section>
-
-      <section className="h-[66vh] min-h-[320px]" aria-label="LUFA Flag" style={heroStyle("/Hero1.JPG")} />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
