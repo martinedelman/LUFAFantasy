@@ -16,11 +16,11 @@ type ScoreDraft = {
 };
 
 const QUARTERS: { key: QuarterKey; label: string }[] = [
-  { key: "q1", label: "1C" },
-  { key: "q2", label: "2C" },
-  { key: "q3", label: "3C" },
-  { key: "q4", label: "4C" },
-  { key: "overtime", label: "TE" },
+  { key: "q1", label: "1T" },
+  { key: "q2", label: "2T" },
+  { key: "q3", label: "3T" },
+  { key: "q4", label: "4T" },
+  { key: "overtime", label: "ET" },
 ];
 
 const SCORING_ACTIONS = [
@@ -56,17 +56,6 @@ type EventDraft = {
   points: string;
 };
 
-const emptyScoreSide = (): ScoreSide => ({
-  q1: 0,
-  q2: 0,
-  q3: 0,
-  q4: 0,
-  overtime: 0,
-  total: 0,
-});
-
-const calculateTotal = (side: ScoreSide) => side.q1 + side.q2 + side.q3 + side.q4 + side.overtime;
-
 const getReadableTextColor = (backgroundColor?: string) => {
   if (!backgroundColor || !/^#[0-9A-Fa-f]{6}$/.test(backgroundColor)) {
     return "#ffffff";
@@ -82,20 +71,36 @@ const getReadableTextColor = (backgroundColor?: string) => {
 
 const normalizeScoreSide = (side?: Partial<ScoreSide>): ScoreSide => {
   const normalized = {
-    ...emptyScoreSide(),
+    q1: 0,
+    q2: 0,
+    q3: 0,
+    q4: 0,
+    overtime: 0,
+    total: 0,
     ...side,
   };
 
   return {
     ...normalized,
-    total: calculateTotal(normalized),
+    total: normalized.q1 + normalized.q2 + normalized.q3 + normalized.q4 + normalized.overtime,
   };
 };
 
-const getInitialScore = (game?: GameApiResponse | null): ScoreDraft => ({
-  home: normalizeScoreSide(game?.score?.home),
-  away: normalizeScoreSide(game?.score?.away),
-});
+const sortPlayersByJerseyNumber = (players: PlayerApiResponse[]) => {
+  return [...players].sort((leftPlayer, rightPlayer) => {
+    const leftJersey = leftPlayer.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+    const rightJersey = rightPlayer.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+
+    if (leftJersey !== rightJersey) {
+      return leftJersey - rightJersey;
+    }
+
+    const leftName = `${leftPlayer.firstName} ${leftPlayer.lastName}`.toLowerCase();
+    const rightName = `${rightPlayer.firstName} ${rightPlayer.lastName}`.toLowerCase();
+
+    return leftName.localeCompare(rightName, "es", { sensitivity: "base" });
+  });
+};
 
 export default function LiveMatchPage() {
   const params = useParams();
@@ -110,12 +115,7 @@ export default function LiveMatchPage() {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [scoreDraft, setScoreDraft] = useState<ScoreDraft>(getInitialScore());
   const [currentQuarter, setCurrentQuarter] = useState<QuarterKey>("q1");
-  const [savingScore, setSavingScore] = useState(false);
-  const [scoreDirty, setScoreDirty] = useState(false);
-  const [scoreMessage, setScoreMessage] = useState<string | null>(null);
-  const [scoreError, setScoreError] = useState<string | null>(null);
   const [eventDraft, setEventDraft] = useState<EventDraft>({
     teamSide: "home",
     type: "touchdown",
@@ -141,15 +141,13 @@ export default function LiveMatchPage() {
       }
 
       setGame(gameData.data);
-      setScoreDraft(getInitialScore(gameData.data));
-      setScoreDirty(false);
 
       // Fetch players for both teams
       if (gameData.data.homeTeam) {
         const homePlayersRes = await fetch(`/api/players?team=${gameData.data.homeTeam._id}&limit=50`);
         const homePlayersData: ApiResponse<PlayerApiResponse[]> = await homePlayersRes.json();
         if (homePlayersData.success && homePlayersData.data) {
-          setHomePlayers(homePlayersData.data.filter((p) => p.status === "active"));
+          setHomePlayers(sortPlayersByJerseyNumber(homePlayersData.data.filter((p) => p.status === "active")));
         }
       }
 
@@ -157,7 +155,7 @@ export default function LiveMatchPage() {
         const awayPlayersRes = await fetch(`/api/players?team=${gameData.data.awayTeam._id}&limit=50`);
         const awayPlayersData: ApiResponse<PlayerApiResponse[]> = await awayPlayersRes.json();
         if (awayPlayersData.success && awayPlayersData.data) {
-          setAwayPlayers(awayPlayersData.data.filter((p) => p.status === "active"));
+          setAwayPlayers(sortPlayersByJerseyNumber(awayPlayersData.data.filter((p) => p.status === "active")));
         }
       }
     } catch {
@@ -243,8 +241,6 @@ export default function LiveMatchPage() {
       // Actualizar el estado del juego
       if (data.data) {
         setGame(data.data);
-        setScoreDraft(getInitialScore(data.data));
-        setScoreDirty(false);
       }
     } catch {
       setError("Error de conexión al iniciar partido");
@@ -275,97 +271,13 @@ export default function LiveMatchPage() {
     [game],
   );
 
-  const changeQuarterScore = (side: TeamSide, quarter: QuarterKey, value: number) => {
-    const safeValue = Math.max(0, Number.isFinite(value) ? value : 0);
+  const liveScoreHome = game?.score?.home?.total ?? 0;
+  const liveScoreAway = game?.score?.away?.total ?? 0;
 
-    setScoreDraft((prev) => {
-      const nextSide = normalizeScoreSide({
-        ...prev[side],
-        [quarter]: safeValue,
-      });
-
-      return {
-        ...prev,
-        [side]: nextSide,
-      };
-    });
-    setScoreDirty(true);
-    setScoreMessage(null);
-    setScoreError(null);
-  };
-
-  const addPoints = (side: TeamSide, points: number) => {
-    changeQuarterScore(side, currentQuarter, scoreDraft[side][currentQuarter] + points);
-  };
-
-  const subtractPoint = (side: TeamSide) => {
-    changeQuarterScore(side, currentQuarter, scoreDraft[side][currentQuarter] - 1);
-  };
-
-  const buildScorePayload = (score: ScoreDraft) => ({
-    home: {
-      q1: score.home.q1,
-      q2: score.home.q2,
-      q3: score.home.q3,
-      q4: score.home.q4,
-      overtime: score.home.overtime,
-    },
-    away: {
-      q1: score.away.q1,
-      q2: score.away.q2,
-      q3: score.away.q3,
-      q4: score.away.q4,
-      overtime: score.away.overtime,
-    },
-  });
-
-  const persistScore = async (status?: "completed") => {
-    try {
-      setSavingScore(true);
-      setScoreError(null);
-      setScoreMessage(null);
-
-      const response = await fetch(`/api/games/${gameId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          score: buildScorePayload(scoreDraft),
-          ...(status ? { status } : {}),
-        }),
-      });
-
-      const data: ApiResponse<GameApiResponse> = await response.json();
-
-      if (!response.ok || !data.success) {
-        setScoreError(data.message || "No se pudo guardar el marcador");
-        return false;
-      }
-
-      await fetchGameData();
-      setScoreDirty(false);
-      setScoreMessage(status === "completed" ? "Partido finalizado correctamente." : "Marcador guardado.");
-      return true;
-    } catch {
-      setScoreError("Error de conexión al guardar el marcador");
-      return false;
-    } finally {
-      setSavingScore(false);
-    }
-  };
-
-  const handleSaveScore = async () => {
-    await persistScore();
-  };
-
-  const handleCompleteGame = async () => {
-    await persistScore("completed");
-  };
 
   const currentQuarterNumber = useMemo(() => {
     if (currentQuarter === "overtime") return 5;
-    return Number(currentQuarter.replace("q", ""));
+    return currentQuarter === "q1" ? 1 : 2;
   }, [currentQuarter]);
 
   const eventPlayers = eventDraft.teamSide === "home" ? homePlayers : awayPlayers;
@@ -399,7 +311,7 @@ export default function LiveMatchPage() {
       return;
     }
 
-    if (!eventDraft.player) {
+    if (eventDraft.type !== "quarter_end" && eventDraft.type !== "game_end" && !eventDraft.player) {
       setEventError("Selecciona el jugador del evento");
       return;
     }
@@ -414,8 +326,6 @@ export default function LiveMatchPage() {
       setSavingEvent(true);
       setEventError(null);
       setEventMessage(null);
-      setScoreError(null);
-      setScoreMessage(null);
 
       const response = await fetch(`/api/games/${gameId}/events`, {
         method: "POST",
@@ -439,8 +349,6 @@ export default function LiveMatchPage() {
       }
 
       setGame(data.data);
-      setScoreDraft(getInitialScore(data.data));
-      setScoreDirty(false);
       setEventDraft((prev) => ({
         ...prev,
         player: "",
@@ -448,6 +356,112 @@ export default function LiveMatchPage() {
       setEventMessage(points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.");
     } catch {
       setEventError("Error de conexión al registrar el evento");
+    } finally {
+      setSavingEvent(false);
+    }
+  };
+
+  const handleDeleteGameEvent = async (eventId?: string) => {
+    if (!game || !eventId) return;
+
+    if (!confirm("¿Querés eliminar este evento del historial?")) {
+      return;
+    }
+
+    try {
+      setSavingEvent(true);
+      setEventError(null);
+      setEventMessage(null);
+
+      const response = await fetch(`/api/games/${gameId}/events/${eventId}`, {
+        method: "DELETE",
+      });
+
+      const data: ApiResponse<GameApiResponse> = await response.json();
+
+      if (!response.ok || !data.success) {
+        setEventError(data.message || "No se pudo eliminar el evento");
+        return;
+      }
+
+      await fetchGameData();
+      setEventMessage("Evento eliminado correctamente.");
+    } catch {
+      setEventError("Error de conexión al eliminar el evento");
+    } finally {
+      setSavingEvent(false);
+    }
+  };
+
+  const handleEndHalf = async () => {
+    if (!game) return;
+
+    const team = game[`${eventDraft.teamSide}Team`]?._id;
+    if (!team) {
+      setEventError("Selecciona un equipo válido");
+      return;
+    }
+
+    try {
+      setSavingEvent(true);
+      setEventError(null);
+      setEventMessage(null);
+
+      const response = await fetch(`/api/games/${gameId}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quarter: currentQuarterNumber,
+          type: "quarter_end",
+          team,
+        }),
+      });
+
+      const data: ApiResponse<GameApiResponse> = await response.json();
+
+      if (!response.ok || !data.success || !data.data) {
+        setEventError(data.message || "No se pudo registrar el fin de mitad");
+        return;
+      }
+
+      setGame(data.data);
+      setEventMessage("Mitad registrada correctamente.");
+    } catch {
+      setEventError("Error de conexión al registrar el fin de mitad");
+    } finally {
+      setSavingEvent(false);
+    }
+  };
+
+  const handleEndGame = async () => {
+    if (!game) return;
+
+    if (!confirm("¿Querés finalizar el partido?")) {
+      return;
+    }
+
+    try {
+      setSavingEvent(true);
+      setEventError(null);
+      setEventMessage(null);
+
+      const response = await fetch(`/api/games/${gameId}/complete`, {
+        method: "PATCH",
+      });
+
+      const data: ApiResponse<GameApiResponse> = await response.json();
+
+      if (!response.ok || !data.success || !data.data) {
+        setEventError(data.message || "No se pudo finalizar el partido");
+        return;
+      }
+
+      setGame(data.data);
+      setEventMessage("Partido finalizado correctamente.");
+    } catch {
+      setEventError("Error de conexión al finalizar el partido");
     } finally {
       setSavingEvent(false);
     }
@@ -465,7 +479,11 @@ export default function LiveMatchPage() {
     return typeof team === "string" ? "Equipo" : team.name;
   };
 
-  const getEventPlayerName = (player: GameApiResponse["events"][number]["player"]) => {
+  const getEventPlayerName = (player?: GameApiResponse["events"][number]["player"]) => {
+    if (!player) {
+      return "";
+    }
+
     return typeof player === "string"
       ? "Jugador"
       : `${player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} ${player.firstName} ${player.lastName}`;
@@ -487,10 +505,7 @@ export default function LiveMatchPage() {
         <div className="min-h-screen bg-gray-50 p-4">
           <ErrorMessage message={error} />
           <div className="mt-4 text-center">
-            <button
-              onClick={() => router.push("/games")}
-              className="text-green-600 hover:text-green-800 font-medium"
-            >
+            <button onClick={() => router.push("/games")} className="text-green-600 hover:text-green-800 font-medium">
               Volver a partidos
             </button>
           </div>
@@ -511,6 +526,9 @@ export default function LiveMatchPage() {
 
   // If game is already completed, postponed, or cancelled, show an end-state message.
   if (game.status === "completed" || game.status === "postponed" || game.status === "cancelled") {
+  const completedScoreHome = game.score?.home?.total ?? 0;
+  const completedScoreAway = game.score?.away?.total ?? 0;
+
     return (
       <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
         <div className="min-h-screen bg-gray-50 p-4">
@@ -521,7 +539,7 @@ export default function LiveMatchPage() {
                   <div className="text-gray-500 text-5xl mb-4">Final</div>
                   <h2 className="text-xl font-bold mb-2 text-gray-900">Partido finalizado</h2>
                   <p className="text-gray-600 mb-4">
-                    {teamNames.home} {scoreDraft.home.total} - {scoreDraft.away.total} {teamNames.away}
+                    {game.homeTeam?.name || teamNames.home} {completedScoreHome} - {completedScoreAway} {game.awayTeam?.name || teamNames.away}
                   </p>
                 </>
               )}
@@ -575,6 +593,12 @@ export default function LiveMatchPage() {
               <span className="text-sm text-gray-500">{game.tournament?.name}</span>
               <span className="mx-2 text-gray-300">·</span>
               <span className="text-sm text-gray-500">{game.division?.name}</span>
+            </div>
+            <div className="mb-3 text-center">
+              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">Marcador en vivo</div>
+              <div className="mt-1 text-4xl font-black text-gray-900 sm:text-5xl">
+                {liveScoreHome} - {liveScoreAway}
+              </div>
             </div>
             <div className="flex items-center justify-center gap-4">
               <div className="text-center flex-1">
@@ -806,64 +830,46 @@ export default function LiveMatchPage() {
             </>
           ) : (
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow p-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Marcador en vivo</p>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {scoreDraft.home.total} - {scoreDraft.away.total}
-                    </h2>
-                  </div>
-                  <div className="grid grid-cols-5 gap-2">
-                    {QUARTERS.map((quarter) => (
-                      <button
-                        key={quarter.key}
-                        onClick={() => setCurrentQuarter(quarter.key)}
-                        className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                          currentQuarter === quarter.key
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        {quarter.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {(scoreError || scoreMessage) && (
-                <div
-                  className={`rounded-lg p-3 text-sm ${
-                    scoreError ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
-                  }`}
-                >
-                  {scoreError || scoreMessage}
-                </div>
-              )}
-
               <div className="bg-white rounded-lg shadow">
                 <div className="border-b border-gray-100 p-4">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h2 className="font-bold text-gray-900">Registrar evento</h2>
                       <p className="text-sm text-gray-500">
-                        Cuarto {currentQuarter === "overtime" ? "TE" : currentQuarterNumber}
+                        Mitad {currentQuarter === "overtime" ? "ET" : `${currentQuarterNumber}T`}
                       </p>
                     </div>
-                    <div className="grid w-full grid-cols-2 rounded-md bg-gray-100 p-1 sm:w-auto sm:min-w-80">
-                      {(["home", "away"] as TeamSide[]).map((side) => (
-                        <button
-                          key={`event-${side}`}
-                          onClick={() => setEventTeamSide(side)}
-                          className={`min-w-0 truncate rounded px-3 py-2 text-sm font-semibold transition-colors ${
-                            eventDraft.teamSide === side ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
-                          }`}
-                        >
-                          {teamNames[side]}
-                        </button>
-                      ))}
+                    <div className="grid w-full grid-cols-3 rounded-md bg-gray-100 p-1 sm:w-auto sm:min-w-80">
+                      {QUARTERS.filter((quarter) => quarter.key === "q1" || quarter.key === "q2" || quarter.key === "overtime").map(
+                        (quarter) => (
+                          <button
+                            key={`quarter-${quarter.key}`}
+                            onClick={() => setCurrentQuarter(quarter.key)}
+                            className={`min-w-0 truncate rounded px-3 py-2 text-sm font-semibold transition-colors ${
+                              currentQuarter === quarter.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
+                            }`}
+                          >
+                            {quarter.label}
+                          </button>
+                        ),
+                      )}
                     </div>
+                  </div>
+                </div>
+
+                <div className="border-b border-gray-100 px-4 pb-4">
+                  <div className="grid grid-cols-2 rounded-md bg-gray-100 p-1">
+                    {(["home", "away"] as TeamSide[]).map((side) => (
+                      <button
+                        key={`event-${side}`}
+                        onClick={() => setEventTeamSide(side)}
+                        className={`min-w-0 truncate rounded px-3 py-2 text-sm font-semibold transition-colors ${
+                          eventDraft.teamSide === side ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
+                        }`}
+                      >
+                        {teamNames[side]}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -891,9 +897,7 @@ export default function LiveMatchPage() {
                             key={`${eventType.value}-${eventType.label}`}
                             onClick={() => selectEventType(eventType.value, eventType.points)}
                             className={`rounded-md border px-3 py-3 text-sm font-bold transition-colors ${
-                              isSelected
-                                ? "border-blue-600 bg-blue-600 text-white"
-                                : "hover:brightness-110"
+                              isSelected ? "border-blue-600 bg-blue-600 text-white" : "hover:brightness-110"
                             }`}
                             style={isSelected ? undefined : highContrastControlStyle}
                           >
@@ -959,140 +963,63 @@ export default function LiveMatchPage() {
                   <h2 className="font-bold text-gray-900">Historial del partido</h2>
                   <span className="text-sm text-gray-500">{game.events?.length || 0} eventos</span>
                 </div>
-                <div className="mt-3 divide-y divide-gray-100">
+                <div className="mt-3 max-h-96 divide-y divide-gray-100 overflow-y-auto pr-1">
                   {game.events && game.events.length > 0 ? (
-                    [...game.events].reverse().slice(0, 8).map((event, index) => (
-                      <div key={event._id || `${event.quarter}-${event.type}-${index}`} className="py-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {event.description || getEventTypeLabel(event.type)}
-                              {!event.description && event.points ? ` +${event.points}` : ""}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              C{event.quarter === 5 ? "TE" : event.quarter} · {getEventTeamName(event.team)} ·{" "}
-                              {getEventPlayerName(event.player)}
-                            </p>
+                    [...game.events]
+                      .reverse()
+                      .map((event, index) => (
+                        <div key={event._id || `${event.quarter}-${event.type}-${index}`} className="py-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {event.description || getEventTypeLabel(event.type)}
+                                {!event.description && event.points ? ` +${event.points}` : ""}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {event.quarter === 5 ? "ET" : `${event.quarter}T`} · {getEventTeamName(event.team)}
+                                {event.player ? ` · ${getEventPlayerName(event.player)}` : ""}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteGameEvent(event._id)}
+                              className="rounded-md border border-red-200 bg-red-50 p-2 text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                              title="Eliminar evento"
+                              aria-label="Eliminar evento"
+                              disabled={savingEvent}
+                            >
+                              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14" />
+                              </svg>
+                            </button>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))
                   ) : (
-                    <div className="py-6 text-center text-sm text-gray-500">
-                      Todavía no hay eventos registrados.
-                    </div>
+                    <div className="py-6 text-center text-sm text-gray-500">Todavía no hay eventos registrados.</div>
                   )}
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                {(["home", "away"] as TeamSide[]).map((side) => (
-                  <div key={side} className="bg-white rounded-lg shadow overflow-hidden">
-                    <div
-                      className="p-4"
-                      style={{
-                        backgroundColor: teamColors[side].background,
-                        color: teamColors[side].text,
-                      }}
-                    >
-                      <p className="text-sm opacity-80">{side === "home" ? "Local" : "Visitante"}</p>
-                      <div className="mt-1 flex items-center justify-between gap-3">
-                        <h3 className="text-lg font-bold">{teamNames[side]}</h3>
-                        <span className="rounded-md bg-black/10 px-3 py-1 text-2xl font-bold">
-                          {scoreDraft[side].total}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-4">
-                      <div className="grid grid-cols-2 gap-2">
-                        {SCORING_ACTIONS.map((action) => (
-                          <button
-                            key={`${side}-${action.label}`}
-                            onClick={() => addPoints(side, action.points)}
-                            className="rounded-md bg-blue-600 px-3 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-                          >
-                            {action.label} +{action.points}
-                          </button>
-                        ))}
-                        <button
-                          onClick={() => subtractPoint(side)}
-                          className="rounded-md border border-gray-300 px-3 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                        >
-                          Restar 1
-                        </button>
-                        <button
-                          onClick={() => changeQuarterScore(side, currentQuarter, 0)}
-                          className="rounded-md border border-gray-300 px-3 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                        >
-                          Limpiar cuarto
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-white rounded-lg shadow p-4">
-                <h2 className="font-bold text-gray-900">Detalle por cuarto</h2>
-                <div className="mt-4 overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200 text-left text-gray-500">
-                        <th className="py-2 pr-3">Equipo</th>
-                        {QUARTERS.map((quarter) => (
-                          <th key={quarter.key} className="px-2 py-2 text-center">
-                            {quarter.label}
-                          </th>
-                        ))}
-                        <th className="py-2 pl-3 text-center">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(["home", "away"] as TeamSide[]).map((side) => (
-                        <tr key={side} className="border-b border-gray-100">
-                          <td className="py-3 pr-3 font-medium text-gray-900">{teamNames[side]}</td>
-                          {QUARTERS.map((quarter) => (
-                            <td key={`${side}-${quarter.key}`} className="px-2 py-3">
-                              <input
-                                type="number"
-                                min={0}
-                                value={scoreDraft[side][quarter.key]}
-                                onChange={(event) =>
-                                  changeQuarterScore(side, quarter.key, Number(event.target.value))
-                                }
-                                className="w-16 rounded-md border border-gray-300 px-2 py-1 text-center text-gray-900"
-                              />
-                            </td>
-                          ))}
-                          <td className="py-3 pl-3 text-center text-lg font-bold text-gray-900">
-                            {scoreDraft[side].total}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
-                <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="mt-4 border-t border-gray-200 bg-white px-4 py-4">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <button
-                    onClick={handleSaveScore}
-                    disabled={savingScore || !scoreDirty}
-                    className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+                    onClick={handleEndHalf}
+                    disabled={savingEvent}
+                    className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
                   >
-                    {savingScore ? "Guardando..." : scoreDirty ? "Guardar marcador" : "Marcador guardado"}
+                    Terminar mitad
                   </button>
                   <button
-                    onClick={handleCompleteGame}
-                    disabled={savingScore}
-                    className="flex-1 rounded-lg bg-green-600 px-4 py-3 font-bold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+                    onClick={handleEndGame}
+                    disabled={savingEvent}
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
                   >
                     Finalizar partido
                   </button>
                 </div>
               </div>
+
             </div>
           )}
         </div>

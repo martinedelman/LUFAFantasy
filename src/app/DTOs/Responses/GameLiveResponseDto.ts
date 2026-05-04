@@ -10,7 +10,7 @@ export interface GameEventResponseDto {
   time?: string;
   type: GameEventType;
   team: TeamSummaryResponseDto | string;
-  player: PlayerSummaryResponseDto | string;
+  player?: PlayerSummaryResponseDto | string;
   description?: string;
   yards?: number;
   points?: number;

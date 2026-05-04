@@ -42,6 +42,11 @@ export interface IGameRepository extends IRepository<Game> {
   addEvent(id: string, event: GameEvent, score?: GameScore): Promise<Game>;
 
   /**
+   * Elimina un evento del partido y, opcionalmente, actualiza el score en la misma operación.
+   */
+  removeEvent(id: string, eventId: string, score?: GameScore): Promise<Game>;
+
+  /**
    * Inicia un partido programado
    */
   startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game>;

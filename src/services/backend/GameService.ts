@@ -13,7 +13,16 @@ interface CreateGameEventInput {
   quarter: number;
   type: GameEventType;
   team: string;
-  player: string;
+  player?: string;
+  points?: number;
+}
+
+interface StoredGameEvent {
+  _id?: string;
+  quarter: number;
+  type: GameEventType;
+  team: string | { _id?: string };
+  player: string | { _id?: string };
   points?: number;
 }
 
@@ -156,7 +165,8 @@ export class GameService {
       throw new Error("El equipo es requerido");
     }
 
-    if (!eventData.player) {
+    const requiresPlayer = eventData.type !== "quarter_end" && eventData.type !== "game_end";
+    if (requiresPlayer && !eventData.player) {
       throw new Error("El jugador es requerido");
     }
 
@@ -172,7 +182,7 @@ export class GameService {
       quarter: eventData.quarter,
       type: eventData.type,
       team: eventData.team,
-      player: eventData.player,
+      ...(eventData.player ? { player: eventData.player } : {}),
       points: safePoints,
       description: this.getEventDescription(eventData.type, safePoints),
     };
@@ -183,6 +193,34 @@ export class GameService {
     if (nextScore) {
       await this.recalculateStandingsForGame(updatedGame);
     }
+
+    return updatedGame;
+  }
+
+  /**
+   * Elimina un evento del historial y recalcula el marcador.
+   */
+  async removeGameEvent(id: string, eventId: string): Promise<Game> {
+    const game = await this.gameRepo.findById(id);
+    if (!game) {
+      throw new Error("Partido no encontrado");
+    }
+
+    if (game.status !== "in_progress") {
+      throw new Error("Solo se pueden eliminar eventos de partidos en progreso");
+    }
+
+    const gameWithEvents = game as Game & { events?: StoredGameEvent[] };
+    const remainingEvents = (gameWithEvents.events || []).filter((event) => this.getReferenceId(event._id) !== eventId);
+
+    if (remainingEvents.length === (gameWithEvents.events || []).length) {
+      throw new Error("Evento no encontrado");
+    }
+
+    const recalculatedScore = this.recalculateScoreFromEvents(game, remainingEvents);
+    const updatedGame = await this.gameRepo.removeEvent(id, eventId, recalculatedScore);
+
+    await this.recalculateStandingsForGame(updatedGame);
 
     return updatedGame;
   }
@@ -294,6 +332,32 @@ export class GameService {
     );
   }
 
+  private recalculateScoreFromEvents(game: Game, events: StoredGameEvent[]): GameScore {
+    const totals = {
+      home: { q1: 0, q2: 0, q3: 0, q4: 0, overtime: 0 },
+      away: { q1: 0, q2: 0, q3: 0, q4: 0, overtime: 0 },
+    };
+
+    const homeTeamId = this.getReferenceId(game.homeTeam);
+
+    for (const event of events) {
+      if (!event.points || event.points <= 0) {
+        continue;
+      }
+
+      const teamId = this.getReferenceId(event.team);
+      const side = teamId === homeTeamId ? totals.home : totals.away;
+      const quarterKey = event.quarter === 5 ? "overtime" : (`q${event.quarter}` as keyof typeof side);
+
+      side[quarterKey] += event.points;
+    }
+
+    return new GameScore(
+      new QuarterScore(totals.home.q1, totals.home.q2, totals.home.q3, totals.home.q4, totals.home.overtime),
+      new QuarterScore(totals.away.q1, totals.away.q2, totals.away.q3, totals.away.q4, totals.away.overtime),
+    );
+  }
+
   private getEventDescription(type: GameEventType, points?: number): string {
     const labels: Record<GameEventType, string> = {
       touchdown: "Touchdown",
@@ -311,6 +375,8 @@ export class GameService {
       first_down: "Primero y diez",
       sack: "Sack",
     };
+
+    if (type === "quarter_end") return "Fin de mitad";
 
     return points && points > 0 ? `${labels[type]} (+${points})` : labels[type];
   }

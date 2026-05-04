@@ -201,6 +201,48 @@ export class MongoGameRepository implements IGameRepository {
     return doc;
   }
 
+  async removeEvent(id: string, eventId: string, score?: GameScore): Promise<Game> {
+    await connectToDatabase();
+
+    const update: Record<string, unknown> = {
+      $pull: {
+        events: { _id: eventId },
+      },
+    };
+
+    if (score) {
+      update.$set = {
+        "score.home.q1": score.home.q1,
+        "score.home.q2": score.home.q2,
+        "score.home.q3": score.home.q3,
+        "score.home.q4": score.home.q4,
+        "score.home.overtime": score.home.overtime,
+        "score.home.total": score.home.total,
+        "score.away.q1": score.away.q1,
+        "score.away.q2": score.away.q2,
+        "score.away.q3": score.away.q3,
+        "score.away.q4": score.away.q4,
+        "score.away.overtime": score.away.overtime,
+        "score.away.total": score.away.total,
+      };
+    }
+
+    const doc = await GameModel.findByIdAndUpdate(id, update, { new: true, runValidators: true })
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("events.team")
+      .populate("events.player")
+      .exec();
+
+    if (!doc) {
+      throw new Error("Partido no encontrado");
+    }
+
+    return doc;
+  }
+
   async startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game> {
     await connectToDatabase();
 

@@ -69,7 +69,7 @@ function toGameEventResponseDto(event: NonNullable<GameWithEvents["events"]>[num
     time: event.time,
     type: event.type,
     team: toTeamRef(event.team),
-    player: toPlayerRef(event.player),
+    ...(event.player ? { player: toPlayerRef(event.player) } : {}),
     description: event.description,
     yards: event.yards,
     points: event.points,
@@ -94,7 +94,11 @@ function toTeamRef(team: string | PopulatedRef): GameEventResponseDto["team"] {
   };
 }
 
-function toPlayerRef(player: string | PopulatedRef): GameEventResponseDto["player"] {
+function toPlayerRef(player: string | PopulatedRef | undefined): GameEventResponseDto["player"] {
+  if (!player) {
+    return undefined;
+  }
+
   if (typeof player === "string") {
     return player;
   }

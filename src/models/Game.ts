@@ -90,7 +90,7 @@ const GameEventSchema = new Schema({
     required: true,
   },
   team: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-  player: { type: Schema.Types.ObjectId, ref: "Player", required: true },
+  player: { type: Schema.Types.ObjectId, ref: "Player" },
   description: { type: String, trim: true },
   yards: { type: Number },
   points: { type: Number },
