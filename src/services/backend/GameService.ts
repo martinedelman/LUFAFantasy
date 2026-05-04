@@ -182,7 +182,7 @@ export class GameService {
       quarter: eventData.quarter,
       type: eventData.type,
       team: eventData.team,
-      ...(eventData.player ? { player: eventData.player } : {}),
+      player: eventData.player || "",
       points: safePoints,
       description: this.getEventDescription(eventData.type, safePoints),
     };
