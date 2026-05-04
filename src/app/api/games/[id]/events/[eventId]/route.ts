@@ -4,10 +4,7 @@ import { toGameResponseDto } from "@/app/DTOs";
 
 const gameService = new GameService();
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string; eventId: string }> },
-) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
     const { id, eventId } = await params;
 

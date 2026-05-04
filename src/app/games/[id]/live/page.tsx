@@ -274,7 +274,6 @@ export default function LiveMatchPage() {
   const liveScoreHome = game?.score?.home?.total ?? 0;
   const liveScoreAway = game?.score?.away?.total ?? 0;
 
-
   const currentQuarterNumber = useMemo(() => {
     if (currentQuarter === "overtime") return 5;
     return currentQuarter === "q1" ? 1 : 2;
@@ -526,8 +525,8 @@ export default function LiveMatchPage() {
 
   // If game is already completed, postponed, or cancelled, show an end-state message.
   if (game.status === "completed" || game.status === "postponed" || game.status === "cancelled") {
-  const completedScoreHome = game.score?.home?.total ?? 0;
-  const completedScoreAway = game.score?.away?.total ?? 0;
+    const completedScoreHome = game.score?.home?.total ?? 0;
+    const completedScoreAway = game.score?.away?.total ?? 0;
 
     return (
       <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
@@ -539,7 +538,8 @@ export default function LiveMatchPage() {
                   <div className="text-gray-500 text-5xl mb-4">Final</div>
                   <h2 className="text-xl font-bold mb-2 text-gray-900">Partido finalizado</h2>
                   <p className="text-gray-600 mb-4">
-                    {game.homeTeam?.name || teamNames.home} {completedScoreHome} - {completedScoreAway} {game.awayTeam?.name || teamNames.away}
+                    {game.homeTeam?.name || teamNames.home} {completedScoreHome} - {completedScoreAway}{" "}
+                    {game.awayTeam?.name || teamNames.away}
                   </p>
                 </>
               )}
@@ -840,19 +840,19 @@ export default function LiveMatchPage() {
                       </p>
                     </div>
                     <div className="grid w-full grid-cols-3 rounded-md bg-gray-100 p-1 sm:w-auto sm:min-w-80">
-                      {QUARTERS.filter((quarter) => quarter.key === "q1" || quarter.key === "q2" || quarter.key === "overtime").map(
-                        (quarter) => (
-                          <button
-                            key={`quarter-${quarter.key}`}
-                            onClick={() => setCurrentQuarter(quarter.key)}
-                            className={`min-w-0 truncate rounded px-3 py-2 text-sm font-semibold transition-colors ${
-                              currentQuarter === quarter.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
-                            }`}
-                          >
-                            {quarter.label}
-                          </button>
-                        ),
-                      )}
+                      {QUARTERS.filter(
+                        (quarter) => quarter.key === "q1" || quarter.key === "q2" || quarter.key === "overtime",
+                      ).map((quarter) => (
+                        <button
+                          key={`quarter-${quarter.key}`}
+                          onClick={() => setCurrentQuarter(quarter.key)}
+                          className={`min-w-0 truncate rounded px-3 py-2 text-sm font-semibold transition-colors ${
+                            currentQuarter === quarter.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
+                          }`}
+                        >
+                          {quarter.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -965,36 +965,39 @@ export default function LiveMatchPage() {
                 </div>
                 <div className="mt-3 max-h-96 divide-y divide-gray-100 overflow-y-auto pr-1">
                   {game.events && game.events.length > 0 ? (
-                    [...game.events]
-                      .reverse()
-                      .map((event, index) => (
-                        <div key={event._id || `${event.quarter}-${event.type}-${index}`} className="py-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-semibold text-gray-900">
-                                {event.description || getEventTypeLabel(event.type)}
-                                {!event.description && event.points ? ` +${event.points}` : ""}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {event.quarter === 5 ? "ET" : `${event.quarter}T`} · {getEventTeamName(event.team)}
-                                {event.player ? ` · ${getEventPlayerName(event.player)}` : ""}
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteGameEvent(event._id)}
-                              className="rounded-md border border-red-200 bg-red-50 p-2 text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                              title="Eliminar evento"
-                              aria-label="Eliminar evento"
-                              disabled={savingEvent}
-                            >
-                              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14" />
-                              </svg>
-                            </button>
+                    [...game.events].reverse().map((event, index) => (
+                      <div key={event._id || `${event.quarter}-${event.type}-${index}`} className="py-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {event.description || getEventTypeLabel(event.type)}
+                              {!event.description && event.points ? ` +${event.points}` : ""}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {event.quarter === 5 ? "ET" : `${event.quarter}T`} · {getEventTeamName(event.team)}
+                              {event.player ? ` · ${getEventPlayerName(event.player)}` : ""}
+                            </p>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteGameEvent(event._id)}
+                            className="rounded-md border border-red-200 bg-red-50 p-2 text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Eliminar evento"
+                            aria-label="Eliminar evento"
+                            disabled={savingEvent}
+                          >
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"
+                              />
+                            </svg>
+                          </button>
                         </div>
-                      ))
+                      </div>
+                    ))
                   ) : (
                     <div className="py-6 text-center text-sm text-gray-500">Todavía no hay eventos registrados.</div>
                   )}
@@ -1019,7 +1022,6 @@ export default function LiveMatchPage() {
                   </button>
                 </div>
               </div>
-
             </div>
           )}
         </div>

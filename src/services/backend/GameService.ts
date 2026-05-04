@@ -187,7 +187,10 @@ export class GameService {
       description: this.getEventDescription(eventData.type, safePoints),
     };
 
-    const nextScore = safePoints && safePoints > 0 ? this.addEventPointsToScore(game, eventData.team, eventData.quarter, safePoints) : undefined;
+    const nextScore =
+      safePoints && safePoints > 0
+        ? this.addEventPointsToScore(game, eventData.team, eventData.quarter, safePoints)
+        : undefined;
     const updatedGame = await this.gameRepo.addEvent(id, event, nextScore);
 
     if (nextScore) {
