@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import FilterAccordion from "@/components/FilterAccordion";
 import Pagination from "@/components/Pagination";
 import Avatar from "@/components/Avatar";
 
@@ -279,7 +280,11 @@ export default function StatisticsPage() {
           </div>
 
           {/* Filters */}
-          <div className="p-4">
+          <FilterAccordion
+            className="border-t border-gray-200"
+            buttonClassName="flex w-full items-center justify-between gap-3 px-4 py-4 text-left text-sm font-semibold text-gray-900"
+            contentClassName="p-4"
+          >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
@@ -334,7 +339,7 @@ export default function StatisticsPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </FilterAccordion>
         </div>
 
         {error && (

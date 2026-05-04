@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import FilterAccordion from "@/components/FilterAccordion";
 import Table, { TableColumn } from "@/components/Table";
 import Avatar from "@/components/Avatar";
 
@@ -241,7 +242,7 @@ export default function StandingsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Filters */}
-      <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <FilterAccordion className="mb-6 overflow-hidden rounded-lg bg-white shadow-sm" contentClassName="px-6 pb-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <label htmlFor="tournament" className="block text-sm font-medium text-gray-700">
@@ -304,7 +305,7 @@ export default function StandingsPage() {
             </button>
           </div>
         </div>
-      </div>
+      </FilterAccordion>
 
       {error && (
         <div className="mb-6">

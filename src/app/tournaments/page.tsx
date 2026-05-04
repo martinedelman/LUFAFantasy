@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import FilterAccordion from "@/components/FilterAccordion";
 import Pagination from "@/components/Pagination";
 import Tag from "@/components/Tag";
 
@@ -177,7 +178,7 @@ export default function TournamentsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <FilterAccordion className="mb-6 overflow-hidden rounded-lg bg-white shadow-sm" contentClassName="px-6 pb-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700">
@@ -215,7 +216,7 @@ export default function TournamentsPage() {
             </select>
           </div>
         </div>
-      </div>
+      </FilterAccordion>
 
       {error && (
         <div className="mb-6">

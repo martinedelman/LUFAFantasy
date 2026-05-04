@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import FilterAccordion from "@/components/FilterAccordion";
 import Pagination from "@/components/Pagination";
 import Card from "@/components/Card";
 import { useAuth } from "@/hooks/useAuth";
@@ -190,7 +191,7 @@ export default function PlayersPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <FilterAccordion className="mb-6 overflow-hidden rounded-lg bg-white shadow-sm" contentClassName="px-6 pb-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <label htmlFor="search" className="block text-sm font-medium text-gray-700">
@@ -272,7 +273,7 @@ export default function PlayersPage() {
             </button>
           </div>
         </div>
-      </div>
+      </FilterAccordion>
 
       {error && (
         <div className="mb-6">
