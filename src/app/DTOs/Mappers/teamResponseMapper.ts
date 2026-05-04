@@ -7,6 +7,7 @@ export function toTeamResponseDto(team: Team): TeamResponseDto {
     name: team.name,
     shortName: team.shortName,
     logo: team.logo,
+    backgroundImage: team.backgroundImage,
     colors: {
       primary: team.colors.primary,
       secondary: team.colors.secondary,
@@ -33,6 +34,7 @@ export function toTeamSummaryResponseDto(team: Team): TeamSummaryResponseDto {
     name: team.name,
     shortName: team.shortName,
     logo: team.logo,
+    backgroundImage: team.backgroundImage,
     colors: {
       primary: team.colors.primary,
       secondary: team.colors.secondary,

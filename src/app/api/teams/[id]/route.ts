@@ -79,6 +79,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       colors: body.colors,
       shortName: body.shortName,
       logo: body.logo,
+      backgroundImage: body.backgroundImage,
       contact: body.contact,
       status: body.status,
       players: body.players,

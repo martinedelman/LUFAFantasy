@@ -8,6 +8,7 @@ export interface UpdateTeamRequestDto {
   };
   shortName?: string;
   logo?: string;
+  backgroundImage?: string;
   contact?: {
     email?: string;
     phone?: string;

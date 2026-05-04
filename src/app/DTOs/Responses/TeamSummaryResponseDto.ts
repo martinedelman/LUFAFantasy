@@ -3,6 +3,7 @@ export interface TeamSummaryResponseDto {
   name: string;
   shortName?: string;
   logo?: string;
+  backgroundImage?: string;
   colors: {
     primary: string;
     secondary?: string;

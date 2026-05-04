@@ -19,6 +19,7 @@ export interface CreateTeamRequestDto {
   };
   shortName?: string;
   logo?: string;
+  backgroundImage?: string;
   tournament?: string;
   players?: string[];
   status?: TeamStatus;

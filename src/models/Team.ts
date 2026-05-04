@@ -25,6 +25,7 @@ const TeamSchema = new Schema(
     name: { type: String, required: true, trim: true },
     shortName: { type: String, trim: true },
     logo: { type: String, trim: true },
+    backgroundImage: { type: String, trim: true },
     colors: {
       primary: { type: String, required: true, trim: true },
       secondary: { type: String, trim: true },

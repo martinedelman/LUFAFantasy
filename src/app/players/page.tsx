@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
@@ -62,6 +63,7 @@ interface TeamsApiResponse {
 
 export default function PlayersPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [players, setPlayers] = useState<Player[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(true);
@@ -326,6 +328,7 @@ export default function PlayersPage() {
                   id={player._id}
                   title={`${player.firstName} ${player.lastName}`}
                   subtitle={player.position}
+                  onCardClick={() => router.push(`/players/${player._id}`)}
                   icon={{
                     type: player.profilePicture ? "image" : "jersey",
                     value: player.profilePicture || player.jerseyNumber?.toString() || player.firstName,
@@ -359,25 +362,6 @@ export default function PlayersPage() {
                       ),
                       text: `${calculateAge(player.dateOfBirth)} años`,
                     },
-                  ]}
-                  footer={{
-                    text: "Registro",
-                    date: `Reg: ${new Date(player.registrationDate).toLocaleDateString("es-ES")}`,
-                  }}
-                  actions={[
-                    {
-                      label: "Ver perfil",
-                      href: `/players/${player._id}`,
-                    },
-                    ...(user?.role === "admin"
-                      ? [
-                          {
-                            label: "Editar",
-                            href: `/players/${player._id}/edit`,
-                            className: "text-blue-600 hover:text-blue-800 text-sm font-medium ml-2",
-                          },
-                        ]
-                      : []),
                   ]}
                 />
               ))}

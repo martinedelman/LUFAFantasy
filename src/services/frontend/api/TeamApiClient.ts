@@ -43,6 +43,7 @@ export class TeamApiClient extends BaseApiClient {
       primary: string;
       secondary: string;
     };
+    backgroundImage?: string;
     contactInfo?: {
       managerName: string;
       phone?: string;
@@ -64,6 +65,7 @@ export class TeamApiClient extends BaseApiClient {
         primary: string;
         secondary: string;
       };
+      backgroundImage: string;
       contactInfo: {
         managerName: string;
         phone?: string;

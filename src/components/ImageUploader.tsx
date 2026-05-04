@@ -3,7 +3,7 @@
 import { ChangeEvent, useMemo, useState } from "react";
 import Avatar from "@/components/Avatar";
 
-type UploadAssetType = "team_logo" | "player_profile_picture";
+type UploadAssetType = "team_logo" | "team_background" | "player_profile_picture";
 
 interface ImageUploaderProps {
   label: string;

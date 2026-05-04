@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Pagination from "@/components/Pagination";
@@ -15,6 +15,7 @@ interface Team {
   name: string;
   shortName: string;
   logo?: string;
+  backgroundImage?: string;
   colors: {
     primary: string;
     secondary: string;
@@ -59,6 +60,7 @@ interface DivisionsApiResponse {
 
 function TeamsPageContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const tournamentId = searchParams.get("tournament") || "";
   const [teams, setTeams] = useState<Team[]>([]);
@@ -286,6 +288,10 @@ function TeamsPageContent() {
                   title={team.name}
                   subtitle={team.division.name || "Sin División"}
                   badge={getStatusTag(team.status)}
+                  backgroundImage={team.backgroundImage}
+                  aspectRatio="16:9"
+                  infoPlacement="bottom"
+                  onCardClick={() => router.push(`/teams/${team._id}`)}
                   icon={
                     team.logo
                       ? {
@@ -296,7 +302,7 @@ function TeamsPageContent() {
                       : {
                           type: "initials",
                           value: team.shortName || team.name.substring(0, 2).toUpperCase(),
-                          backgroundColor: team.colors.primary,
+                          backgroundColor: "#374151",
                         }
                   }
                   info={[
@@ -327,26 +333,6 @@ function TeamsPageContent() {
                               </svg>
                             ),
                             text: team.coach.name,
-                          },
-                        ]
-                      : []),
-                  ]}
-                  colors={team.colors}
-                  footer={{
-                    text: "Registro",
-                    date: `Reg: ${new Date(team.registrationDate).toLocaleDateString("es-ES")}`,
-                  }}
-                  actions={[
-                    {
-                      label: "Ver detalles",
-                      href: `/teams/${team._id}`,
-                    },
-                    ...(user?.role === "admin"
-                      ? [
-                          {
-                            label: "Editar",
-                            href: `/teams/${team._id}/edit`,
-                            className: "text-blue-600 hover:text-blue-800 text-sm font-medium ml-2",
                           },
                         ]
                       : []),

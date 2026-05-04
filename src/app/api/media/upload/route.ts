@@ -6,7 +6,7 @@ import type { BlobAssetType } from "@/services/backend/BlobStorageService";
 const authService = new AuthService();
 const blobStorageService = new BlobStorageService();
 
-const VALID_ASSET_TYPES: BlobAssetType[] = ["team_logo", "player_profile_picture"];
+const VALID_ASSET_TYPES: BlobAssetType[] = ["team_logo", "team_background", "player_profile_picture"];
 
 /**
  * POST /api/media/upload
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: "assetType inválido. Use team_logo o player_profile_picture",
+          message: "assetType inválido. Use team_logo, team_background o player_profile_picture",
         },
         { status: 400 },
       );

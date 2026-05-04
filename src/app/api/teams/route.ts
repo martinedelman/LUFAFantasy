@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
       contact: body.contact,
       shortName: body.shortName,
       logo: body.logo,
+      backgroundImage: body.backgroundImage,
       tournament: body.tournament,
       players: body.players,
       status: body.status,

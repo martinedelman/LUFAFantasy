@@ -28,6 +28,7 @@ export class TeamService {
     };
     shortName?: string;
     logo?: string;
+    backgroundImage?: string;
     tournament?: string;
     players?: string[];
     status?: TeamStatus;
@@ -52,6 +53,7 @@ export class TeamService {
       data.players || [],
       data.shortName,
       data.logo,
+      data.backgroundImage,
       data.tournament,
     );
 
@@ -117,6 +119,7 @@ export class TeamService {
       colors: { primary: string; secondary?: string };
       shortName: string;
       logo: string;
+      backgroundImage: string;
       contact: {
         email?: string;
         phone?: string;
@@ -146,6 +149,7 @@ export class TeamService {
       data.players || team.players,
       data.shortName !== undefined ? data.shortName : team.shortName,
       data.logo !== undefined ? data.logo : team.logo,
+      data.backgroundImage !== undefined ? data.backgroundImage : team.backgroundImage,
       team.tournament,
       team.id,
       team.createdAt,

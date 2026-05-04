@@ -1,7 +1,7 @@
 import RepositoryContainer from "@/repositories";
 import { StoredFileMetadata } from "@/repositories/contracts";
 
-export type BlobAssetType = "team_logo" | "player_profile_picture";
+export type BlobAssetType = "team_logo" | "team_background" | "player_profile_picture";
 
 interface UploadAssetInput {
   file: File;
@@ -20,9 +20,13 @@ export class BlobStorageService {
     return process.env.environment === "production" ? "prod_env" : "dev_env";
   }
 
-  private getAssetFolder(assetType: BlobAssetType): "team_logos" | "profile_pictures" {
+  private getAssetFolder(assetType: BlobAssetType): "team_logos" | "team_backgrounds" | "profile_pictures" {
     if (assetType === "team_logo") {
       return "team_logos";
+    }
+
+    if (assetType === "team_background") {
+      return "team_backgrounds";
     }
 
     return "profile_pictures";

@@ -12,6 +12,7 @@ export class Team extends AggregateRoot {
   public readonly name: string;
   public readonly shortName?: string;
   public readonly logo?: string;
+  public readonly backgroundImage?: string;
   public readonly colors: Colors;
   public readonly division: string; // ID de división
   public readonly tournament?: string; // ID de torneo
@@ -30,6 +31,7 @@ export class Team extends AggregateRoot {
     players: string[] = [],
     shortName?: string,
     logo?: string,
+    backgroundImage?: string,
     tournament?: string,
     id?: string,
     createdAt?: Date,
@@ -39,6 +41,7 @@ export class Team extends AggregateRoot {
     this.name = name;
     this.shortName = shortName;
     this.logo = logo;
+    this.backgroundImage = backgroundImage;
     this.colors = colors;
     this.division = division;
     this.tournament = tournament;
