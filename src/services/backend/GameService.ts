@@ -83,6 +83,7 @@ export class GameService {
       data.awayTeam,
       GameScore.zero(),
       undefined,
+      undefined,
       data.week,
       data.round,
     );
@@ -512,6 +513,7 @@ export class GameService {
       data.awayTeam || this.getReferenceId(game.awayTeam),
       normalizedScore,
       game.statistics,
+      game.presentPlayers,
       data.week !== undefined ? data.week : game.week,
       data.round || game.round,
       game.actualStartTime,

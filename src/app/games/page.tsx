@@ -167,6 +167,7 @@ export default function GamesPage() {
   const [form, setForm] = useState<GameFormState>(INITIAL_FORM);
   const [showForm, setShowForm] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [handledEditGameId, setHandledEditGameId] = useState<string | null>(null);
 
   const [tournaments, setTournaments] = useState<TournamentOption[]>([]);
   const [divisions, setDivisions] = useState<DivisionOption[]>([]);
@@ -336,7 +337,7 @@ export default function GamesPage() {
     setShowForm(true);
   };
 
-  const openEditForm = async (game: Game) => {
+  const openEditForm = useCallback(async (game: Game) => {
     if (!canManageGames) return;
 
     const tournamentId = getRefId(game.tournament);
@@ -367,7 +368,7 @@ export default function GamesPage() {
     setEditingGame(game);
     setFormError(null);
     setShowForm(true);
-  };
+  }, [canManageGames, fetchTeamsForDivision]);
 
   const closeForm = () => {
     setShowForm(false);
@@ -375,6 +376,37 @@ export default function GamesPage() {
     setEditingGame(null);
     setFormError(null);
   };
+
+  useEffect(() => {
+    const editGameId = new URLSearchParams(window.location.search).get("edit");
+
+    if (!canManageGames || !editGameId || handledEditGameId === editGameId) {
+      return;
+    }
+
+    const openRequestedGame = async () => {
+      const localGame = games.find((game) => game._id === editGameId);
+      if (localGame) {
+        setHandledEditGameId(editGameId);
+        await openEditForm(localGame);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/games/${editGameId}`);
+        const data: ApiResponse<Game> = await response.json();
+
+        if (response.ok && data.success && data.data) {
+          setHandledEditGameId(editGameId);
+          await openEditForm(data.data);
+        }
+      } catch {
+        // No bloquear la página si el deep link de edición no carga.
+      }
+    };
+
+    void openRequestedGame();
+  }, [canManageGames, games, handledEditGameId, openEditForm]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -942,7 +974,12 @@ export default function GamesPage() {
 
       <div className="space-y-4">
         {games.map((game) => (
-          <div key={game._id} className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow">
+          <Link
+            key={game._id}
+            href={`/games/${game._id}`}
+            className="block rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6"
+            aria-label={`Ver match ${game.homeTeam?.name || "TBD"} vs ${game.awayTeam?.name || "TBD"}`}
+          >
             <div className="sm:hidden">
               <div className="flex items-start justify-between gap-3">
                 <div className="text-sm text-gray-700 font-medium break-words">{game.venue.name}</div>
@@ -989,24 +1026,6 @@ export default function GamesPage() {
                 {game.round ? ` · ${game.round}` : ""}
               </div>
 
-              {canManageGames && (
-                <div className="mt-4 grid gap-2">
-                  {(game.status === "scheduled" || game.status === "in_progress") && (
-                    <Link
-                      href={`/games/${game._id}/live`}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center transition-colors"
-                    >
-                      Live Match
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => openEditForm(game)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    Editar
-                  </button>
-                </div>
-              )}
             </div>
 
             <div className="hidden sm:block">
@@ -1079,27 +1098,9 @@ export default function GamesPage() {
                   </div>
                 </div>
 
-                {canManageGames && (
-                  <div className="mt-4 lg:mt-0 lg:ml-6 flex gap-3">
-                    {(game.status === "scheduled" || game.status === "in_progress") && (
-                      <Link
-                        href={`/games/${game._id}/live`}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                      >
-                        Live Match
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => openEditForm(game)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      Editar
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

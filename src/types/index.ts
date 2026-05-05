@@ -177,6 +177,10 @@ export interface Game {
   weather?: WeatherConditions;
   score: GameScore;
   statistics: GameStatistics;
+  presentPlayers?: {
+    home: string[];
+    away: string[];
+  };
   events: GameEvent[];
   notes?: string;
   createdAt: Date;

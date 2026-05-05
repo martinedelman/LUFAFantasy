@@ -1,6 +1,7 @@
 import type { GameStatus, GameStatistics } from "@/entities/Game";
 import type { GameScore } from "@/entities/valueObjects/Score";
 import type { GameEventResponseDto } from "./GameLiveResponseDto";
+import type { PlayerSummaryResponseDto } from "./PlayerSummaryResponseDto";
 
 export interface GameResponseDto {
   _id?: string;
@@ -20,6 +21,10 @@ export interface GameResponseDto {
   round?: string;
   score: GameScore;
   statistics: GameStatistics;
+  presentPlayers?: {
+    home: Array<PlayerSummaryResponseDto | string>;
+    away: Array<PlayerSummaryResponseDto | string>;
+  };
   events: GameEventResponseDto[];
   notes?: string;
   createdAt?: string;

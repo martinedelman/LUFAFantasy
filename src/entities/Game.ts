@@ -38,6 +38,11 @@ export interface GameStatistics {
   away: TeamStatistics;
 }
 
+export interface GamePresentPlayers {
+  home: string[];
+  away: string[];
+}
+
 /**
  * Entity: Game (Partido)
  * Aggregate Root - Entidad más compleja del dominio
@@ -56,6 +61,7 @@ export class Game extends AggregateRoot {
   public readonly round?: string;
   public readonly score: GameScore;
   public readonly statistics: GameStatistics;
+  public readonly presentPlayers?: GamePresentPlayers;
   public readonly notes?: string;
 
   constructor(
@@ -68,6 +74,7 @@ export class Game extends AggregateRoot {
     awayTeam: string | null = null,
     score?: GameScore,
     statistics?: GameStatistics,
+    presentPlayers?: GamePresentPlayers,
     week?: number,
     round?: string,
     actualStartTime?: Date,
@@ -94,6 +101,7 @@ export class Game extends AggregateRoot {
       home: TeamStatistics.empty(),
       away: TeamStatistics.empty(),
     };
+    this.presentPlayers = presentPlayers;
     this.notes = notes;
   }
 
@@ -150,6 +158,7 @@ export class Game extends AggregateRoot {
       this.awayTeam,
       this.score,
       this.statistics,
+      this.presentPlayers,
       this.week,
       this.round,
       new Date(),
@@ -179,6 +188,7 @@ export class Game extends AggregateRoot {
       this.awayTeam,
       this.score,
       this.statistics,
+      this.presentPlayers,
       this.week,
       this.round,
       this.actualStartTime,

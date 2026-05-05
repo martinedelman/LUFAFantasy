@@ -12,6 +12,8 @@ export class MongoGameRepository implements IGameRepository {
       .populate("awayTeam")
       .populate("tournament")
       .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();
@@ -23,6 +25,8 @@ export class MongoGameRepository implements IGameRepository {
     const docs = await GameModel.find(filters || {})
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();
@@ -148,6 +152,8 @@ export class MongoGameRepository implements IGameRepository {
       .populate("awayTeam")
       .populate("tournament")
       .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();
@@ -190,6 +196,8 @@ export class MongoGameRepository implements IGameRepository {
       .populate("awayTeam")
       .populate("tournament")
       .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();
@@ -232,6 +240,8 @@ export class MongoGameRepository implements IGameRepository {
       .populate("awayTeam")
       .populate("tournament")
       .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();
@@ -256,6 +266,7 @@ export class MongoGameRepository implements IGameRepository {
         $set: {
           status: "in_progress",
           actualStartTime: new Date(),
+          presentPlayers,
         },
       },
       { new: true },
@@ -264,6 +275,8 @@ export class MongoGameRepository implements IGameRepository {
       .populate("awayTeam")
       .populate("tournament")
       .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();
@@ -275,9 +288,6 @@ export class MongoGameRepository implements IGameRepository {
       }
       throw new Error("Solo se pueden iniciar partidos programados");
     }
-
-    // El esquema actual no persiste presentPlayers, pero se valida en servicio.
-    void presentPlayers;
 
     return doc;
   }
@@ -294,6 +304,8 @@ export class MongoGameRepository implements IGameRepository {
       .populate("awayTeam")
       .populate("tournament")
       .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();
