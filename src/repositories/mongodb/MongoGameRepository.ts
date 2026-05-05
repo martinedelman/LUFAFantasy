@@ -90,6 +90,10 @@ export class MongoGameRepository implements IGameRepository {
     })
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();

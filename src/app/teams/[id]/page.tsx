@@ -481,7 +481,15 @@ export default function TeamViewerPage() {
   };
 
   const getDivisionName = (game: TeamGame) => {
-    return typeof game.division === "string" ? "División" : game.division.name || "División";
+    if (typeof game.division === "string") return "División";
+
+    const categoryLabel: Record<string, string> = {
+      masculino: "Masculino",
+      femenino: "Femenino",
+      mixto: "Mixto",
+    };
+
+    return game.division.category ? categoryLabel[game.division.category] || game.division.category : game.division.name || "División";
   };
 
   const renderGameCard = (game: TeamGame) => (
