@@ -324,7 +324,7 @@ export default function PlayersPage() {
                   key={player._id}
                   id={player._id}
                   title={`${player.firstName} ${player.lastName}`}
-                  subtitle={player.position}
+                  subtitle={`${player.position} - #${player.jerseyNumber}`}
                   onCardClick={() => router.push(`/players/${player._id}`)}
                   icon={{
                     type: player.profilePicture ? "image" : "jersey",
