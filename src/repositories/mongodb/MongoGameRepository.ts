@@ -276,6 +276,55 @@ export class MongoGameRepository implements IGameRepository {
     return doc;
   }
 
+  async updateEvent(id: string, eventId: string, event: GameEvent, score?: GameScore): Promise<Game> {
+    await connectToDatabase();
+
+    const setUpdate: Record<string, unknown> = {
+      "events.$.quarter": event.quarter,
+      "events.$.type": event.type,
+      "events.$.team": event.team,
+      "events.$.player": event.player || undefined,
+      "events.$.description": event.description,
+      "events.$.points": event.points,
+      "events.$.yards": event.yards,
+      "events.$.details": event.details,
+    };
+
+    if (score) {
+      setUpdate["score.home.q1"] = score.home.q1;
+      setUpdate["score.home.q2"] = score.home.q2;
+      setUpdate["score.home.q3"] = score.home.q3;
+      setUpdate["score.home.q4"] = score.home.q4;
+      setUpdate["score.home.overtime"] = score.home.overtime;
+      setUpdate["score.home.total"] = score.home.total;
+      setUpdate["score.away.q1"] = score.away.q1;
+      setUpdate["score.away.q2"] = score.away.q2;
+      setUpdate["score.away.q3"] = score.away.q3;
+      setUpdate["score.away.q4"] = score.away.q4;
+      setUpdate["score.away.overtime"] = score.away.overtime;
+      setUpdate["score.away.total"] = score.away.total;
+    }
+
+    const doc = await GameModel.findOneAndUpdate(
+      { _id: id, "events._id": eventId },
+      { $set: setUpdate },
+      { new: true, runValidators: true },
+    )
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("events.team")
+      .populate("events.player")
+      .exec();
+
+    if (!doc) {
+      throw new Error("Evento no encontrado");
+    }
+
+    return doc;
+  }
+
   async startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game> {
     await connectToDatabase();
 

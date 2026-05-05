@@ -96,6 +96,7 @@ export default function LiveMatchPage() {
   const [savingEvent, setSavingEvent] = useState(false);
   const [eventMessage, setEventMessage] = useState<string | null>(null);
   const [eventError, setEventError] = useState<string | null>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   const fetchGameData = useCallback(async () => {
     try {
@@ -272,6 +273,19 @@ export default function LiveMatchPage() {
     setEventError(null);
   };
 
+  const resetEventDraft = () => {
+    setEditingEventId(null);
+    setEventDraft({
+      teamSide: "home",
+      type: "touchdown",
+      player: "",
+      points: "6",
+    });
+    setCurrentQuarter("q1");
+    setEventMessage(null);
+    setEventError(null);
+  };
+
   const handleAddGameEvent = async () => {
     if (!game) return;
 
@@ -297,8 +311,8 @@ export default function LiveMatchPage() {
       setEventError(null);
       setEventMessage(null);
 
-      const response = await fetch(`/api/games/${gameId}/events`, {
-        method: "POST",
+      const response = await fetch(editingEventId ? `/api/games/${gameId}/events/${editingEventId}` : `/api/games/${gameId}/events`, {
+        method: editingEventId ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -319,16 +333,39 @@ export default function LiveMatchPage() {
       }
 
       setGame(data.data);
-      setEventDraft((prev) => ({
-        ...prev,
-        player: "",
-      }));
-      setEventMessage(points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.");
+      if (editingEventId) {
+        setEditingEventId(null);
+        setEventMessage("Evento actualizado y marcador recalculado.");
+      } else {
+        setEventDraft((prev) => ({
+          ...prev,
+          player: "",
+        }));
+        setEventMessage(points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.");
+      }
     } catch {
       setEventError("Error de conexión al registrar el evento");
     } finally {
       setSavingEvent(false);
     }
+  };
+
+  const handleEditGameEvent = (event: GameApiResponse["events"][number]) => {
+    if (!game || !event._id) return;
+
+    const eventTeamId = getEventReferenceId(event.team);
+    const teamSide: TeamSide = eventTeamId === game.awayTeam?._id ? "away" : "home";
+
+    setEditingEventId(event._id);
+    setEventDraft({
+      teamSide,
+      type: event.type,
+      player: getEventReferenceId(event.player),
+      points: event.points === undefined || event.points === null ? "" : String(event.points),
+    });
+    setCurrentQuarter(event.quarter === 5 ? "overtime" : event.quarter === 2 ? "q2" : "q1");
+    setEventMessage(null);
+    setEventError(null);
   };
 
   const handleDeleteGameEvent = async (eventId?: string) => {
@@ -459,6 +496,11 @@ export default function LiveMatchPage() {
       : `${player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} ${player.firstName} ${player.lastName}`;
   };
 
+  const getEventReferenceId = (reference?: GameApiResponse["events"][number]["team"] | GameApiResponse["events"][number]["player"]) => {
+    if (!reference) return "";
+    return typeof reference === "string" ? reference : reference._id;
+  };
+
   if (loading) {
     return (
       <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
@@ -494,34 +536,17 @@ export default function LiveMatchPage() {
     );
   }
 
-  // If game is already completed, postponed, or cancelled, show an end-state message.
-  if (game.status === "completed" || game.status === "postponed" || game.status === "cancelled") {
-    const completedScoreHome = game.score?.home?.total ?? 0;
-    const completedScoreAway = game.score?.away?.total ?? 0;
-
+  // If game is postponed or cancelled, show an end-state message.
+  if (game.status === "postponed" || game.status === "cancelled") {
     return (
       <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
         <div className="min-h-screen bg-gray-50 p-4">
           <div className="max-w-lg mx-auto">
             <div className="bg-white rounded-lg shadow p-6 text-center">
-              {game.status === "completed" && (
-                <>
-                  <div className="text-gray-500 text-5xl mb-4">Final</div>
-                  <h2 className="text-xl font-bold mb-2 text-gray-900">Partido finalizado</h2>
-                  <p className="text-gray-600 mb-4">
-                    {game.homeTeam?.name || teamNames.home} {completedScoreHome} - {completedScoreAway}{" "}
-                    {game.awayTeam?.name || teamNames.away}
-                  </p>
-                </>
-              )}
-              {(game.status === "postponed" || game.status === "cancelled") && (
-                <>
-                  <h2 className="text-xl font-bold mb-2 text-gray-900">
-                    Partido {game.status === "postponed" ? "pospuesto" : "cancelado"}
-                  </h2>
-                  <p className="text-gray-600 mb-4">Este partido no puede iniciarse en su estado actual.</p>
-                </>
-              )}
+              <h2 className="text-xl font-bold mb-2 text-gray-900">
+                Partido {game.status === "postponed" ? "pospuesto" : "cancelado"}
+              </h2>
+              <p className="text-gray-600 mb-4">Este partido no puede iniciarse en su estado actual.</p>
               <button
                 onClick={() => router.push("/games")}
                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
@@ -551,7 +576,9 @@ export default function LiveMatchPage() {
                 </svg>
                 Volver
               </button>
-              <h1 className="text-lg font-bold text-gray-900">Live Match</h1>
+              <h1 className="text-lg font-bold text-gray-900">
+                {game.status === "completed" ? "Corrección Live" : "Live Match"}
+              </h1>
               <div className="w-16" />
             </div>
           </div>
@@ -566,7 +593,9 @@ export default function LiveMatchPage() {
               <span className="text-sm text-gray-500">{game.division?.name}</span>
             </div>
             <div className="mb-3 text-center">
-              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">Marcador en vivo</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">
+                {game.status === "completed" ? "Marcador final" : "Marcador en vivo"}
+              </div>
               <div className="mt-1 text-4xl font-black text-gray-900 sm:text-5xl">
                 {liveScoreHome} - {liveScoreAway}
               </div>
@@ -805,9 +834,13 @@ export default function LiveMatchPage() {
                 <div className="border-b border-gray-100 p-4">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h2 className="font-bold text-gray-900">Registrar evento</h2>
+                      <h2 className="font-bold text-gray-900">
+                        {game.status === "completed" ? "Corregir jugadas" : editingEventId ? "Editar evento" : "Registrar evento"}
+                      </h2>
                       <p className="text-sm text-gray-500">
-                        Mitad {currentQuarter === "overtime" ? "ET" : `${currentQuarterNumber}T`}
+                        {game.status === "completed"
+                          ? "Los cambios recalculan marcador y standings."
+                          : `Mitad ${currentQuarter === "overtime" ? "ET" : `${currentQuarterNumber}T`}`}
                       </p>
                     </div>
                     <div className="grid w-full grid-cols-3 rounded-md bg-gray-100 p-1 sm:w-auto sm:min-w-80">
@@ -924,8 +957,17 @@ export default function LiveMatchPage() {
                     disabled={savingEvent}
                     className="w-full rounded-lg bg-blue-600 px-4 py-4 text-base font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
                   >
-                    {savingEvent ? "Registrando..." : "Registrar evento"}
+                    {savingEvent ? "Guardando..." : editingEventId ? "Guardar cambios" : "Registrar evento"}
                   </button>
+                  {editingEventId && (
+                    <button
+                      onClick={resetEventDraft}
+                      disabled={savingEvent}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      Cancelar edición
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -966,6 +1008,23 @@ export default function LiveMatchPage() {
                               />
                             </svg>
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEditGameEvent(event)}
+                            className="rounded-md border border-blue-200 bg-blue-50 p-2 text-blue-600 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Editar evento"
+                            aria-label="Editar evento"
+                            disabled={savingEvent}
+                          >
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"
+                              />
+                            </svg>
+                          </button>
                         </div>
                       </div>
                     ))
@@ -975,24 +1034,26 @@ export default function LiveMatchPage() {
                 </div>
               </div>
 
-              <div className="mt-4 border-t border-gray-200 bg-white px-4 py-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <button
-                    onClick={handleEndHalf}
-                    disabled={savingEvent}
-                    className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    Terminar mitad
-                  </button>
-                  <button
-                    onClick={handleEndGame}
-                    disabled={savingEvent}
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    Finalizar partido
-                  </button>
+              {game.status === "in_progress" && (
+                <div className="mt-4 border-t border-gray-200 bg-white px-4 py-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <button
+                      onClick={handleEndHalf}
+                      disabled={savingEvent}
+                      className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      Terminar mitad
+                    </button>
+                    <button
+                      onClick={handleEndGame}
+                      disabled={savingEvent}
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      Finalizar partido
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>

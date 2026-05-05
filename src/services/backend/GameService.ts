@@ -152,8 +152,8 @@ export class GameService {
       throw new Error("Partido no encontrado");
     }
 
-    if (game.status !== "in_progress") {
-      throw new Error("Solo se pueden agregar eventos a partidos en progreso");
+    if (game.status !== "in_progress" && game.status !== "completed") {
+      throw new Error("Solo se pueden agregar eventos a partidos en progreso o finalizados");
     }
 
     if (!Number.isInteger(eventData.quarter) || eventData.quarter < 1 || eventData.quarter > 5) {
@@ -212,8 +212,8 @@ export class GameService {
       throw new Error("Partido no encontrado");
     }
 
-    if (game.status !== "in_progress") {
-      throw new Error("Solo se pueden eliminar eventos de partidos en progreso");
+    if (game.status !== "in_progress" && game.status !== "completed") {
+      throw new Error("Solo se pueden eliminar eventos de partidos en progreso o finalizados");
     }
 
     const gameWithEvents = game as Game & { events?: StoredGameEvent[] };
@@ -225,6 +225,84 @@ export class GameService {
 
     const recalculatedScore = this.recalculateScoreFromEvents(game, remainingEvents);
     const updatedGame = await this.gameRepo.removeEvent(id, eventId, recalculatedScore);
+
+    await this.recalculateStandingsForGame(updatedGame);
+
+    return updatedGame;
+  }
+
+  /**
+   * Actualiza una jugada de Live Match y recalcula marcador/standings.
+   * Permite corregir partidos en curso y finalizados.
+   */
+  async updateGameEvent(id: string, eventId: string, eventData: CreateGameEventInput): Promise<Game> {
+    const game = await this.gameRepo.findById(id);
+    if (!game) {
+      throw new Error("Partido no encontrado");
+    }
+
+    if (game.status !== "in_progress" && game.status !== "completed") {
+      throw new Error("Solo se pueden editar eventos de partidos en progreso o finalizados");
+    }
+
+    if (!Number.isInteger(eventData.quarter) || eventData.quarter < 1 || eventData.quarter > 5) {
+      throw new Error("El cuarto debe estar entre 1 y 5");
+    }
+
+    if (!eventData.type) {
+      throw new Error("El tipo de evento es requerido");
+    }
+
+    if (!eventData.team) {
+      throw new Error("El equipo es requerido");
+    }
+
+    const requiresPlayer = eventData.type !== "quarter_end" && eventData.type !== "game_end";
+    if (requiresPlayer && !eventData.player) {
+      throw new Error("El jugador es requerido");
+    }
+
+    const homeTeamId = this.getReferenceId(game.homeTeam);
+    const awayTeamId = this.getReferenceId(game.awayTeam);
+
+    if (eventData.team !== homeTeamId && eventData.team !== awayTeamId) {
+      throw new Error("El equipo del evento no participa en este partido");
+    }
+
+    const safePoints = eventData.points === undefined ? undefined : Math.max(0, eventData.points);
+    const event: GameEvent = {
+      quarter: eventData.quarter,
+      type: eventData.type,
+      team: eventData.team,
+      player: eventData.player || "",
+      points: safePoints,
+      description: this.getEventDescription(eventData.type, safePoints),
+    };
+
+    const gameWithEvents = game as Game & { events?: StoredGameEvent[] };
+    let foundEvent = false;
+    const updatedEvents = (gameWithEvents.events || []).map((storedEvent) => {
+      if (this.getReferenceId(storedEvent._id) !== eventId) {
+        return storedEvent;
+      }
+
+      foundEvent = true;
+      return {
+        ...storedEvent,
+        quarter: event.quarter,
+        type: event.type,
+        team: event.team,
+        player: event.player,
+        points: event.points,
+      };
+    });
+
+    if (!foundEvent) {
+      throw new Error("Evento no encontrado");
+    }
+
+    const recalculatedScore = this.recalculateScoreFromEvents(game, updatedEvents);
+    const updatedGame = await this.gameRepo.updateEvent(id, eventId, event, recalculatedScore);
 
     await this.recalculateStandingsForGame(updatedGame);
 

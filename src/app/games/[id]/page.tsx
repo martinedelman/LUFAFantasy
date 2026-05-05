@@ -317,12 +317,12 @@ export default function MatchPage() {
 
         {canManageGame && (
           <div className="mb-5 flex flex-wrap justify-end gap-2">
-            {(game.status === "scheduled" || game.status === "in_progress") && (
+            {(game.status === "scheduled" || game.status === "in_progress" || game.status === "completed") && (
               <Link
                 href={`/games/${game._id}/live`}
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-700"
               >
-                Live Match
+                {game.status === "completed" ? "Corregir Live" : "Live Match"}
               </Link>
             )}
             <Link
