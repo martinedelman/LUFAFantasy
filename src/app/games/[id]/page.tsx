@@ -16,7 +16,7 @@ type PlayerRef = PlayerSummaryResponseDto | string;
 
 const SCORING_EVENT_LABELS: Partial<Record<GameEventType, string>> = {
   touchdown: "Touchdown",
-  extra_point: "Conversión",
+  extra_point: "Punto extra",
   field_goal: "Field goal",
   safety: "Safety",
   pick_six: "Pick six",
