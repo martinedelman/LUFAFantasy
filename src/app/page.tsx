@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -68,7 +68,6 @@ export default function Home() {
               .sort((a: TeamCarouselItem, b: TeamCarouselItem) =>
                 a.name.localeCompare(b.name, "es", { sensitivity: "base" }),
               );
-            console.log("Fetched teams for carousel:", sortedTeams);
             setTeams(sortedTeams);
           }
         }
@@ -109,6 +108,61 @@ export default function Home() {
   });
 
   const carouselTeams = teams.length > 0 ? [...teams, ...teams] : [];
+
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const capturedTranslateX = useRef(0);
+
+  const pauseAndCapture = (clientX: number) => {
+    const el = sliderRef.current;
+    if (!el) return;
+    // Read the current animated position BEFORE cancelling the animation
+    const matrix = new DOMMatrix(window.getComputedStyle(el).transform);
+    const currentX = matrix.m41;
+    // Cancel the CSS animation so inline transform takes full control
+    el.style.animation = "none";
+    el.style.transform = `translateX(${currentX}px)`;
+    isDragging.current = true;
+    dragStartX.current = clientX;
+    capturedTranslateX.current = currentX;
+  };
+
+  const dragMove = (clientX: number) => {
+    if (!isDragging.current || !sliderRef.current) return;
+    const dx = clientX - dragStartX.current;
+    sliderRef.current.style.transform = `translateX(${capturedTranslateX.current + dx}px)`;
+  };
+
+  const releaseAndResume = () => {
+    const el = sliderRef.current;
+    if (!el || !isDragging.current) return;
+    isDragging.current = false;
+    const matrix = new DOMMatrix(window.getComputedStyle(el).transform);
+    const currentX = matrix.m41;
+    const totalDistance = el.scrollWidth / 2;
+    // Normalise to a value between -totalDistance and 0
+    let normalizedX = currentX % -totalDistance;
+    if (normalizedX > 0) normalizedX -= totalDistance;
+    const duration = 38;
+    const delay = (normalizedX / -totalDistance) * duration;
+    // Remove inline overrides, force reflow, then restart animation
+    el.style.transform = "";
+    el.style.animation = "";
+    void el.offsetWidth; // trigger reflow so animation restarts cleanly
+    el.style.animationDelay = `-${delay}s`;
+  };
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => dragMove(e.clientX);
+    const onMouseUp = () => releaseAndResume();
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+  }, []);
 
   if (error) {
     return (
@@ -252,8 +306,19 @@ export default function Home() {
           </div>
 
           {teams.length > 0 ? (
-            <div className="mt-6 team-slider-mask">
-              <div className="team-slider-track">
+            <div className="mt-6 team-slider-mask select-none">
+              <div
+                ref={sliderRef}
+                className="team-slider-track"
+                style={{ cursor: "grab", userSelect: "none" }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  pauseAndCapture(e.clientX);
+                }}
+                onTouchStart={(e) => pauseAndCapture(e.touches[0].clientX)}
+                onTouchMove={(e) => dragMove(e.touches[0].clientX)}
+                onTouchEnd={releaseAndResume}
+              >
                 {carouselTeams.map((team, index) => (
                   <Link
                     key={`${team._id}-${index}`}
