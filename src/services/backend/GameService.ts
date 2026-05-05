@@ -9,6 +9,8 @@ interface ScoreUpdate {
   away: { q1: number; q2: number; q3: number; q4: number; overtime?: number };
 }
 
+type WalkOverWinner = "home" | "away";
+
 interface CreateGameEventInput {
   quarter: number;
   type: GameEventType;
@@ -268,6 +270,36 @@ export class GameService {
     await this.recalculateStandingsForGame(updatedGame);
 
     return updatedGame;
+  }
+
+  /**
+   * Marca un partido programado como Walk Over con marcador 14-0.
+   * No crea eventos de jugadores para evitar asignación de puntos individuales.
+   */
+  async markWalkOver(id: string, winner: WalkOverWinner): Promise<Game> {
+    const game = await this.gameRepo.findById(id);
+    if (!game) {
+      throw new Error("Partido no encontrado");
+    }
+
+    if (game.status !== "scheduled") {
+      throw new Error("Solo se puede registrar Walk Over en partidos programados");
+    }
+
+    if (!game.homeTeam || !game.awayTeam) {
+      throw new Error("El partido debe tener equipo local y visitante asignados");
+    }
+
+    const walkOverScore =
+      winner === "home"
+        ? { home: { q1: 14, q2: 0, q3: 0, q4: 0, overtime: 0 }, away: { q1: 0, q2: 0, q3: 0, q4: 0, overtime: 0 } }
+        : { home: { q1: 0, q2: 0, q3: 0, q4: 0, overtime: 0 }, away: { q1: 14, q2: 0, q3: 0, q4: 0, overtime: 0 } };
+
+    await this.updateGameScore(id, walkOverScore);
+    const completedGame = await this.gameRepo.updateStatus(id, "completed");
+    await this.recalculateStandingsForGame(completedGame);
+
+    return completedGame;
   }
 
   /**

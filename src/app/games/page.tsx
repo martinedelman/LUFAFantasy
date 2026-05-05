@@ -147,6 +147,7 @@ export default function GamesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [walkOverLoadingGameId, setWalkOverLoadingGameId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
@@ -435,6 +436,54 @@ export default function GamesPage() {
       setFormError("Error de conexión. Intenta de nuevo.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleWalkOver = async (game: Game, winner: "home" | "away") => {
+    if (!canManageGames || game.status !== "scheduled") return;
+
+    const winnerName = winner === "home" ? game.homeTeam?.name || "Local" : game.awayTeam?.name || "Visitante";
+    const loserName = winner === "home" ? game.awayTeam?.name || "Visitante" : game.homeTeam?.name || "Local";
+
+    const confirmed = window.confirm(
+      `¿Confirmas Walk Over para ${winnerName}?\n\nResultado final: ${winner === "home" ? "14-0" : "0-14"}\nNo se asignarán puntos a jugadores.\n${loserName} perderá por WO.`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setWalkOverLoadingGameId(game._id);
+      setError(null);
+
+      const response = await fetch(`/api/games/${game._id}/walkover`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ winner }),
+      });
+
+      const data: ApiResponse<Game> = await response.json();
+
+      if (!response.ok || !data.success) {
+        const message = data.message || "No se pudo registrar Walk Over";
+        setError(message);
+        if (showForm) {
+          setFormError(message);
+        }
+        return;
+      }
+
+      if (showForm) {
+        closeForm();
+      }
+      await fetchGames(currentPage);
+    } catch {
+      const message = "Error de conexión. Intenta de nuevo.";
+      setError(message);
+      if (showForm) {
+        setFormError(message);
+      }
+    } finally {
+      setWalkOverLoadingGameId(null);
     }
   };
 
@@ -747,6 +796,33 @@ export default function GamesPage() {
                   rows={3}
                 />
               </div>
+
+              {editingGame && editingGame.status === "scheduled" && (
+                <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-semibold text-amber-900">Walk Over</p>
+                  <p className="mt-1 text-sm text-amber-800">
+                    Marca el partido como WO con resultado automático 14-0. No se asignarán puntos a jugadores.
+                  </p>
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleWalkOver(editingGame, "home")}
+                      disabled={walkOverLoadingGameId === editingGame._id}
+                      className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      WO Local
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleWalkOver(editingGame, "away")}
+                      disabled={walkOverLoadingGameId === editingGame._id}
+                      className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      WO Visitante
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end gap-2">
                 <button
