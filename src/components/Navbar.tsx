@@ -167,7 +167,7 @@ export default function Navbar() {
         {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 rounded-2xl border border-white/10 bg-green-950/40 backdrop-blur-md mb-3 shadow-[0_12px_32px_rgba(15,23,42,0.22)]">
+            <div className="px-2 pt-2 mt-2 pb-3 space-y-1 sm:px-3 rounded-2xl border border-white/10 bg-blue-950 mb-3 shadow-[0_12px_32px_rgba(15,23,42,0.22)]">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -226,42 +226,6 @@ export default function Navbar() {
                     >
                       Mi Perfil
                     </Link>
-                    {user.role === "admin" && (
-                      <>
-                        <div className="border-t border-white/10 my-2"></div>
-                        <div className="px-3 py-1 text-xs font-medium text-green-300 uppercase tracking-wider">
-                          Administración
-                        </div>
-                        <Link
-                          href="/teams/create"
-                          className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Crear Equipo
-                        </Link>
-                        <Link
-                          href="/players/create"
-                          className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Crear Jugador
-                        </Link>
-                        <Link
-                          href="/tournaments/new"
-                          className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Crear Torneo
-                        </Link>
-                        <Link
-                          href="/admin"
-                          className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Panel Admin
-                        </Link>
-                      </>
-                    )}
                     <button
                       onClick={() => {
                         handleSignOut();
