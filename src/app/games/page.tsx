@@ -270,7 +270,7 @@ export default function GamesPage() {
   const filteredDivisionsForForm = useMemo(() => {
     if (!form.tournament) return divisions;
 
-    return divisions.filter((division) => {
+    const filtered = divisions.filter((division) => {
       const tournamentValue = division.tournament;
       if (!tournamentValue) return false;
 
@@ -280,6 +280,10 @@ export default function GamesPage() {
 
       return tournamentValue._id === form.tournament;
     });
+
+    // Fallback: si no hay relación torneo-división consistente en datos,
+    // mostrar todas para evitar que el selector quede vacío en edición.
+    return filtered.length > 0 ? filtered : divisions;
   }, [divisions, form.tournament]);
 
   const filteredDivisionsForFilter = useMemo(() => {
