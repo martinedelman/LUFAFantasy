@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Propuesta LUFA Flag</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 0 0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: #172033;
+        background: #f4f7fb;
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.5;
+      }
+
+      .page {
+        min-height: 297mm;
+        page-break-after: always;
+        background: #ffffff;
+        border: 1px solid #dfe7f1;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 18px 40px rgba(24, 35, 56, 0.08);
+      }
+
+      .page:last-child {
+        page-break-after: auto;
+      }
+
+      .cover {
+        position: relative;
+        display: flex;
+        min-height: 297mm;
+        flex-direction: column;
+        justify-content: space-between;
+        color: #ffffff;
+        background:
+          linear-gradient(120deg, rgba(9, 28, 57, 0.91), rgba(18, 74, 66, 0.82)),
+          url("../public/Hero1.JPG") center / cover;
+      }
+
+      .cover-content {
+        padding: 42mm 18mm 0;
+      }
+
+      .kicker {
+        margin: 0 0 12px;
+        color: #bde8d7;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 700px;
+        font-size: 46px;
+        line-height: 1.04;
+        letter-spacing: -0.02em;
+      }
+
+      .cover-subtitle {
+        max-width: 660px;
+        margin-top: 22px;
+        color: #eef7ff;
+        font-size: 20px;
+      }
+
+      .cover-footer {
+        padding: 0 18mm 18mm;
+      }
+
+      .proposal-card {
+        max-width: 660px;
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(8px);
+      }
+
+      .proposal-card strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #ffffff;
+      }
+
+      .section {
+        padding: 18mm;
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        color: #10233f;
+        font-size: 27px;
+        line-height: 1.12;
+      }
+
+      h3 {
+        margin: 22px 0 8px;
+        color: #17365f;
+        font-size: 17px;
+      }
+
+      p {
+        margin: 0 0 10px;
+        font-size: 12.4px;
+      }
+
+      ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+      }
+
+      li {
+        margin: 0 0 8px;
+        font-size: 12.2px;
+      }
+
+      .lead {
+        color: #405069;
+        font-size: 14px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .card {
+        padding: 14px;
+        border: 1px solid #dce5ef;
+        border-radius: 9px;
+        background: #fbfdff;
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .highlight {
+        padding: 14px 16px;
+        border-left: 4px solid #0f766e;
+        border-radius: 8px;
+        background: #ecfdf7;
+        color: #173b36;
+      }
+
+      .metric-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 16px 0;
+      }
+
+      .metric {
+        padding: 13px;
+        border-radius: 9px;
+        background: #10233f;
+        color: #ffffff;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 22px;
+      }
+
+      .metric span {
+        color: #d7e7f4;
+        font-size: 11px;
+      }
+
+      .feature-table {
+        width: 100%;
+        margin-top: 14px;
+        border-collapse: collapse;
+        font-size: 11.4px;
+      }
+
+      .feature-table th,
+      .feature-table td {
+        padding: 9px 10px;
+        border: 1px solid #dce5ef;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .feature-table th {
+        background: #edf4fb;
+        color: #10233f;
+      }
+
+      .strip {
+        margin: 16px -18mm 0;
+        padding: 20px 18mm;
+        color: #ffffff;
+        background:
+          linear-gradient(100deg, rgba(10, 38, 70, 0.9), rgba(13, 99, 92, 0.82)),
+          url("../public/Hero3.JPG") center / cover;
+      }
+
+      .two-col {
+        columns: 2;
+        column-gap: 24px;
+      }
+
+      .quote {
+        margin-top: 16px;
+        padding: 15px;
+        border-radius: 10px;
+        background: #f1f6fb;
+        color: #17365f;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .footer-note {
+        margin-top: 18px;
+        padding-top: 12px;
+        border-top: 1px solid #dce5ef;
+        color: #65748b;
+        font-size: 10.5px;
+      }
+
+      .mini {
+        color: #65748b;
+        font-size: 10.5px;
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+        }
+
+        .page {
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="page cover">
+      <div class="cover-content">
+        <p class="kicker">Propuesta para la Comisión de Flag</p>
+        <h1>LUFA Flag: una plataforma propia para gestionar, registrar y mostrar la competencia</h1>
+        <p class="cover-subtitle">
+          Una alternativa moderna a Copa Fácil, pensada específicamente para la Liga Uruguaya de Football Americano y
+          para la realidad del Flag Football en Uruguay.
+        </p>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <p class="kicker">Resumen ejecutivo</p>
+        <h2>Una herramienta hecha para que la liga gane control, claridad y visibilidad</h2>
+        <p class="lead">
+          LUFA Flag no busca ser solamente una página de resultados. La idea es ofrecerle a la comisión una plataforma
+          propia donde cada torneo pueda vivir completo: desde la creación de equipos y jugadores hasta el seguimiento
+          de partidos en vivo, tablas de posiciones y estadísticas.
+        </p>
+
+        <div class="highlight">
+          La principal diferencia frente a una solución genérica es que esta plataforma está pensada alrededor del Flag
+          Football: sus divisiones, posiciones, eventos de partido, marcadores, jugadores presentes y necesidades de
+          comunicación con equipos, atletas y público.
+        </div>
+
+        <div class="metric-row">
+          <div class="metric">
+            <strong>1</strong>
+            <span>Sistema central para torneos, partidos, equipos y jugadores</span>
+          </div>
+          <div class="metric">
+            <strong>Live</strong>
+            <span>Registro de eventos y marcador durante el partido</span>
+          </div>
+          <div class="metric">
+            <strong>Web</strong>
+            <span>Información pública atractiva para comunidad y difusión</span>
+          </div>
+        </div>
+
+        <h3>Por qué puede servirle a la comisión</h3>
+        <ul>
+          <li>
+            Reduce la dependencia de plataformas externas y permite construir una identidad digital propia de LUFA Flag.
+          </li>
+          <li>
+            Ordena la información deportiva en un mismo lugar: calendario, equipos, planteles, resultados y posiciones.
+          </li>
+          <li>
+            Le da a cada partido un registro más rico que el marcador final, incluyendo eventos y jugadores presentes.
+          </li>
+          <li>Facilita la comunicación hacia jugadores, equipos, familias, hinchas, sponsors y nuevos interesados.</li>
+          <li>Permite crecer hacia reportes, rankings, historial por temporada y estadísticas más profundas.</li>
+        </ul>
+
+        <div class="quote">
+          La propuesta es pasar de “cargar partidos en una herramienta externa” a “gestionar la competencia desde una
+          plataforma propia de la liga”.
+        </div>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <p class="kicker">Funcionalidades actuales</p>
+        <h2>Qué permite hacer la plataforma</h2>
+        <p class="lead">
+          El sistema ya cuenta con módulos clave para cubrir la operativa principal de una competencia de Flag Football.
+          Está construido como aplicación web, por lo que puede ser usado desde computadora, tablet o celular.
+        </p>
+
+        <table class="feature-table">
+          <thead>
+            <tr>
+              <th>Módulo</th>
+              <th>Qué ofrece</th>
+              <th>Valor para LUFA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Torneos</td>
+              <td>
+                Creación, listado, filtros por estado y año, detalle por torneo, divisiones y formato de competencia.
+              </td>
+              <td>Permite organizar Apertura, Clausura, copas o torneos especiales con estructura clara.</td>
+            </tr>
+            <tr>
+              <td>Equipos</td>
+              <td>Registro de nombre, abreviatura, división, estado, colores, logo, imagen y datos de entrenador.</td>
+              <td>Da presencia institucional a cada equipo y ordena la información de contacto.</td>
+            </tr>
+            <tr>
+              <td>Jugadores</td>
+              <td>
+                Alta de jugadores, búsqueda, filtros por equipo, posición y estado, ficha individual y datos deportivos.
+              </td>
+              <td>Ayuda a controlar planteles, números de camiseta, posiciones y disponibilidad.</td>
+            </tr>
+            <tr>
+              <td>Partidos</td>
+              <td>Programación, edición, estado del partido, local/visitante, fecha, hora, sede, ronda y notas.</td>
+              <td>
+                Centraliza el calendario oficial y evita información dispersa entre planillas, chats y publicaciones.
+              </td>
+            </tr>
+            <tr>
+              <td>Posiciones</td>
+              <td>
+                Tabla por torneo/división con ganados, perdidos, empatados, porcentaje, puntos a favor/en contra y
+                racha.
+              </td>
+              <td>Entrega una clasificación clara, consultable y presentable para toda la comunidad.</td>
+            </tr>
+            <tr>
+              <td>Estadísticas</td>
+              <td>Ranking de jugadores y equipos, métricas ofensivas, defensivas y ordenamientos por rendimiento.</td>
+              <td>Genera contenido deportivo, reconoce desempeño y eleva la seriedad competitiva del torneo.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="strip">
+          <h2 style="color: #ffffff; margin-bottom: 8px">La web pública también vende el deporte</h2>
+          <p>
+            La página de inicio muestra próximos partidos, mejores jugadores, equipos actuales y contenido introductorio
+            sobre el Flag Football. Eso transforma la plataforma en una vitrina para atraer jugadores, público, prensa y
+            potenciales sponsors.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <p class="kicker">Diferencial deportivo</p>
+        <h2>Registro en vivo: más que anotar un resultado</h2>
+        <p class="lead">
+          Uno de los puntos más fuertes es el modo Live Match, pensado para que un administrador registre lo que ocurre
+          durante el partido de forma ordenada.
+        </p>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Jugadores presentes</h3>
+            <p>
+              Antes de iniciar el partido se seleccionan los jugadores disponibles de cada equipo. Esto permite dejar
+              constancia real de quién participó y puede servir para control de roster, elegibilidad y estadísticas.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Marcador en vivo</h3>
+            <p>
+              El sistema muestra el resultado actualizado y permite registrar eventos que suman puntos, manteniendo un
+              historial del encuentro.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Eventos propios de Flag</h3>
+            <p>
+              Incluye touchdowns, puntos extra, conversiones, safety, intercepciones, pick six, sacks, castigos,
+              actitudes antideportivas y primeros downs.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Cierre de partido</h3>
+            <p>
+              Permite marcar mitades, finalizar partidos y conservar el historial de eventos registrados para revisión
+              posterior.
+            </p>
+          </div>
+        </div>
+
+        <h3>Impacto directo</h3>
+        <ul>
+          <li>Menos carga manual posterior, porque el partido se documenta mientras ocurre.</li>
+          <li>Mayor transparencia ante equipos y jugadores sobre cómo se llegó al resultado final.</li>
+          <li>Base de datos útil para estadísticas, rankings, posteos, premios y resúmenes semanales.</li>
+          <li>Mejor experiencia para seguir la liga incluso cuando alguien no puede estar presente en la cancha.</li>
+        </ul>
+
+        <div class="quote">
+          Este módulo convierte cada partido en información aprovechable: resultado, participantes, eventos y narrativa
+          deportiva.
+        </div>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <p class="kicker">Beneficios frente al modelo actual</p>
+        <h2>Por qué conviene evaluar una plataforma propia</h2>
+        <p class="lead">
+          Copa Fácil puede resolver una parte del problema: publicar fixtures y resultados. Esta propuesta apunta a algo
+          más amplio: construir un sistema de gestión y comunicación alineado con la liga.
+        </p>
+
+        <div class="two-col">
+          <h3>Identidad LUFA</h3>
+          <p>
+            La plataforma puede hablar con la estética, nombres, divisiones y tono propio de LUFA. No queda limitada a
+            una plantilla genérica de un tercero.
+          </p>
+
+          <h3>Datos centralizados</h3>
+          <p>
+            Equipos, jugadores, torneos, partidos y estadísticas quedan en una base unificada. Eso facilita consultas,
+            reportes y continuidad histórica entre temporadas.
+          </p>
+
+          <h3>Experiencia para la comunidad</h3>
+          <p>
+            Jugadores e hinchas pueden ver equipos, fichas, próximos partidos, posiciones y estadísticas sin depender de
+            capturas o publicaciones aisladas.
+          </p>
+
+          <h3>Control administrativo</h3>
+          <p>
+            El sistema distingue usuarios comunes y administradores. Las acciones sensibles, como crear equipos,
+            jugadores, torneos o gestionar partidos, quedan reservadas para perfiles autorizados.
+          </p>
+
+          <h3>Escalabilidad</h3>
+          <p>
+            Al estar desarrollado con Next.js, TypeScript y MongoDB, puede seguir creciendo: reportes, inscripciones,
+            sanciones, exportaciones, historial por jugador o integraciones futuras.
+          </p>
+
+          <h3>Contenido para difusión</h3>
+          <p>
+            Los rankings, top players, logos de equipos y resultados generan material natural para redes sociales,
+            comunicación institucional y presentación ante sponsors.
+          </p>
+        </div>
+
+        <div class="highlight" style="margin-top: 18px">
+          Adoptar esta plataforma no significa solamente cambiar dónde se cargan los partidos. Significa empezar a
+          construir una memoria deportiva propia de la liga.
+        </div>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <p class="kicker">Operativa</p>
+        <h2>Cómo podría usarse en una fecha de liga</h2>
+
+        <div class="grid">
+          <div class="card">
+            <h3>1. Antes de la fecha</h3>
+            <ul>
+              <li>Crear o confirmar torneo y divisiones.</li>
+              <li>Registrar equipos y planteles.</li>
+              <li>Programar partidos con fecha, hora y sede.</li>
+              <li>Publicar automáticamente próximos partidos en la web.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>2. Durante el partido</h3>
+            <ul>
+              <li>Seleccionar jugadores presentes.</li>
+              <li>Iniciar el encuentro desde modo Live Match.</li>
+              <li>Registrar touchdowns, conversiones, defensivas y castigos.</li>
+              <li>Actualizar marcador y conservar historial.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>3. Después del partido</h3>
+            <ul>
+              <li>Finalizar el partido.</li>
+              <li>Actualizar posiciones y estadísticas.</li>
+              <li>Revisar eventos registrados si hiciera falta.</li>
+              <li>Usar datos para comunicación y reportes.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>4. Durante la temporada</h3>
+            <ul>
+              <li>Consultar rankings de jugadores y equipos.</li>
+              <li>Mantener planteles actualizados.</li>
+              <li>Filtrar información por torneo, división, equipo o estado.</li>
+              <li>Mostrar una liga activa, ordenada y profesional.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>Propuesta de implementación gradual</h3>
+        <table class="feature-table">
+          <tbody>
+            <tr>
+              <th>Etapa 1</th>
+              <td>
+                Cargar torneos, divisiones, equipos y jugadores actuales. Validar que la información base sea correcta.
+              </td>
+            </tr>
+            <tr>
+              <th>Etapa 2</th>
+              <td>Usar el sistema para fixture, resultados y posiciones de una división piloto.</td>
+            </tr>
+            <tr>
+              <th>Etapa 3</th>
+              <td>Probar Live Match en partidos seleccionados y ajustar el flujo con feedback de mesa y árbitros.</td>
+            </tr>
+            <tr>
+              <th>Etapa 4</th>
+              <td>Extender el uso a toda la competencia y definir mejoras prioritarias para la temporada.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <p class="kicker">Cierre</p>
+        <h2>Una oportunidad para profesionalizar la gestión del Flag en Uruguay</h2>
+        <p class="lead">
+          Este sistema propone una evolución natural para la comisión: mantener la información deportiva ordenada,
+          mejorar la experiencia de jugadores y equipos, y mostrar hacia afuera una liga con estructura, datos e
+          identidad.
+        </p>
+
+        <h3>Lo más fuerte de la propuesta</h3>
+        <ul>
+          <li>Está enfocada en Flag Football, no en un deporte genérico.</li>
+          <li>Combina gestión interna con una web pública atractiva.</li>
+          <li>Permite registrar partidos con detalle y no solo publicar resultados.</li>
+          <li>Da base para estadísticas, rankings, premios y contenido de difusión.</li>
+          <li>Puede crecer junto con las necesidades reales de la comisión.</li>
+        </ul>
+
+        <div class="quote">
+          Si LUFA quiere seguir creciendo, también necesita que su información deportiva crezca con ella: ordenada,
+          consultable, confiable y propia.
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
