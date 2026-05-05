@@ -458,15 +458,6 @@ export default function TeamViewerPage() {
     />
   );
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("es-ES", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   const formatTime = (date: string) => {
     return new Date(date).toLocaleTimeString("es-ES", {
       hour: "2-digit",
@@ -497,124 +488,47 @@ export default function TeamViewerPage() {
     <Link
       key={game._id}
       href={`/games/${game._id}`}
-      className="block rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6"
+      className="block rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
       aria-label={`Ver match ${getTeamDisplayName(game.homeTeam)} vs ${getTeamDisplayName(game.awayTeam)}`}
     >
-      <div className="sm:hidden">
-        <div className="flex items-start justify-between gap-3">
-          <div className="text-sm font-medium text-gray-700 break-words">{game.venue.name}</div>
-          <div className="text-xs text-gray-500 whitespace-nowrap">{formatDateTimeCompact(game.scheduledDate)}</div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="truncate text-sm font-medium text-gray-700">{game.venue.name}</div>
+          <div className="mt-1 line-clamp-2 text-xs text-gray-500">{game.venue.address}</div>
+        </div>
+        <div className="shrink-0 text-right text-xs text-gray-500">{formatDateTimeCompact(game.scheduledDate)}</div>
+      </div>
+
+      <div className="mt-4 flex justify-center">{getGameStatusTag(game.status)}</div>
+
+      <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="min-w-0 text-center">
+          <div className="mb-2 flex justify-center">{renderGameTeamAvatar(game.homeTeam, "sm")}</div>
+          <div className="truncate text-sm font-bold text-gray-900">{getTeamDisplayName(game.homeTeam)}</div>
         </div>
 
-        <div className="mt-1 text-xs text-gray-500 break-words">{game.venue.address}</div>
-
-        <div className="mt-3 flex justify-center">{getGameStatusTag(game.status)}</div>
-
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="w-[36%] flex flex-col items-center text-center">
-            {renderGameTeamAvatar(game.homeTeam, "sm")}
-            <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
-              {getTeamDisplayName(game.homeTeam)}
+        <div className="text-center">
+          {game.status === "completed" || game.status === "in_progress" ? (
+            <div className="text-2xl font-bold leading-none text-blue-900">
+              {game.score.home.total}:{game.score.away.total}
             </div>
-          </div>
-
-          <div className="w-[28%] text-center">
-            {game.status === "completed" || game.status === "in_progress" ? (
-              <div className="text-4xl font-bold text-blue-900 leading-none">
-                {game.score.home.total}:{game.score.away.total}
-              </div>
-            ) : (
-              <div>
-                <div className="text-base font-semibold text-gray-500">vs</div>
-                <div className="text-xs text-gray-400">{formatTime(game.scheduledDate)}</div>
-              </div>
-            )}
-          </div>
-
-          <div className="w-[36%] flex flex-col items-center text-center">
-            {renderGameTeamAvatar(game.awayTeam, "sm")}
-            <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
-              {getTeamDisplayName(game.awayTeam)}
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="text-lg font-bold text-gray-600">vs</div>
+              <div className="text-sm text-gray-500">{formatTime(game.scheduledDate)}</div>
+            </>
+          )}
         </div>
 
-        <div className="mt-3 text-xs text-gray-500 text-center">
-          {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionName(game)}
-          {game.round ? ` · ${game.round}` : ""}
+        <div className="min-w-0 text-center">
+          <div className="mb-2 flex justify-center">{renderGameTeamAvatar(game.awayTeam, "sm")}</div>
+          <div className="truncate text-sm font-bold text-gray-900">{getTeamDisplayName(game.awayTeam)}</div>
         </div>
       </div>
 
-      <div className="hidden sm:block">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                {getGameStatusTag(game.status)}
-                <span className="text-sm text-gray-500">
-                  {game.week ? `Semana ${game.week}` : "Sin semana"} - {getDivisionName(game)}
-                  {game.round ? ` - ${game.round}` : ""}
-                </span>
-              </div>
-              <div className="text-sm text-gray-500">{formatDate(game.scheduledDate)}</div>
-            </div>
-
-            <div className="flex items-center justify-center space-x-8 mb-4">
-              <div className="flex items-center space-x-3 flex-1 justify-end">
-                <div className="text-right">
-                  <div className="font-semibold text-gray-900">{getTeamDisplayName(game.homeTeam)}</div>
-                  {typeof game.homeTeam !== "string" && game.homeTeam && !game.homeTeam.logo && game.homeTeam.shortName && (
-                    <div className="text-sm text-gray-500">{game.homeTeam.shortName}</div>
-                  )}
-                </div>
-                {renderGameTeamAvatar(game.homeTeam, "md")}
-              </div>
-
-              <div className="flex items-center space-x-4">
-                {game.status === "completed" || game.status === "in_progress" ? (
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {game.score.home.total} - {game.score.away.total}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <div className="text-lg font-medium text-gray-500">vs</div>
-                    <div className="text-sm text-gray-400">{formatTime(game.scheduledDate)}</div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center space-x-3 flex-1">
-                {renderGameTeamAvatar(game.awayTeam, "md")}
-                <div>
-                  <div className="font-semibold text-gray-900">{getTeamDisplayName(game.awayTeam)}</div>
-                  {typeof game.awayTeam !== "string" && game.awayTeam && !game.awayTeam.logo && game.awayTeam.shortName && (
-                    <div className="text-sm text-gray-500">{game.awayTeam.shortName}</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center text-sm text-gray-500">
-              <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              {game.venue.name}, {game.venue.address}
-            </div>
-          </div>
-        </div>
+      <div className="mt-4 truncate text-center text-xs text-gray-500">
+        {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionName(game)}
+        {game.round ? ` · ${game.round}` : ""}
       </div>
     </Link>
   );
@@ -1203,7 +1117,7 @@ export default function TeamViewerPage() {
                   </div>
 
                   {upcomingGames.length > 0 ? (
-                    <div className="space-y-4">{upcomingGames.map(renderGameCard)}</div>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{upcomingGames.map(renderGameCard)}</div>
                   ) : (
                     <div className="rounded-lg bg-gray-50 px-4 py-10 text-center">
                       <h4 className="text-sm font-medium text-gray-900">No hay próximos partidos</h4>
@@ -1223,7 +1137,7 @@ export default function TeamViewerPage() {
                   </div>
 
                   {previousGames.length > 0 ? (
-                    <div className="space-y-4">{previousGames.map(renderGameCard)}</div>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{previousGames.map(renderGameCard)}</div>
                   ) : (
                     <div className="rounded-lg bg-gray-50 px-4 py-10 text-center">
                       <h4 className="text-sm font-medium text-gray-900">No hay partidos anteriores</h4>
