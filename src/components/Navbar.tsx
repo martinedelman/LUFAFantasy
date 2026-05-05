@@ -12,6 +12,7 @@ const navigation = [
   { name: "Jugadores", href: "/players" },
   { name: "Partidos", href: "/games" },
   { name: "Posiciones", href: "/standings" },
+  { name: "Rankings", href: "/rankings" },
 ];
 
 export default function Navbar() {
