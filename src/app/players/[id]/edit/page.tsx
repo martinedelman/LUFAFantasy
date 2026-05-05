@@ -268,20 +268,15 @@ export default function EditPlayerPage() {
               onChange={handleChange}
               className="w-full border px-3 py-2 rounded"
             >
-              <option value="QB">QB</option>
-              <option value="WR">WR</option>
-              <option value="RB">RB</option>
-              <option value="C">C</option>
-              <option value="G">G</option>
-              <option value="T">T</option>
-              <option value="DE">DE</option>
-              <option value="DT">DT</option>
-              <option value="LB">LB</option>
-              <option value="CB">CB</option>
-              <option value="FS">FS</option>
-              <option value="SS">SS</option>
-              <option value="K">K</option>
-              <option value="P">P</option> <option value="FLEX">FLEX</option>
+              <option value="QB">Quarterback (QB)</option>
+              <option value="WR">Wide Receiver (WR)</option>
+              <option value="RB">Running Back (RB)</option>
+              <option value="C">Center (C)</option>
+              <option value="RS">Rusher (RS)</option>
+              <option value="LB">Linebacker (LB)</option>
+              <option value="CB">Cornerback (CB)</option>
+              <option value="FS">Free Safety (FS)</option>
+              <option value="SS">Strong Safety (SS)</option>
             </select>
             {/* Campos de contacto de emergencia */}
             <div className="col-span-2">
