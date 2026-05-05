@@ -66,6 +66,14 @@ const GameStatisticsSchema = new Schema({
   away: { type: TeamGameStatsSchema, required: true },
 });
 
+const PresentPlayersSchema = new Schema(
+  {
+    home: [{ type: Schema.Types.ObjectId, ref: "Player" }],
+    away: [{ type: Schema.Types.ObjectId, ref: "Player" }],
+  },
+  { _id: false },
+);
+
 const GameEventSchema = new Schema({
   quarter: { type: Number, required: true, min: 1, max: 5 },
   time: { type: String }, // MM:SS format
@@ -118,6 +126,7 @@ const GameSchema = new Schema(
     weather: { type: WeatherConditionsSchema },
     score: { type: GameScoreSchema, required: true },
     statistics: { type: GameStatisticsSchema, required: true },
+    presentPlayers: { type: PresentPlayersSchema, default: () => ({ home: [], away: [] }) },
     events: [{ type: GameEventSchema }],
     notes: { type: String, trim: true },
   },

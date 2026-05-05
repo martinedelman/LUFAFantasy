@@ -19,7 +19,11 @@ interface PopulatedRef {
   };
 }
 
-interface GameWithEvents extends Game {
+type GameWithEvents = Omit<Game, "presentPlayers"> & {
+  presentPlayers?: {
+    home?: Array<string | PopulatedRef>;
+    away?: Array<string | PopulatedRef>;
+  };
   events?: Array<{
     _id?: unknown;
     quarter: number;
@@ -32,7 +36,7 @@ interface GameWithEvents extends Game {
     points?: number;
     details?: unknown;
   }>;
-}
+};
 
 export function toGameResponseDto(game: Game): GameResponseDto {
   const gameWithEvents = game as GameWithEvents;
@@ -55,6 +59,10 @@ export function toGameResponseDto(game: Game): GameResponseDto {
     round: game.round,
     score: game.score,
     statistics: game.statistics,
+    presentPlayers: {
+      home: (gameWithEvents.presentPlayers?.home || []).map(toPlayerRef).filter(isDefinedPlayerRef),
+      away: (gameWithEvents.presentPlayers?.away || []).map(toPlayerRef).filter(isDefinedPlayerRef),
+    },
     events: (gameWithEvents.events || []).map(toGameEventResponseDto),
     notes: game.notes,
     createdAt: game.createdAt?.toISOString(),
@@ -115,4 +123,10 @@ function toPlayerRef(player: string | PopulatedRef | undefined): GameEventRespon
 
 function stringifyId(value: unknown): string {
   return value ? value.toString() : "";
+}
+
+function isDefinedPlayerRef(
+  player: ReturnType<typeof toPlayerRef>,
+): player is NonNullable<ReturnType<typeof toPlayerRef>> {
+  return Boolean(player);
 }

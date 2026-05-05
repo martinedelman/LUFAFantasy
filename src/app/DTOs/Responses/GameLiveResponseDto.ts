@@ -37,10 +37,12 @@ export interface GameLiveResponseDto {
   scheduledDate: string;
   actualStartTime?: string;
   actualEndTime?: string;
+  week?: number;
+  round?: string;
   score: GameScore;
   events: GameEventResponseDto[];
   presentPlayers?: {
-    home: string[];
-    away: string[];
+    home: Array<PlayerSummaryResponseDto | string>;
+    away: Array<PlayerSummaryResponseDto | string>;
   };
 }
