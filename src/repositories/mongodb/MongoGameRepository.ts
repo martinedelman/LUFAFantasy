@@ -25,6 +25,8 @@ export class MongoGameRepository implements IGameRepository {
     const docs = await GameModel.find(filters || {})
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
       .populate("presentPlayers.home")
       .populate("presentPlayers.away")
       .populate("events.team")
@@ -77,6 +79,10 @@ export class MongoGameRepository implements IGameRepository {
     const docs = await GameModel.find({ tournament: tournamentId })
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();
@@ -90,6 +96,10 @@ export class MongoGameRepository implements IGameRepository {
     })
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();
@@ -98,7 +108,14 @@ export class MongoGameRepository implements IGameRepository {
 
   async findByStatus(status: GameStatus): Promise<Game[]> {
     await connectToDatabase();
-    const docs = await GameModel.find({ status }).populate("homeTeam").populate("awayTeam").exec();
+    const docs = await GameModel.find({ status })
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
+      .exec();
     return docs;
   }
 
@@ -111,6 +128,8 @@ export class MongoGameRepository implements IGameRepository {
     })
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
       .exec();
     return docs;
   }
@@ -120,6 +139,10 @@ export class MongoGameRepository implements IGameRepository {
     const docs = await GameModel.find({ division: divisionId })
       .populate("homeTeam")
       .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
       .populate("events.team")
       .populate("events.player")
       .exec();

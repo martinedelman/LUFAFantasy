@@ -5,8 +5,20 @@ import type { PlayerSummaryResponseDto } from "./PlayerSummaryResponseDto";
 
 export interface GameResponseDto {
   _id?: string;
-  tournament: string;
-  division: string;
+  tournament:
+    | string
+    | {
+        _id: string;
+        name: string;
+        year: number;
+      };
+  division:
+    | string
+    | {
+        _id: string;
+        name: string;
+        category: string;
+      };
   homeTeam: string | null;
   awayTeam: string | null;
   venue: {

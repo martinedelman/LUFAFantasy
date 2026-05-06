@@ -155,13 +155,31 @@ interface GameEvent {
   yards?: number;
 }
 
+interface GameTeam {
+  _id: string;
+  name: string;
+  shortName?: string;
+  logo?: string;
+  colors: {
+    primary: string;
+    secondary?: string;
+  };
+}
+
 interface TeamGame {
   _id: string;
   status: "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
-  homeTeam: string | { _id: string } | null;
-  awayTeam: string | { _id: string } | null;
+  scheduledDate: string;
+  week?: number;
+  round?: string;
+  homeTeam: string | GameTeam | null;
+  awayTeam: string | GameTeam | null;
   tournament: string | { _id: string; name?: string; year?: number };
   division: string | { _id: string; name?: string; category?: string };
+  venue: {
+    name: string;
+    address: string;
+  };
   score: {
     home: { total: number };
     away: { total: number };
@@ -315,10 +333,11 @@ export default function TeamViewerPage() {
 
   const [team, setTeam] = useState<Team | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [teamGames, setTeamGames] = useState<TeamGame[]>([]);
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"info" | "roster" | "stats">("info");
+  const [activeTab, setActiveTab] = useState<"info" | "roster" | "games" | "stats">("info");
 
   const fetchPlayers = useCallback(async () => {
     try {
@@ -365,14 +384,19 @@ export default function TeamViewerPage() {
           const gamesData = await gamesResponse.json();
 
           if (gamesData.success) {
-            setTeamStats(deriveTeamStatsFromGames(loadedTeam, gamesData.data || []));
+            const loadedGames = (gamesData.data || []) as TeamGame[];
+            setTeamGames(loadedGames);
+            setTeamStats(deriveTeamStatsFromGames(loadedTeam, loadedGames));
           } else if (statsData.success && statsData.data.length > 0) {
+            setTeamGames([]);
             setTeamStats(statsData.data[0]);
           } else {
+            setTeamGames([]);
             setTeamStats(emptyTeamStats(loadedTeam));
           }
         } catch (statsError) {
           console.log("Stats not available:", statsError);
+          setTeamGames([]);
           setTeamStats(emptyTeamStats(loadedTeam));
         }
       } catch {
@@ -399,6 +423,123 @@ export default function TeamViewerPage() {
     const { label, type } = statusMap[status] || { label: status, type: "info" as const };
     return <Tag label={label} type={type} />;
   };
+
+  const getGameStatusTag = (status: TeamGame["status"]) => {
+    const statusMap: Record<TeamGame["status"], { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      scheduled: { label: "Programado", type: "info" },
+      in_progress: { label: "En Curso", type: "success" },
+      completed: { label: "Completado", type: "success" },
+      postponed: { label: "Pospuesto", type: "warning" },
+      cancelled: { label: "Cancelado", type: "error" },
+    };
+
+    const { label, type } = statusMap[status];
+    return <Tag label={label} type={type} />;
+  };
+
+  const getTeamDisplayName = (gameTeam: TeamGame["homeTeam"]) => {
+    if (!gameTeam || typeof gameTeam === "string") return "TBD";
+    return gameTeam.name;
+  };
+
+  const getTeamAvatarFallback = (gameTeam: TeamGame["homeTeam"]) => {
+    if (!gameTeam || typeof gameTeam === "string") return "TBD";
+    return (gameTeam.shortName || gameTeam.name.substring(0, 2)).toUpperCase();
+  };
+
+  const renderGameTeamAvatar = (gameTeam: TeamGame["homeTeam"], size: "sm" | "md") => (
+    <Avatar
+      imageUrl={typeof gameTeam === "string" ? undefined : gameTeam?.logo}
+      alt={getTeamDisplayName(gameTeam)}
+      fallback={getTeamAvatarFallback(gameTeam)}
+      backgroundColor={typeof gameTeam === "string" ? "#9CA3AF" : gameTeam?.colors.primary || "#9CA3AF"}
+      size={size}
+      fallbackClassName={size === "sm" ? "text-xs" : "text-sm"}
+    />
+  );
+
+  const formatTime = (date: string) => {
+    return new Date(date).toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatDateTimeCompact = (date: string) => {
+    const parsedDate = new Date(date);
+    const dayMonth = parsedDate.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+    });
+
+    const hour = parsedDate.toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    return `${dayMonth} · ${hour}`;
+  };
+
+  const getDivisionName = (game: TeamGame) => {
+    if (typeof game.division === "string") return "División";
+
+    const categoryLabel: Record<string, string> = {
+      masculino: "Masculino",
+      femenino: "Femenino",
+      mixto: "Mixto",
+    };
+
+    return game.division.category ? categoryLabel[game.division.category] || game.division.category : game.division.name || "División";
+  };
+
+  const renderGameCard = (game: TeamGame) => (
+    <Link
+      key={game._id}
+      href={`/games/${game._id}`}
+      className="block rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+      aria-label={`Ver match ${getTeamDisplayName(game.homeTeam)} vs ${getTeamDisplayName(game.awayTeam)}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="truncate text-sm font-medium text-gray-700">{game.venue.name}</div>
+          <div className="mt-1 line-clamp-2 text-xs text-gray-500">{game.venue.address}</div>
+        </div>
+        <div className="shrink-0 text-right text-xs text-gray-500">{formatDateTimeCompact(game.scheduledDate)}</div>
+      </div>
+
+      <div className="mt-4 flex justify-center">{getGameStatusTag(game.status)}</div>
+
+      <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="min-w-0 text-center">
+          <div className="mb-2 flex justify-center">{renderGameTeamAvatar(game.homeTeam, "sm")}</div>
+          <div className="truncate text-sm font-bold text-gray-900">{getTeamDisplayName(game.homeTeam)}</div>
+        </div>
+
+        <div className="text-center">
+          {game.status === "completed" || game.status === "in_progress" ? (
+            <div className="text-2xl font-bold leading-none text-blue-900">
+              {game.score.home.total}:{game.score.away.total}
+            </div>
+          ) : (
+            <>
+              <div className="text-lg font-bold text-gray-600">vs</div>
+              <div className="text-sm text-gray-500">{formatTime(game.scheduledDate)}</div>
+            </>
+          )}
+        </div>
+
+        <div className="min-w-0 text-center">
+          <div className="mb-2 flex justify-center">{renderGameTeamAvatar(game.awayTeam, "sm")}</div>
+          <div className="truncate text-sm font-bold text-gray-900">{getTeamDisplayName(game.awayTeam)}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 truncate text-center text-xs text-gray-500">
+        {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionName(game)}
+        {game.round ? ` · ${game.round}` : ""}
+      </div>
+    </Link>
+  );
 
   const calculateWinPercentage = (stats: TeamStats) => {
     const totalGames = stats.wins + stats.losses + stats.ties;
@@ -442,6 +583,13 @@ export default function TeamViewerPage() {
   }
 
   const hasHeaderImage = Boolean(team.backgroundImage);
+  const now = Date.now();
+  const upcomingGames = [...teamGames]
+    .filter((game) => game.status !== "completed" && new Date(game.scheduledDate).getTime() >= now)
+    .sort((left, right) => new Date(left.scheduledDate).getTime() - new Date(right.scheduledDate).getTime());
+  const previousGames = [...teamGames]
+    .filter((game) => game.status === "completed" || new Date(game.scheduledDate).getTime() < now)
+    .sort((left, right) => new Date(right.scheduledDate).getTime() - new Date(left.scheduledDate).getTime());
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -633,6 +781,16 @@ export default function TeamViewerPage() {
                 }`}
               >
                 Plantilla ({players.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("games")}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "games"
+                    ? "border-green-500 text-green-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Partidos ({teamGames.length})
               </button>
               <button
                 onClick={() => setActiveTab("stats")}
@@ -952,6 +1110,51 @@ export default function TeamViewerPage() {
                     </table>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Games Tab */}
+            {activeTab === "games" && (
+              <div className="space-y-8">
+                <section>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Próximos partidos</h3>
+                    <p className="mt-1 text-sm text-gray-700">
+                      Partidos programados o en curso para este equipo.
+                    </p>
+                  </div>
+
+                  {upcomingGames.length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{upcomingGames.map(renderGameCard)}</div>
+                  ) : (
+                    <div className="rounded-lg bg-gray-50 px-4 py-10 text-center">
+                      <h4 className="text-sm font-medium text-gray-900">No hay próximos partidos</h4>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Cuando se programen partidos para este equipo, aparecerán acá.
+                      </p>
+                    </div>
+                  )}
+                </section>
+
+                <section>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Historial de partidos</h3>
+                    <p className="mt-1 text-sm text-gray-700">
+                      Partidos anteriores y resultados registrados.
+                    </p>
+                  </div>
+
+                  {previousGames.length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{previousGames.map(renderGameCard)}</div>
+                  ) : (
+                    <div className="rounded-lg bg-gray-50 px-4 py-10 text-center">
+                      <h4 className="text-sm font-medium text-gray-900">No hay partidos anteriores</h4>
+                      <p className="mt-1 text-sm text-gray-500">
+                        El historial aparecerá cuando este equipo haya jugado partidos.
+                      </p>
+                    </div>
+                  )}
+                </section>
               </div>
             )}
 

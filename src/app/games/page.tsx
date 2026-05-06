@@ -139,6 +139,18 @@ function getTeamDisplayName(value: unknown): string {
   return "TBD";
 }
 
+function getDivisionDisplayName(division: DivisionOption | string | null | undefined): string {
+  if (!division || typeof division === "string") return "División";
+
+  const categoryLabel: Record<string, string> = {
+    masculino: "Masculino",
+    femenino: "Femenino",
+    mixto: "Mixto",
+  };
+
+  return division.category ? categoryLabel[division.category] || division.category : division.name || "División";
+}
+
 export default function GamesPage() {
   const { user } = useAuth();
   const canManageGames = user?.role === "admin";
@@ -1022,7 +1034,7 @@ export default function GamesPage() {
               </div>
 
               <div className="mt-3 text-xs text-gray-500 text-center">
-                {game.week ? `Semana ${game.week}` : "Sin semana"} · {game.division.name}
+                {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
                 {game.round ? ` · ${game.round}` : ""}
               </div>
 
@@ -1035,7 +1047,7 @@ export default function GamesPage() {
                     <div className="flex items-center space-x-2">
                       {getStatusTag(game.status)}
                       <span className="text-sm text-gray-500">
-                        {game.week ? `Semana ${game.week}` : "Sin semana"} - {game.division.name}
+                        {game.week ? `Semana ${game.week}` : "Sin semana"} - {getDivisionDisplayName(game.division)}
                         {game.round ? ` - ${game.round}` : ""}
                       </span>
                     </div>

@@ -6,6 +6,8 @@ interface PopulatedRef {
   _id?: unknown;
   id?: unknown;
   name?: string;
+  category?: string;
+  year?: number;
   firstName?: string;
   lastName?: string;
   jerseyNumber?: number | null;
@@ -43,8 +45,8 @@ export function toGameResponseDto(game: Game): GameResponseDto {
 
   return {
     _id: game.id,
-    tournament: game.tournament,
-    division: game.division,
+    tournament: toTournamentRef(gameWithEvents.tournament),
+    division: toDivisionRef(gameWithEvents.division),
     homeTeam: game.homeTeam,
     awayTeam: game.awayTeam,
     venue: {
@@ -67,6 +69,30 @@ export function toGameResponseDto(game: Game): GameResponseDto {
     notes: game.notes,
     createdAt: game.createdAt?.toISOString(),
     updatedAt: game.updatedAt?.toISOString(),
+  };
+}
+
+function toTournamentRef(tournament: string | PopulatedRef): GameResponseDto["tournament"] {
+  if (typeof tournament === "string") {
+    return tournament;
+  }
+
+  return {
+    _id: stringifyId(tournament._id || tournament.id),
+    name: tournament.name || "Torneo",
+    year: tournament.year || new Date().getFullYear(),
+  };
+}
+
+function toDivisionRef(division: string | PopulatedRef): GameResponseDto["division"] {
+  if (typeof division === "string") {
+    return division;
+  }
+
+  return {
+    _id: stringifyId(division._id || division.id),
+    name: division.name || "División",
+    category: division.category || "",
   };
 }
 
