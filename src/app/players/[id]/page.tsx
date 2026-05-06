@@ -50,6 +50,8 @@ interface PlayerStats {
   fieldGoals: number;
   firstDowns: number;
   penalties: number;
+  pickSixes: number;
+  unsportsmanlike: number;
   passing: {
     attempts: number;
     completions: number;
@@ -84,9 +86,9 @@ type GameEventType =
   | "field_goal"
   | "safety"
   | "interception"
-  | "fumble"
+  | "pick_six"
   | "penalty"
-  | "timeout"
+  | "unsportsmanlike"
   | "quarter_end"
   | "game_end"
   | "substitution"
@@ -123,42 +125,47 @@ export default function PlayerProfilePage() {
     return typeof reference === "string" ? reference : reference._id || "";
   }, []);
 
-  const emptyPlayerStats = useCallback((): PlayerStats => ({
-    gamesPlayed: 0,
-    totalPoints: 0,
-    touchdowns: 0,
-    extraPoints: 0,
-    safeties: 0,
-    fieldGoals: 0,
-    firstDowns: 0,
-    penalties: 0,
-    passing: {
-      attempts: 0,
-      completions: 0,
-      yards: 0,
+  const emptyPlayerStats = useCallback(
+    (): PlayerStats => ({
+      gamesPlayed: 0,
+      totalPoints: 0,
       touchdowns: 0,
-      interceptions: 0,
-    },
-    rushing: {
-      attempts: 0,
-      yards: 0,
-      touchdowns: 0,
-      fumbles: 0,
-    },
-    receiving: {
-      receptions: 0,
-      yards: 0,
-      touchdowns: 0,
-      fumbles: 0,
-    },
-    defensive: {
-      tackles: 0,
-      sacks: 0,
-      interceptions: 0,
-      fumbleRecoveries: 0,
+      extraPoints: 0,
       safeties: 0,
-    },
-  }), []);
+      fieldGoals: 0,
+      firstDowns: 0,
+      penalties: 0,
+      pickSixes: 0,
+      unsportsmanlike: 0,
+      passing: {
+        attempts: 0,
+        completions: 0,
+        yards: 0,
+        touchdowns: 0,
+        interceptions: 0,
+      },
+      rushing: {
+        attempts: 0,
+        yards: 0,
+        touchdowns: 0,
+        fumbles: 0,
+      },
+      receiving: {
+        receptions: 0,
+        yards: 0,
+        touchdowns: 0,
+        fumbles: 0,
+      },
+      defensive: {
+        tackles: 0,
+        sacks: 0,
+        interceptions: 0,
+        fumbleRecoveries: 0,
+        safeties: 0,
+      },
+    }),
+    [],
+  );
 
   const normalizeStoredStats = useCallback(
     (stats: Partial<PlayerStats>): PlayerStats => {
@@ -169,10 +176,10 @@ export default function PlayerProfilePage() {
         ...stats,
         totalPoints:
           stats.totalPoints ??
-          ((stats.touchdowns || 0) * 6 +
+          (stats.touchdowns || 0) * 6 +
             (stats.extraPoints || 0) +
             (stats.safeties || 0) * 2 +
-            (stats.fieldGoals || 0) * 3),
+            (stats.fieldGoals || 0) * 3,
         passing: { ...emptyStats.passing, ...stats.passing },
         rushing: { ...emptyStats.rushing, ...stats.rushing },
         receiving: { ...emptyStats.receiving, ...stats.receiving },
@@ -182,44 +189,48 @@ export default function PlayerProfilePage() {
     [emptyPlayerStats],
   );
 
-  const derivePlayerStatsFromGames = useCallback((games: PlayerGame[]): PlayerStats => {
-    const stats = emptyPlayerStats();
-    const gamesWithEvents = new Set<string>();
+  const derivePlayerStatsFromGames = useCallback(
+    (games: PlayerGame[]): PlayerStats => {
+      const stats = emptyPlayerStats();
+      const gamesWithEvents = new Set<string>();
 
-    games
-      .filter((game) => game.status === "in_progress" || game.status === "completed")
-      .forEach((game) => {
-        (game.events || []).forEach((event) => {
-          if (getReferenceId(event.player) !== playerId) return;
+      games
+        .filter((game) => game.status === "in_progress" || game.status === "completed")
+        .forEach((game) => {
+          (game.events || []).forEach((event) => {
+            if (getReferenceId(event.player) !== playerId) return;
 
-          gamesWithEvents.add(game._id);
-          stats.totalPoints += event.points || 0;
+            gamesWithEvents.add(game._id);
+            stats.totalPoints += event.points || 0;
 
-          if (event.type === "touchdown") {
-            stats.touchdowns += 1;
-            stats.receiving.touchdowns += 1;
-          }
-          if (event.type === "extra_point") stats.extraPoints += 1;
-          if (event.type === "field_goal") stats.fieldGoals += 1;
-          if (event.type === "safety") {
-            stats.safeties += 1;
-            stats.defensive.safeties += 1;
-          }
-          if (event.type === "first_down") stats.firstDowns += 1;
-          if (event.type === "penalty") stats.penalties += 1;
-          if (event.type === "interception") stats.defensive.interceptions += 1;
-          if (event.type === "sack") stats.defensive.sacks += 1;
-          if (event.type === "fumble") stats.defensive.fumbleRecoveries += 1;
+            if (event.type === "touchdown") {
+              stats.touchdowns += 1;
+              stats.receiving.touchdowns += 1;
+            }
+            if (event.type === "extra_point") stats.extraPoints += 1;
+            if (event.type === "field_goal") stats.fieldGoals += 1;
+            if (event.type === "safety") {
+              stats.safeties += 1;
+              stats.defensive.safeties += 1;
+            }
+            if (event.type === "first_down") stats.firstDowns += 1;
+            if (event.type === "penalty") stats.penalties += 1;
+            if (event.type === "unsportsmanlike") stats.unsportsmanlike += 1;
+            if (event.type === "interception") stats.defensive.interceptions += 1;
+            if (event.type === "pick_six") stats.pickSixes += 1;
+            if (event.type === "sack") stats.defensive.sacks += 1;
 
-          if (event.yards) {
-            stats.receiving.yards += event.yards;
-          }
+            if (event.yards) {
+              stats.receiving.yards += event.yards;
+            }
+          });
         });
-      });
 
-    stats.gamesPlayed = gamesWithEvents.size;
-    return stats;
-  }, [emptyPlayerStats, getReferenceId, playerId]);
+      stats.gamesPlayed = gamesWithEvents.size;
+      return stats;
+    },
+    [emptyPlayerStats, getReferenceId, playerId],
+  );
 
   useEffect(() => {
     const fetchPlayerData = async () => {
@@ -330,6 +341,18 @@ export default function PlayerProfilePage() {
 
   const pointsPerGame =
     playerStats && playerStats.gamesPlayed > 0 ? playerStats.totalPoints / playerStats.gamesPlayed : 0;
+  const liveEventStats = playerStats
+    ? [
+        { label: "Punto extra", value: playerStats.extraPoints },
+        { label: "Safety", value: playerStats.safeties },
+        { label: "Intercepciones", value: playerStats.defensive.interceptions },
+        { label: "Pick six", value: playerStats.pickSixes },
+        { label: "Sacks", value: playerStats.defensive.sacks },
+        { label: "Castigos", value: playerStats.penalties },
+        { label: "Actitud antideportiva", value: playerStats.unsportsmanlike },
+        { label: "Primeros downs", value: playerStats.firstDowns },
+      ]
+    : [];
 
   if (loading) {
     return <LoadingSpinner size="lg" />;
@@ -498,13 +521,31 @@ export default function PlayerProfilePage() {
                 </div>
               </div>
             </div>
+
+            {playerStats && (
+              <div className="mt-6 bg-white shadow rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-medium text-gray-900">Estadísticas</h2>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {liveEventStats.map((stat) => (
+                      <div key={stat.label} className="rounded-lg bg-gray-50 p-4">
+                        <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                        <div className="text-sm text-gray-600">{stat.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Player Statistics */}
           <div className="lg:col-span-1">
             <div className="bg-white shadow rounded-lg">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Estadísticas</h2>
+                <h2 className="text-lg font-medium text-gray-900">Resumen</h2>
               </div>
               <div className="p-6">
                 {playerStats ? (
@@ -525,62 +566,6 @@ export default function PlayerProfilePage() {
                       <div className="rounded-lg bg-gray-50 p-4">
                         <div className="text-2xl font-bold text-gray-900">{formatDecimal(pointsPerGame)}</div>
                         <div className="text-sm text-gray-600">Pts/Juego</div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Ofensiva</h3>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Recepciones</span>
-                          <span className="text-sm font-medium text-gray-900">{playerStats.receiving.receptions}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Yardas recepción</span>
-                          <span className="text-sm font-medium text-gray-900">{playerStats.receiving.yards}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Primeros downs</span>
-                          <span className="text-sm font-medium text-gray-900">{playerStats.firstDowns}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Extra points</span>
-                          <span className="text-sm font-medium text-gray-900">{playerStats.extraPoints}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Defensiva</h3>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Intercepciones</span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {playerStats.defensive.interceptions}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Sacks</span>
-                          <span className="text-sm font-medium text-gray-900">{playerStats.defensive.sacks}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Fumbles recuperados</span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {playerStats.defensive.fumbleRecoveries}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Safeties</span>
-                          <span className="text-sm font-medium text-gray-900">{playerStats.defensive.safeties}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Disciplina</h3>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Castigos</span>
-                        <span className="text-sm font-medium text-gray-900">{playerStats.penalties}</span>
                       </div>
                     </div>
                   </div>
@@ -630,10 +615,11 @@ export default function PlayerProfilePage() {
                     <div className="text-xs text-gray-500">{player.team.division.name}</div>
                     {player.team.division.category &&
                       player.team.division.category.toLowerCase() !== player.team.division.name.toLowerCase() && (
-                      <div className="text-xs text-gray-400">
-                        {player.team.division.category.charAt(0).toUpperCase() + player.team.division.category.slice(1)}
-                      </div>
-                    )}
+                        <div className="text-xs text-gray-400">
+                          {player.team.division.category.charAt(0).toUpperCase() +
+                            player.team.division.category.slice(1)}
+                        </div>
+                      )}
                   </div>
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
