@@ -8,106 +8,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Tag from "@/components/Tag";
 import Avatar from "@/components/Avatar";
-
-interface Player {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  profilePicture?: string;
-  dateOfBirth: string;
-  team: {
-    _id: string;
-    name: string;
-    shortName: string;
-    logo?: string;
-    colors: {
-      primary: string;
-      secondary?: string;
-    };
-    division: {
-      _id: string;
-      name: string;
-      category: string;
-    };
-  };
-  jerseyNumber?: number | null;
-  position: string;
-  height?: number;
-  weight?: number;
-  experience?: string;
-  registrationDate: string;
-  status: "active" | "inactive" | "injured" | "suspended";
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface PlayerStats {
-  gamesPlayed: number;
-  totalPoints: number;
-  touchdowns: number;
-  extraPoints: number;
-  safeties: number;
-  fieldGoals: number;
-  firstDowns: number;
-  penalties: number;
-  pickSixes: number;
-  unsportsmanlike: number;
-  passing: {
-    attempts: number;
-    completions: number;
-    yards: number;
-    touchdowns: number;
-    interceptions: number;
-  };
-  rushing: {
-    attempts: number;
-    yards: number;
-    touchdowns: number;
-    fumbles: number;
-  };
-  receiving: {
-    receptions: number;
-    yards: number;
-    touchdowns: number;
-    fumbles: number;
-  };
-  defensive: {
-    tackles: number;
-    sacks: number;
-    interceptions: number;
-    fumbleRecoveries: number;
-    safeties: number;
-  };
-}
-
-type GameEventType =
-  | "touchdown"
-  | "extra_point"
-  | "field_goal"
-  | "safety"
-  | "interception"
-  | "pick_six"
-  | "penalty"
-  | "unsportsmanlike"
-  | "quarter_end"
-  | "game_end"
-  | "substitution"
-  | "injury"
-  | "first_down"
-  | "sack";
-
-interface GameEvent {
-  type: GameEventType;
-  player: string | { _id: string };
-  points?: number;
-  yards?: number;
-}
-
-interface PlayerGame {
-  _id: string;
-  status: "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
-  events?: GameEvent[];
-}
+import type { ApiResponseDto, GameResponseDto, PlayerProfileResponseDto, PlayerStatsResponseDto } from "@/app/DTOs";
 
 export default function PlayerProfilePage() {
   const { user } = useAuth();
@@ -115,8 +16,8 @@ export default function PlayerProfilePage() {
   const router = useRouter();
   const playerId = params?.id as string;
 
-  const [player, setPlayer] = useState<Player | null>(null);
-  const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+  const [player, setPlayer] = useState<PlayerProfileResponseDto | null>(null);
+  const [playerStats, setPlayerStats] = useState<PlayerStatsResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,7 +27,7 @@ export default function PlayerProfilePage() {
   }, []);
 
   const emptyPlayerStats = useCallback(
-    (): PlayerStats => ({
+    (): PlayerStatsResponseDto => ({
       gamesPlayed: 0,
       totalPoints: 0,
       touchdowns: 0,
@@ -168,7 +69,7 @@ export default function PlayerProfilePage() {
   );
 
   const normalizeStoredStats = useCallback(
-    (stats: Partial<PlayerStats>): PlayerStats => {
+    (stats: Partial<PlayerStatsResponseDto>): PlayerStatsResponseDto => {
       const emptyStats = emptyPlayerStats();
 
       return {
@@ -190,17 +91,22 @@ export default function PlayerProfilePage() {
   );
 
   const derivePlayerStatsFromGames = useCallback(
-    (games: PlayerGame[]): PlayerStats => {
+    (games: GameResponseDto[]): PlayerStatsResponseDto => {
       const stats = emptyPlayerStats();
       const gamesWithEvents = new Set<string>();
 
       games
         .filter((game) => game.status === "in_progress" || game.status === "completed")
         .forEach((game) => {
+          const gameId = game._id;
+          if (!gameId) {
+            return;
+          }
+
           (game.events || []).forEach((event) => {
             if (getReferenceId(event.player) !== playerId) return;
 
-            gamesWithEvents.add(game._id);
+            gamesWithEvents.add(gameId);
             stats.totalPoints += event.points || 0;
 
             if (event.type === "touchdown") {
@@ -240,14 +146,14 @@ export default function PlayerProfilePage() {
 
         // Fetch player data
         const playerResponse = await fetch(`/api/players/${playerId}`);
-        const playerData = await playerResponse.json();
+        const playerData = (await playerResponse.json()) as ApiResponseDto<PlayerProfileResponseDto>;
 
-        if (!playerData.success) {
+        if (!playerData.success || !playerData.data) {
           setError(playerData.message || "Error al cargar el jugador");
           return;
         }
 
-        const loadedPlayer = playerData.data as Player;
+        const loadedPlayer = playerData.data;
         setPlayer(loadedPlayer);
 
         // Fetch player statistics. Prefer the live-derived stats from GameEvents
@@ -257,8 +163,9 @@ export default function PlayerProfilePage() {
             fetch(`/api/statistics/players?player=${playerId}`),
             fetch(`/api/games?team=${loadedPlayer.team._id}`),
           ]);
-          const statsData = await statsResponse.json();
-          const gamesData = await gamesResponse.json();
+          const statsData = (await statsResponse.json()) as ApiResponseDto<PlayerStatsResponseDto[]>;
+          const gamesData = (await gamesResponse.json()) as ApiResponseDto<GameResponseDto[]>;
+          const storedStats = statsData.success ? (statsData.data ?? []) : [];
 
           if (gamesData.success) {
             const derivedStats = derivePlayerStatsFromGames(gamesData.data || []);
@@ -266,12 +173,12 @@ export default function PlayerProfilePage() {
             setPlayerStats(
               hasLiveStats
                 ? derivedStats
-                : statsData.success && statsData.data.length > 0
-                  ? normalizeStoredStats(statsData.data[0])
+                : storedStats.length > 0
+                  ? normalizeStoredStats(storedStats[0])
                   : emptyPlayerStats(),
             );
-          } else if (statsData.success && statsData.data.length > 0) {
-            setPlayerStats(normalizeStoredStats(statsData.data[0]));
+          } else if (storedStats.length > 0) {
+            setPlayerStats(normalizeStoredStats(storedStats[0]));
           } else {
             setPlayerStats(emptyPlayerStats());
           }
