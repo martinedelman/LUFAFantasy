@@ -5,7 +5,6 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import Pagination from "@/components/Pagination";
-import Tag from "@/components/Tag";
 import Avatar from "@/components/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
@@ -99,6 +98,13 @@ type GameFormState = {
   notes: string;
 };
 
+type GameFilters = {
+  status: string;
+  tournament: string;
+  division: string;
+  upcoming: boolean;
+};
+
 const INITIAL_FORM: GameFormState = {
   tournament: "",
   division: "",
@@ -112,6 +118,35 @@ const INITIAL_FORM: GameFormState = {
   venueAddress: "",
   notes: "",
 };
+
+const INITIAL_FILTERS: GameFilters = {
+  status: "",
+  tournament: "",
+  division: "",
+  upcoming: true,
+};
+
+const GAMES_FILTERS_STORAGE_KEY = "lufa:games:filters";
+
+function getInitialFilters(): GameFilters {
+  if (typeof window === "undefined") return INITIAL_FILTERS;
+
+  try {
+    const storedFilters = window.sessionStorage.getItem(GAMES_FILTERS_STORAGE_KEY);
+    if (!storedFilters) return INITIAL_FILTERS;
+
+    const parsedFilters = JSON.parse(storedFilters) as Partial<GameFilters>;
+
+    return {
+      status: typeof parsedFilters.status === "string" ? parsedFilters.status : INITIAL_FILTERS.status,
+      tournament: typeof parsedFilters.tournament === "string" ? parsedFilters.tournament : INITIAL_FILTERS.tournament,
+      division: typeof parsedFilters.division === "string" ? parsedFilters.division : INITIAL_FILTERS.division,
+      upcoming: typeof parsedFilters.upcoming === "boolean" ? parsedFilters.upcoming : INITIAL_FILTERS.upcoming,
+    };
+  } catch {
+    return INITIAL_FILTERS;
+  }
+}
 
 function toDateTimeLocal(isoDate: string) {
   const date = new Date(isoDate);
@@ -169,12 +204,7 @@ export default function GamesPage() {
     hasNext: false,
     hasPrev: false,
   });
-  const [filters, setFilters] = useState({
-    status: "",
-    tournament: "",
-    division: "",
-    upcoming: true,
-  });
+  const [filters, setFilters] = useState<GameFilters>(() => getInitialFilters());
 
   const [form, setForm] = useState<GameFormState>(INITIAL_FORM);
   const [showForm, setShowForm] = useState(false);
@@ -273,6 +303,10 @@ export default function GamesPage() {
   }, [fetchCatalogs]);
 
   useEffect(() => {
+    window.sessionStorage.setItem(GAMES_FILTERS_STORAGE_KEY, JSON.stringify(filters));
+  }, [filters]);
+
+  useEffect(() => {
     fetchGames(1);
   }, [fetchGames]);
 
@@ -349,38 +383,41 @@ export default function GamesPage() {
     setShowForm(true);
   };
 
-  const openEditForm = useCallback(async (game: Game) => {
-    if (!canManageGames) return;
+  const openEditForm = useCallback(
+    async (game: Game) => {
+      if (!canManageGames) return;
 
-    const tournamentId = getRefId(game.tournament);
-    const divisionId = getRefId(game.division);
-    const homeTeamId = getRefId(game.homeTeam);
-    const awayTeamId = getRefId(game.awayTeam);
+      const tournamentId = getRefId(game.tournament);
+      const divisionId = getRefId(game.division);
+      const homeTeamId = getRefId(game.homeTeam);
+      const awayTeamId = getRefId(game.awayTeam);
 
-    if (divisionId) {
-      await fetchTeamsForDivision(divisionId);
-    } else {
-      setTeams([]);
-    }
+      if (divisionId) {
+        await fetchTeamsForDivision(divisionId);
+      } else {
+        setTeams([]);
+      }
 
-    setForm({
-      id: game._id,
-      tournament: tournamentId,
-      division: divisionId,
-      homeTeam: homeTeamId,
-      awayTeam: awayTeamId,
-      scheduledDate: toDateTimeLocal(game.scheduledDate),
-      status: game.status,
-      week: game.week ? String(game.week) : "",
-      round: game.round || "",
-      venueName: game.venue?.name || "",
-      venueAddress: game.venue?.address || "",
-      notes: game.notes || "",
-    });
-    setEditingGame(game);
-    setFormError(null);
-    setShowForm(true);
-  }, [canManageGames, fetchTeamsForDivision]);
+      setForm({
+        id: game._id,
+        tournament: tournamentId,
+        division: divisionId,
+        homeTeam: homeTeamId,
+        awayTeam: awayTeamId,
+        scheduledDate: toDateTimeLocal(game.scheduledDate),
+        status: game.status,
+        week: game.week ? String(game.week) : "",
+        round: game.round || "",
+        venueName: game.venue?.name || "",
+        venueAddress: game.venue?.address || "",
+        notes: game.notes || "",
+      });
+      setEditingGame(game);
+      setFormError(null);
+      setShowForm(true);
+    },
+    [canManageGames, fetchTeamsForDivision],
+  );
 
   const closeForm = () => {
     setShowForm(false);
@@ -535,17 +572,28 @@ export default function GamesPage() {
     }
   };
 
-  const getStatusTag = (status: GameStatus) => {
-    const statusMap: Record<GameStatus, { label: string; type: "info" | "warning" | "success" | "error" }> = {
-      scheduled: { label: "Programado", type: "info" },
-      in_progress: { label: "En Curso", type: "success" },
-      completed: { label: "Completado", type: "success" },
-      postponed: { label: "Pospuesto", type: "warning" },
-      cancelled: { label: "Cancelado", type: "error" },
+  const getStatusBadge = (status: GameStatus, placement: "right" | "top" = "top") => {
+    const statusMap: Record<GameStatus, { label: string; className: string }> = {
+      scheduled: { label: "Programado", className: "bg-blue-500/75 text-white" },
+      in_progress: { label: "En Curso", className: "bg-red-600/75 text-white" },
+      completed: { label: "Finalizado", className: "bg-pink-600/75 text-white" },
+      postponed: { label: "Pospuesto", className: "bg-yellow-500/75 text-white" },
+      cancelled: { label: "Cancelado", className: "bg-red-700/75 text-white" },
     };
 
-    const { label, type } = statusMap[status];
-    return <Tag label={label} type={type} />;
+    const { label, className } = statusMap[status];
+    const placementClassName =
+      placement === "right"
+        ? "min-w-32 rounded-l-md px-2 py-1 shadow-md"
+        : "min-w-28 rounded-b-md px-3 py-1.5 shadow-sm";
+
+    return (
+      <div
+        className={`inline-flex justify-center text-center text-xs font-bold uppercase tracking-wide ${placementClassName} ${className}`}
+      >
+        {label}
+      </div>
+    );
   };
 
   const formatDate = (date: string) => {
@@ -969,7 +1017,7 @@ export default function GamesPage() {
 
           <div className="flex items-end">
             <button
-              onClick={() => setFilters({ status: "", tournament: "", division: "", upcoming: true })}
+              onClick={() => setFilters({ ...INITIAL_FILTERS })}
               className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               Limpiar Filtros
@@ -989,20 +1037,25 @@ export default function GamesPage() {
           <Link
             key={game._id}
             href={`/games/${game._id}`}
-            className="block rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6"
+            className="relative block overflow-hidden rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6"
             aria-label={`Ver match ${game.homeTeam?.name || "TBD"} vs ${game.awayTeam?.name || "TBD"}`}
           >
+            <div className="absolute left-1/2 top-0 z-10 hidden -translate-x-1/2 sm:block">
+              {getStatusBadge(game.status, "top")}
+            </div>
             <div className="sm:hidden">
               <div className="flex items-start justify-between gap-3">
-                <div className="text-sm text-gray-700 font-medium break-words">{game.venue.name}</div>
-                <div className="text-xs text-gray-500 whitespace-nowrap">
-                  {formatDateTimeCompact(game.scheduledDate)}
+                <div className="min-w-0">
+                  <div className="text-sm text-gray-700 font-medium break-words">{game.venue.name}</div>
+                  <div className="mt-1 text-xs text-gray-500 break-words">{game.venue.address}</div>
+                </div>
+                <div className="-mr-4 flex shrink-0 flex-col items-end gap-1">
+                  <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
+                    {formatDateTimeCompact(game.scheduledDate)}
+                  </div>
+                  {getStatusBadge(game.status, "right")}
                 </div>
               </div>
-
-              <div className="mt-1 text-xs text-gray-500 break-words">{game.venue.address}</div>
-
-              <div className="mt-3 flex justify-center">{getStatusTag(game.status)}</div>
 
               <div className="mt-3 flex items-center justify-between gap-2">
                 <div className="w-[36%] flex flex-col items-center text-center">
@@ -1037,21 +1090,22 @@ export default function GamesPage() {
                 {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
                 {game.round ? ` · ${game.round}` : ""}
               </div>
-
             </div>
 
             <div className="hidden sm:block">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      {getStatusTag(game.status)}
-                      <span className="text-sm text-gray-500">
-                        {game.week ? `Semana ${game.week}` : "Sin semana"} - {getDivisionDisplayName(game.division)}
-                        {game.round ? ` - ${game.round}` : ""}
-                      </span>
+                  <div className="mb-4 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-gray-700">{game.venue.name}</div>
+                      <div className="mt-1 text-sm text-gray-500">{game.venue.address}</div>
                     </div>
-                    <div className="text-sm text-gray-500">{formatDate(game.scheduledDate)}</div>
+                    <div className="-mr-6 flex shrink-0 flex-col items-end gap-1">
+                      <div className="pr-6 text-right text-sm text-gray-500">
+                        <div>{formatDate(game.scheduledDate)}</div>
+                        <div>{formatTime(game.scheduledDate)}</div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-center space-x-8 mb-4">
@@ -1065,7 +1119,7 @@ export default function GamesPage() {
                       {renderTeamAvatar(game.homeTeam, "md")}
                     </div>
 
-                    <div className="flex items-center space-x-4">
+                    <div className="flex min-w-24 flex-col items-center">
                       {game.status === "completed" || game.status === "in_progress" ? (
                         <div className="text-center">
                           <div className="text-2xl font-bold text-gray-900">
@@ -1091,25 +1145,11 @@ export default function GamesPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-center text-sm text-gray-500">
-                    <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    {game.venue.name}, {game.venue.address}
+                  <div className="text-center text-sm text-gray-500">
+                    {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
+                    {game.round ? ` · ${game.round}` : ""}
                   </div>
                 </div>
-
               </div>
             </div>
           </Link>
