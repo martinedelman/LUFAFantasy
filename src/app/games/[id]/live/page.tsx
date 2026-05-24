@@ -73,6 +73,11 @@ const sortPlayersByJerseyNumber = (players: PlayerApiResponse[]) => {
   });
 };
 
+const getReferenceId = (reference?: string | { _id?: string } | null) => {
+  if (!reference) return "";
+  return typeof reference === "string" ? reference : reference._id || "";
+};
+
 export default function LiveMatchPage() {
   const params = useParams();
   const router = useRouter();
@@ -251,7 +256,33 @@ export default function LiveMatchPage() {
     return currentQuarter === "q1" ? 1 : 2;
   }, [currentQuarter]);
 
-  const eventPlayers = eventDraft.teamSide === "home" ? homePlayers : awayPlayers;
+  const playersById = useMemo(() => {
+    const entries = [...homePlayers, ...awayPlayers].map((player) => [player._id, player] as const);
+    return new Map(entries);
+  }, [awayPlayers, homePlayers]);
+
+  const presentPlayersBySide = useMemo(() => {
+    const buildSide = (side: TeamSide, roster: PlayerApiResponse[]) => {
+      const presentPlayerIds = new Set((game?.presentPlayers?.[side] || []).map(getReferenceId).filter(Boolean));
+
+      if (presentPlayerIds.size === 0) {
+        return game?.status === "scheduled" ? roster : [];
+      }
+
+      return sortPlayersByJerseyNumber(
+        Array.from(presentPlayerIds)
+          .map((playerId) => playersById.get(playerId))
+          .filter((player): player is PlayerApiResponse => Boolean(player)),
+      );
+    };
+
+    return {
+      home: buildSide("home", homePlayers),
+      away: buildSide("away", awayPlayers),
+    };
+  }, [awayPlayers, game?.presentPlayers, game?.status, homePlayers, playersById]);
+
+  const eventPlayers = presentPlayersBySide[eventDraft.teamSide];
 
   const setEventTeamSide = (teamSide: TeamSide) => {
     setEventDraft((prev) => ({
@@ -434,6 +465,9 @@ export default function LiveMatchPage() {
       }
 
       setGame(data.data);
+      if (currentQuarter === "q1") {
+        setCurrentQuarter("q2");
+      }
       setEventMessage("Mitad registrada correctamente.");
     } catch {
       setEventError("Error de conexión al registrar el fin de mitad");

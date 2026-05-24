@@ -24,7 +24,7 @@ interface StoredGameEvent {
   quarter: number;
   type: GameEventType;
   team: string | { _id?: string };
-  player: string | { _id?: string };
+  player?: string | { _id?: string };
   points?: number;
 }
 
@@ -185,7 +185,7 @@ export class GameService {
       quarter: eventData.quarter,
       type: eventData.type,
       team: eventData.team,
-      player: eventData.player || "",
+      player: eventData.player || undefined,
       points: safePoints,
       description: this.getEventDescription(eventData.type, safePoints),
     };
@@ -274,7 +274,7 @@ export class GameService {
       quarter: eventData.quarter,
       type: eventData.type,
       team: eventData.team,
-      player: eventData.player || "",
+      player: eventData.player || undefined,
       points: safePoints,
       description: this.getEventDescription(eventData.type, safePoints),
     };

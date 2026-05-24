@@ -26,7 +26,7 @@ export interface GameEvent {
   time?: string;
   type: GameEventType;
   team: string;
-  player: string;
+  player?: string;
   description?: string;
   yards?: number;
   points?: number;
