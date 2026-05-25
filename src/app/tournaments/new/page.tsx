@@ -382,6 +382,7 @@ export default function NewTournamentPage() {
                 >
                   <option value="Apertura">Apertura</option>
                   <option value="Clausura">Clausura</option>
+                  <option value="Anual">Anual</option>
                   <option value="Verano">Verano</option>
                   <option value="Invierno">Invierno</option>
                 </select>
