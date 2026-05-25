@@ -1,4 +1,5 @@
 import type { TeamStatus } from "@/entities/Team";
+import type { Coach } from "@/entities/Team";
 
 export interface UpdateTeamRequestDto {
   name?: string;
@@ -19,6 +20,7 @@ export interface UpdateTeamRequestDto {
       twitter?: string;
     };
   };
+  coach?: Coach;
   status?: TeamStatus;
   players?: string[];
 }

@@ -392,9 +392,8 @@ export default function EditTournamentPage() {
                   type="text"
                   required
                   value={formData.name}
-                  disabled={true}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
               <div>
@@ -405,13 +404,13 @@ export default function EditTournamentPage() {
                   id="season"
                   name="season"
                   required
-                  disabled={true}
                   value={formData.season}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="Apertura">Apertura</option>
                   <option value="Clausura">Clausura</option>
+                  <option value="Anual">Anual</option>
                   <option value="Verano">Verano</option>
                   <option value="Invierno">Invierno</option>
                 </select>

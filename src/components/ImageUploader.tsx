@@ -11,6 +11,8 @@ interface ImageUploaderProps {
   value?: string;
   onUploaded: (url: string) => void;
   disabled?: boolean;
+  ownerType?: "player" | "team";
+  ownerId?: string;
 }
 
 interface UploadResponse {
@@ -21,7 +23,15 @@ interface UploadResponse {
   message?: string;
 }
 
-export default function ImageUploader({ label, assetType, value, onUploaded, disabled = false }: ImageUploaderProps) {
+export default function ImageUploader({
+  label,
+  assetType,
+  value,
+  onUploaded,
+  disabled = false,
+  ownerType,
+  ownerId,
+}: ImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +52,10 @@ export default function ImageUploader({ label, assetType, value, onUploaded, dis
       formData.append("assetType", assetType);
       if (value) {
         formData.append("currentUrl", value);
+      }
+      if (ownerType && ownerId) {
+        formData.append("ownerType", ownerType);
+        formData.append("ownerId", ownerId);
       }
 
       const response = await fetch("/api/media/upload", {
