@@ -111,8 +111,14 @@ export class Team extends AggregateRoot {
       errors.push(...contactValidation.errors);
     }
 
-    if (this.coach?.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.coach.email)) {
-      errors.push("Email del entrenador inválido");
+    if (this.coach) {
+      if (!this.coach.name || this.coach.name.trim().length === 0) {
+        errors.push("El nombre del entrenador es requerido");
+      }
+
+      if (this.coach.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.coach.email)) {
+        errors.push("Email del entrenador inválido");
+      }
     }
 
     if (!["active", "inactive", "suspended"].includes(this.status)) {
