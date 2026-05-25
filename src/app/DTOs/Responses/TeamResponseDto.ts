@@ -1,4 +1,5 @@
 import type { TeamStatus } from "@/entities/Team";
+import type { Coach } from "@/entities/Team";
 
 export interface TeamResponseDto {
   _id?: string;
@@ -13,6 +14,7 @@ export interface TeamResponseDto {
   division: string;
   tournament?: string;
   players: string[];
+  coach?: Coach;
   contact: {
     email?: string;
     phone?: string;

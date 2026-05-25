@@ -1,4 +1,4 @@
-import { Team, TeamStatus } from "../../entities/Team";
+import { Coach, Team, TeamStatus } from "../../entities/Team";
 import { Colors } from "../../entities/valueObjects/Colors";
 import { ContactInfo } from "../../entities/valueObjects/ContactInfo";
 import RepositoryContainer from "../../repositories";
@@ -26,6 +26,7 @@ export class TeamService {
         twitter?: string;
       };
     };
+    coach?: Coach;
     shortName?: string;
     logo?: string;
     backgroundImage?: string;
@@ -55,6 +56,10 @@ export class TeamService {
       data.logo,
       data.backgroundImage,
       data.tournament,
+      undefined,
+      undefined,
+      undefined,
+      data.coach,
     );
 
     // Validar
@@ -130,6 +135,7 @@ export class TeamService {
           twitter?: string;
         };
       };
+      coach: Coach;
       status: TeamStatus;
       players: string[];
     }>,
@@ -154,6 +160,7 @@ export class TeamService {
       team.id,
       team.createdAt,
       team.updatedAt,
+      data.coach !== undefined ? data.coach : team.coach,
     );
 
     // Validar

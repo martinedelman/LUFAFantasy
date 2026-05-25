@@ -15,6 +15,7 @@ export function toTeamResponseDto(team: Team): TeamResponseDto {
     division: team.division,
     tournament: team.tournament,
     players: team.players,
+    coach: team.coach,
     contact: {
       email: team.contact.email,
       phone: team.contact.phone,

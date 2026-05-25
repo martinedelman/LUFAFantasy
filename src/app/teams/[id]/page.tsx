@@ -338,6 +338,13 @@ export default function TeamViewerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"info" | "roster" | "games" | "stats">("info");
+  const userEmail = user?.email.trim().toLowerCase();
+  const canEditTeam =
+    !!userEmail &&
+    !!team &&
+    (isAdmin ||
+      userEmail === (team.contact?.email || "").trim().toLowerCase() ||
+      userEmail === (team.coach?.email || "").trim().toLowerCase());
 
   const fetchPlayers = useCallback(async () => {
     try {
@@ -648,7 +655,7 @@ export default function TeamViewerPage() {
                 </div>
               </div>
             </div>
-            {user?.role === "admin" && (
+            {canEditTeam && (
               <Link
                 href={`/teams/${team._id}/edit`}
                 className={`inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${

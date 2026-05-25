@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PlayerService } from "@/services/backend";
+import { AuthService, PlayerService } from "@/services/backend";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 import { toPlayerResponseDto } from "@/app/DTOs";
 import type { UpdatePlayerRequestDto } from "@/app/DTOs";
 
 const playerService = new PlayerService();
+const authService = new AuthService();
+
+function normalizeEmail(email?: string | null) {
+  return email?.trim().toLowerCase() || "";
+}
 
 /**
  * GET /api/players/:id - Obtiene un jugador por ID
@@ -45,6 +51,42 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const token = getSessionTokenFromRequest(request);
+
+    if (!token) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autenticado",
+        },
+        { status: 401 },
+      );
+    }
+
+    const user = await authService.verifyToken(token);
+    const player = await playerService.getPlayerById(id);
+
+    if (!player) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Jugador no encontrado",
+        },
+        { status: 404 },
+      );
+    }
+
+    const canEdit = user.role === "admin" || normalizeEmail(user.email) === normalizeEmail(player.email);
+    if (!canEdit) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo el jugador asociado a este email o un administrador puede editarlo",
+        },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as UpdatePlayerRequestDto;
 
     const updatedPlayer = await playerService.updatePlayer(id, {
@@ -69,7 +111,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar jugador";
-    const status = message.includes("no encontrado") ? 404 : 400;
+    const status = message.includes("no encontrado")
+      ? 404
+      : message.includes("Token") || message.includes("Usuario")
+        ? 401
+        : 400;
 
     return NextResponse.json(
       {

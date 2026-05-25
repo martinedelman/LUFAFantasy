@@ -7,6 +7,10 @@ import type { UpdateTeamRequestDto } from "@/app/DTOs";
 const teamService = new TeamService();
 const authService = new AuthService();
 
+function normalizeEmail(email?: string | null) {
+  return email?.trim().toLowerCase() || "";
+}
+
 /**
  * GET /api/teams/:id - Obtiene un equipo por ID
  */
@@ -44,10 +48,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 /**
- * PUT /api/teams/:id - Actualiza un equipo (solo admin)
+ * PUT /api/teams/:id - Actualiza un equipo
  */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const token = getSessionTokenFromRequest(request);
 
     if (!token) {
@@ -60,18 +65,35 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const isAdmin = await authService.verifyAdmin(token);
-    if (!isAdmin) {
+    const user = await authService.verifyToken(token);
+    const team = await teamService.getTeamById(id);
+
+    if (!team) {
       return NextResponse.json(
         {
           success: false,
-          message: "No autorizado. Solo administradores pueden editar equipos",
+          message: "Equipo no encontrado",
+        },
+        { status: 404 },
+      );
+    }
+
+    const userEmail = normalizeEmail(user.email);
+    const canEdit =
+      user.role === "admin" ||
+      userEmail === normalizeEmail(team.contact?.email) ||
+      userEmail === normalizeEmail(team.coach?.email);
+
+    if (!canEdit) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo el contacto del equipo, el entrenador o un administrador pueden editarlo",
         },
         { status: 403 },
       );
     }
 
-    const { id } = await params;
     const body = (await request.json()) as UpdateTeamRequestDto;
 
     const updatedTeam = await teamService.updateTeam(id, {
@@ -81,6 +103,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       logo: body.logo,
       backgroundImage: body.backgroundImage,
       contact: body.contact,
+      coach: body.coach,
       status: body.status,
       players: body.players,
     });
@@ -92,7 +115,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al actualizar equipo";
-    const status = message.includes("no encontrado") ? 404 : 400;
+    const status = message.includes("no encontrado")
+      ? 404
+      : message.includes("Token") || message.includes("Usuario")
+        ? 401
+        : 400;
 
     return NextResponse.json(
       {

@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import AdminProtection from "@/components/AdminProtection";
 import ImageUploader from "@/components/ImageUploader";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Division {
   _id: string;
@@ -15,6 +15,7 @@ interface Division {
 }
 
 export default function EditTeamPage() {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const teamId = params?.id as string;
@@ -46,6 +47,13 @@ export default function EditTeamPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [teamEmails, setTeamEmails] = useState({ contact: "", coach: "" });
+  const userEmail = user?.email.trim().toLowerCase();
+  const canEdit =
+    !!userEmail &&
+    (user?.role === "admin" ||
+      userEmail === teamEmails.contact.trim().toLowerCase() ||
+      userEmail === teamEmails.coach.trim().toLowerCase());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,6 +71,10 @@ export default function EditTeamPage() {
           const teamData = await teamRes.json();
           if (teamData.success) {
             const team = teamData.data;
+            setTeamEmails({
+              contact: team.contact?.email || "",
+              coach: team.coach?.email || "",
+            });
             setForm({
               name: team.name || "",
               shortName: team.shortName || "",
@@ -142,7 +154,13 @@ export default function EditTeamPage() {
       setLoading(false);
     }
   };
-  if (loadingData) {
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      router.push("/auth/signin");
+    }
+  }, [isAuthLoading, router, user]);
+
+  if (isAuthLoading || loadingData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-lg shadow text-center">
@@ -152,8 +170,32 @@ export default function EditTeamPage() {
       </div>
     );
   }
+
+  if (!user) {
+    return <div className="min-h-screen flex items-center justify-center">Debes iniciar sesión para editar.</div>;
+  }
+
+  if (!canEdit) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-lg shadow text-center max-w-md">
+          <h2 className="text-xl font-bold mb-2 text-gray-900">Acceso denegado</h2>
+          <p className="text-gray-600 mb-4">
+            Solo el contacto del equipo, el entrenador o un administrador pueden editar este equipo.
+          </p>
+          <button
+            onClick={() => router.back()}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          >
+            Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <AdminProtection fallbackMessage="Solo los administradores pueden editar equipos.">
+    <>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-lg shadow-lg p-8">
@@ -384,6 +426,8 @@ export default function EditTeamPage() {
                       value={form.logo}
                       onUploaded={(url) => setForm((prev) => ({ ...prev, logo: url }))}
                       disabled={loading}
+                      ownerType="team"
+                      ownerId={teamId}
                     />
                     <input
                       id="logo"
@@ -402,6 +446,8 @@ export default function EditTeamPage() {
                       value={form.backgroundImage}
                       onUploaded={(url) => setForm((prev) => ({ ...prev, backgroundImage: url }))}
                       disabled={loading}
+                      ownerType="team"
+                      ownerId={teamId}
                     />
                     <input
                       id="backgroundImage"
@@ -458,6 +504,6 @@ export default function EditTeamPage() {
           </div>
         </div>
       </div>
-    </AdminProtection>
+    </>
   );
 }

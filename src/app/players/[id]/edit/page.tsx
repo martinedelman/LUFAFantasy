@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import AdminProtection from "@/components/AdminProtection";
 import ImageUploader from "@/components/ImageUploader";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Team {
   _id: string;
@@ -15,6 +15,7 @@ interface Team {
 }
 
 export default function EditPlayerPage() {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const playerId = params?.id as string;
@@ -44,6 +45,10 @@ export default function EditPlayerPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [playerEmail, setPlayerEmail] = useState("");
+  const canEdit =
+    !!user &&
+    (user.role === "admin" || user.email.trim().toLowerCase() === playerEmail.trim().toLowerCase());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +66,7 @@ export default function EditPlayerPage() {
           const playerData = await playerRes.json();
           if (playerData.success) {
             const player = playerData.data;
+            setPlayerEmail(player.email || "");
             setForm({
               firstName: player.firstName || "",
               lastName: player.lastName || "",
@@ -138,16 +144,43 @@ export default function EditPlayerPage() {
       setLoading(false);
     }
   };
-  if (loadingData) {
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      router.push("/auth/signin");
+    }
+  }, [isAuthLoading, router, user]);
+
+  if (isAuthLoading || loadingData) {
     return (
-      <AdminProtection>
-        <div className="min-h-screen flex items-center justify-center">Cargando jugador...</div>
-      </AdminProtection>
+      <div className="min-h-screen flex items-center justify-center">Cargando jugador...</div>
+    );
+  }
+
+  if (!user) {
+    return <div className="min-h-screen flex items-center justify-center">Debes iniciar sesión para editar.</div>;
+  }
+
+  if (!canEdit) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-lg shadow text-center max-w-md">
+          <h2 className="text-xl font-bold mb-2 text-gray-900">Acceso denegado</h2>
+          <p className="text-gray-600 mb-4">
+            Solo el jugador asociado a este email o un administrador puede editar este perfil.
+          </p>
+          <button
+            onClick={() => router.back()}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          >
+            Volver
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <AdminProtection fallbackMessage="Solo los administradores pueden editar jugadores.">
+    <>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6">Editar Jugador</h1>
@@ -167,6 +200,8 @@ export default function EditPlayerPage() {
                 value={form.profilePicture}
                 onUploaded={(url) => setForm((prev) => ({ ...prev, profilePicture: url }))}
                 disabled={loading}
+                ownerType="player"
+                ownerId={playerId}
               />
               <input
                 name="profilePicture"
@@ -358,6 +393,6 @@ export default function EditPlayerPage() {
           </form>
         </div>
       </div>
-    </AdminProtection>
+    </>
   );
 }

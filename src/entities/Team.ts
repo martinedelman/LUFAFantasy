@@ -4,6 +4,14 @@ import { ContactInfo } from "./valueObjects/ContactInfo";
 
 export type TeamStatus = "active" | "inactive" | "suspended";
 
+export interface Coach {
+  name: string;
+  email?: string;
+  phone?: string;
+  experience?: string;
+  certifications?: string[];
+}
+
 /**
  * Entity: Team (Equipo)
  * Aggregate Root
@@ -18,6 +26,7 @@ export class Team extends AggregateRoot {
   public readonly tournament?: string; // ID de torneo
   public readonly players: string[]; // IDs de jugadores
   public readonly contact: ContactInfo;
+  public readonly coach?: Coach;
   public readonly registrationDate: Date;
   public readonly status: TeamStatus;
 
@@ -36,6 +45,7 @@ export class Team extends AggregateRoot {
     id?: string,
     createdAt?: Date,
     updatedAt?: Date,
+    coach?: Coach,
   ) {
     super(id, createdAt, updatedAt);
     this.name = name;
@@ -47,6 +57,7 @@ export class Team extends AggregateRoot {
     this.tournament = tournament;
     this.players = players;
     this.contact = contact;
+    this.coach = coach;
     this.registrationDate = registrationDate;
     this.status = status;
   }
@@ -98,6 +109,10 @@ export class Team extends AggregateRoot {
     const contactValidation = this.contact.validate();
     if (!contactValidation.isValid) {
       errors.push(...contactValidation.errors);
+    }
+
+    if (this.coach?.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.coach.email)) {
+      errors.push("Email del entrenador inválido");
     }
 
     if (!["active", "inactive", "suspended"].includes(this.status)) {
