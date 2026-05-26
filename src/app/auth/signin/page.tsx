@@ -121,19 +121,6 @@ export default function SignInPage() {
               </Link>
             </p>
           </div>
-
-          {/* Demo credentials */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <h3 className="text-sm font-medium text-blue-800 mb-2">Credenciales de Prueba:</h3>
-            <div className="text-xs text-blue-600 space-y-1">
-              <div>
-                <strong>Administrador:</strong> admin@lufa.com / admin123
-              </div>
-              <div>
-                <strong>Usuario:</strong> user@lufa.com / user123
-              </div>
-            </div>
-          </div>
         </form>
       </div>
     </div>
