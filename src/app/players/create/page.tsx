@@ -157,6 +157,7 @@ export default function CreatePlayerPage() {
                       value={form.profilePicture}
                       onUploaded={(url) => setForm((prev) => ({ ...prev, profilePicture: url }))}
                       disabled={loading}
+                      enableCrop
                     />
                     <input
                       name="profilePicture"
