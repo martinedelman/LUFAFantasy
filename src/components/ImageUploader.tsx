@@ -355,7 +355,7 @@ export default function ImageUploader({
                 style={{ width: cropSize, height: cropSize }}
                 role="application"
                 tabIndex={0}
-                aria-label="Area de recorte. Use las flechas para mover la imagen."
+                aria-label="Área de recorte. Usa las flechas para mover la imagen."
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
