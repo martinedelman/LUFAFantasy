@@ -156,13 +156,15 @@ export default function ImageUploader({
 
     setError(null);
 
+    let imageUrl: string | null = null;
+
     try {
       if (!enableCrop) {
         await uploadFile(file);
         return;
       }
 
-      const imageUrl = URL.createObjectURL(file);
+      imageUrl = URL.createObjectURL(file);
       const image = new Image();
       image.src = imageUrl;
       await image.decode();
@@ -173,9 +175,14 @@ export default function ImageUploader({
         naturalWidth: image.naturalWidth,
         naturalHeight: image.naturalHeight,
       });
+      imageUrl = null;
       setZoom(1);
       setOffset({ x: 0, y: 0 });
     } catch (uploadError) {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+
       const message = uploadError instanceof Error ? uploadError.message : "Error al subir imagen";
       setError(message);
     } finally {
@@ -270,41 +277,44 @@ export default function ImageUploader({
       return;
     }
 
-    const outputSize = 800;
-    const canvas = document.createElement("canvas");
-    canvas.width = outputSize;
-    canvas.height = outputSize;
+    try {
+      const outputSize = 800;
+      const canvas = document.createElement("canvas");
+      canvas.width = outputSize;
+      canvas.height = outputSize;
 
-    const context = canvas.getContext("2d");
-    if (!context) {
-      setError("No se pudo preparar el recorte");
-      return;
+      const context = canvas.getContext("2d");
+      if (!context) {
+        throw new Error("No se pudo preparar el recorte");
+      }
+
+      const dimensions = getCoverDimensions(cropImage, cropSize, zoom);
+      const displayedLeft = cropSize / 2 - dimensions.width / 2 + offset.x;
+      const displayedTop = cropSize / 2 - dimensions.height / 2 + offset.y;
+      const sourceX = Math.max(0, -displayedLeft / dimensions.scale);
+      const sourceY = Math.max(0, -displayedTop / dimensions.scale);
+      const sourceSize = cropSize / dimensions.scale;
+      const image = new Image();
+      image.src = cropImage.url;
+      await image.decode();
+
+      context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, outputSize, outputSize);
+
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png", 0.92));
+      if (!blob) {
+        throw new Error("No se pudo generar la imagen recortada");
+      }
+
+      const croppedFile = new File([blob], `${cropImage.file.name.replace(/\.[^.]+$/, "")}-perfil.png`, {
+        type: "image/png",
+      });
+
+      closeCropEditor();
+      await uploadFile(croppedFile);
+    } catch (cropError) {
+      const message = cropError instanceof Error ? cropError.message : "No se pudo recortar la imagen";
+      setError(message);
     }
-
-    const dimensions = getCoverDimensions(cropImage, cropSize, zoom);
-    const displayedLeft = cropSize / 2 - dimensions.width / 2 + offset.x;
-    const displayedTop = cropSize / 2 - dimensions.height / 2 + offset.y;
-    const sourceX = Math.max(0, -displayedLeft / dimensions.scale);
-    const sourceY = Math.max(0, -displayedTop / dimensions.scale);
-    const sourceSize = cropSize / dimensions.scale;
-    const image = new Image();
-    image.src = cropImage.url;
-    await image.decode();
-
-    context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, outputSize, outputSize);
-
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png", 0.92));
-    if (!blob) {
-      setError("No se pudo generar la imagen recortada");
-      return;
-    }
-
-    const croppedFile = new File([blob], `${cropImage.file.name.replace(/\.[^.]+$/, "")}-perfil.png`, {
-      type: "image/png",
-    });
-
-    closeCropEditor();
-    await uploadFile(croppedFile);
   };
 
   const cropDimensions = cropImage ? getCoverDimensions(cropImage, cropSize, zoom) : null;
