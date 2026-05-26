@@ -145,7 +145,7 @@ function parseOptionalNumber(value: string, fieldName: string) {
 function parseOptionalJerseyNumber(value: string) {
   const parsedValue = parseOptionalNumber(value, "Número de camiseta");
   if (parsedValue === undefined) {
-    return null;
+    return undefined;
   }
 
   if (!Number.isInteger(parsedValue)) {

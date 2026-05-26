@@ -100,7 +100,7 @@ export class MongoPlayerRepository implements IPlayerRepository {
   async findByEmail(email: string): Promise<Player | null> {
     await connectToDatabase();
     const normalizedEmail = email.trim().toLowerCase();
-    const doc = await PlayerModel.findOne({ email: normalizedEmail }).populate("team").exec();
+    const doc = await PlayerModel.findOne({ email: normalizedEmail }).exec();
     return doc ? doc : null;
   }
 
