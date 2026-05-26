@@ -20,6 +20,10 @@ export default function PlayerProfilePage() {
   const [playerStats, setPlayerStats] = useState<PlayerStatsResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const canEditPlayer =
+    !!user &&
+    !!player &&
+    (user.role === "admin" || user.email.trim().toLowerCase() === (player.email || "").trim().toLowerCase());
 
   const getReferenceId = useCallback((reference: string | { _id?: string } | null | undefined) => {
     if (!reference) return "";
@@ -325,7 +329,7 @@ export default function PlayerProfilePage() {
                 </div>
               </div>
             </div>
-            {user?.role === "admin" && (
+            {canEditPlayer && (
               <Link
                 href={`/players/${player._id}/edit`}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
