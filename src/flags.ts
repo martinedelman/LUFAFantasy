@@ -1,10 +1,29 @@
 import { vercelAdapter } from "@flags-sdk/vercel";
 import { flag } from "flags/next";
+import crypto from "node:crypto";
 
 const booleanOptions = [
   { label: "Oculta", value: false },
   { label: "Visible", value: true },
 ];
+
+function ensureFlagsSecret() {
+  if (process.env.FLAGS_SECRET || !process.env.FLAGS) {
+    return;
+  }
+
+  const seedParts = [
+    process.env.VERCEL_PROJECT_ID,
+    process.env.VERCEL_ORG_ID,
+    process.env.VERCEL_GIT_REPO_SLUG,
+    "lufa-fantasy-flags-secret-v1",
+  ].filter(Boolean);
+
+  const seed = seedParts.join(":");
+  process.env.FLAGS_SECRET = crypto.createHash("sha256").update(seed).digest("base64");
+}
+
+ensureFlagsSecret();
 
 function pageReleaseFlag(key: string, description: string) {
   const baseFlag = {
@@ -14,17 +33,24 @@ function pageReleaseFlag(key: string, description: string) {
     options: booleanOptions,
   };
 
-  if (!process.env.FLAGS) {
+  if (!process.env.FLAGS || !process.env.FLAGS_SECRET) {
     return flag<boolean>({
       ...baseFlag,
       decide: () => false,
     });
   }
 
-  return flag<boolean>({
-    ...baseFlag,
-    adapter: vercelAdapter(),
-  });
+  try {
+    return flag<boolean>({
+      ...baseFlag,
+      adapter: vercelAdapter(),
+    });
+  } catch {
+    return flag<boolean>({
+      ...baseFlag,
+      decide: () => false,
+    });
+  }
 }
 
 export const showTournamentsPages = pageReleaseFlag(

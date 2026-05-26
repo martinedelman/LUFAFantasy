@@ -238,6 +238,10 @@ Variables requeridas por esta app:
 - `MONGODB_URI`
 - `JWT_SECRET`
 
+Opcional:
+
+- **Vercel Feature Flags**: `FLAGS` (y `FLAGS_SECRET` opcional; la app lo deriva si no está definido).
+
 Configúralas en Preview y Production:
 
 ```bash
