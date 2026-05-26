@@ -121,6 +121,7 @@ export interface Player {
   team: string; // Referencia a Team
   jerseyNumber?: number | null;
   position: PlayerPosition;
+  secondaryPosition?: PlayerPosition;
   height?: number; // cm
   weight?: number; // kg
   experience?: string;

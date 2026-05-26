@@ -27,8 +27,12 @@ const PlayerSchema = new Schema(
     jerseyNumber: { type: Number },
     position: {
       type: String,
-      enum: ["QB", "WR", "RB", "C", "G", "T", "DE", "DT", "LB", "CB", "FS", "SS", "K", "P", "FLEX"],
+      enum: ["QB", "WR", "RB", "C", "RS", "G", "T", "DE", "DT", "LB", "CB", "FS", "SS", "K", "P", "FLEX"],
       required: true,
+    },
+    secondaryPosition: {
+      type: String,
+      enum: ["QB", "WR", "RB", "C", "RS", "LB", "CB", "FS", "SS"],
     },
     height: { type: Number }, // cm
     weight: { type: Number }, // kg
@@ -59,6 +63,7 @@ PlayerSchema.index(
 PlayerSchema.index({ firstName: 1, lastName: 1 });
 PlayerSchema.index({ team: 1 });
 PlayerSchema.index({ position: 1 });
+PlayerSchema.index({ secondaryPosition: 1 });
 PlayerSchema.index({ status: 1 });
 
 export const PlayerModel = mongoose.models.Player || mongoose.model<Player>("Player", PlayerSchema);

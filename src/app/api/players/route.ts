@@ -91,11 +91,13 @@ export async function POST(request: NextRequest) {
       team: body.team,
       jerseyNumber: body.jerseyNumber,
       position: body.position,
+      secondaryPosition: body.secondaryPosition,
       email: body.email,
       phone: body.phone,
       height: body.height,
       weight: body.weight,
       experience: body.experience,
+      emergencyContact: body.emergencyContact,
       status: body.status,
     });
 

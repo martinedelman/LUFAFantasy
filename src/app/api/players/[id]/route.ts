@@ -94,13 +94,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       lastName: body.lastName,
       profilePicture: body.profilePicture,
       dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : undefined,
+      registrationDate: body.registrationDate ? new Date(body.registrationDate) : undefined,
       email: body.email,
       phone: body.phone,
       jerseyNumber: body.jerseyNumber,
       position: body.position,
+      secondaryPosition: body.secondaryPosition,
       height: body.height,
       weight: body.weight,
       experience: body.experience,
+      emergencyContact: body.emergencyContact,
       status: body.status,
     });
 

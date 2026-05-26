@@ -13,6 +13,13 @@ export type PlayerPosition =
 
 export type PlayerStatus = "active" | "inactive" | "injured" | "suspended";
 
+export interface EmergencyContact {
+  name?: string;
+  relationship?: string;
+  phone?: string;
+  email?: string;
+}
+
 /**
  * Entity: Player (Jugador)
  * Aggregate Root
@@ -27,9 +34,11 @@ export class Player extends AggregateRoot {
   public readonly team: string; // ID del equipo
   public readonly jerseyNumber?: number | null;
   public readonly position: PlayerPosition;
+  public readonly secondaryPosition?: PlayerPosition;
   public readonly height?: number; // cm
   public readonly weight?: number; // kg
   public readonly experience?: string;
+  public readonly emergencyContact?: EmergencyContact;
   public readonly registrationDate: Date;
   public readonly status: PlayerStatus;
 
@@ -40,6 +49,7 @@ export class Player extends AggregateRoot {
     team: string,
     jerseyNumber: number | null | undefined,
     position: PlayerPosition,
+    secondaryPosition: PlayerPosition | undefined,
     registrationDate: Date,
     status: PlayerStatus = "active",
     email?: string,
@@ -51,6 +61,7 @@ export class Player extends AggregateRoot {
     createdAt?: Date,
     updatedAt?: Date,
     profilePicture?: string,
+    emergencyContact?: EmergencyContact,
   ) {
     super(id, createdAt, updatedAt);
     this.firstName = firstName;
@@ -62,9 +73,11 @@ export class Player extends AggregateRoot {
     this.team = team;
     this.jerseyNumber = jerseyNumber;
     this.position = position;
+    this.secondaryPosition = secondaryPosition;
     this.height = height;
     this.weight = weight;
     this.experience = experience;
+    this.emergencyContact = emergencyContact;
     this.registrationDate = registrationDate;
     this.status = status;
   }
@@ -141,12 +154,20 @@ export class Player extends AggregateRoot {
       errors.push("Posición inválida");
     }
 
+    if (this.secondaryPosition && !validPositions.includes(this.secondaryPosition)) {
+      errors.push("Posición secundaria inválida");
+    }
+
     if (!["active", "inactive", "injured", "suspended"].includes(this.status)) {
       errors.push("Estado del jugador inválido");
     }
 
     if (this.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
       errors.push("Email inválido");
+    }
+
+    if (this.emergencyContact?.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.emergencyContact.email)) {
+      errors.push("Email del contacto de emergencia inválido");
     }
 
     const age = this.age();

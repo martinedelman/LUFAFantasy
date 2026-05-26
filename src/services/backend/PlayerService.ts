@@ -1,4 +1,4 @@
-import { Player, PlayerPosition, PlayerStatus } from "../../entities/Player";
+import { EmergencyContact, Player, PlayerPosition, PlayerStatus } from "../../entities/Player";
 import RepositoryContainer from "../../repositories";
 
 /**
@@ -7,6 +7,24 @@ import RepositoryContainer from "../../repositories";
 export class PlayerService {
   private playerRepo = RepositoryContainer.getPlayerRepository();
   private teamRepo = RepositoryContainer.getTeamRepository();
+
+  private getReferenceId(value: unknown): string {
+    if (!value) {
+      return "";
+    }
+
+    if (typeof value === "string") {
+      return value;
+    }
+
+    const reference = value as { _id?: unknown; id?: unknown; toString?: () => string };
+    const id = reference._id || reference.id;
+    if (id) {
+      return String(id);
+    }
+
+    return reference.toString ? reference.toString() : "";
+  }
 
   private normalizeJerseyNumber(value: unknown): number | null | undefined {
     if (value === undefined) {
@@ -37,11 +55,13 @@ export class PlayerService {
     team: string;
     jerseyNumber?: number | null;
     position: PlayerPosition;
+    secondaryPosition?: PlayerPosition;
     email?: string;
     phone?: string;
     height?: number;
     weight?: number;
     experience?: string;
+    emergencyContact?: EmergencyContact;
     status?: PlayerStatus;
     registrationDate?: Date;
   }): Promise<Player> {
@@ -68,6 +88,7 @@ export class PlayerService {
       data.team,
       jerseyNumber,
       data.position,
+      data.secondaryPosition,
       data.registrationDate || new Date(),
       data.status || "active",
       data.email,
@@ -79,6 +100,7 @@ export class PlayerService {
       undefined,
       undefined,
       data.profilePicture,
+      data.emergencyContact,
     );
 
     // Validar
@@ -163,11 +185,14 @@ export class PlayerService {
       team: string;
       jerseyNumber?: number | null;
       position: PlayerPosition;
+      secondaryPosition: PlayerPosition;
       email: string;
       phone: string;
       height: number;
       weight: number;
       experience: string;
+      emergencyContact: EmergencyContact;
+      registrationDate: Date;
       status: PlayerStatus;
     }>,
   ): Promise<Player> {
@@ -178,15 +203,16 @@ export class PlayerService {
 
     const requestedJerseyNumber = this.normalizeJerseyNumber(data.jerseyNumber);
     const jerseyNumber = requestedJerseyNumber !== undefined ? requestedJerseyNumber : player.jerseyNumber;
-    const teamId = data.team || player.team;
+    const currentTeamId = this.getReferenceId(player.team);
+    const teamId = data.team || currentTeamId;
 
     // Si cambia el número o equipo, verificar que no esté en uso
     if (
       jerseyNumber !== undefined &&
       jerseyNumber !== null &&
-      (jerseyNumber !== player.jerseyNumber || teamId !== player.team)
+      (jerseyNumber !== player.jerseyNumber || teamId !== currentTeamId)
     ) {
-      const numberExists = await this.playerRepo.existsWithJerseyNumber(jerseyNumber, teamId);
+      const numberExists = await this.playerRepo.existsWithJerseyNumber(jerseyNumber, teamId, player.id);
       if (numberExists) {
         throw new Error("El número de camiseta ya está en uso en este equipo");
       }
@@ -199,7 +225,8 @@ export class PlayerService {
       teamId,
       jerseyNumber,
       data.position || player.position,
-      player.registrationDate,
+      data.secondaryPosition !== undefined ? data.secondaryPosition : player.secondaryPosition,
+      data.registrationDate || player.registrationDate,
       data.status || player.status,
       data.email !== undefined ? data.email : player.email,
       data.phone !== undefined ? data.phone : player.phone,
@@ -210,6 +237,7 @@ export class PlayerService {
       player.createdAt,
       player.updatedAt,
       data.profilePicture !== undefined ? data.profilePicture : player.profilePicture,
+      data.emergencyContact !== undefined ? data.emergencyContact : player.emergencyContact,
     );
 
     // Validar
@@ -219,6 +247,10 @@ export class PlayerService {
     }
 
     return await this.playerRepo.update(id, updatedPlayer);
+  }
+
+  async getPlayerByEmail(email: string): Promise<Player | null> {
+    return await this.playerRepo.findByEmail(email);
   }
 
   /**

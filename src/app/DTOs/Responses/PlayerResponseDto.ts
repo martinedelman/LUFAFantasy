@@ -1,4 +1,4 @@
-import type { PlayerPosition, PlayerStatus } from "@/entities/Player";
+import type { EmergencyContact, PlayerPosition, PlayerStatus } from "@/entities/Player";
 
 export interface PlayerResponseDto {
   _id?: string;
@@ -11,9 +11,11 @@ export interface PlayerResponseDto {
   team: string;
   jerseyNumber?: number | null;
   position: PlayerPosition;
+  secondaryPosition?: PlayerPosition;
   height?: number;
   weight?: number;
   experience?: string;
+  emergencyContact?: EmergencyContact;
   registrationDate: string;
   status: PlayerStatus;
   createdAt?: string;
