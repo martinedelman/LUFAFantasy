@@ -34,10 +34,23 @@ export interface PlayerImportError {
   message: string;
 }
 
+export interface CreatedPlayerImportResult {
+  rowNumber: number;
+  id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  team: string;
+  jerseyNumber?: number | null;
+  position: PlayerPosition;
+  secondaryPosition?: PlayerPosition;
+}
+
 export interface PlayerImportResult {
   created: number;
   updated: number;
   skipped: number;
+  createdPlayers: CreatedPlayerImportResult[];
   errors: PlayerImportError[];
   dryRun: boolean;
 }
@@ -137,6 +150,41 @@ function parseOptionalNumber(value: string, fieldName: string) {
   const parsedValue = Number(trimmedValue.replace(",", "."));
   if (Number.isNaN(parsedValue)) {
     throw new Error(`${fieldName} inválido`);
+  }
+
+  return parsedValue;
+}
+
+function parseOptionalHeight(value: string) {
+  const normalizedValue = normalize(value).replace(/\s+/g, "").replace(/cms?$/, "").replace(/mts?$/, "m");
+  if (!normalizedValue) {
+    return undefined;
+  }
+
+  const hasMetersUnit = normalizedValue.endsWith("m");
+  const numericText = normalizedValue.replace(/m$/, "").replace(",", ".");
+  const parsedValue = Number(numericText);
+
+  if (Number.isNaN(parsedValue)) {
+    throw new Error("Altura inválida");
+  }
+
+  if (hasMetersUnit || parsedValue < 3) {
+    return Math.round(parsedValue * 100);
+  }
+
+  return Math.round(parsedValue);
+}
+
+function parseOptionalWeight(value: string) {
+  const normalizedValue = normalize(value).replace(/\s+/g, "").replace(/kgs?$/, "").replace(",", ".");
+  if (!normalizedValue) {
+    return undefined;
+  }
+
+  const parsedValue = Number(normalizedValue);
+  if (Number.isNaN(parsedValue)) {
+    throw new Error("Peso inválido");
   }
 
   return parsedValue;
@@ -245,6 +293,7 @@ export class PlayerImportService {
       created: 0,
       updated: 0,
       skipped: 0,
+      createdPlayers: [],
       errors: [],
       dryRun,
     };
@@ -262,6 +311,7 @@ export class PlayerImportService {
             result.updated += 1;
           } else {
             result.created += 1;
+            result.createdPlayers.push(this.toCreatedPlayerResult(payload, rowNumber));
           }
           continue;
         }
@@ -270,8 +320,9 @@ export class PlayerImportService {
           await this.playerService.updatePlayer(existingPlayer.id, payload);
           result.updated += 1;
         } else {
-          await this.playerService.createPlayer({ ...payload, status: "active" });
+          const createdPlayer = await this.playerService.createPlayer({ ...payload, status: "active" });
           result.created += 1;
+          result.createdPlayers.push(this.toCreatedPlayerResult(payload, rowNumber, createdPlayer.id));
         }
       } catch (error) {
         result.skipped += 1;
@@ -284,6 +335,24 @@ export class PlayerImportService {
     }
 
     return result;
+  }
+
+  private toCreatedPlayerResult(
+    payload: PlayerImportPayload,
+    rowNumber: number,
+    id?: string,
+  ): CreatedPlayerImportResult {
+    return {
+      rowNumber,
+      id,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      email: payload.email,
+      team: payload.team,
+      jerseyNumber: payload.jerseyNumber,
+      position: payload.position,
+      secondaryPosition: payload.secondaryPosition,
+    };
   }
 
   private async fetchRowsFromGoogleSheet(): Promise<PlayerImportRow[]> {
@@ -357,8 +426,8 @@ export class PlayerImportService {
       jerseyNumber: parseOptionalJerseyNumber(row["Número de camiseta"]),
       position: positions.position,
       secondaryPosition: positions.secondaryPosition,
-      height: parseOptionalNumber(row.Altura, "Altura"),
-      weight: parseOptionalNumber(row.Peso, "Peso"),
+      height: parseOptionalHeight(row.Altura),
+      weight: parseOptionalWeight(row.Peso),
       experience: row.Experiencia.trim() || undefined,
       emergencyContact: buildEmergencyContact(row),
     };

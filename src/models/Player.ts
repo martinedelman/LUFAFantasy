@@ -27,7 +27,7 @@ const PlayerSchema = new Schema(
     jerseyNumber: { type: Number },
     position: {
       type: String,
-      enum: ["QB", "WR", "RB", "C", "G", "T", "DE", "DT", "LB", "CB", "FS", "SS", "K", "P", "FLEX"],
+      enum: ["QB", "WR", "RB", "C", "RS", "G", "T", "DE", "DT", "LB", "CB", "FS", "SS", "K", "P", "FLEX"],
       required: true,
     },
     secondaryPosition: {
