@@ -4,6 +4,10 @@ import { TeamModel } from "../../models/Team";
 import connectToDatabase from "../../lib/mongodb";
 import { TournamentModel } from "@/models";
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export class MongoTeamRepository implements ITeamRepository {
   async findById(id: string): Promise<Team | null> {
     await connectToDatabase();
@@ -89,6 +93,22 @@ export class MongoTeamRepository implements ITeamRepository {
     }
     const count = await TeamModel.countDocuments(query).exec();
     return count > 0;
+  }
+
+  async findByNormalizedName(name: string): Promise<Team[]> {
+    await connectToDatabase();
+    const normalizedName = name.trim();
+    if (!normalizedName) {
+      return [];
+    }
+
+    const docs = await TeamModel.find({
+      name: { $regex: new RegExp(`^\\s*${escapeRegExp(normalizedName)}\\s*$`, "i") },
+    })
+      .populate("division")
+      .exec();
+
+    return docs;
   }
 
   async findActiveTeams(): Promise<Team[]> {

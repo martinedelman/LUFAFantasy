@@ -78,6 +78,10 @@ export class TeamService {
     return await this.teamRepo.findById(id);
   }
 
+  async findTeamsByNormalizedName(name: string): Promise<Team[]> {
+    return await this.teamRepo.findByNormalizedName(name);
+  }
+
   /**
    * Lista equipos con filtros
    */

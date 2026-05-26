@@ -23,7 +23,12 @@ export interface IPlayerRepository extends IRepository<Player> {
   /**
    * Verifica si existe un jugador con el número de camiseta en un equipo
    */
-  existsWithJerseyNumber(jerseyNumber: number, teamId: string): Promise<boolean>;
+  existsWithJerseyNumber(jerseyNumber: number, teamId: string, excludePlayerId?: string): Promise<boolean>;
+
+  /**
+   * Busca un jugador por email normalizado
+   */
+  findByEmail(email: string): Promise<Player | null>;
 
   /**
    * Busca jugadores por nombre (búsqueda parcial)

@@ -5,6 +5,7 @@ export { StandingService } from "./StandingService";
 export { TournamentService } from "./TournamentService";
 export { TeamService } from "./TeamService";
 export { PlayerService } from "./PlayerService";
+export { PlayerImportService } from "./PlayerImportService";
 export { DivisionService } from "./DivisionService";
 export { BlobStorageService } from "./BlobStorageService";
 // Exportar factories desde entities

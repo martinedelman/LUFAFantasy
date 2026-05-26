@@ -82,13 +82,26 @@ export class MongoPlayerRepository implements IPlayerRepository {
     return docs;
   }
 
-  async existsWithJerseyNumber(jerseyNumber: number, teamId: string): Promise<boolean> {
+  async existsWithJerseyNumber(jerseyNumber: number, teamId: string, excludePlayerId?: string): Promise<boolean> {
     await connectToDatabase();
-    const count = await PlayerModel.countDocuments({
+    const query: Record<string, unknown> = {
       jerseyNumber,
       team: teamId,
-    }).exec();
+    };
+
+    if (excludePlayerId) {
+      query._id = { $ne: excludePlayerId };
+    }
+
+    const count = await PlayerModel.countDocuments(query).exec();
     return count > 0;
+  }
+
+  async findByEmail(email: string): Promise<Player | null> {
+    await connectToDatabase();
+    const normalizedEmail = email.trim().toLowerCase();
+    const doc = await PlayerModel.findOne({ email: normalizedEmail }).populate("team").exec();
+    return doc ? doc : null;
   }
 
   async searchByName(query: string): Promise<Player[]> {

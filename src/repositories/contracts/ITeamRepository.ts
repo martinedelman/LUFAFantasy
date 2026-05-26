@@ -21,6 +21,11 @@ export interface ITeamRepository extends IRepository<Team> {
   existsWithName(name: string, tournamentId?: string): Promise<boolean>;
 
   /**
+   * Busca equipos por nombre normalizado
+   */
+  findByNormalizedName(name: string): Promise<Team[]>;
+
+  /**
    * Busca equipos activos
    */
   findActiveTeams(): Promise<Team[]>;
