@@ -1,6 +1,8 @@
 import { User } from "../../entities/User";
 import RepositoryContainer from "../../repositories";
 import { verifySessionToken, createSessionToken } from "@/lib/auth";
+import { EmailService } from "./EmailService";
+import { OtpService } from "./OtpService";
 
 /**
  * Servicio de autenticación
@@ -8,6 +10,8 @@ import { verifySessionToken, createSessionToken } from "@/lib/auth";
  */
 export class AuthService {
   private userRepo = RepositoryContainer.getUserRepository();
+  private emailService = new EmailService();
+  private otpService = new OtpService();
 
   /**
    * Realiza login de un usuario
@@ -20,7 +24,7 @@ export class AuthService {
     }
 
     if (!user.isActive) {
-      throw new Error("Usuario inactivo");
+      throw new Error("Usuario pendiente de verificación");
     }
 
     const isPasswordValid = await user.comparePassword(password);
@@ -45,6 +49,11 @@ export class AuthService {
     // Verificar que el email no esté en uso
     const existingUser = await this.userRepo.findByEmail(data.email);
     if (existingUser) {
+      if (!existingUser.isActive) {
+        await this.sendRegistrationVerification(existingUser);
+        return existingUser;
+      }
+
       throw new Error("El email ya está registrado");
     }
 
@@ -52,7 +61,7 @@ export class AuthService {
     const passwordHash = await User.hashPassword(data.password);
 
     // Crear usuario
-    const user = new User(data.email, passwordHash, data.name, data.role || "user", true);
+    const user = new User(data.email, passwordHash, data.name, data.role || "user", false);
 
     // Validar
     const validation = user.validate();
@@ -60,8 +69,30 @@ export class AuthService {
       throw new Error(validation.errors.join(", "));
     }
 
-    // Persistir
-    return await this.userRepo.create(user);
+    const createdUser = await this.userRepo.create(user);
+    await this.sendRegistrationVerification(createdUser);
+
+    return createdUser;
+  }
+
+  private async sendRegistrationVerification(user: User): Promise<void> {
+    const otp = await this.otpService.createRegistrationOtp(user);
+
+    await this.emailService.sendTemplate({
+      name: "registration-verification",
+      to: user.email,
+      data: {
+        name: user.name,
+        verificationUrl: otp.verificationUrl,
+        code: otp.code,
+        expiresInMinutes: 15,
+      },
+    });
+  }
+
+  async verifyRegistration(data: { token: string; code: string }): Promise<{ user: User; token: string }> {
+    const { user, sessionToken } = await this.otpService.verifyRegistrationOtp(data);
+    return { user, token: sessionToken };
   }
 
   /**

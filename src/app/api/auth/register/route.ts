@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "Usuario registrado exitosamente",
+        message: "Te enviamos un link y un código para verificar tu cuenta",
         data: toRegisteredUserResponseDto(user),
       },
       { status: 201 },

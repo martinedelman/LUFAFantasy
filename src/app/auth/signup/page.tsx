@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -14,7 +13,6 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const router = useRouter();
   const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,11 +42,6 @@ export default function SignUpPage() {
       }
 
       setSuccess(true);
-
-      // Redirigir al login después de 2 segundos
-      setTimeout(() => {
-        router.push("/auth/signin");
-      }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de conexión");
     } finally {
@@ -75,11 +68,11 @@ export default function SignUpPage() {
                 </svg>
               </div>
             </div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">¡Registro Exitoso!</h2>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Revisá tu correo</h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Tu cuenta ha sido creada correctamente.
+              Te enviamos un link y un código para activar tu cuenta.
               <br />
-              Serás redirigido al login en unos segundos...
+              Después de verificarla vas a entrar automáticamente.
             </p>
           </div>
         </div>
