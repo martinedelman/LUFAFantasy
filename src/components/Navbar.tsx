@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
@@ -19,6 +19,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const { user, signOut } = useAuth();
 
   const handleSignOut = () => {
@@ -29,26 +31,63 @@ export default function Navbar() {
   const linkBaseClass =
     "px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200 border border-transparent";
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+
+      if (mobileMenuRef.current?.contains(target) || mobileMenuButtonRef.current?.contains(target)) {
+        return;
+      }
+
+      setIsMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isMenuOpen]);
+
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-blue-900/70 text-white backdrop-blur-xl shadow-2xl h-[70px]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-[70px]">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group min-w-0">
-            <div className="h-8 w-8 md:h-9 md:w-9 rounded-lg overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10">
+          <div className="flex items-center gap-4 min-w-0">
+            <a
+              href="https://lufa.com.uy"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Ir a lufa.com.uy"
+              className="h-8 w-8 md:h-9 md:w-9 rounded-md overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10 transition-transform hover:scale-110"
+            >
               <Image
-                src="/lufa_flag_icon.jpeg"
+                src="/lufa_icon.png"
                 alt="Logo LUFA"
                 width={36}
                 height={36}
                 className="h-full w-full object-cover"
                 priority
               />
-            </div>
-          </Link>
+            </a>
+            <Link href="/" className="flex items-center group">
+              <div className="h-8 w-8 md:h-9 md:w-9 rounded-md overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10 transition-transform hover:scale-110">
+                <Image
+                  src="/lufa_flag_icon.jpeg"
+                  alt="Logo LUFA"
+                  width={36}
+                  height={36}
+                  className="h-full w-full object-cover"
+                  priority
+                />
+              </div>
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden min-[950px]:flex items-center space-x-6">
             <div className="flex space-x-6">
               {navigation.map((item) => (
                 <Link
@@ -146,8 +185,9 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="min-[950px]:hidden">
             <button
+              ref={mobileMenuButtonRef}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-full text-green-50/90 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white/60"
             >
@@ -167,8 +207,11 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 mt-2 pb-3 space-y-1 sm:px-3 rounded-2xl border border-white/10 bg-blue-950 mb-3 shadow-[0_12px_32px_rgba(15,23,42,0.22)]">
+          <div className="min-[950px]:hidden">
+            <div
+              ref={mobileMenuRef}
+              className="px-2 pt-2 mt-2 pb-3 space-y-1 sm:px-3 rounded-2xl border border-white/10 bg-blue-950 mb-3 shadow-[0_12px_32px_rgba(15,23,42,0.22)]"
+            >
               {navigation.map((item) => (
                 <Link
                   key={item.name}
