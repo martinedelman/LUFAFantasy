@@ -21,6 +21,8 @@ export default function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const userMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const { user, signOut } = useAuth();
 
   const handleSignOut = () => {
@@ -49,6 +51,25 @@ export default function Navbar() {
       document.removeEventListener("pointerdown", handlePointerDown);
     };
   }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+
+      if (userMenuRef.current?.contains(target) || userMenuButtonRef.current?.contains(target)) {
+        return;
+      }
+
+      setIsUserMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isUserMenuOpen]);
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-blue-900/70 text-white backdrop-blur-xl shadow-2xl h-[70px]">
@@ -108,6 +129,7 @@ export default function Navbar() {
             {user ? (
               <div className="relative">
                 <button
+                  ref={userMenuButtonRef}
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium text-green-50/90 border border-transparent hover:bg-white/10 hover:text-white hover:border-white/10 transition-colors duration-200"
                 >
@@ -121,7 +143,10 @@ export default function Navbar() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-md shadow-[0_18px_40px_rgba(15,23,42,0.18)] py-2 z-50 overflow-hidden">
+                  <div
+                    ref={userMenuRef}
+                    className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-md shadow-[0_18px_40px_rgba(15,23,42,0.18)] py-2 z-50 overflow-hidden"
+                  >
                     <div className="px-4 py-3 text-sm text-gray-700 border-b border-slate-200">
                       <div className="font-medium">{user.name}</div>
                       <div className="text-gray-500">{user.email}</div>

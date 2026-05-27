@@ -129,8 +129,10 @@ const INITIAL_FILTERS: GameFilters = {
 const GAMES_FILTERS_STORAGE_KEY = "lufa:games:filters";
 
 function getInitialFilters(): GameFilters {
-  if (typeof window === "undefined") return INITIAL_FILTERS;
+  return INITIAL_FILTERS;
+}
 
+function readStoredFilters(): GameFilters {
   try {
     const storedFilters = window.sessionStorage.getItem(GAMES_FILTERS_STORAGE_KEY);
     if (!storedFilters) return INITIAL_FILTERS;
@@ -205,6 +207,7 @@ export default function GamesPage() {
     hasPrev: false,
   });
   const [filters, setFilters] = useState<GameFilters>(() => getInitialFilters());
+  const [filtersHydrated, setFiltersHydrated] = useState(false);
 
   const [form, setForm] = useState<GameFormState>(INITIAL_FORM);
   const [showForm, setShowForm] = useState(false);
@@ -303,8 +306,15 @@ export default function GamesPage() {
   }, [fetchCatalogs]);
 
   useEffect(() => {
+    setFilters(readStoredFilters());
+    setFiltersHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!filtersHydrated) return;
+
     window.sessionStorage.setItem(GAMES_FILTERS_STORAGE_KEY, JSON.stringify(filters));
-  }, [filters]);
+  }, [filters, filtersHydrated]);
 
   useEffect(() => {
     fetchGames(1);
