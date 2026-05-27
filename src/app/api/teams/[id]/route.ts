@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TeamService, AuthService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toTeamResponseDto } from "@/app/DTOs";
 import type { UpdateTeamRequestDto } from "@/app/DTOs";
 
 const teamService = new TeamService();
 const authService = new AuthService();
+const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
 
 function normalizeEmail(email?: string | null) {
   return email?.trim().toLowerCase() || "";
@@ -107,6 +109,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       status: body.status,
       players: body.players,
     });
+
+    invalidateCacheByPrefix(TEAM_RELATED_CACHE_PREFIXES);
 
     return NextResponse.json({
       success: true,

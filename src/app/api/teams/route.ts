@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TeamService, AuthService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { buildRequestCacheKey, createCacheHeaders, getCachedValue, invalidateCacheByPrefix } from "@/lib/serverCache";
 import { TeamStatus } from "@/entities/Team";
 import { toTeamResponseDto } from "@/app/DTOs";
 import type { CreateTeamRequestDto } from "@/app/DTOs";
 
 const teamService = new TeamService();
 const authService = new AuthService();
+const TEAMS_CACHE_TTL_SECONDS = 1800; // 30 minutos
+const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
 
 /**
  * GET /api/teams - Obtiene todos los equipos con filtros y paginación
@@ -14,41 +17,53 @@ const authService = new AuthService();
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const division = searchParams.get("division");
-    const tournament = searchParams.get("tournament");
-    const status = searchParams.get("status") as TeamStatus | null;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const cacheKey = buildRequestCacheKey("teams:list", searchParams);
+    const payload = await getCachedValue(cacheKey, TEAMS_CACHE_TTL_SECONDS * 1000, async () => {
+      const division = searchParams.get("division");
+      const tournament = searchParams.get("tournament");
+      const status = searchParams.get("status") as TeamStatus | null;
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "10");
 
-    // Construir filtros
-    const filters: { tournament?: string; division?: string; status?: TeamStatus } = {};
-    if (tournament) filters.tournament = tournament;
-    if (division) filters.division = division;
-    if (status) filters.status = status;
+      // Construir filtros
+      const filters: { tournament?: string; division?: string; status?: TeamStatus } = {};
+      if (tournament) filters.tournament = tournament;
+      if (division) filters.division = division;
+      if (status) filters.status = status;
 
-    // Obtener equipos
-    const allTeams = await teamService.listTeams(filters);
+      // Obtener equipos
+      const allTeams = await teamService.listTeams(filters);
 
-    // Aplicar paginación
-    const total = allTeams.length;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedTeams = allTeams.slice(startIndex, endIndex);
+      // Aplicar paginación
+      const total = allTeams.length;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedTeams = allTeams.slice(startIndex, endIndex);
 
-    // Convertir a respuesta API
-    const responseData = paginatedTeams.map((team) => toTeamResponseDto(team));
+      // Convertir a respuesta API
+      const responseData = paginatedTeams.map((team) => toTeamResponseDto(team));
 
-    return NextResponse.json({
-      success: true,
-      data: responseData,
-      pagination: {
-        current: page,
-        total: Math.ceil(total / limit),
-        pages: Math.ceil(total / limit),
-        hasNext: endIndex < total,
-        hasPrev: page > 1,
-      },
+      return {
+        data: responseData,
+        pagination: {
+          current: page,
+          total: Math.ceil(total / limit),
+          pages: Math.ceil(total / limit),
+          hasNext: endIndex < total,
+          hasPrev: page > 1,
+        },
+      };
     });
+
+    return NextResponse.json(
+      {
+        success: true,
+        ...payload,
+      },
+      {
+        headers: createCacheHeaders(TEAMS_CACHE_TTL_SECONDS),
+      },
+    );
   } catch (error) {
     return NextResponse.json(
       {
@@ -113,6 +128,8 @@ export async function POST(request: NextRequest) {
       players: body.players,
       status: body.status,
     });
+
+    invalidateCacheByPrefix(TEAM_RELATED_CACHE_PREFIXES);
 
     return NextResponse.json(
       {

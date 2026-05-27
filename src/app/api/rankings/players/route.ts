@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import { GameModel } from "@/models";
+import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
 import mongoose from "mongoose";
 
 type AllowedEventType = "touchdown" | "extra_point" | "safety" | "interception" | "pick_six";
 
 const ALLOWED_EVENT_TYPES: AllowedEventType[] = ["touchdown", "extra_point", "safety", "interception", "pick_six"];
+const RANKINGS_CACHE_TTL_SECONDS = 1800; // 30 minutos
 
 export async function GET(request: NextRequest) {
   try {
@@ -77,59 +79,67 @@ export async function GET(request: NextRequest) {
       eventMatch["events.points"] = { $gt: 0 };
     }
 
-    const rankings = await GameModel.aggregate([
-      { $match: gameMatch },
-      { $unwind: "$events" },
-      { $match: eventMatch },
-      {
-        $group: {
-          _id: "$events.player",
-          value: mode === "points" ? { $sum: "$events.points" } : { $sum: 1 },
-        },
-      },
-      { $sort: { value: -1, _id: 1 } },
-      { $limit: limit },
-      {
-        $lookup: {
-          from: "players",
-          localField: "_id",
-          foreignField: "_id",
-          as: "player",
-        },
-      },
-      { $unwind: "$player" },
-      {
-        $lookup: {
-          from: "teams",
-          localField: "player.team",
-          foreignField: "_id",
-          as: "team",
-        },
-      },
-      { $unwind: { path: "$team", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: 0,
-          player: {
-            _id: "$player._id",
-            firstName: "$player.firstName",
-            lastName: "$player.lastName",
-            jerseyNumber: "$player.jerseyNumber",
-            team: {
-              _id: "$team._id",
-              name: "$team.name",
-              shortName: "$team.shortName",
-            },
+    const cacheKey = buildRequestCacheKey("rankings:players", searchParams);
+    const rankings = await getCachedValue(cacheKey, RANKINGS_CACHE_TTL_SECONDS * 1000, () =>
+      GameModel.aggregate([
+        { $match: gameMatch },
+        { $unwind: "$events" },
+        { $match: eventMatch },
+        {
+          $group: {
+            _id: "$events.player",
+            value: mode === "points" ? { $sum: "$events.points" } : { $sum: 1 },
           },
-          value: 1,
         },
-      },
-    ]);
+        { $sort: { value: -1, _id: 1 } },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: "players",
+            localField: "_id",
+            foreignField: "_id",
+            as: "player",
+          },
+        },
+        { $unwind: "$player" },
+        {
+          $lookup: {
+            from: "teams",
+            localField: "player.team",
+            foreignField: "_id",
+            as: "team",
+          },
+        },
+        { $unwind: { path: "$team", preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            _id: 0,
+            player: {
+              _id: "$player._id",
+              firstName: "$player.firstName",
+              lastName: "$player.lastName",
+              jerseyNumber: "$player.jerseyNumber",
+              team: {
+                _id: "$team._id",
+                name: "$team.name",
+                shortName: "$team.shortName",
+              },
+            },
+            value: 1,
+          },
+        },
+      ]),
+    );
 
-    return NextResponse.json({
-      success: true,
-      data: rankings,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: rankings,
+      },
+      {
+        headers: createCacheHeaders(RANKINGS_CACHE_TTL_SECONDS),
+      },
+    );
   } catch (error) {
     return NextResponse.json(
       {

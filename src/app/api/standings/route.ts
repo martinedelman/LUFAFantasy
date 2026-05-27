@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { StandingService } from "@/services/backend";
+import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
 import { toStandingResponseDto } from "@/app/DTOs";
 
 const standingService = new StandingService();
+const STANDINGS_CACHE_TTL_SECONDS = 1800; // 30 minutos
 
 /**
  * GET /api/standings - Obtiene la tabla de posiciones por división
@@ -22,16 +24,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Obtener standings ordenados
-    const standings = await standingService.getStandingsByDivision(division);
+    const cacheKey = buildRequestCacheKey("standings:list", searchParams);
+    const responseData = await getCachedValue(cacheKey, STANDINGS_CACHE_TTL_SECONDS * 1000, async () => {
+      // Obtener standings ordenados
+      const standings = await standingService.getStandingsByDivision(division);
 
-    // Convertir a respuesta API
-    const responseData = standings.map((standing) => toStandingResponseDto(standing));
-
-    return NextResponse.json({
-      success: true,
-      data: responseData,
+      // Convertir a respuesta API
+      return standings.map((standing) => toStandingResponseDto(standing));
     });
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: responseData,
+      },
+      {
+        headers: createCacheHeaders(STANDINGS_CACHE_TTL_SECONDS),
+      },
+    );
   } catch (error) {
     return NextResponse.json(
       {
