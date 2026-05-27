@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { UpdateGameScoreRequestDto } from "@/app/DTOs";
 
@@ -29,13 +30,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: toGameResponseDto(game),
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al obtener partido",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al obtener partido";
+    return apiErrorResponse({ request, error, message, status: 500, route: "/api/games/[id]" });
   }
 }
 
@@ -88,13 +84,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const message = error instanceof Error ? error.message : "Error al actualizar score";
     const status = message.includes("no encontrado") ? 404 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/games/[id]" });
   }
 }
 
@@ -115,12 +105,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const message = error instanceof Error ? error.message : "Error al eliminar partido";
     const status = message.includes("no encontrado") ? 404 : message.includes("completado") ? 409 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/games/[id]" });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/apiError";
 import { toUserResponseDto } from "@/app/DTOs";
 
 const authService = new AuthService();
@@ -26,13 +27,13 @@ export async function GET(request: NextRequest) {
       data: toUserResponseDto(user),
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Error interno del servidor",
-        error: error instanceof Error ? error.message : "Error desconocido",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse({
+      request,
+      error,
+      message: "Error interno del servidor",
+      status: 500,
+      route: "/api/auth/me",
+      exposeError: true,
+    });
   }
 }

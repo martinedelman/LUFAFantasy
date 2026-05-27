@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 import { GameStatus } from "@/entities/Game";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { CreateGameRequestDto, UpdateGameRequestDto } from "@/app/DTOs";
@@ -36,14 +37,14 @@ export async function GET(request: NextRequest) {
       data: gamesData,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Error al obtener partidos",
-        error: error instanceof Error ? error.message : "Error desconocido",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse({
+      request,
+      error,
+      message: "Error al obtener partidos",
+      status: 500,
+      route: "/api/games",
+      exposeError: true,
+    });
   }
 }
 
@@ -84,13 +85,8 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al crear partido",
-      },
-      { status: 400 },
-    );
+    const message = error instanceof Error ? error.message : "Error al crear partido";
+    return apiErrorResponse({ request, error, message, status: 400, route: "/api/games" });
   }
 }
 
@@ -128,12 +124,6 @@ export async function PUT(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Error al actualizar partido";
     const status = message.includes("no encontrado") ? 404 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/games" });
   }
 }

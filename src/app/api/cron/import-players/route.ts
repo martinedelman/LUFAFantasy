@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PlayerImportService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 
 const playerImportService = new PlayerImportService();
 
@@ -45,12 +46,13 @@ export async function GET(request: NextRequest) {
       data: result,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al importar jugadores",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al importar jugadores";
+    return apiErrorResponse({
+      request,
+      error,
+      message,
+      status: 500,
+      route: "/api/cron/import-players",
+    });
   }
 }

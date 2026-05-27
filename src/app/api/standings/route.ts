@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { StandingService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
 import { toStandingResponseDto } from "@/app/DTOs";
 
@@ -48,12 +49,13 @@ export async function GET(request: NextRequest) {
       },
     );
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al obtener tabla de posiciones",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al obtener tabla de posiciones";
+    return apiErrorResponse({
+      request,
+      error,
+      message,
+      status: 500,
+      route: "/api/standings",
+    });
   }
 }

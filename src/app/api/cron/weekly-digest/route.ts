@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { WeeklyDigestEmailService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 
 const weeklyDigestEmailService = new WeeklyDigestEmailService();
 
@@ -34,12 +35,13 @@ export async function GET(request: NextRequest) {
       data: result,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al enviar digest semanal",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al enviar digest semanal";
+    return apiErrorResponse({
+      request,
+      error,
+      message,
+      status: 500,
+      route: "/api/cron/weekly-digest",
+    });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DivisionService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 import { DivisionCategory } from "@/entities/Division";
 import { toDivisionResponseDto } from "@/app/DTOs";
 import type { CreateDivisionRequestDto } from "@/app/DTOs";
@@ -46,13 +47,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al obtener divisiones",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al obtener divisiones";
+    return apiErrorResponse({ request, error, message, status: 500, route: "/api/divisions" });
   }
 }
 
@@ -95,12 +91,6 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Error al crear división";
     const status = message.includes("existe") ? 409 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/divisions" });
   }
 }

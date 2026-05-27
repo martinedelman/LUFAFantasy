@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/services/backend";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { apiErrorResponse } from "@/lib/apiError";
 import { toRegisteredUserResponseDto } from "@/app/DTOs";
 import type { UserRegistrationRequestDto } from "@/app/DTOs";
 
@@ -62,12 +63,12 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Error desconocido";
     const status = message.includes("ya está registrado") ? 400 : 500;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({
+      request,
+      error,
+      message,
+      status,
+      route: "/api/auth/register",
+    });
   }
 }

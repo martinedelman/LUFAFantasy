@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PlayerService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 import { PlayerPosition, PlayerStatus } from "@/entities/Player";
 import { toPlayerResponseDto } from "@/app/DTOs";
 import type { CreatePlayerRequestDto } from "@/app/DTOs";
@@ -55,13 +56,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al obtener jugadores",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al obtener jugadores";
+    return apiErrorResponse({ request, error, message, status: 500, route: "/api/players" });
   }
 }
 
@@ -113,12 +109,6 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Error al crear jugador";
     const status = message.includes("existe") ? 409 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/players" });
   }
 }

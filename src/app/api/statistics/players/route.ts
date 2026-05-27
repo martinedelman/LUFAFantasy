@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import { PlayerStatisticsModel } from "@/models";
+import { apiErrorResponse } from "@/lib/apiError";
 
 // GET /api/statistics/players - Obtener estadísticas de jugadores
 export async function GET(request: NextRequest) {
@@ -50,13 +51,13 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Error al obtener estadísticas de jugadores",
-        error: error instanceof Error ? error.message : "Error desconocido",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse({
+      request,
+      error,
+      message: "Error al obtener estadísticas de jugadores",
+      status: 500,
+      route: "/api/statistics/players",
+      exposeError: true,
+    });
   }
 }

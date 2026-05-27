@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService, PlayerService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/apiError";
 import { toPlayerResponseDto } from "@/app/DTOs";
 import type { UpdatePlayerRequestDto } from "@/app/DTOs";
 
@@ -35,13 +36,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: toPlayerResponseDto(player),
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al obtener jugador",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al obtener jugador";
+    return apiErrorResponse({ request, error, message, status: 500, route: "/api/players/[id]" });
   }
 }
 
@@ -120,13 +116,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         ? 401
         : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/players/[id]" });
   }
 }
 
@@ -147,12 +137,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const message = error instanceof Error ? error.message : "Error al eliminar jugador";
     const status = message.includes("no encontrado") ? 404 : 500;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/players/[id]" });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import { TeamStatisticsModel } from "@/models";
+import { apiErrorResponse } from "@/lib/apiError";
 
 // GET /api/statistics/teams - Obtener estadísticas de equipos
 export async function GET(request: NextRequest) {
@@ -43,14 +44,14 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Error al obtener estadísticas de equipos",
-        error: error instanceof Error ? error.message : "Error desconocido",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse({
+      request,
+      error,
+      message: "Error al obtener estadísticas de equipos",
+      status: 500,
+      route: "/api/statistics/teams",
+      exposeError: true,
+    });
   }
 }
 
@@ -92,13 +93,13 @@ export async function POST(request: NextRequest) {
       message: "Estadísticas de equipo actualizadas exitosamente",
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Error al actualizar estadísticas de equipo",
-        error: error instanceof Error ? error.message : "Error desconocido",
-      },
-      { status: 400 }
-    );
+    return apiErrorResponse({
+      request,
+      error,
+      message: "Error al actualizar estadísticas de equipo",
+      status: 400,
+      route: "/api/statistics/teams",
+      exposeError: true,
+    });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 import { toGameResponseDto } from "@/app/DTOs";
 
 const gameService = new GameService();
@@ -7,7 +8,7 @@ const gameService = new GameService();
 /**
  * PATCH /api/games/:id/complete - Marca un partido como finalizado
  */
-export async function PATCH(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
@@ -22,12 +23,6 @@ export async function PATCH(_request: NextRequest, { params }: { params: Promise
     const message = error instanceof Error ? error.message : "Error al finalizar partido";
     const status = message.includes("no encontrado") ? 404 : message.includes("ya está completado") ? 409 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/games/[id]/complete" });
   }
 }

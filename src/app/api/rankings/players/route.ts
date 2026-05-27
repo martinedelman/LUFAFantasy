@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import { GameModel } from "@/models";
+import { apiErrorResponse } from "@/lib/apiError";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
 import mongoose from "mongoose";
 
@@ -145,13 +146,13 @@ export async function GET(request: NextRequest) {
       },
     );
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Error al obtener rankings de jugadores",
-        error: error instanceof Error ? error.message : "Error desconocido",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse({
+      request,
+      error,
+      message: "Error al obtener rankings de jugadores",
+      status: 500,
+      route: "/api/rankings/players",
+      exposeError: true,
+    });
   }
 }

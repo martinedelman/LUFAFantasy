@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { GameEventType } from "@/entities/Game";
 
@@ -35,17 +36,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const message = error instanceof Error ? error.message : "Error al actualizar evento";
     const status = message.includes("no encontrado") ? 404 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/games/[id]/events/[eventId]" });
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
     const { id, eventId } = await params;
 
@@ -60,12 +55,6 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     const message = error instanceof Error ? error.message : "Error al eliminar evento";
     const status = message.includes("no encontrado") ? 404 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/games/[id]/events/[eventId]" });
   }
 }

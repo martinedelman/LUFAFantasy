@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TeamService, AuthService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/apiError";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toTeamResponseDto } from "@/app/DTOs";
 import type { UpdateTeamRequestDto } from "@/app/DTOs";
@@ -39,13 +40,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: apiResponse,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al obtener equipo",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al obtener equipo";
+    return apiErrorResponse({
+      request,
+      error,
+      message,
+      status: 500,
+      route: "/api/teams/[id]",
+    });
   }
 }
 
@@ -125,13 +127,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         ? 401
         : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({
+      request,
+      error,
+      message,
+      status,
+      route: "/api/teams/[id]",
+    });
   }
 }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TournamentService, AuthService } from "@/services/backend";
+import { apiErrorResponse } from "@/lib/apiError";
 import { TournamentStatus } from "@/entities/Tournament";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { toTournamentResponseDto } from "@/app/DTOs";
@@ -48,13 +49,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al obtener torneos",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al obtener torneos";
+    return apiErrorResponse({ request, error, message, status: 500, route: "/api/tournaments" });
   }
 }
 
@@ -127,12 +123,6 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Error al crear torneo";
     const status = message.includes("existe") ? 409 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/tournaments" });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/services/backend";
 import { setSessionCookie } from "@/lib/auth";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { apiErrorResponse } from "@/lib/apiError";
 import { toUserResponseDto } from "@/app/DTOs";
 
 const authService = new AuthService();
@@ -48,12 +49,12 @@ export async function POST(request: NextRequest) {
     const status =
       message.includes("inválido") || message.includes("expiró") || message.includes("intentos") ? 400 : 500;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({
+      request,
+      error,
+      message,
+      status,
+      route: "/api/auth/verify-registration",
+    });
   }
 }

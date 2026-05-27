@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TournamentService, AuthService, DivisionService, TeamService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/apiError";
 import { toDivisionResponseDto, toTeamResponseDto, toTournamentResponseDto } from "@/app/DTOs";
 import type { TournamentResponseDto, UpdateTournamentRequestDto } from "@/app/DTOs";
 
@@ -84,13 +85,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: tournamentData,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Error al obtener torneo",
-      },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Error al obtener torneo";
+    return apiErrorResponse({ request, error, message, status: 500, route: "/api/tournaments/[id]" });
   }
 }
 
@@ -161,13 +157,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const message = error instanceof Error ? error.message : "Error al actualizar torneo";
     const status = message.includes("no encontrado") ? 404 : 400;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/tournaments/[id]" });
   }
 }
 
@@ -211,12 +201,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const message = error instanceof Error ? error.message : "Error al eliminar torneo";
     const status = message.includes("no encontrado") ? 404 : 500;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/tournaments/[id]" });
   }
 }

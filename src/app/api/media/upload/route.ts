@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService, BlobStorageService, PlayerService, TeamService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/apiError";
 import type { BlobAssetType } from "@/services/backend/BlobStorageService";
 
 const authService = new AuthService();
@@ -132,12 +133,6 @@ export async function POST(request: NextRequest) {
     const status =
       message.includes("Token") || message.includes("Usuario") ? 401 : message.includes("imagen") ? 400 : 500;
 
-    return NextResponse.json(
-      {
-        success: false,
-        message,
-      },
-      { status },
-    );
+    return apiErrorResponse({ request, error, message, status, route: "/api/media/upload" });
   }
 }
