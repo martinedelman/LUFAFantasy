@@ -15,13 +15,85 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const siteName = "LUFA Flag";
+const siteDescription =
+  "Liga Uruguaya de Football Americano: toda la información sobre Flag Football incluyendo partidos, equipos, jugadores, rankings, estadísticas y tabla de posiciones.";
+
 export const metadata: Metadata = {
-  title: "LUFA Flag - Sistema de Gestión de Flag Football",
-  description: "Plataforma completa para la gestión de ligas de Flag Football",
+  metadataBase: new URL(appUrl),
+  applicationName: siteName,
+  title: {
+    default: "LUFA Flag",
+    template: "%s | LUFA Flag",
+  },
+  description: siteDescription,
+  keywords: [
+    "LUFA",
+    "LUFA Flag",
+    "flag football Uruguay",
+    "Liga Uruguaya de Football Americano",
+    "football flag",
+    "partidos LUFA",
+    "rankings LUFA",
+    "equipos flag football",
+    "flag football",
+  ],
+  authors: [{ name: "LUFA Flag" }],
+  creator: "LUFA Flag",
+  publisher: "LUFA Flag",
+  alternates: {
+    canonical: "/",
+  },
   icons: {
-    icon: "/lufa_flag_icon.jpeg",
+    icon: [
+      {
+        url: "/lufa_flag_icon.jpeg",
+        type: "image/jpeg",
+        sizes: "225x225",
+      },
+    ],
     shortcut: "/lufa_flag_icon.jpeg",
-    apple: "/lufa_flag_icon.jpeg",
+    apple: [
+      {
+        url: "/lufa_flag_icon.jpeg",
+        type: "image/jpeg",
+        sizes: "225x225",
+      },
+    ],
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_UY",
+    url: "/",
+    siteName,
+    title: "LUFA Flag",
+    description: siteDescription,
+    images: [
+      {
+        url: "/Hero1.JPG",
+        width: 1200,
+        height: 798,
+        alt: "Partido de Flag football en Uruguay",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LUFA Flag",
+    description: siteDescription,
+    images: ["/Hero1.JPG"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
