@@ -58,6 +58,10 @@ function getPlayerName(player: PlayerRef | undefined, fallback = "Jugador") {
   return `${jersey}${player.firstName} ${player.lastName}`;
 }
 
+function formatPlayerPositions(player: Pick<PlayerSummaryResponseDto, "position" | "secondaryPosition">) {
+  return [player.position, player.secondaryPosition].filter(Boolean).join(" / ") || "Sin posición";
+}
+
 function sortPlayers(players: PlayerSummaryResponseDto[]) {
   return [...players].sort((left, right) => {
     const leftNumber = left.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
@@ -293,7 +297,7 @@ export default function MatchPage() {
                     {player.jerseyNumber != null ? `#${player.jerseyNumber} ` : ""}
                     {player.firstName} {player.lastName}
                   </p>
-                  <p className="text-sm text-gray-500">{player.position || "Sin posición"}</p>
+                  <p className="text-sm text-gray-500">{formatPlayerPositions(player)}</p>
                 </div>
               </div>
             ))

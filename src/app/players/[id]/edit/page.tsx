@@ -29,6 +29,7 @@ export default function EditPlayerPage() {
     team: "",
     jerseyNumber: "",
     position: "QB",
+    secondaryPosition: "",
     height: "",
     weight: "",
     experience: "",
@@ -77,6 +78,7 @@ export default function EditPlayerPage() {
               team: player.team?._id || "",
               jerseyNumber: player.jerseyNumber?.toString() || "",
               position: player.position || "QB",
+              secondaryPosition: player.secondaryPosition || "",
               height: player.height?.toString() || "",
               weight: player.weight?.toString() || "",
               experience: player.experience || "",
@@ -304,6 +306,23 @@ export default function EditPlayerPage() {
               onChange={handleChange}
               className="w-full border px-3 py-2 rounded"
             >
+              <option value="QB">Quarterback (QB)</option>
+              <option value="WR">Wide Receiver (WR)</option>
+              <option value="RB">Running Back (RB)</option>
+              <option value="C">Center (C)</option>
+              <option value="RS">Rusher (RS)</option>
+              <option value="LB">Linebacker (LB)</option>
+              <option value="CB">Cornerback (CB)</option>
+              <option value="FS">Free Safety (FS)</option>
+              <option value="SS">Strong Safety (SS)</option>
+            </select>
+            <select
+              name="secondaryPosition"
+              value={form.secondaryPosition}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded"
+            >
+              <option value="">Sin posición secundaria</option>
               <option value="QB">Quarterback (QB)</option>
               <option value="WR">Wide Receiver (WR)</option>
               <option value="RB">Running Back (RB)</option>

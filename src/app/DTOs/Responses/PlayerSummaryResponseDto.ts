@@ -6,5 +6,6 @@ export interface PlayerSummaryResponseDto {
   lastName: string;
   jerseyNumber?: number | null;
   position: PlayerPosition | string;
+  secondaryPosition?: PlayerPosition | string;
   status: PlayerStatus;
 }

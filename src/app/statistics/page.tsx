@@ -14,6 +14,7 @@ interface PlayerStatistic {
     lastName: string;
     jerseyNumber?: number | null;
     position: string;
+    secondaryPosition?: string;
     team: {
       _id: string;
       name: string;
@@ -397,7 +398,7 @@ export default function StatisticsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                        {stat.player.position}
+                        {[stat.player.position, stat.player.secondaryPosition].filter(Boolean).join(" / ")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="text-sm text-gray-900">{stat.passing.touchdowns} TD</div>

@@ -32,6 +32,7 @@ export function toPlayerSummaryResponseDto(player: Player): PlayerSummaryRespons
     lastName: player.lastName,
     jerseyNumber: player.jerseyNumber,
     position: player.position,
+    secondaryPosition: player.secondaryPosition,
     status: player.status,
   };
 }

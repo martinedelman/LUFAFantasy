@@ -16,6 +16,7 @@ interface Player {
   profilePicture?: string;
   jerseyNumber?: number | null;
   position: string;
+  secondaryPosition?: string;
   email: string;
   phone: string;
   dateOfBirth: string;
@@ -165,6 +166,9 @@ export default function PlayersPage() {
     }
     return age;
   };
+
+  const formatPlayerPositions = (player: Player) =>
+    [player.position, player.secondaryPosition].filter(Boolean).join(" / ");
 
   if (initialLoading && players.length === 0) {
     return (
@@ -324,7 +328,7 @@ export default function PlayersPage() {
                   key={player._id}
                   id={player._id}
                   title={`${player.firstName} ${player.lastName}`}
-                  subtitle={`${player.position} - #${player.jerseyNumber}`}
+                  subtitle={`${formatPlayerPositions(player)} - #${player.jerseyNumber}`}
                   onCardClick={() => router.push(`/players/${player._id}`)}
                   icon={{
                     type: player.profilePicture ? "image" : "jersey",

@@ -229,6 +229,14 @@ export default function PlayerProfilePage() {
     return positions[position as keyof typeof positions] || position;
   };
 
+  const getPlayerPositions = () =>
+    player
+      ? [player.position, player.secondaryPosition]
+          .map((position) => (position ? getPositionName(position) : ""))
+          .filter(Boolean)
+          .join(" / ")
+      : "";
+
   const calculateAge = (dateOfBirth: string) => {
     const birth = new Date(dateOfBirth);
     const today = new Date();
@@ -320,7 +328,7 @@ export default function PlayerProfilePage() {
                     {player.firstName} {player.lastName}
                   </h1>
                   <div className="flex items-center space-x-4 mt-1">
-                    <p className="text-sm text-gray-600">{getPositionName(player.position)}</p>
+                    <p className="text-sm text-gray-600">{getPlayerPositions()}</p>
                     <Link href={`/teams/${player.team._id}`} className="text-sm text-blue-600 hover:text-blue-800">
                       {player.team.name}
                     </Link>
@@ -404,7 +412,7 @@ export default function PlayerProfilePage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Posición:</span>
-                        <span className="text-sm font-medium text-gray-900">{getPositionName(player.position)}</span>
+                        <span className="text-sm font-medium text-gray-900">{getPlayerPositions()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Equipo:</span>

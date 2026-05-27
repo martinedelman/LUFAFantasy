@@ -22,6 +22,7 @@ interface DashboardStats {
     id: string;
     name: string;
     position: string;
+    secondaryPosition?: string;
     team: string;
     stat: number;
     statLabel: string;
@@ -270,7 +271,9 @@ export default function Home() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-slate-950 truncate">{player.name}</p>
-                          <p className="text-sm text-slate-600 truncate">{player.position}</p>
+                          <p className="text-sm text-slate-600 truncate">
+                            {[player.position, player.secondaryPosition].filter(Boolean).join(" / ")}
+                          </p>
                           <p className="text-xs text-slate-500 truncate">{player.team}</p>
                         </div>
                       </div>

@@ -15,6 +15,7 @@ interface Player {
   lastName: string;
   jerseyNumber?: number | null;
   position: string;
+  secondaryPosition?: string;
   email: string;
   phone: string;
   height?: number;
@@ -1069,7 +1070,7 @@ export default function TeamViewerPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {player.position}
+                                {[player.position, player.secondaryPosition].filter(Boolean).join(" / ")}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

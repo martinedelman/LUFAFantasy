@@ -141,7 +141,7 @@ export class PlayerService {
           return false;
         }
 
-        if (position && player.position !== position) {
+        if (position && player.position !== position && player.secondaryPosition !== position) {
           return false;
         }
 
@@ -155,11 +155,11 @@ export class PlayerService {
 
     const queryFilters: {
       team?: string;
-      position?: PlayerPosition;
       status?: PlayerStatus;
+      $or?: Array<{ position: PlayerPosition } | { secondaryPosition: PlayerPosition }>;
     } = {};
     if (team) queryFilters.team = team;
-    if (position) queryFilters.position = position;
+    if (position) queryFilters.$or = [{ position }, { secondaryPosition: position }];
     if (status) queryFilters.status = status;
 
     return await this.playerRepo.findAll(queryFilters);

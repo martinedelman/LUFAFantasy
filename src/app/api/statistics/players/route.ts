@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const statistics = await PlayerStatisticsModel.find(filter)
       .populate({
         path: "player",
-        select: "firstName lastName jerseyNumber position",
+        select: "firstName lastName jerseyNumber position secondaryPosition",
         populate: {
           path: "team",
           select: "name shortName logo colors",

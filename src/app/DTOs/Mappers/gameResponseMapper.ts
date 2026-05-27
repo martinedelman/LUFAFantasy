@@ -12,6 +12,7 @@ interface PopulatedRef {
   lastName?: string;
   jerseyNumber?: number | null;
   position?: string;
+  secondaryPosition?: string;
   status?: PlayerStatus;
   shortName?: string;
   logo?: string;
@@ -143,6 +144,7 @@ function toPlayerRef(player: string | PopulatedRef | undefined): GameEventRespon
     lastName: player.lastName || "",
     jerseyNumber: player.jerseyNumber ?? null,
     position: player.position || "",
+    secondaryPosition: player.secondaryPosition || "",
     status: player.status || "active",
   };
 }

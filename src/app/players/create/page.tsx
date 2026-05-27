@@ -26,6 +26,7 @@ export default function CreatePlayerPage() {
     team: "",
     jerseyNumber: "",
     position: "QB",
+    secondaryPosition: "",
     height: "",
     weight: "",
     experience: "",
@@ -93,6 +94,7 @@ export default function CreatePlayerPage() {
         status: form.status,
       };
 
+      if (form.secondaryPosition) payload.secondaryPosition = form.secondaryPosition;
       if (form.email.trim()) payload.email = form.email.trim();
       if (form.phone.trim()) payload.phone = form.phone.trim();
       if (form.profilePicture.trim()) payload.profilePicture = form.profilePicture.trim();
@@ -305,6 +307,29 @@ export default function CreatePlayerPage() {
                       className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     >
+                      <option value="QB">Quarterback (QB)</option>
+                      <option value="WR">Wide Receiver (WR)</option>
+                      <option value="RB">Running Back (RB)</option>
+                      <option value="C">Center (C)</option>
+                      <option value="RS">Rusher (RS)</option>
+                      <option value="LB">Linebacker (LB)</option>
+                      <option value="CB">Cornerback (CB)</option>
+                      <option value="FS">Free Safety (FS)</option>
+                      <option value="SS">Strong Safety (SS)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="secondaryPosition" className="block text-sm font-medium text-gray-700 mb-1">
+                      Posición secundaria
+                    </label>
+                    <select
+                      id="secondaryPosition"
+                      name="secondaryPosition"
+                      value={form.secondaryPosition}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Sin posición secundaria</option>
                       <option value="QB">Quarterback (QB)</option>
                       <option value="WR">Wide Receiver (WR)</option>
                       <option value="RB">Running Back (RB)</option>

@@ -73,6 +73,10 @@ const sortPlayersByJerseyNumber = (players: PlayerApiResponse[]) => {
   });
 };
 
+const formatPlayerPositions = (player: Pick<PlayerApiResponse, "position" | "secondaryPosition">) => {
+  return [player.position, player.secondaryPosition].filter(Boolean).join(" / ") || "Sin posición";
+};
+
 const getReferenceId = (reference?: string | { _id?: string } | null) => {
   if (!reference) return "";
   return typeof reference === "string" ? reference : reference._id || "";
@@ -740,7 +744,7 @@ export default function LiveMatchPage() {
                                   {player.firstName} {player.lastName}
                                 </span>
                               </div>
-                              <span className="text-xs text-gray-500">{player.position}</span>
+                              <span className="text-xs text-gray-500">{formatPlayerPositions(player)}</span>
                             </div>
                           </label>
                         ))
@@ -803,7 +807,7 @@ export default function LiveMatchPage() {
                                   {player.firstName} {player.lastName}
                                 </span>
                               </div>
-                              <span className="text-xs text-gray-500">{player.position}</span>
+                              <span className="text-xs text-gray-500">{formatPlayerPositions(player)}</span>
                             </div>
                           </label>
                         ))
@@ -963,7 +967,7 @@ export default function LiveMatchPage() {
                         {eventPlayers.map((player) => (
                           <option key={player._id} value={player._id}>
                             {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} {player.firstName}{" "}
-                            {player.lastName} · {player.position}
+                            {player.lastName} · {formatPlayerPositions(player)}
                           </option>
                         ))}
                       </select>
