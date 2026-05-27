@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/services/backend";
 import { setSessionCookie } from "@/lib/auth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { toUserResponseDto } from "@/app/DTOs";
 
 const authService = new AuthService();
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, {
+    key: "auth:verify-registration",
+    limit: 6,
+    windowMs: 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit.resetAt);
+  }
+
   try {
     const { token, code } = (await request.json()) as { token?: string; code?: string };
 
