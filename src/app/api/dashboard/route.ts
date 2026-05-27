@@ -30,7 +30,7 @@ export async function GET(): Promise<NextResponse> {
     // Obtener partidos completados
     const completedGames = await GameModel.countDocuments({ status: "completed" });
 
-    // Obtener próximos partidos (los 3 próximos)
+    // Obtener próximos partidos (los 4 próximos)
     const nextGamesData = await GameModel.find({
       status: { $in: ["scheduled", "in_progress"] },
     })
@@ -38,7 +38,7 @@ export async function GET(): Promise<NextResponse> {
       .populate("awayTeam", "name")
       .populate("division", "name")
       .sort({ scheduledDate: 1 })
-      .limit(3)
+      .limit(4)
       .select("homeTeam awayTeam division venue scheduledDate status")
       .lean();
 
@@ -73,7 +73,7 @@ export async function GET(): Promise<NextResponse> {
         },
       },
       { $sort: { totalPoints: -1 } },
-      { $limit: 3 },
+      { $limit: 4 },
       {
         $lookup: {
           from: "players",
