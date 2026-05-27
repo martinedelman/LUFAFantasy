@@ -80,55 +80,59 @@ export async function GET(request: NextRequest) {
     }
 
     const cacheKey = buildRequestCacheKey("rankings:players", searchParams);
-    const rankings = await getCachedValue(cacheKey, RANKINGS_CACHE_TTL_SECONDS * 1000, () =>
-      GameModel.aggregate([
-        { $match: gameMatch },
-        { $unwind: "$events" },
-        { $match: eventMatch },
-        {
-          $group: {
-            _id: "$events.player",
-            value: mode === "points" ? { $sum: "$events.points" } : { $sum: 1 },
-          },
-        },
-        { $sort: { value: -1, _id: 1 } },
-        { $limit: limit },
-        {
-          $lookup: {
-            from: "players",
-            localField: "_id",
-            foreignField: "_id",
-            as: "player",
-          },
-        },
-        { $unwind: "$player" },
-        {
-          $lookup: {
-            from: "teams",
-            localField: "player.team",
-            foreignField: "_id",
-            as: "team",
-          },
-        },
-        { $unwind: { path: "$team", preserveNullAndEmptyArrays: true } },
-        {
-          $project: {
-            _id: 0,
-            player: {
-              _id: "$player._id",
-              firstName: "$player.firstName",
-              lastName: "$player.lastName",
-              jerseyNumber: "$player.jerseyNumber",
-              team: {
-                _id: "$team._id",
-                name: "$team.name",
-                shortName: "$team.shortName",
-              },
+    const rankings = await getCachedValue(
+      cacheKey,
+      RANKINGS_CACHE_TTL_SECONDS * 1000,
+      () =>
+        GameModel.aggregate([
+          { $match: gameMatch },
+          { $unwind: "$events" },
+          { $match: eventMatch },
+          {
+            $group: {
+              _id: "$events.player",
+              value: mode === "points" ? { $sum: "$events.points" } : { $sum: 1 },
             },
-            value: 1,
           },
-        },
-      ]),
+          { $sort: { value: -1, _id: 1 } },
+          { $limit: limit },
+          {
+            $lookup: {
+              from: "players",
+              localField: "_id",
+              foreignField: "_id",
+              as: "player",
+            },
+          },
+          { $unwind: "$player" },
+          {
+            $lookup: {
+              from: "teams",
+              localField: "player.team",
+              foreignField: "_id",
+              as: "team",
+            },
+          },
+          { $unwind: { path: "$team", preserveNullAndEmptyArrays: true } },
+          {
+            $project: {
+              _id: 0,
+              player: {
+                _id: "$player._id",
+                firstName: "$player.firstName",
+                lastName: "$player.lastName",
+                jerseyNumber: "$player.jerseyNumber",
+                team: {
+                  _id: "$team._id",
+                  name: "$team.name",
+                  shortName: "$team.shortName",
+                },
+              },
+              value: 1,
+            },
+          },
+        ]),
+      { tags: ["rankings"] },
     );
 
     return NextResponse.json(

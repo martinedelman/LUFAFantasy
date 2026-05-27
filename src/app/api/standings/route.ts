@@ -25,13 +25,18 @@ export async function GET(request: NextRequest) {
     }
 
     const cacheKey = buildRequestCacheKey("standings:list", searchParams);
-    const responseData = await getCachedValue(cacheKey, STANDINGS_CACHE_TTL_SECONDS * 1000, async () => {
-      // Obtener standings ordenados
-      const standings = await standingService.getStandingsByDivision(division);
+    const responseData = await getCachedValue(
+      cacheKey,
+      STANDINGS_CACHE_TTL_SECONDS * 1000,
+      async () => {
+        // Obtener standings ordenados
+        const standings = await standingService.getStandingsByDivision(division);
 
-      // Convertir a respuesta API
-      return standings.map((standing) => toStandingResponseDto(standing));
-    });
+        // Convertir a respuesta API
+        return standings.map((standing) => toStandingResponseDto(standing));
+      },
+      { tags: ["standings"] },
+    );
 
     return NextResponse.json(
       {

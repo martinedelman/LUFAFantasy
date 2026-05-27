@@ -18,42 +18,47 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const cacheKey = buildRequestCacheKey("teams:list", searchParams);
-    const payload = await getCachedValue(cacheKey, TEAMS_CACHE_TTL_SECONDS * 1000, async () => {
-      const division = searchParams.get("division");
-      const tournament = searchParams.get("tournament");
-      const status = searchParams.get("status") as TeamStatus | null;
-      const page = parseInt(searchParams.get("page") || "1");
-      const limit = parseInt(searchParams.get("limit") || "10");
+    const payload = await getCachedValue(
+      cacheKey,
+      TEAMS_CACHE_TTL_SECONDS * 1000,
+      async () => {
+        const division = searchParams.get("division");
+        const tournament = searchParams.get("tournament");
+        const status = searchParams.get("status") as TeamStatus | null;
+        const page = parseInt(searchParams.get("page") || "1");
+        const limit = parseInt(searchParams.get("limit") || "10");
 
-      // Construir filtros
-      const filters: { tournament?: string; division?: string; status?: TeamStatus } = {};
-      if (tournament) filters.tournament = tournament;
-      if (division) filters.division = division;
-      if (status) filters.status = status;
+        // Construir filtros
+        const filters: { tournament?: string; division?: string; status?: TeamStatus } = {};
+        if (tournament) filters.tournament = tournament;
+        if (division) filters.division = division;
+        if (status) filters.status = status;
 
-      // Obtener equipos
-      const allTeams = await teamService.listTeams(filters);
+        // Obtener equipos
+        const allTeams = await teamService.listTeams(filters);
 
-      // Aplicar paginación
-      const total = allTeams.length;
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedTeams = allTeams.slice(startIndex, endIndex);
+        // Aplicar paginación
+        const total = allTeams.length;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedTeams = allTeams.slice(startIndex, endIndex);
 
-      // Convertir a respuesta API
-      const responseData = paginatedTeams.map((team) => toTeamResponseDto(team));
+        // Convertir a respuesta API
+        const responseData = paginatedTeams.map((team) => toTeamResponseDto(team));
 
-      return {
-        data: responseData,
-        pagination: {
-          current: page,
-          total: Math.ceil(total / limit),
-          pages: Math.ceil(total / limit),
-          hasNext: endIndex < total,
-          hasPrev: page > 1,
-        },
-      };
-    });
+        return {
+          data: responseData,
+          pagination: {
+            current: page,
+            total: Math.ceil(total / limit),
+            pages: Math.ceil(total / limit),
+            hasNext: endIndex < total,
+            hasPrev: page > 1,
+          },
+        };
+      },
+      { tags: ["teams"] },
+    );
 
     return NextResponse.json(
       {

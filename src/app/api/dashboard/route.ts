@@ -9,6 +9,7 @@ export async function GET(): Promise<NextResponse> {
   try {
     const stats = await getCachedValue("dashboard:stats", DASHBOARD_CACHE_TTL_SECONDS * 1000, () =>
       dashboardService.getStats(),
+      { tags: ["dashboard", "teams", "standings", "rankings"] },
     );
 
     return NextResponse.json(

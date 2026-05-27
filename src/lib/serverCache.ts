@@ -1,17 +1,7 @@
-interface CacheEntry<T> {
-  value?: T;
-  expiresAt: number;
-  pending?: Promise<T>;
-}
+import { revalidateTag, unstable_cache } from "next/cache";
 
-const cacheStore = new Map<string, CacheEntry<unknown>>();
-
-function pruneExpiredEntries(now: number) {
-  for (const [key, entry] of cacheStore.entries()) {
-    if (!entry.pending && entry.expiresAt <= now) {
-      cacheStore.delete(key);
-    }
-  }
+interface CachedValueOptions {
+  tags: string[];
 }
 
 export function buildRequestCacheKey(namespace: string, searchParams?: URLSearchParams) {
@@ -33,54 +23,24 @@ export function buildRequestCacheKey(namespace: string, searchParams?: URLSearch
   return `${namespace}:${normalizedParams}`;
 }
 
-export async function getCachedValue<T>(key: string, ttlMs: number, loader: () => Promise<T>): Promise<T> {
-  const now = Date.now();
-  const entry = cacheStore.get(key) as CacheEntry<T> | undefined;
-
-  if (entry?.value !== undefined && entry.expiresAt > now) {
-    return entry.value;
-  }
-
-  if (entry?.pending) {
-    return entry.pending;
-  }
-
-  if (cacheStore.size > 500) {
-    pruneExpiredEntries(now);
-  }
-
-  const pending = loader();
-  cacheStore.set(key, {
-    pending,
-    expiresAt: now + ttlMs,
+export async function getCachedValue<T>(
+  key: string,
+  ttlMs: number,
+  loader: () => Promise<T>,
+  options: CachedValueOptions,
+): Promise<T> {
+  const cachedLoader = unstable_cache(loader, [key], {
+    revalidate: Math.max(1, Math.ceil(ttlMs / 1000)),
+    tags: options.tags,
   });
 
-  try {
-    const value = await pending;
-    cacheStore.set(key, {
-      value,
-      expiresAt: Date.now() + ttlMs,
-    });
-
-    return value;
-  } catch (error) {
-    cacheStore.delete(key);
-    throw error;
-  }
+  return cachedLoader();
 }
 
 export function invalidateCacheByPrefix(prefixes: string | string[]) {
-  const prefixList = Array.isArray(prefixes) ? prefixes : [prefixes];
-  let deleted = 0;
-
-  for (const key of cacheStore.keys()) {
-    if (prefixList.some((prefix) => key === prefix || key.startsWith(`${prefix}:`))) {
-      cacheStore.delete(key);
-      deleted += 1;
-    }
-  }
-
-  return deleted;
+  const tags = Array.isArray(prefixes) ? prefixes : [prefixes];
+  tags.forEach((tag) => revalidateTag(tag));
+  return tags.length;
 }
 
 export function createCacheHeaders(ttlSeconds: number) {
