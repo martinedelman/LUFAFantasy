@@ -77,22 +77,6 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-[70px]">
           {/* Logo */}
           <div className="flex items-center gap-4 min-w-0">
-            <a
-              href="https://lufa.com.uy"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Ir a lufa.com.uy"
-              className="h-8 w-8 md:h-9 md:w-9 rounded-md overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10 transition-transform hover:scale-110"
-            >
-              <Image
-                src="/lufa_icon.png"
-                alt="Logo LUFA"
-                width={36}
-                height={36}
-                className="h-full w-full object-cover"
-                priority
-              />
-            </a>
             <Link href="/" className="flex items-center group">
               <div className="h-8 w-8 md:h-9 md:w-9 rounded-md overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10 transition-transform hover:scale-110">
                 <Image
@@ -207,10 +191,27 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
+
+            <a
+              href="https://lufa.com.uy"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Ir a lufa.com.uy"
+              className="h-8 w-8 md:h-9 md:w-9 rounded-md overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10 transition-transform hover:scale-110"
+            >
+              <Image
+                src="/lufa_icon.png"
+                alt="Logo LUFA"
+                width={36}
+                height={36}
+                className="h-full w-full object-cover"
+                priority
+              />
+            </a>
           </div>
 
           {/* Mobile menu button */}
-          <div className="min-[950px]:hidden">
+          <div className="min-[950px]:hidden flex items-center gap-3">
             <button
               ref={mobileMenuButtonRef}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -227,6 +228,22 @@ export default function Navbar() {
                 </svg>
               )}
             </button>
+            <a
+              href="https://lufa.com.uy"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Ir a lufa.com.uy"
+              className="h-8 w-8 rounded-md overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10 transition-transform hover:scale-110"
+            >
+              <Image
+                src="/lufa_icon.png"
+                alt="Logo LUFA"
+                width={32}
+                height={32}
+                className="h-full w-full object-cover"
+                priority
+              />
+            </a>
           </div>
         </div>
 
