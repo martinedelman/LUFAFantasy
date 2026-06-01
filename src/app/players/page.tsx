@@ -44,7 +44,7 @@ interface TeamsApiResponse {
 
 const PAGE_SIZE = 12;
 const UNKNOWN_BIRTHDATE = "1900-01-01";
-const NO_JERSEY_NUMBER_LABEL = "Sin número de jugador";
+const NO_JERSEY_NUMBER_LABEL = "Sin número";
 
 const initialPagination: PaginationDto = {
   current: 1,
