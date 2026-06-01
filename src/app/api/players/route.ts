@@ -7,6 +7,19 @@ import type { CreatePlayerRequestDto } from "@/app/DTOs";
 
 const playerService = new PlayerService();
 
+function parseRequiredDate(value: unknown, fieldLabel: string): Date {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${fieldLabel} es requerida`);
+  }
+
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    throw new Error(`${fieldLabel} inválida`);
+  }
+
+  return parsedDate;
+}
+
 /**
  * GET /api/players - Obtiene todos los jugadores con filtros y paginación
  */
@@ -99,11 +112,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const dateOfBirth = parseRequiredDate(body.dateOfBirth, "dateOfBirth");
+
     const player = await playerService.createPlayer({
       firstName: body.firstName,
       lastName: body.lastName,
       profilePicture: body.profilePicture,
-      dateOfBirth: new Date(body.dateOfBirth),
+      dateOfBirth,
       team: body.team,
       jerseyNumber: body.jerseyNumber,
       position: body.position,

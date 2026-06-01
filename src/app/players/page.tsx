@@ -43,6 +43,7 @@ interface TeamsApiResponse {
 }
 
 const PAGE_SIZE = 12;
+const UNKNOWN_BIRTHDATE = "1900-01-01";
 
 const initialPagination: PaginationDto = {
   current: 1,
@@ -178,7 +179,15 @@ export default function PlayersPage() {
   };
 
   const calculateAge = (dateOfBirth: string) => {
+    if (!dateOfBirth || dateOfBirth.startsWith(UNKNOWN_BIRTHDATE)) {
+      return null;
+    }
+
     const birth = new Date(dateOfBirth);
+    if (Number.isNaN(birth.getTime())) {
+      return null;
+    }
+
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
@@ -190,6 +199,11 @@ export default function PlayersPage() {
 
   const formatPlayerPositions = (player: PlayerListItem) =>
     [player.position, player.secondaryPosition].filter(Boolean).join(" / ");
+
+  const formatAge = (dateOfBirth: string) => {
+    const age = calculateAge(dateOfBirth);
+    return age === null ? "No disponible" : `${age} años`;
+  };
 
   if (initialLoading && players.length === 0) {
     return (
@@ -392,7 +406,7 @@ export default function PlayersPage() {
                           />
                         </svg>
                       ),
-                      text: `${calculateAge(player.dateOfBirth)} años`,
+                      text: formatAge(player.dateOfBirth),
                     },
                   ]}
                 />

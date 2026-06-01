@@ -10,6 +10,8 @@ import Tag from "@/components/Tag";
 import Avatar from "@/components/Avatar";
 import type { ApiResponseDto, GameResponseDto, PlayerProfileResponseDto, PlayerStatsResponseDto } from "@/app/DTOs";
 
+const UNKNOWN_BIRTHDATE = "1900-01-01";
+
 export default function PlayerProfilePage() {
   const { user } = useAuth();
   const params = useParams();
@@ -238,7 +240,15 @@ export default function PlayerProfilePage() {
       : "";
 
   const calculateAge = (dateOfBirth: string) => {
+    if (!dateOfBirth || dateOfBirth.startsWith(UNKNOWN_BIRTHDATE)) {
+      return null;
+    }
+
     const birth = new Date(dateOfBirth);
+    if (Number.isNaN(birth.getTime())) {
+      return null;
+    }
+
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
@@ -249,11 +259,25 @@ export default function PlayerProfilePage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
+    if (!dateString || dateString.startsWith(UNKNOWN_BIRTHDATE)) {
+      return "No disponible";
+    }
+
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return "No disponible";
+    }
+
+    return date.toLocaleDateString("es-ES", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
+  };
+
+  const formatAge = (dateOfBirth: string) => {
+    const age = calculateAge(dateOfBirth);
+    return age === null ? "No disponible" : `${age} años`;
   };
 
   const formatDecimal = (value: number) => value.toFixed(1);
@@ -372,9 +396,7 @@ export default function PlayerProfilePage() {
                     <div className="mt-3 space-y-3">
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Edad:</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {calculateAge(player.dateOfBirth)} años
-                        </span>
+                        <span className="text-sm font-medium text-gray-900">{formatAge(player.dateOfBirth)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Fecha de nacimiento:</span>

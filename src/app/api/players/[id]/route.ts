@@ -12,6 +12,23 @@ function normalizeEmail(email?: string | null) {
   return email?.trim().toLowerCase() || "";
 }
 
+function parseOptionalDate(value: unknown, fieldLabel: string): Date | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${fieldLabel} no puede ser nula`);
+  }
+
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    throw new Error(`${fieldLabel} inválida`);
+  }
+
+  return parsedDate;
+}
+
 /**
  * GET /api/players/:id - Obtiene un jugador por ID
  */
@@ -84,12 +101,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = (await request.json()) as UpdatePlayerRequestDto;
+    const dateOfBirth = parseOptionalDate(body.dateOfBirth, "dateOfBirth");
 
     const updatedPlayer = await playerService.updatePlayer(id, {
       firstName: body.firstName,
       lastName: body.lastName,
       profilePicture: body.profilePicture,
-      dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : undefined,
+      dateOfBirth,
       registrationDate: body.registrationDate ? new Date(body.registrationDate) : undefined,
       email: body.email,
       phone: body.phone,
