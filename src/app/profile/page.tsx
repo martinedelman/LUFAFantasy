@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import type { ApiResponseDto, PlayerResponseDto } from "@/app/DTOs";
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -12,11 +13,16 @@ export default function ProfilePage() {
     phone: "",
     bio: "",
   });
-  const { user } = useAuth();
+  const [isCheckingPlayer, setIsCheckingPlayer] = useState(false);
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   // Redirigir si no está autenticado
   useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
     if (!user) {
       router.push("/auth/signin");
     } else {
@@ -27,14 +33,48 @@ export default function ProfilePage() {
         bio: "Fanático del Flag Football y usuario del sistema LUFA Flag.",
       });
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
-  if (!user) {
+  useEffect(() => {
+    if (isLoading || !user?.email) {
+      return;
+    }
+
+    let isActive = true;
+
+    const checkPlayerProfile = async () => {
+      try {
+        setIsCheckingPlayer(true);
+        const response = await fetch(`/api/players?email=${encodeURIComponent(user.email)}`);
+        const data = (await response.json()) as ApiResponseDto<PlayerResponseDto>;
+
+        if (response.ok && data.success && data.data?._id) {
+          router.replace(`/players/${data.data._id}`);
+          return;
+        }
+      } catch {
+        // noop
+      } finally {
+        if (isActive) {
+          setIsCheckingPlayer(false);
+        }
+      }
+    };
+
+    void checkPlayerProfile();
+
+    return () => {
+      isActive = false;
+    };
+  }, [user?.email, isLoading, router]);
+
+  if (isLoading || !user || isCheckingPlayer) {
+    const message = !user || isLoading ? "Verificando autenticación..." : "Buscando tu perfil...";
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Verificando autenticación...</p>
+          <p className="text-gray-600">{message}</p>
         </div>
       </div>
     );

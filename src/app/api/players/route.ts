@@ -13,12 +13,32 @@ const playerService = new PlayerService();
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const email = searchParams.get("email");
     const team = searchParams.get("team");
     const position = searchParams.get("position") as PlayerPosition | null;
     const status = searchParams.get("status") as PlayerStatus | null;
     const search = searchParams.get("search");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+
+    if (email) {
+      const player = await playerService.getPlayerByEmail(email);
+
+      if (!player) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Jugador no encontrado",
+          },
+          { status: 404 },
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: toPlayerResponseDto(player),
+      });
+    }
 
     // Construir filtros
     const filters: {
