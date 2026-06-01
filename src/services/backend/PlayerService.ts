@@ -8,6 +8,31 @@ export class PlayerService {
   private playerRepo = RepositoryContainer.getPlayerRepository();
   private teamRepo = RepositoryContainer.getTeamRepository();
 
+  private sortPlayers(players: Player[]): Player[] {
+    return [...players].sort((firstPlayer, secondPlayer) => {
+      const lastNameComparison = firstPlayer.lastName.localeCompare(secondPlayer.lastName, "es", {
+        sensitivity: "base",
+      });
+
+      if (lastNameComparison !== 0) {
+        return lastNameComparison;
+      }
+
+      const firstNameComparison = firstPlayer.firstName.localeCompare(secondPlayer.firstName, "es", {
+        sensitivity: "base",
+      });
+
+      if (firstNameComparison !== 0) {
+        return firstNameComparison;
+      }
+
+      const firstJerseyNumber = firstPlayer.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+      const secondJerseyNumber = secondPlayer.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+
+      return firstJerseyNumber - secondJerseyNumber;
+    });
+  }
+
   private getReferenceId(value: unknown): string {
     if (!value) {
       return "";
@@ -129,14 +154,15 @@ export class PlayerService {
     search?: string;
   }): Promise<Player[]> {
     if (!filters) {
-      return await this.playerRepo.findAll();
+      const players = await this.playerRepo.findAll();
+      return this.sortPlayers(players);
     }
 
     const { search, team, position, status } = filters;
 
     if (search) {
       const searchResults = await this.playerRepo.searchByName(search);
-      return searchResults.filter((player) => {
+      const filteredPlayers = searchResults.filter((player) => {
         if (team && String((player.team as unknown as { _id?: string })?._id || player.team) !== team) {
           return false;
         }
@@ -151,6 +177,8 @@ export class PlayerService {
 
         return true;
       });
+
+      return this.sortPlayers(filteredPlayers);
     }
 
     const queryFilters: {
@@ -162,7 +190,8 @@ export class PlayerService {
     if (position) queryFilters.$or = [{ position }, { secondaryPosition: position }];
     if (status) queryFilters.status = status;
 
-    return await this.playerRepo.findAll(queryFilters);
+    const players = await this.playerRepo.findAll(queryFilters);
+    return this.sortPlayers(players);
   }
 
   /**

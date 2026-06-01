@@ -1,27 +1,16 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
-import Pagination from "@/components/Pagination";
 import Card from "@/components/Card";
 import { useAuth } from "@/hooks/useAuth";
+import type { ApiResponseDto, PaginationDto, PlayerResponseDto } from "@/app/DTOs";
 
-interface Player {
+interface PlayerListItem extends Omit<PlayerResponseDto, "team"> {
   _id: string;
-  firstName: string;
-  lastName: string;
-  profilePicture?: string;
-  jerseyNumber?: number | null;
-  position: string;
-  secondaryPosition?: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  height: number;
-  weight: number;
   team: {
     _id: string;
     name: string;
@@ -36,21 +25,11 @@ interface Player {
       category: string;
     };
   };
-  status: "active" | "inactive" | "injured" | "suspended";
-  registrationDate: string;
 }
 
-interface ApiResponse {
-  success: boolean;
-  data: Player[];
-  pagination: {
-    current: number;
-    total: number;
-    pages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-  message?: string;
+interface PlayersApiResponse extends ApiResponseDto<PlayerListItem[]> {
+  data: PlayerListItem[];
+  pagination: PaginationDto;
 }
 
 interface TeamOption {
@@ -63,39 +42,55 @@ interface TeamsApiResponse {
   data: TeamOption[];
 }
 
+const PAGE_SIZE = 12;
+
+const initialPagination: PaginationDto = {
+  current: 1,
+  total: 1,
+  pages: 1,
+  hasNext: false,
+  hasPrev: false,
+};
+
 export default function PlayersPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<PlayerListItem[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    current: 1,
-    total: 1,
-    pages: 1,
-    hasNext: false,
-    hasPrev: false,
-  });
+  const [pagination, setPagination] = useState<PaginationDto>(initialPagination);
   const [filters, setFilters] = useState({
     position: "",
     team: "",
     status: "",
     search: "",
   });
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const isFetchingRef = useRef(false);
 
   const fetchPlayers = useCallback(
-    async (page: number = 1) => {
+    async ({ page = 1, append = false }: { page?: number; append?: boolean } = {}) => {
+      if (isFetchingRef.current) {
+        return;
+      }
+
       try {
-        setLoading(true);
+        isFetchingRef.current = true;
+        if (append) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+        }
         setError(null);
 
         const params = new URLSearchParams({
           page: page.toString(),
-          limit: "12",
+          limit: PAGE_SIZE.toString(),
           ...(filters.position && { position: filters.position }),
           ...(filters.team && { team: filters.team }),
           ...(filters.status && { status: filters.status }),
@@ -103,10 +98,10 @@ export default function PlayersPage() {
         });
 
         const response = await fetch(`/api/players?${params}`);
-        const data: ApiResponse = await response.json();
+        const data: PlayersApiResponse = await response.json();
 
         if (data.success) {
-          setPlayers(data.data);
+          setPlayers((previousPlayers) => (append ? [...previousPlayers, ...data.data] : data.data));
           setPagination(data.pagination);
           setCurrentPage(page);
         } else {
@@ -115,7 +110,9 @@ export default function PlayersPage() {
       } catch {
         setError("Error de conexión. Por favor, intenta de nuevo.");
       } finally {
+        isFetchingRef.current = false;
         setLoading(false);
+        setLoadingMore(false);
         setInitialLoading(false);
       }
     },
@@ -123,8 +120,37 @@ export default function PlayersPage() {
   );
 
   useEffect(() => {
-    fetchPlayers(1);
+    setPlayers([]);
+    setCurrentPage(1);
+    setPagination(initialPagination);
+    fetchPlayers({ page: 1, append: false });
   }, [fetchPlayers]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+        if (firstEntry.isIntersecting && pagination.hasNext && !loading && !loadingMore && !isFetchingRef.current) {
+          fetchPlayers({ page: currentPage + 1, append: true });
+        }
+      },
+      {
+        rootMargin: "250px 0px",
+      },
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [currentPage, fetchPlayers, loading, loadingMore, pagination.hasNext]);
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -147,13 +173,8 @@ export default function PlayersPage() {
     fetchTeams();
   }, []);
 
-  const handlePageChange = (page: number) => {
-    fetchPlayers(page);
-  };
-
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-    setCurrentPage(1);
   };
 
   const calculateAge = (dateOfBirth: string) => {
@@ -167,7 +188,7 @@ export default function PlayersPage() {
     return age;
   };
 
-  const formatPlayerPositions = (player: Player) =>
+  const formatPlayerPositions = (player: PlayerListItem) =>
     [player.position, player.secondaryPosition].filter(Boolean).join(" / ");
 
   if (initialLoading && players.length === 0) {
@@ -281,13 +302,23 @@ export default function PlayersPage() {
 
       {error && (
         <div className="mb-6">
-          <ErrorMessage message={error} onRetry={() => fetchPlayers(currentPage)} />
+          <ErrorMessage
+            message={error}
+            onRetry={() => {
+              if (players.length > 0 && pagination.hasNext) {
+                fetchPlayers({ page: currentPage + 1, append: true });
+                return;
+              }
+
+              fetchPlayers({ page: 1, append: false });
+            }}
+          />
         </div>
       )}
 
       {/* Players Grid */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        {loading && !initialLoading && (
+        {loading && !initialLoading && players.length === 0 && (
           <div className="flex justify-center items-center py-4 ">
             <LoadingSpinner size="md" />
           </div>
@@ -320,7 +351,7 @@ export default function PlayersPage() {
             )}
           </div>
         )}
-        {players.length > 0 && !loading && (
+        {players.length > 0 && (
           <>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-6">
               {players.map((player) => (
@@ -368,13 +399,12 @@ export default function PlayersPage() {
               ))}
             </div>
 
-            <Pagination
-              currentPage={pagination.current}
-              totalPages={pagination.pages}
-              hasNext={pagination.hasNext}
-              hasPrev={pagination.hasPrev}
-              onPageChange={handlePageChange}
-            />
+            <div ref={loadMoreRef} className="flex justify-center items-center py-6">
+              {loadingMore && <LoadingSpinner size="md" />}
+              {!pagination.hasNext && !loadingMore && (
+                <p className="text-sm text-gray-500">Has llegado al final de la lista</p>
+              )}
+            </div>
           </>
         )}
       </div>
