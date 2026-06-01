@@ -44,6 +44,7 @@ interface TeamsApiResponse {
 
 const PAGE_SIZE = 12;
 const UNKNOWN_BIRTHDATE = "1900-01-01";
+const NO_JERSEY_NUMBER_LABEL = "Sin número de jugador";
 
 const initialPagination: PaginationDto = {
   current: 1,
@@ -203,6 +204,10 @@ export default function PlayersPage() {
   const formatAge = (dateOfBirth: string) => {
     const age = calculateAge(dateOfBirth);
     return age === null ? "No disponible" : `${age} años`;
+  };
+
+  const formatJerseyNumber = (jerseyNumber?: number | null) => {
+    return jerseyNumber != null ? `#${jerseyNumber}` : NO_JERSEY_NUMBER_LABEL;
   };
 
   if (initialLoading && players.length === 0) {
@@ -373,7 +378,7 @@ export default function PlayersPage() {
                   key={player._id}
                   id={player._id}
                   title={`${player.firstName} ${player.lastName}`}
-                  subtitle={`${formatPlayerPositions(player)} - #${player.jerseyNumber}`}
+                  subtitle={`${formatPlayerPositions(player)} - ${formatJerseyNumber(player.jerseyNumber)}`}
                   onCardClick={() => router.push(`/players/${player._id}`)}
                   icon={{
                     type: player.profilePicture ? "image" : "jersey",

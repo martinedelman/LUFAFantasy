@@ -11,6 +11,7 @@ import Avatar from "@/components/Avatar";
 import type { ApiResponseDto, GameResponseDto, PlayerProfileResponseDto, PlayerStatsResponseDto } from "@/app/DTOs";
 
 const UNKNOWN_BIRTHDATE = "1900-01-01";
+const NO_JERSEY_NUMBER_LABEL = "Sin número de jugador";
 
 export default function PlayerProfilePage() {
   const { user } = useAuth();
@@ -429,7 +430,7 @@ export default function PlayerProfilePage() {
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Número de camiseta:</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"}
+                          {player.jerseyNumber != null ? `#${player.jerseyNumber}` : NO_JERSEY_NUMBER_LABEL}
                         </span>
                       </div>
                       <div className="flex justify-between">
