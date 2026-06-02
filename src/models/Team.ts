@@ -16,6 +16,7 @@ const ContactInfoSchema = new Schema({
   socialMedia: {
     facebook: { type: String, trim: true },
     instagram: { type: String, trim: true },
+    x: { type: String, trim: true },
     twitter: { type: String, trim: true },
   },
 });

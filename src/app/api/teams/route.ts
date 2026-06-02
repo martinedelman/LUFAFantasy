@@ -12,6 +12,28 @@ const authService = new AuthService();
 const TEAMS_CACHE_TTL_SECONDS = 1800; // 30 minutos
 const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
 
+function normalizeOptionalText(value: string | null | undefined): string | undefined {
+  if (value === null || value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function sanitizeContactForService(contact: CreateTeamRequestDto["contact"]) {
+  return {
+    email: normalizeOptionalText(contact.email),
+    phone: normalizeOptionalText(contact.phone),
+    address: normalizeOptionalText(contact.address),
+    socialMedia: contact.socialMedia
+      ? {
+          facebook: normalizeOptionalText(contact.socialMedia.facebook),
+          instagram: normalizeOptionalText(contact.socialMedia.instagram),
+          x: normalizeOptionalText(contact.socialMedia.x ?? contact.socialMedia.twitter),
+          twitter: normalizeOptionalText(contact.socialMedia.twitter),
+        }
+      : undefined,
+  };
+}
+
 /**
  * GET /api/teams - Obtiene todos los equipos con filtros y paginación
  */
@@ -127,7 +149,7 @@ export async function POST(request: NextRequest) {
       name: body.name,
       colors: body.colors,
       division: body.division,
-      contact: body.contact,
+      contact: sanitizeContactForService(body.contact),
       shortName: body.shortName,
       logo: body.logo,
       backgroundImage: body.backgroundImage,

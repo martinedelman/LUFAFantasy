@@ -15,9 +15,10 @@ export interface UpdateTeamRequestDto {
     phone?: string;
     address?: string;
     socialMedia?: {
-      facebook?: string;
-      instagram?: string;
-      twitter?: string;
+      facebook?: string | null;
+      instagram?: string | null;
+      x?: string | null;
+      twitter?: string | null;
     };
   };
   coach?: Coach;

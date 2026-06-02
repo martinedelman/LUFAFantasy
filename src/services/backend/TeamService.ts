@@ -23,6 +23,7 @@ export class TeamService {
       socialMedia?: {
         facebook?: string;
         instagram?: string;
+        x?: string;
         twitter?: string;
       };
     };
@@ -136,6 +137,7 @@ export class TeamService {
         socialMedia?: {
           facebook?: string;
           instagram?: string;
+          x?: string;
           twitter?: string;
         };
       };

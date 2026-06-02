@@ -11,6 +11,7 @@ export class ContactInfo extends ValueObject {
   public readonly socialMedia?: {
     facebook?: string;
     instagram?: string;
+    x?: string;
     twitter?: string;
   };
 
@@ -21,6 +22,7 @@ export class ContactInfo extends ValueObject {
     socialMedia?: {
       facebook?: string;
       instagram?: string;
+      x?: string;
       twitter?: string;
     };
   }) {

@@ -33,6 +33,11 @@ export default function EditTeamPage() {
       email: "",
       phone: "",
       address: "",
+      socialMedia: {
+        facebook: "",
+        instagram: "",
+        x: "",
+      },
     },
     coach: {
       name: "",
@@ -90,6 +95,11 @@ export default function EditTeamPage() {
                 email: team.contact?.email || "",
                 phone: team.contact?.phone || "",
                 address: team.contact?.address || "",
+                socialMedia: {
+                  facebook: team.contact?.socialMedia?.facebook || "",
+                  instagram: team.contact?.socialMedia?.instagram || "",
+                  x: team.contact?.socialMedia?.x || team.contact?.socialMedia?.twitter || "",
+                },
               },
               coach: {
                 name: team.coach?.name || "",
@@ -133,6 +143,24 @@ export default function EditTeamPage() {
     }
   };
 
+  const handleSocialMediaChange = (platform: "facebook" | "instagram" | "x", value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      contact: {
+        ...prev.contact,
+        socialMedia: {
+          ...prev.contact.socialMedia,
+          [platform]: value,
+        },
+      },
+    }));
+  };
+
+  const toNullable = (value: string) => {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -141,7 +169,17 @@ export default function EditTeamPage() {
       const res = await fetch(`/api/teams/${teamId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          contact: {
+            ...form.contact,
+            socialMedia: {
+              facebook: toNullable(form.contact.socialMedia.facebook),
+              instagram: toNullable(form.contact.socialMedia.instagram),
+              x: toNullable(form.contact.socialMedia.x),
+            },
+          },
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -351,6 +389,54 @@ export default function EditTeamPage() {
                       value={form.contact.address}
                       onChange={handleChange}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="contact.socialMedia.facebook"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Facebook
+                    </label>
+                    <input
+                      id="contact.socialMedia.facebook"
+                      name="contact.socialMedia.facebook"
+                      type="url"
+                      value={form.contact.socialMedia.facebook}
+                      onChange={(event) => handleSocialMediaChange("facebook", event.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://facebook.com/tu-equipo"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="contact.socialMedia.instagram"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Instagram
+                    </label>
+                    <input
+                      id="contact.socialMedia.instagram"
+                      name="contact.socialMedia.instagram"
+                      type="url"
+                      value={form.contact.socialMedia.instagram}
+                      onChange={(event) => handleSocialMediaChange("instagram", event.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://instagram.com/tu-equipo"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label htmlFor="contact.socialMedia.x" className="block text-sm font-medium text-gray-700 mb-1">
+                      X
+                    </label>
+                    <input
+                      id="contact.socialMedia.x"
+                      name="contact.socialMedia.x"
+                      type="url"
+                      value={form.contact.socialMedia.x}
+                      onChange={(event) => handleSocialMediaChange("x", event.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://x.com/tu-equipo"
                     />
                   </div>
                 </div>

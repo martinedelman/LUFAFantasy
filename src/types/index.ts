@@ -105,6 +105,7 @@ export interface ContactInfo {
   socialMedia?: {
     facebook?: string;
     instagram?: string;
+    x?: string;
     twitter?: string;
   };
 }

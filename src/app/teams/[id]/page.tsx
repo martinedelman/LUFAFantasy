@@ -13,6 +13,7 @@ interface Player {
   _id: string;
   firstName: string;
   lastName: string;
+  profilePicture?: string;
   jerseyNumber?: number | null;
   position: string;
   secondaryPosition?: string;
@@ -62,6 +63,7 @@ interface Team {
     socialMedia?: {
       facebook?: string;
       instagram?: string;
+      x?: string;
       twitter?: string;
     };
   };
@@ -790,7 +792,7 @@ export default function TeamViewerPage() {
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
-                Plantilla ({players.length})
+                Roster ({players.length})
               </button>
               <button
                 onClick={() => setActiveTab("games")}
@@ -942,14 +944,14 @@ export default function TeamViewerPage() {
                                   Instagram
                                 </a>
                               )}
-                              {team.contact.socialMedia.twitter && (
+                              {(team.contact.socialMedia.x || team.contact.socialMedia.twitter) && (
                                 <a
-                                  href={team.contact.socialMedia.twitter}
+                                  href={team.contact.socialMedia.x || team.contact.socialMedia.twitter}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-blue-400 hover:text-blue-600"
                                 >
-                                  Twitter
+                                  X
                                 </a>
                               )}
                             </dd>
@@ -972,7 +974,7 @@ export default function TeamViewerPage() {
               <div>
                 <div className="sm:flex sm:items-center mb-6">
                   <div className="sm:flex-auto">
-                    <h3 className="text-lg font-medium text-gray-900">Plantilla del Equipo</h3>
+                    <h3 className="text-lg font-medium text-gray-900">Roster del Equipo</h3>
                     <p className="mt-1 text-sm text-gray-700">Lista completa de jugadores registrados en el equipo.</p>
                   </div>
                   {user?.role === "admin" && (
@@ -1010,7 +1012,10 @@ export default function TeamViewerPage() {
                     <table className="min-w-[720px] w-full divide-y divide-gray-300">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 z-10 bg-gray-50">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Foto
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             #
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1033,13 +1038,18 @@ export default function TeamViewerPage() {
                       <tbody className="bg-white divide-y divide-gray-200">
                         {players.map((player) => (
                           <tr key={player._id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap sticky left-0 z-10 bg-white">
-                              <div
-                                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                                style={{ backgroundColor: team.colors.primary }}
-                              >
-                                {player.jerseyNumber ?? "S/N"}
-                              </div>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Avatar
+                                imageUrl={player.profilePicture}
+                                alt={`${player.firstName} ${player.lastName}`}
+                                fallback={`${player.firstName.charAt(0)}${player.lastName.charAt(0)}`.toUpperCase()}
+                                backgroundColor={team.colors.primary}
+                                size="sm"
+                                fallbackClassName="text-xs"
+                              />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {player.jerseyNumber ?? "S/N"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm font-medium text-gray-900">

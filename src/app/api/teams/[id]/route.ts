@@ -14,6 +14,30 @@ function normalizeEmail(email?: string | null) {
   return email?.trim().toLowerCase() || "";
 }
 
+function normalizeOptionalText(value: string | null | undefined): string | undefined {
+  if (value === null || value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function sanitizeContactForService(contact?: UpdateTeamRequestDto["contact"]) {
+  if (!contact) return undefined;
+
+  return {
+    email: normalizeOptionalText(contact.email),
+    phone: normalizeOptionalText(contact.phone),
+    address: normalizeOptionalText(contact.address),
+    socialMedia: contact.socialMedia
+      ? {
+          facebook: normalizeOptionalText(contact.socialMedia.facebook),
+          instagram: normalizeOptionalText(contact.socialMedia.instagram),
+          x: normalizeOptionalText(contact.socialMedia.x ?? contact.socialMedia.twitter),
+          twitter: normalizeOptionalText(contact.socialMedia.twitter),
+        }
+      : undefined,
+  };
+}
+
 /**
  * GET /api/teams/:id - Obtiene un equipo por ID
  */
@@ -120,7 +144,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       shortName: body.shortName,
       logo: body.logo,
       backgroundImage: body.backgroundImage,
-      contact: body.contact,
+      contact: sanitizeContactForService(body.contact),
       coach: body.coach,
       status: body.status,
       players: body.players,

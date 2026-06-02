@@ -22,6 +22,7 @@ export interface TeamResponseDto {
     socialMedia?: {
       facebook?: string;
       instagram?: string;
+      x?: string;
       twitter?: string;
     };
   };
