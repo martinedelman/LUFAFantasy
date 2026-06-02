@@ -190,8 +190,9 @@ export interface Game {
 }
 
 export interface Official {
+  judgeId?: string;
   name: string;
-  role: "referee" | "umpire" | "linesman" | "field_judge";
+  role: "referee" | "down_judge" | "side_judge" | "table_judge" | "umpire" | "linesman" | "field_judge";
   certification?: string;
 }
 

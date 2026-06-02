@@ -11,6 +11,26 @@ function escapeRegExp(value: string): string {
 }
 
 export class JudgeService {
+  async getJudgesByIds(ids: string[]): Promise<Judge[]> {
+    await connectToDatabase();
+
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const docs = await JudgeModel.find({ _id: { $in: ids } })
+      .select("firstName lastName createdAt updatedAt")
+      .lean();
+
+    return docs.map((judge) => ({
+      _id: judge._id?.toString(),
+      firstName: judge.firstName,
+      lastName: judge.lastName,
+      createdAt: judge.createdAt,
+      updatedAt: judge.updatedAt,
+    }));
+  }
+
   async listJudges(): Promise<Judge[]> {
     await connectToDatabase();
 

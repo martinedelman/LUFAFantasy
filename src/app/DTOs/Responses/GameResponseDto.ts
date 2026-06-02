@@ -32,6 +32,11 @@ export interface GameResponseDto {
   status: GameStatus;
   week?: number;
   round?: string;
+  officials: Array<{
+    judgeId?: string;
+    name: string;
+    role: "referee" | "down_judge" | "side_judge" | "table_judge";
+  }>;
   score: GameScore;
   statistics: GameStatistics;
   presentPlayers?: {

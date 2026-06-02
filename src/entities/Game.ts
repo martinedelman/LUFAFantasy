@@ -43,6 +43,21 @@ export interface GamePresentPlayers {
   away: string[];
 }
 
+export type GameOfficialRole =
+  | "referee"
+  | "down_judge"
+  | "side_judge"
+  | "table_judge"
+  | "umpire"
+  | "linesman"
+  | "field_judge";
+
+export interface GameOfficial {
+  judgeId?: string;
+  name: string;
+  role: GameOfficialRole;
+}
+
 /**
  * Entity: Game (Partido)
  * Aggregate Root - Entidad más compleja del dominio
@@ -59,6 +74,7 @@ export class Game extends AggregateRoot {
   public readonly status: GameStatus;
   public readonly week?: number;
   public readonly round?: string;
+  public readonly officials: GameOfficial[];
   public readonly score: GameScore;
   public readonly statistics: GameStatistics;
   public readonly presentPlayers?: GamePresentPlayers;
@@ -72,6 +88,7 @@ export class Game extends AggregateRoot {
     status: GameStatus = "scheduled",
     homeTeam: string | null = null,
     awayTeam: string | null = null,
+    officials: GameOfficial[] = [],
     score?: GameScore,
     statistics?: GameStatistics,
     presentPlayers?: GamePresentPlayers,
@@ -96,6 +113,7 @@ export class Game extends AggregateRoot {
     this.status = status;
     this.week = week;
     this.round = round;
+    this.officials = officials;
     this.score = score || GameScore.zero();
     this.statistics = statistics || {
       home: TeamStatistics.empty(),
@@ -156,6 +174,7 @@ export class Game extends AggregateRoot {
       "in_progress",
       this.homeTeam,
       this.awayTeam,
+      this.officials,
       this.score,
       this.statistics,
       this.presentPlayers,
@@ -186,6 +205,7 @@ export class Game extends AggregateRoot {
       "completed",
       this.homeTeam,
       this.awayTeam,
+      this.officials,
       this.score,
       this.statistics,
       this.presentPlayers,

@@ -1,5 +1,12 @@
 import type { GameStatus } from "@/entities/Game";
 
+export type GameOfficialAssignmentRole = "referee" | "down_judge" | "side_judge" | "table_judge";
+
+export interface GameOfficialAssignmentRequestDto {
+  judgeId: string;
+  role: GameOfficialAssignmentRole;
+}
+
 export interface CreateGameRequestDto {
   tournament: string;
   division: string;
@@ -13,4 +20,5 @@ export interface CreateGameRequestDto {
   week?: number;
   round?: string;
   status?: GameStatus;
+  officials?: GameOfficialAssignmentRequestDto[];
 }

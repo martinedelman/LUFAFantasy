@@ -131,6 +131,17 @@ function getScoringBadgeClass(type: GameEventType) {
   return classes[type] || "bg-gray-100 text-gray-700 ring-gray-200";
 }
 
+function getOfficialRoleLabel(role: GameApiResponse["officials"][number]["role"]) {
+  const labels: Record<GameApiResponse["officials"][number]["role"], string> = {
+    referee: "Referee",
+    down_judge: "Down judge",
+    side_judge: "Side judge",
+    table_judge: "Juez de mesa",
+  };
+
+  return labels[role];
+}
+
 export default function MatchPage() {
   const params = useParams();
   const gameId = params?.id as string;
@@ -502,6 +513,25 @@ export default function MatchPage() {
             <div>{formatDateTime(game.scheduledDate)}</div>
             <div>{game.venue?.name}</div>
             <div>{game.week ? `Semana ${game.week}` : game.round || "Fecha por definir"}</div>
+          </div>
+
+          <div className="mt-5 rounded-md border border-gray-200 bg-gray-50 p-4">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-700">Jueces del Partido</h2>
+            {game.officials.length > 0 ? (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {game.officials.map((official) => (
+                  <div
+                    key={`${official.role}-${official.judgeId || official.name}`}
+                    className="rounded bg-white p-2 text-sm"
+                  >
+                    <p className="font-semibold text-gray-900">{getOfficialRoleLabel(official.role)}</p>
+                    <p className="text-gray-600">{official.name}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-gray-500">Sin jueces asignados.</p>
+            )}
           </div>
         </header>
 

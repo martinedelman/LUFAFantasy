@@ -35,6 +35,13 @@ type TeamOption = {
   };
 };
 
+type JudgeOption = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+};
+
 type Game = {
   _id: string;
   scheduledDate: string;
@@ -50,6 +57,11 @@ type Game = {
     address: string;
   };
   notes?: string;
+  officials: Array<{
+    judgeId?: string;
+    name: string;
+    role: "referee" | "down_judge" | "side_judge" | "table_judge";
+  }>;
   score: {
     home: {
       q1?: number;
@@ -95,6 +107,10 @@ type GameFormState = {
   round: string;
   venueName: string;
   venueAddress: string;
+  refereeJudgeId: string;
+  downJudgeId: string;
+  sideJudgeId: string;
+  tableJudgeId: string;
   notes: string;
 };
 
@@ -116,6 +132,10 @@ const INITIAL_FORM: GameFormState = {
   round: "",
   venueName: "",
   venueAddress: "",
+  refereeJudgeId: "",
+  downJudgeId: "",
+  sideJudgeId: "",
+  tableJudgeId: "",
   notes: "",
 };
 
@@ -217,6 +237,7 @@ export default function GamesPage() {
   const [tournaments, setTournaments] = useState<TournamentOption[]>([]);
   const [divisions, setDivisions] = useState<DivisionOption[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [judges, setJudges] = useState<JudgeOption[]>([]);
 
   const fetchGames = useCallback(
     async (page = 1) => {
@@ -280,6 +301,24 @@ export default function GamesPage() {
     }
   }, []);
 
+  const fetchJudges = useCallback(async () => {
+    if (!canManageGames) {
+      setJudges([]);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/judges");
+      const data: ApiResponse<JudgeOption[]> = await response.json();
+
+      if (response.ok && data.success && Array.isArray(data.data)) {
+        setJudges(data.data);
+      }
+    } catch {
+      setJudges([]);
+    }
+  }, [canManageGames]);
+
   const fetchTeamsForDivision = useCallback(async (divisionId: string) => {
     if (!divisionId) {
       setTeams([]);
@@ -304,6 +343,10 @@ export default function GamesPage() {
   useEffect(() => {
     fetchCatalogs();
   }, [fetchCatalogs]);
+
+  useEffect(() => {
+    fetchJudges();
+  }, [fetchJudges]);
 
   useEffect(() => {
     setFilters(readStoredFilters());
@@ -420,6 +463,10 @@ export default function GamesPage() {
         round: game.round || "",
         venueName: game.venue?.name || "",
         venueAddress: game.venue?.address || "",
+        refereeJudgeId: game.officials.find((official) => official.role === "referee")?.judgeId || "",
+        downJudgeId: game.officials.find((official) => official.role === "down_judge")?.judgeId || "",
+        sideJudgeId: game.officials.find((official) => official.role === "side_judge")?.judgeId || "",
+        tableJudgeId: game.officials.find((official) => official.role === "table_judge")?.judgeId || "",
         notes: game.notes || "",
       });
       setEditingGame(game);
@@ -491,6 +538,18 @@ export default function GamesPage() {
       return;
     }
 
+    const selectedJudgeIds = [form.refereeJudgeId, form.downJudgeId, form.sideJudgeId, form.tableJudgeId];
+
+    if (selectedJudgeIds.some((judgeId) => !judgeId)) {
+      setFormError("Debes seleccionar Referee, Down judge, Side judge y Juez de mesa.");
+      return;
+    }
+
+    if (new Set(selectedJudgeIds).size !== selectedJudgeIds.length) {
+      setFormError("Un juez no se puede repetir en un partido.");
+      return;
+    }
+
     const payload: Record<string, unknown> = {
       tournament: form.tournament,
       division: form.division,
@@ -499,6 +558,12 @@ export default function GamesPage() {
       scheduledDate: new Date(form.scheduledDate).toISOString(),
       status: form.status,
       round: form.round.trim(),
+      officials: [
+        { role: "referee", judgeId: form.refereeJudgeId },
+        { role: "down_judge", judgeId: form.downJudgeId },
+        { role: "side_judge", judgeId: form.sideJudgeId },
+        { role: "table_judge", judgeId: form.tableJudgeId },
+      ],
       venue: {
         name: form.venueName.trim(),
         address: form.venueAddress.trim(),
@@ -532,6 +597,23 @@ export default function GamesPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const isJudgeSelectedInAnotherRole = (
+    judgeId: string,
+    currentField: "refereeJudgeId" | "downJudgeId" | "sideJudgeId" | "tableJudgeId",
+  ) => {
+    const selectedByField = {
+      refereeJudgeId: form.refereeJudgeId,
+      downJudgeId: form.downJudgeId,
+      sideJudgeId: form.sideJudgeId,
+      tableJudgeId: form.tableJudgeId,
+    };
+
+    return Object.entries(selectedByField).some(([field, selectedJudgeId]) => {
+      if (field === currentField) return false;
+      return selectedJudgeId === judgeId;
+    });
   };
 
   const handleWalkOver = async (game: Game, winner: "home" | "away") => {
@@ -873,6 +955,102 @@ export default function GamesPage() {
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
+                </div>
+
+                <div>
+                  <label htmlFor="refereeJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Referee
+                  </label>
+                  <select
+                    id="refereeJudgeId"
+                    value={form.refereeJudgeId}
+                    onChange={(e) => handleFormChange("refereeJudgeId", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Seleccionar juez</option>
+                    {judges.map((judge) => (
+                      <option
+                        key={judge._id}
+                        value={judge._id}
+                        disabled={isJudgeSelectedInAnotherRole(judge._id, "refereeJudgeId")}
+                      >
+                        {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="downJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Down judge
+                  </label>
+                  <select
+                    id="downJudgeId"
+                    value={form.downJudgeId}
+                    onChange={(e) => handleFormChange("downJudgeId", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Seleccionar juez</option>
+                    {judges.map((judge) => (
+                      <option
+                        key={judge._id}
+                        value={judge._id}
+                        disabled={isJudgeSelectedInAnotherRole(judge._id, "downJudgeId")}
+                      >
+                        {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="sideJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Side judge
+                  </label>
+                  <select
+                    id="sideJudgeId"
+                    value={form.sideJudgeId}
+                    onChange={(e) => handleFormChange("sideJudgeId", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Seleccionar juez</option>
+                    {judges.map((judge) => (
+                      <option
+                        key={judge._id}
+                        value={judge._id}
+                        disabled={isJudgeSelectedInAnotherRole(judge._id, "sideJudgeId")}
+                      >
+                        {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="tableJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Juez de mesa
+                  </label>
+                  <select
+                    id="tableJudgeId"
+                    value={form.tableJudgeId}
+                    onChange={(e) => handleFormChange("tableJudgeId", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Seleccionar juez</option>
+                    {judges.map((judge) => (
+                      <option
+                        key={judge._id}
+                        value={judge._id}
+                        disabled={isJudgeSelectedInAnotherRole(judge._id, "tableJudgeId")}
+                      >
+                        {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="md:col-span-2">

@@ -1,11 +1,87 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GameService } from "@/services/backend";
+import { GameService, JudgeService } from "@/services/backend";
 import { apiErrorResponse } from "@/lib/apiError";
 import { GameStatus } from "@/entities/Game";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { CreateGameRequestDto, UpdateGameRequestDto } from "@/app/DTOs";
 
 const gameService = new GameService();
+const judgeService = new JudgeService();
+const REQUIRED_OFFICIAL_ROLES = ["referee", "down_judge", "side_judge", "table_judge"] as const;
+
+type OfficialRole = (typeof REQUIRED_OFFICIAL_ROLES)[number];
+type OfficialAssignment = {
+  judgeId: string;
+  role: OfficialRole;
+};
+
+function normalizeAssignments(assignments: CreateGameRequestDto["officials"]): OfficialAssignment[] {
+  if (!assignments || assignments.length === 0) {
+    return [];
+  }
+
+  return assignments
+    .map((assignment) => ({
+      judgeId: (assignment.judgeId || "").trim(),
+      role: assignment.role,
+    }))
+    .filter((assignment) => assignment.judgeId.length > 0);
+}
+
+async function resolveOfficials(assignments: CreateGameRequestDto["officials"], required = false) {
+  const normalizedAssignments = normalizeAssignments(assignments);
+
+  if (normalizedAssignments.length === 0) {
+    if (required) {
+      throw new Error("Debes seleccionar los 4 jueces del partido");
+    }
+
+    return [];
+  }
+
+  if (normalizedAssignments.length !== REQUIRED_OFFICIAL_ROLES.length) {
+    throw new Error("Debes seleccionar los 4 jueces del partido");
+  }
+
+  const roleSet = new Set(normalizedAssignments.map((assignment) => assignment.role));
+  if (roleSet.size !== REQUIRED_OFFICIAL_ROLES.length) {
+    throw new Error("Los roles de jueces no pueden repetirse");
+  }
+
+  for (const requiredRole of REQUIRED_OFFICIAL_ROLES) {
+    if (!roleSet.has(requiredRole)) {
+      throw new Error("Debes asignar Referee, Down judge, Side judge y Juez de mesa");
+    }
+  }
+
+  const judgeIds = normalizedAssignments.map((assignment) => assignment.judgeId);
+  const uniqueJudgeIds = new Set(judgeIds);
+
+  if (uniqueJudgeIds.size !== judgeIds.length) {
+    throw new Error("Un juez no se puede repetir en un partido");
+  }
+
+  const judges = await judgeService.getJudgesByIds(Array.from(uniqueJudgeIds));
+  if (judges.length !== uniqueJudgeIds.size) {
+    throw new Error("Uno o más jueces seleccionados no existen");
+  }
+
+  const judgeById = new Map(judges.map((judge) => [judge._id || "", judge]));
+
+  return normalizedAssignments.map((assignment) => {
+    const judge = judgeById.get(assignment.judgeId);
+
+    if (!judge) {
+      throw new Error("Uno o más jueces seleccionados no existen");
+    }
+
+    return {
+      judgeId: assignment.judgeId,
+      name: `${judge.firstName} ${judge.lastName}`.trim(),
+      role: assignment.role,
+    };
+  });
+}
 
 // GET /api/games - Obtener todos los partidos
 export async function GET(request: NextRequest) {
@@ -69,6 +145,7 @@ export async function POST(request: NextRequest) {
       division: body.division,
       homeTeam: body.homeTeam || null,
       awayTeam: body.awayTeam || null,
+      officials: await resolveOfficials(body.officials, true),
       venue: body.venue,
       scheduledDate: new Date(body.scheduledDate),
       week: body.week,
@@ -113,6 +190,7 @@ export async function PUT(request: NextRequest) {
       status: body.status,
       week: body.week,
       round: body.round,
+      officials: body.officials ? await resolveOfficials(body.officials) : undefined,
     });
 
     return NextResponse.json({

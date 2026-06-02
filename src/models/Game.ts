@@ -2,10 +2,11 @@ import mongoose, { Schema } from "mongoose";
 import { Game } from "../types";
 
 const OfficialSchema = new Schema({
+  judgeId: { type: Schema.Types.ObjectId, ref: "Judge" },
   name: { type: String, required: true, trim: true },
   role: {
     type: String,
-    enum: ["referee", "umpire", "linesman", "field_judge"],
+    enum: ["referee", "down_judge", "side_judge", "table_judge", "umpire", "linesman", "field_judge"],
     required: true,
   },
   certification: { type: String, trim: true },

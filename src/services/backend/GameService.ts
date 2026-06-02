@@ -1,4 +1,4 @@
-import { Game, GameEvent, GameEventType, GameStatus } from "../../entities/Game";
+import { Game, GameEvent, GameEventType, GameOfficial, GameStatus } from "../../entities/Game";
 import { GameScore, QuarterScore } from "../../entities/valueObjects/Score";
 import { Venue } from "../../entities/valueObjects/Venue";
 import RepositoryContainer from "../../repositories";
@@ -44,6 +44,7 @@ export class GameService {
     division: string;
     homeTeam: string | null;
     awayTeam: string | null;
+    officials?: GameOfficial[];
     venue: { name: string; address: string };
     scheduledDate: Date;
     week?: number;
@@ -81,6 +82,7 @@ export class GameService {
       data.status || "scheduled",
       data.homeTeam,
       data.awayTeam,
+      data.officials || [],
       GameScore.zero(),
       undefined,
       undefined,
@@ -555,6 +557,7 @@ export class GameService {
       status: GameStatus;
       week: number;
       round: string;
+      officials: GameOfficial[];
     }>,
   ): Promise<Game> {
     const game = await this.gameRepo.findById(id);
@@ -589,6 +592,7 @@ export class GameService {
       data.status || game.status,
       data.homeTeam || this.getReferenceId(game.homeTeam),
       data.awayTeam || this.getReferenceId(game.awayTeam),
+      data.officials || game.officials || [],
       normalizedScore,
       game.statistics,
       game.presentPlayers,

@@ -1,4 +1,4 @@
-import type { Game } from "@/entities/Game";
+import type { Game, GameOfficial } from "@/entities/Game";
 import type { PlayerStatus } from "@/entities/Player";
 import type { GameEventResponseDto, GameResponseDto } from "../Responses";
 
@@ -37,6 +37,7 @@ interface PopulatedRef {
 }
 
 type GameWithEvents = Omit<Game, "presentPlayers"> & {
+  officials?: GameOfficial[];
   presentPlayers?: {
     home?: Array<string | PopulatedRef>;
     away?: Array<string | PopulatedRef>;
@@ -74,6 +75,7 @@ export function toGameResponseDto(game: Game): GameResponseDto {
     status: game.status,
     week: game.week,
     round: game.round,
+    officials: (gameWithEvents.officials || []).map(toOfficialRef).filter(isDefinedOfficialRef),
     score: game.score,
     statistics: game.statistics,
     presentPlayers: {
@@ -85,6 +87,23 @@ export function toGameResponseDto(game: Game): GameResponseDto {
     createdAt: game.createdAt?.toISOString(),
     updatedAt: game.updatedAt?.toISOString(),
   };
+}
+
+function toOfficialRef(official: GameOfficial | undefined): GameResponseDto["officials"][number] | undefined {
+  if (!official?.name) return undefined;
+
+  return {
+    judgeId: official.judgeId,
+    name: official.name,
+    role: normalizeOfficialRole(official.role),
+  };
+}
+
+function normalizeOfficialRole(role: GameOfficial["role"]): GameResponseDto["officials"][number]["role"] {
+  if (role === "umpire") return "down_judge";
+  if (role === "linesman") return "side_judge";
+  if (role === "field_judge") return "table_judge";
+  return role;
 }
 
 function toTournamentRef(tournament: string | PopulatedRef): GameResponseDto["tournament"] {
@@ -195,4 +214,10 @@ function isDefinedPlayerRef(
   player: ReturnType<typeof toPlayerRef>,
 ): player is NonNullable<ReturnType<typeof toPlayerRef>> {
   return Boolean(player);
+}
+
+function isDefinedOfficialRef(
+  official: ReturnType<typeof toOfficialRef>,
+): official is NonNullable<ReturnType<typeof toOfficialRef>> {
+  return Boolean(official);
 }

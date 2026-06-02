@@ -39,6 +39,11 @@ export interface GameLiveResponseDto {
   actualEndTime?: string;
   week?: number;
   round?: string;
+  officials: Array<{
+    judgeId?: string;
+    name: string;
+    role: "referee" | "down_judge" | "side_judge" | "table_judge";
+  }>;
   score: GameScore;
   events: GameEventResponseDto[];
   presentPlayers?: {

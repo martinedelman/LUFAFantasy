@@ -1,4 +1,5 @@
 import type { GameStatus } from "@/entities/Game";
+import type { GameOfficialAssignmentRequestDto } from "./CreateGameRequestDto";
 
 export interface UpdateGameRequestDto {
   id: string;
@@ -8,4 +9,5 @@ export interface UpdateGameRequestDto {
   status?: GameStatus;
   week?: number;
   round?: string;
+  officials?: GameOfficialAssignmentRequestDto[];
 }
