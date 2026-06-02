@@ -100,7 +100,7 @@ export default function PlayerProfilePage() {
   const derivePlayerStatsFromGames = useCallback(
     (games: GameResponseDto[]): PlayerStatsResponseDto => {
       const stats = emptyPlayerStats();
-      const gamesWithEvents = new Set<string>();
+      const gamesWithParticipation = new Set<string>();
 
       games
         .filter((game) => game.status === "in_progress" || game.status === "completed")
@@ -110,10 +110,19 @@ export default function PlayerProfilePage() {
             return;
           }
 
+          const wasPresentInGame = [...(game.presentPlayers?.home || []), ...(game.presentPlayers?.away || [])].some(
+            (presentPlayer) => getReferenceId(presentPlayer) === playerId,
+          );
+
+          if (wasPresentInGame) {
+            gamesWithParticipation.add(gameId);
+          }
+
           (game.events || []).forEach((event) => {
             if (getReferenceId(event.player) !== playerId) return;
 
-            gamesWithEvents.add(gameId);
+            // Fallback for older games without presentPlayers populated.
+            gamesWithParticipation.add(gameId);
             stats.totalPoints += event.points || 0;
 
             if (event.type === "touchdown") {
@@ -139,7 +148,7 @@ export default function PlayerProfilePage() {
           });
         });
 
-      stats.gamesPlayed = gamesWithEvents.size;
+      stats.gamesPlayed = gamesWithParticipation.size;
       return stats;
     },
     [emptyPlayerStats, getReferenceId, playerId],
@@ -469,7 +478,26 @@ export default function PlayerProfilePage() {
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h2 className="text-lg font-medium text-gray-900">Estadísticas</h2>
                 </div>
-                <div className="p-6">
+                <div className="p-6 space-y-6">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="rounded-lg bg-gray-50 p-4">
+                      <div className="text-2xl font-bold text-gray-900">{playerStats.gamesPlayed}</div>
+                      <div className="text-sm text-gray-600">Partidos jugados</div>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-4">
+                      <div className="text-2xl font-bold text-gray-900">{playerStats.totalPoints}</div>
+                      <div className="text-sm text-gray-600">Puntos</div>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-4">
+                      <div className="text-2xl font-bold text-gray-900">{formatDecimal(pointsPerGame)}</div>
+                      <div className="text-sm text-gray-600">Pts/Juego</div>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-4">
+                      <div className="text-2xl font-bold text-gray-900">{playerStats.touchdowns}</div>
+                      <div className="text-sm text-gray-600">Touchdowns</div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {liveEventStats.map((stat) => (
                       <div key={stat.label} className="rounded-lg bg-gray-50 p-4">
@@ -485,58 +513,8 @@ export default function PlayerProfilePage() {
 
           {/* Player Statistics */}
           <div className="lg:col-span-1">
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Resumen</h2>
-              </div>
-              <div className="p-6">
-                {playerStats ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-lg bg-gray-50 p-4">
-                        <div className="text-2xl font-bold text-gray-900">{playerStats.gamesPlayed}</div>
-                        <div className="text-sm text-gray-600">Juegos</div>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 p-4">
-                        <div className="text-2xl font-bold text-gray-900">{playerStats.totalPoints}</div>
-                        <div className="text-sm text-gray-600">Puntos</div>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 p-4">
-                        <div className="text-2xl font-bold text-gray-900">{playerStats.touchdowns}</div>
-                        <div className="text-sm text-gray-600">Touchdowns</div>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 p-4">
-                        <div className="text-2xl font-bold text-gray-900">{formatDecimal(pointsPerGame)}</div>
-                        <div className="text-sm text-gray-600">Pts/Juego</div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <svg
-                      className="mx-auto h-12 w-12 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">Sin estadísticas</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Las estadísticas aparecerán cuando el jugador participe en juegos.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Team Card */}
-            <div className="mt-6 bg-white shadow rounded-lg">
+            <div className="bg-white shadow rounded-lg">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900">Equipo</h2>
               </div>
