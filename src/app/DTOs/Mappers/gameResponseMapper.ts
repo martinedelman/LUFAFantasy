@@ -20,6 +20,20 @@ interface PopulatedRef {
     primary?: string;
     secondary?: string;
   };
+  coach?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    experience?: string;
+    certifications?: string[];
+  };
+  coaches?: Array<{
+    name?: string;
+    email?: string;
+    phone?: string;
+    experience?: string;
+    certifications?: string[];
+  }>;
 }
 
 type GameWithEvents = Omit<Game, "presentPlayers"> & {
@@ -48,8 +62,8 @@ export function toGameResponseDto(game: Game): GameResponseDto {
     _id: game.id,
     tournament: toTournamentRef(gameWithEvents.tournament),
     division: toDivisionRef(gameWithEvents.division),
-    homeTeam: game.homeTeam,
-    awayTeam: game.awayTeam,
+    homeTeam: gameWithEvents.homeTeam ? toTeamRef(gameWithEvents.homeTeam as string | PopulatedRef) : null,
+    awayTeam: gameWithEvents.awayTeam ? toTeamRef(gameWithEvents.awayTeam as string | PopulatedRef) : null,
     venue: {
       name: game.venue.name,
       address: game.venue.address,
@@ -117,6 +131,29 @@ function toTeamRef(team: string | PopulatedRef): GameEventResponseDto["team"] {
     return team;
   }
 
+  const coaches =
+    team.coaches && team.coaches.length > 0
+      ? team.coaches
+          .filter((coach) => coach?.name)
+          .map((coach) => ({
+            name: coach.name || "",
+            email: coach.email,
+            phone: coach.phone,
+            experience: coach.experience,
+            certifications: coach.certifications,
+          }))
+      : team.coach?.name
+        ? [
+            {
+              name: team.coach.name,
+              email: team.coach.email,
+              phone: team.coach.phone,
+              experience: team.coach.experience,
+              certifications: team.coach.certifications,
+            },
+          ]
+        : undefined;
+
   return {
     _id: stringifyId(team._id || team.id),
     name: team.name || "Equipo",
@@ -126,6 +163,7 @@ function toTeamRef(team: string | PopulatedRef): GameEventResponseDto["team"] {
       primary: team.colors?.primary || "#6b7280",
       secondary: team.colors?.secondary,
     },
+    coaches,
   };
 }
 

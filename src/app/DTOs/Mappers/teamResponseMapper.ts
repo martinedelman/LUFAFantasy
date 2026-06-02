@@ -2,6 +2,8 @@ import type { Team } from "@/entities/Team";
 import type { TeamResponseDto, TeamSummaryResponseDto } from "../Responses";
 
 export function toTeamResponseDto(team: Team): TeamResponseDto {
+  const coaches = team.coaches && team.coaches.length > 0 ? team.coaches : team.coach ? [team.coach] : undefined;
+
   return {
     _id: team.id,
     name: team.name,
@@ -15,7 +17,8 @@ export function toTeamResponseDto(team: Team): TeamResponseDto {
     division: team.division,
     tournament: team.tournament,
     players: team.players,
-    coach: team.coach,
+    coach: coaches?.[0],
+    coaches,
     contact: {
       email: team.contact.email,
       phone: team.contact.phone,
@@ -30,6 +33,8 @@ export function toTeamResponseDto(team: Team): TeamResponseDto {
 }
 
 export function toTeamSummaryResponseDto(team: Team): TeamSummaryResponseDto {
+  const coaches = team.coaches && team.coaches.length > 0 ? team.coaches : team.coach ? [team.coach] : undefined;
+
   return {
     _id: team.id ?? "",
     name: team.name,
@@ -40,5 +45,6 @@ export function toTeamSummaryResponseDto(team: Team): TeamSummaryResponseDto {
       primary: team.colors.primary,
       secondary: team.colors.secondary,
     },
+    coaches,
   };
 }

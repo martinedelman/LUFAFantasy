@@ -15,6 +15,7 @@ export interface TeamResponseDto {
   tournament?: string;
   players: string[];
   coach?: Coach;
+  coaches?: Coach[];
   contact: {
     email?: string;
     phone?: string;

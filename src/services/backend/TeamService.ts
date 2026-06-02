@@ -28,6 +28,7 @@ export class TeamService {
       };
     };
     coach?: Coach;
+    coaches?: Coach[];
     shortName?: string;
     logo?: string;
     backgroundImage?: string;
@@ -45,6 +46,10 @@ export class TeamService {
     const colors = new Colors(data.colors.primary, data.colors.secondary);
     const contact = new ContactInfo(data.contact);
 
+    const normalizedCoaches = (data.coaches || (data.coach ? [data.coach] : []))
+      .slice(0, 2)
+      .filter((coach) => coach && coach.name?.trim());
+
     const team = new Team(
       data.name,
       colors,
@@ -60,7 +65,8 @@ export class TeamService {
       undefined,
       undefined,
       undefined,
-      data.coach,
+      normalizedCoaches[0],
+      normalizedCoaches,
     );
 
     // Validar
@@ -142,6 +148,7 @@ export class TeamService {
         };
       };
       coach: Coach;
+      coaches: Coach[];
       status: TeamStatus;
       players: string[];
     }>,
@@ -150,6 +157,10 @@ export class TeamService {
     if (!team) {
       throw new Error("Equipo no encontrado");
     }
+
+    const sourceCoaches =
+      data.coaches !== undefined ? data.coaches : data.coach !== undefined ? [data.coach] : team.coaches || [];
+    const normalizedCoaches = sourceCoaches.slice(0, 2).filter((coach) => coach && coach.name?.trim());
 
     const updatedTeam = new Team(
       data.name || team.name,
@@ -166,7 +177,8 @@ export class TeamService {
       team.id,
       team.createdAt,
       team.updatedAt,
-      data.coach !== undefined ? data.coach : team.coach,
+      normalizedCoaches[0],
+      normalizedCoaches,
     );
 
     // Validar

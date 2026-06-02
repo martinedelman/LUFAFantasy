@@ -1,4 +1,5 @@
 import type { TeamStatus } from "@/entities/Team";
+import type { Coach } from "@/entities/Team";
 
 export interface CreateTeamRequestDto {
   name: string;
@@ -21,6 +22,8 @@ export interface CreateTeamRequestDto {
   shortName?: string;
   logo?: string;
   backgroundImage?: string;
+  coach?: Coach;
+  coaches?: Coach[];
   tournament?: string;
   players?: string[];
   status?: TeamStatus;

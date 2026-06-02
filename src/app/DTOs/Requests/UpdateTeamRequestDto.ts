@@ -22,6 +22,7 @@ export interface UpdateTeamRequestDto {
     };
   };
   coach?: Coach;
+  coaches?: Coach[];
   status?: TeamStatus;
   players?: string[];
 }

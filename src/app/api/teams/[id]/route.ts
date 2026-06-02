@@ -107,10 +107,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const userEmail = normalizeEmail(user.email);
+    const teamCoachEmails = (team.coaches || (team.coach ? [team.coach] : []))
+      .map((coach) => normalizeEmail(coach?.email))
+      .filter(Boolean);
     const canEdit =
-      user.role === "admin" ||
-      userEmail === normalizeEmail(team.contact?.email) ||
-      userEmail === normalizeEmail(team.coach?.email);
+      user.role === "admin" || userEmail === normalizeEmail(team.contact?.email) || teamCoachEmails.includes(userEmail);
 
     if (!canEdit) {
       return NextResponse.json(
@@ -146,6 +147,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       backgroundImage: body.backgroundImage,
       contact: sanitizeContactForService(body.contact),
       coach: body.coach,
+      coaches: body.coaches,
       status: body.status,
       players: body.players,
     });

@@ -2,6 +2,7 @@ import type { GameStatus, GameStatistics } from "@/entities/Game";
 import type { GameScore } from "@/entities/valueObjects/Score";
 import type { GameEventResponseDto } from "./GameLiveResponseDto";
 import type { PlayerSummaryResponseDto } from "./PlayerSummaryResponseDto";
+import type { TeamSummaryResponseDto } from "./TeamSummaryResponseDto";
 
 export interface GameResponseDto {
   _id?: string;
@@ -19,8 +20,8 @@ export interface GameResponseDto {
         name: string;
         category: string;
       };
-  homeTeam: string | null;
-  awayTeam: string | null;
+  homeTeam: TeamSummaryResponseDto | string | null;
+  awayTeam: TeamSummaryResponseDto | string | null;
   venue: {
     name: string;
     address: string;

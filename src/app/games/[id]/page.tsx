@@ -22,7 +22,10 @@ const SCORING_EVENT_LABELS: Partial<Record<GameEventType, string>> = {
   pick_six: "Pick six",
 };
 
-const STATUS_COPY: Record<GameApiResponse["status"], { label: string; type: "info" | "warning" | "success" | "error" }> = {
+const STATUS_COPY: Record<
+  GameApiResponse["status"],
+  { label: string; type: "info" | "warning" | "success" | "error" }
+> = {
   scheduled: { label: "Pendiente", type: "info" },
   in_progress: { label: "En curso", type: "success" },
   completed: { label: "Finalizado", type: "success" },
@@ -45,6 +48,31 @@ function getTeamColor(team: TeamSummaryResponseDto | string | null | undefined) 
 function getTeamFallback(team: TeamSummaryResponseDto | string | null | undefined, fallback: string) {
   if (typeof team === "string" || !team) return fallback;
   return (team.shortName || team.name.slice(0, 2)).toUpperCase();
+}
+
+function getTeamCoaches(team: TeamSummaryResponseDto | string | null | undefined) {
+  if (typeof team === "string" || !team || !team.coaches) return [];
+  return team.coaches.filter((coach) => coach.name?.trim());
+}
+
+interface TeamCoachesApiResponse {
+  success: boolean;
+  data?: {
+    coaches?: Array<{
+      name: string;
+      email?: string;
+      phone?: string;
+      experience?: string;
+      certifications?: string[];
+    }>;
+    coach?: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      experience?: string;
+      certifications?: string[];
+    };
+  };
 }
 
 function getPlayerId(player: PlayerRef) {
@@ -112,8 +140,49 @@ export default function MatchPage() {
   const [game, setGame] = useState<GameApiResponse | null>(null);
   const [homeRoster, setHomeRoster] = useState<PlayerApiResponse[]>([]);
   const [awayRoster, setAwayRoster] = useState<PlayerApiResponse[]>([]);
+  const [teamCoachesById, setTeamCoachesById] = useState<
+    Record<
+      string,
+      Array<{
+        name: string;
+        email?: string;
+        phone?: string;
+        experience?: string;
+        certifications?: string[];
+      }>
+    >
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchTeamCoaches = useCallback(async (teamId: string) => {
+    if (!teamId) return [];
+
+    const response = await fetch(`/api/teams/${teamId}`);
+    const data: TeamCoachesApiResponse = await response.json();
+
+    if (!response.ok || !data.success || !data.data) {
+      return [];
+    }
+
+    if (data.data.coaches && data.data.coaches.length > 0) {
+      return data.data.coaches.filter((coach) => coach.name?.trim()).slice(0, 2);
+    }
+
+    if (data.data.coach?.name?.trim()) {
+      return [
+        {
+          name: data.data.coach.name,
+          email: data.data.coach.email,
+          phone: data.data.coach.phone,
+          experience: data.data.coach.experience,
+          certifications: data.data.coach.certifications,
+        },
+      ];
+    }
+
+    return [];
+  }, []);
 
   const fetchTeamPlayers = useCallback(async (teamId: string) => {
     if (!teamId) return [];
@@ -148,6 +217,34 @@ export default function MatchPage() {
         fetchTeamPlayers(getTeamId(data.data.awayTeam)),
       ]);
 
+      const homeTeamId = getTeamId(data.data.homeTeam);
+      const awayTeamId = getTeamId(data.data.awayTeam);
+      const responseHomeCoaches = getTeamCoaches(data.data.homeTeam);
+      const responseAwayCoaches = getTeamCoaches(data.data.awayTeam);
+
+      if ((homeTeamId && responseHomeCoaches.length === 0) || (awayTeamId && responseAwayCoaches.length === 0)) {
+        const [homeFallbackCoaches, awayFallbackCoaches] = await Promise.all([
+          homeTeamId && responseHomeCoaches.length === 0 ? fetchTeamCoaches(homeTeamId) : Promise.resolve([]),
+          awayTeamId && responseAwayCoaches.length === 0 ? fetchTeamCoaches(awayTeamId) : Promise.resolve([]),
+        ]);
+
+        setTeamCoachesById((current) => ({
+          ...current,
+          ...(homeTeamId
+            ? { [homeTeamId]: responseHomeCoaches.length > 0 ? responseHomeCoaches : homeFallbackCoaches }
+            : {}),
+          ...(awayTeamId
+            ? { [awayTeamId]: responseAwayCoaches.length > 0 ? responseAwayCoaches : awayFallbackCoaches }
+            : {}),
+        }));
+      } else {
+        setTeamCoachesById((current) => ({
+          ...current,
+          ...(homeTeamId ? { [homeTeamId]: responseHomeCoaches } : {}),
+          ...(awayTeamId ? { [awayTeamId]: responseAwayCoaches } : {}),
+        }));
+      }
+
       setHomeRoster(homePlayers);
       setAwayRoster(awayPlayers);
     } catch {
@@ -155,7 +252,7 @@ export default function MatchPage() {
     } finally {
       setLoading(false);
     }
-  }, [fetchTeamPlayers, gameId]);
+  }, [fetchTeamCoaches, fetchTeamPlayers, gameId]);
 
   useEffect(() => {
     fetchMatch();
@@ -174,14 +271,16 @@ export default function MatchPage() {
         return sortPlayers(
           savedPresent.map((player) => {
             if (typeof player !== "string") return player;
-            return rosterById.get(player) || {
-              _id: player,
-              firstName: "Jugador",
-              lastName: "",
-              jerseyNumber: null,
-              position: "",
-              status: "active",
-            };
+            return (
+              rosterById.get(player) || {
+                _id: player,
+                firstName: "Jugador",
+                lastName: "",
+                jerseyNumber: null,
+                position: "",
+                status: "active",
+              }
+            );
           }),
         );
       }
@@ -262,6 +361,12 @@ export default function MatchPage() {
   const homeName = getTeamName(game.homeTeam, "Equipo Local");
   const awayName = getTeamName(game.awayTeam, "Equipo Visitante");
   const isPending = game.status === "scheduled";
+  const homeTeamId = getTeamId(game.homeTeam);
+  const awayTeamId = getTeamId(game.awayTeam);
+  const homeCoaches =
+    getTeamCoaches(game.homeTeam).length > 0 ? getTeamCoaches(game.homeTeam) : teamCoachesById[homeTeamId] || [];
+  const awayCoaches =
+    getTeamCoaches(game.awayTeam).length > 0 ? getTeamCoaches(game.awayTeam) : teamCoachesById[awayTeamId] || [];
 
   const renderPlayerList = (side: TeamSide, players: PlayerSummaryResponseDto[]) => {
     const team = side === "home" ? game.homeTeam : game.awayTeam;
@@ -357,6 +462,11 @@ export default function MatchPage() {
                 />
               </div>
               <h1 className="break-words text-base font-black text-gray-900 sm:text-2xl">{homeName}</h1>
+              {homeCoaches.length > 0 && (
+                <p className="mt-1 text-xs text-gray-500 sm:text-sm">
+                  DT: {homeCoaches.map((coach) => coach.name).join(" / ")}
+                </p>
+              )}
             </div>
 
             <div className="text-center">
@@ -380,6 +490,11 @@ export default function MatchPage() {
                 />
               </div>
               <h1 className="break-words text-base font-black text-gray-900 sm:text-2xl">{awayName}</h1>
+              {awayCoaches.length > 0 && (
+                <p className="mt-1 text-xs text-gray-500 sm:text-sm">
+                  DT: {awayCoaches.map((coach) => coach.name).join(" / ")}
+                </p>
+              )}
             </div>
           </div>
 

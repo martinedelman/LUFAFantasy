@@ -27,6 +27,7 @@ export class Team extends AggregateRoot {
   public readonly players: string[]; // IDs de jugadores
   public readonly contact: ContactInfo;
   public readonly coach?: Coach;
+  public readonly coaches?: Coach[];
   public readonly registrationDate: Date;
   public readonly status: TeamStatus;
 
@@ -46,6 +47,7 @@ export class Team extends AggregateRoot {
     createdAt?: Date,
     updatedAt?: Date,
     coach?: Coach,
+    coaches?: Coach[],
   ) {
     super(id, createdAt, updatedAt);
     this.name = name;
@@ -57,7 +59,9 @@ export class Team extends AggregateRoot {
     this.tournament = tournament;
     this.players = players;
     this.contact = contact;
-    this.coach = coach;
+    const normalizedCoaches = (coaches || []).slice(0, 2);
+    this.coaches = normalizedCoaches.length > 0 ? normalizedCoaches : coach ? [coach] : undefined;
+    this.coach = coach || this.coaches?.[0];
     this.registrationDate = registrationDate;
     this.status = status;
   }
@@ -111,13 +115,26 @@ export class Team extends AggregateRoot {
       errors.push(...contactValidation.errors);
     }
 
-    if (this.coach) {
-      if (!this.coach.name || this.coach.name.trim().length === 0) {
-        errors.push("El nombre del entrenador es requerido");
+    const coaches = this.coaches && this.coaches.length > 0 ? this.coaches : this.coach ? [this.coach] : [];
+
+    if (coaches.length > 2) {
+      errors.push("Se permiten hasta 2 entrenadores por equipo");
+    }
+
+    coaches.forEach((coach, index) => {
+      if (!coach.name || coach.name.trim().length === 0) {
+        errors.push(`El nombre del entrenador ${index + 1} es requerido`);
       }
 
-      if (this.coach.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.coach.email)) {
-        errors.push("Email del entrenador inválido");
+      if (coach.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(coach.email)) {
+        errors.push(`Email del entrenador ${index + 1} inválido`);
+      }
+    });
+
+    if (coaches.length === 2) {
+      const [first, second] = coaches;
+      if (first.email && second.email && first.email.trim().toLowerCase() === second.email.trim().toLowerCase()) {
+        errors.push("Los entrenadores no pueden tener el mismo email");
       }
     }
 

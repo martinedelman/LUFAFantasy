@@ -33,6 +33,13 @@ const TeamSchema = new Schema(
     },
     division: { type: Schema.Types.ObjectId, ref: "Division", required: true },
     coach: { type: CoachSchema },
+    coaches: {
+      type: [CoachSchema],
+      validate: {
+        validator: (value: unknown[]) => !value || value.length <= 2,
+        message: "Se permiten hasta 2 entrenadores",
+      },
+    },
     players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
     contact: { type: ContactInfoSchema, required: true },
     registrationDate: { type: Date, required: true },

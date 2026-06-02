@@ -31,12 +31,20 @@ export default function CreateTeamPage() {
       phone: "",
       address: "",
     },
-    coach: {
-      name: "",
-      email: "",
-      phone: "",
-      experience: "",
-    },
+    coaches: [
+      {
+        name: "",
+        email: "",
+        phone: "",
+        experience: "",
+      },
+      {
+        name: "",
+        email: "",
+        phone: "",
+        experience: "",
+      },
+    ],
     registrationDate: new Date().toISOString().split("T")[0],
     status: "active",
   });
@@ -79,6 +87,18 @@ export default function CreateTeamPage() {
     }
   };
 
+  const handleCoachChange = (index: number, field: "name" | "email" | "phone" | "experience", value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      coaches: prev.coaches.map((coach, coachIndex) => (coachIndex === index ? { ...coach, [field]: value } : coach)),
+    }));
+  };
+
+  const toNullable = (value: string) => {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -87,7 +107,17 @@ export default function CreateTeamPage() {
       const res = await fetch("/api/teams", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          coaches: form.coaches
+            .map((coach) => ({
+              name: coach.name.trim(),
+              email: toNullable(coach.email),
+              phone: toNullable(coach.phone),
+              experience: toNullable(coach.experience),
+            }))
+            .filter((coach) => coach.name),
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -264,63 +294,79 @@ export default function CreateTeamPage() {
                 </div>
               </div>
 
-              {/* Información del Entrenador */}
+              {/* Información de Entrenadores */}
               <div className="bg-gray-50 p-6 rounded-lg">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Información del Entrenador</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="coach.name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre del Entrenador
-                    </label>
-                    <input
-                      id="coach.name"
-                      name="coach.name"
-                      type="text"
-                      value={form.coach.name}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="coach.email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email del Entrenador
-                    </label>
-                    <input
-                      id="coach.email"
-                      name="coach.email"
-                      type="email"
-                      value={form.coach.email}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="coach.phone" className="block text-sm font-medium text-gray-700 mb-1">
-                      Teléfono del Entrenador
-                    </label>
-                    <input
-                      id="coach.phone"
-                      name="coach.phone"
-                      type="tel"
-                      value={form.coach.phone}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="coach.experience" className="block text-sm font-medium text-gray-700 mb-1">
-                      Experiencia
-                    </label>
-                    <input
-                      id="coach.experience"
-                      name="coach.experience"
-                      type="text"
-                      value={form.coach.experience}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Ej: 5 años"
-                    />
-                  </div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Entrenadores (hasta 2)</h2>
+                <div className="grid grid-cols-1 gap-6">
+                  {[0, 1].map((coachIndex) => (
+                    <div
+                      key={coachIndex}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border border-gray-200 p-4"
+                    >
+                      <div className="md:col-span-2 text-sm font-medium text-gray-700">Entrenador {coachIndex + 1}</div>
+                      <div>
+                        <label
+                          htmlFor={`coaches.${coachIndex}.name`}
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          Nombre del Entrenador
+                        </label>
+                        <input
+                          id={`coaches.${coachIndex}.name`}
+                          type="text"
+                          value={form.coaches[coachIndex].name}
+                          onChange={(event) => handleCoachChange(coachIndex, "name", event.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor={`coaches.${coachIndex}.email`}
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          Email del Entrenador
+                        </label>
+                        <input
+                          id={`coaches.${coachIndex}.email`}
+                          type="email"
+                          value={form.coaches[coachIndex].email}
+                          onChange={(event) => handleCoachChange(coachIndex, "email", event.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor={`coaches.${coachIndex}.phone`}
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          Teléfono del Entrenador
+                        </label>
+                        <input
+                          id={`coaches.${coachIndex}.phone`}
+                          type="tel"
+                          value={form.coaches[coachIndex].phone}
+                          onChange={(event) => handleCoachChange(coachIndex, "phone", event.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor={`coaches.${coachIndex}.experience`}
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          Experiencia
+                        </label>
+                        <input
+                          id={`coaches.${coachIndex}.experience`}
+                          type="text"
+                          value={form.coaches[coachIndex].experience}
+                          onChange={(event) => handleCoachChange(coachIndex, "experience", event.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Ej: 5 años"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

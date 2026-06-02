@@ -8,4 +8,11 @@ export interface TeamSummaryResponseDto {
     primary: string;
     secondary?: string;
   };
+  coaches?: Array<{
+    name: string;
+    email?: string;
+    phone?: string;
+    experience?: string;
+    certifications?: string[];
+  }>;
 }

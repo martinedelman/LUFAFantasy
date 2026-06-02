@@ -55,6 +55,13 @@ interface Team {
     experience: string;
     certifications: string[];
   };
+  coaches?: Array<{
+    name: string;
+    email?: string;
+    phone?: string;
+    experience?: string;
+    certifications?: string[];
+  }>;
   players: Player[];
   contact?: {
     email: string;
@@ -353,7 +360,9 @@ export default function TeamViewerPage() {
     !!team &&
     (isAdmin ||
       userEmail === (team.contact?.email || "").trim().toLowerCase() ||
-      userEmail === (team.coach?.email || "").trim().toLowerCase());
+      (team.coaches || (team.coach ? [team.coach] : [])).some(
+        (coach) => userEmail === (coach.email || "").trim().toLowerCase(),
+      ));
 
   const fetchPlayers = useCallback(async () => {
     try {
@@ -601,6 +610,7 @@ export default function TeamViewerPage() {
   }
 
   const hasHeaderImage = Boolean(team.backgroundImage);
+  const teamCoaches = team.coaches && team.coaches.length > 0 ? team.coaches : team.coach ? [team.coach] : [];
   const now = Date.now();
   const upcomingGames = [...teamGames]
     .filter((game) => game.status !== "completed" && new Date(game.scheduledDate).getTime() >= now)
@@ -861,41 +871,49 @@ export default function TeamViewerPage() {
                   </div>
 
                   {/* Coach Information */}
-                  {team.coach && isAdmin && (
+                  {teamCoaches.length > 0 && isAdmin && (
                     <div className="bg-gray-50 rounded-lg p-6">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Entrenador</h3>
-                      <dl className="space-y-3">
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Nombre</dt>
-                          <dd className="text-sm text-gray-900">{team.coach.name}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Email</dt>
-                          <dd className="text-sm text-gray-900">
-                            <a href={`mailto:${team.coach.email}`} className="text-green-600 hover:text-green-800">
-                              {team.coach.email}
-                            </a>
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Teléfono</dt>
-                          <dd className="text-sm text-gray-900">
-                            <a href={`tel:${team.coach.phone}`} className="text-green-600 hover:text-green-800">
-                              {team.coach.phone}
-                            </a>
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-gray-500">Experiencia</dt>
-                          <dd className="text-sm text-gray-900">{team.coach.experience || "No especificada"}</dd>
-                        </div>
-                        {team.coach.certifications && team.coach.certifications.length > 0 && (
-                          <div>
-                            <dt className="text-sm font-medium text-gray-500">Certificaciones</dt>
-                            <dd className="text-sm text-gray-900">{team.coach.certifications.join(", ")}</dd>
-                          </div>
-                        )}
-                      </dl>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Entrenadores</h3>
+                      <div className="space-y-6">
+                        {teamCoaches.map((coach, index) => (
+                          <dl key={`${coach.email || coach.name}-${index}`} className="space-y-3">
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Nombre</dt>
+                              <dd className="text-sm text-gray-900">{coach.name}</dd>
+                            </div>
+                            {coach.email && (
+                              <div>
+                                <dt className="text-sm font-medium text-gray-500">Email</dt>
+                                <dd className="text-sm text-gray-900">
+                                  <a href={`mailto:${coach.email}`} className="text-green-600 hover:text-green-800">
+                                    {coach.email}
+                                  </a>
+                                </dd>
+                              </div>
+                            )}
+                            {coach.phone && (
+                              <div>
+                                <dt className="text-sm font-medium text-gray-500">Teléfono</dt>
+                                <dd className="text-sm text-gray-900">
+                                  <a href={`tel:${coach.phone}`} className="text-green-600 hover:text-green-800">
+                                    {coach.phone}
+                                  </a>
+                                </dd>
+                              </div>
+                            )}
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Experiencia</dt>
+                              <dd className="text-sm text-gray-900">{coach.experience || "No especificada"}</dd>
+                            </div>
+                            {coach.certifications && coach.certifications.length > 0 && (
+                              <div>
+                                <dt className="text-sm font-medium text-gray-500">Certificaciones</dt>
+                                <dd className="text-sm text-gray-900">{coach.certifications.join(", ")}</dd>
+                              </div>
+                            )}
+                          </dl>
+                        ))}
+                      </div>
                     </div>
                   )}
 

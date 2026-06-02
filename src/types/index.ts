@@ -82,6 +82,7 @@ export interface Team {
   };
   division: string; // Referencia a Division
   coach?: Coach;
+  coaches?: Coach[];
   players: string[]; // Referencias a Player
   contact: ContactInfo;
   registrationDate: Date;

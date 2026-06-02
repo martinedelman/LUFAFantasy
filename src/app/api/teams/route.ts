@@ -150,6 +150,8 @@ export async function POST(request: NextRequest) {
       colors: body.colors,
       division: body.division,
       contact: sanitizeContactForService(body.contact),
+      coach: body.coach,
+      coaches: body.coaches,
       shortName: body.shortName,
       logo: body.logo,
       backgroundImage: body.backgroundImage,
