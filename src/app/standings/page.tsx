@@ -266,8 +266,8 @@ export default function StandingsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Filters */}
       <FilterAccordion className="mb-6 overflow-hidden rounded-lg bg-white shadow-sm" contentClassName="px-6 pb-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
+          <div className="lg:col-span-5">
             <label htmlFor="tournament" className="block text-sm font-medium text-gray-700">
               Torneo
             </label>
@@ -294,7 +294,7 @@ export default function StandingsPage() {
             </select>
           </div>
 
-          <div>
+          <div className="lg:col-span-5">
             <label htmlFor="division" className="block text-sm font-medium text-gray-700">
               División
             </label>
@@ -315,9 +315,7 @@ export default function StandingsPage() {
             </select>
           </div>
 
-          <div className="lg:col-span-2" />
-
-          <div className="flex items-end">
+          <div className="flex items-end lg:col-span-2">
             <button
               onClick={() => {
                 resetCachedFilters();
