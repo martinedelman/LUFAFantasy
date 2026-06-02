@@ -497,7 +497,9 @@ export default function TeamViewerPage() {
       mixto: "Mixto",
     };
 
-    return game.division.category ? categoryLabel[game.division.category] || game.division.category : game.division.name || "División";
+    return game.division.category
+      ? categoryLabel[game.division.category] || game.division.category
+      : game.division.name || "División";
   };
 
   const renderGameCard = (game: TeamGame) => (
@@ -823,50 +825,26 @@ export default function TeamViewerPage() {
                     <h3 className="text-lg font-medium text-gray-900 mb-4">Detalles del Equipo</h3>
                     <dl className="space-y-3">
                       <div>
-                        <dt className="text-sm font-medium text-gray-500">Nombre completo</dt>
+                        <dt className="text-sm font-medium text-gray-500">Nombre</dt>
                         <dd className="text-sm text-gray-900">{team.name}</dd>
                       </div>
                       <div>
-                        <dt className="text-sm font-medium text-gray-500">Nombre corto</dt>
-                        <dd className="text-sm text-gray-900">{team.shortName || "No definido"}</dd>
-                      </div>
-                      <div>
                         <dt className="text-sm font-medium text-gray-500">División</dt>
-                        <dd className="text-sm text-gray-900">
-                          {team.division.name} - {team.division.category}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-medium text-gray-500">Torneo</dt>
-                        <dd className="text-sm text-gray-900">
-                          {team.division.tournament?.name} {team.division.tournament?.year}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-medium text-gray-500">Fecha de registro</dt>
-                        <dd className="text-sm text-gray-900">
-                          {new Date(team.registrationDate).toLocaleDateString("es-ES", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </dd>
+                        <dd className="text-sm text-gray-900">{team.division.name}</dd>
                       </div>
                       <div>
                         <dt className="text-sm font-medium text-gray-500">Colores</dt>
-                        <dd className="flex items-center space-x-2">
+                        <dd className="flex items-center">
                           <div
                             className="w-6 h-6 rounded border border-gray-300"
                             style={{ backgroundColor: team.colors.primary }}
                           ></div>
-                          <span className="text-sm text-gray-900">Primario</span>
                           {team.colors.secondary && (
                             <>
                               <div
                                 className="w-6 h-6 rounded border border-gray-300 ml-4"
                                 style={{ backgroundColor: team.colors.secondary }}
                               ></div>
-                              <span className="text-sm text-gray-900">Secundario</span>
                             </>
                           )}
                         </dd>
@@ -1127,9 +1105,7 @@ export default function TeamViewerPage() {
                 <section>
                   <div className="mb-4">
                     <h3 className="text-lg font-medium text-gray-900">Próximos partidos</h3>
-                    <p className="mt-1 text-sm text-gray-700">
-                      Partidos programados o en curso para este equipo.
-                    </p>
+                    <p className="mt-1 text-sm text-gray-700">Partidos programados o en curso para este equipo.</p>
                   </div>
 
                   {upcomingGames.length > 0 ? (
@@ -1147,9 +1123,7 @@ export default function TeamViewerPage() {
                 <section>
                   <div className="mb-4">
                     <h3 className="text-lg font-medium text-gray-900">Historial de partidos</h3>
-                    <p className="mt-1 text-sm text-gray-700">
-                      Partidos anteriores y resultados registrados.
-                    </p>
+                    <p className="mt-1 text-sm text-gray-700">Partidos anteriores y resultados registrados.</p>
                   </div>
 
                   {previousGames.length > 0 ? (

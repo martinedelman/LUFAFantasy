@@ -100,6 +100,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const body = (await request.json()) as UpdateTeamRequestDto;
 
+    const isChangingTeamMedia =
+      (typeof body.logo === "string" && body.logo !== (team.logo || "")) ||
+      (typeof body.backgroundImage === "string" && body.backgroundImage !== (team.backgroundImage || ""));
+
+    if (user.role !== "admin" && isChangingTeamMedia) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo administradores pueden modificar fotos de equipos",
+        },
+        { status: 403 },
+      );
+    }
+
     const updatedTeam = await teamService.updateTeam(id, {
       name: body.name,
       colors: body.colors,

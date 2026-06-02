@@ -49,6 +49,7 @@ export default function EditTeamPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [teamEmails, setTeamEmails] = useState({ contact: "", coach: "" });
   const userEmail = user?.email.trim().toLowerCase();
+  const canManageTeamPhotos = user?.role === "admin";
   const canEdit =
     !!userEmail &&
     (user?.role === "admin" ||
@@ -420,15 +421,19 @@ export default function EditTeamPage() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Información Adicional</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <ImageUploader
-                      label="Logo del Equipo"
-                      assetType="team_logo"
-                      value={form.logo}
-                      onUploaded={(url) => setForm((prev) => ({ ...prev, logo: url }))}
-                      disabled={loading}
-                      ownerType="team"
-                      ownerId={teamId}
-                    />
+                    {canManageTeamPhotos ? (
+                      <ImageUploader
+                        label="Logo del Equipo"
+                        assetType="team_logo"
+                        value={form.logo}
+                        onUploaded={(url) => setForm((prev) => ({ ...prev, logo: url }))}
+                        disabled={loading}
+                        ownerType="team"
+                        ownerId={teamId}
+                      />
+                    ) : (
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Logo del Equipo</label>
+                    )}
                     <input
                       id="logo"
                       name="logo"
@@ -440,15 +445,19 @@ export default function EditTeamPage() {
                     />
                   </div>
                   <div>
-                    <ImageUploader
-                      label="Imagen de Fondo del Equipo"
-                      assetType="team_background"
-                      value={form.backgroundImage}
-                      onUploaded={(url) => setForm((prev) => ({ ...prev, backgroundImage: url }))}
-                      disabled={loading}
-                      ownerType="team"
-                      ownerId={teamId}
-                    />
+                    {canManageTeamPhotos ? (
+                      <ImageUploader
+                        label="Imagen de Fondo del Equipo"
+                        assetType="team_background"
+                        value={form.backgroundImage}
+                        onUploaded={(url) => setForm((prev) => ({ ...prev, backgroundImage: url }))}
+                        disabled={loading}
+                        ownerType="team"
+                        ownerId={teamId}
+                      />
+                    ) : (
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Imagen de Fondo del Equipo</label>
+                    )}
                     <input
                       id="backgroundImage"
                       name="backgroundImage"
@@ -459,6 +468,11 @@ export default function EditTeamPage() {
                       placeholder="URL generada automáticamente"
                     />
                   </div>
+                  {!canManageTeamPhotos && (
+                    <div className="md:col-span-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                      Solo usuarios con rol Admin pueden modificar las fotos del equipo.
+                    </div>
+                  )}
                   <div>
                     <label htmlFor="registrationDate" className="block text-sm font-medium text-gray-700 mb-1">
                       Fecha de Registro

@@ -63,6 +63,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (user.role !== "admin") {
+      if (assetType === "team_logo" || assetType === "team_background") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "No autorizado. Solo administradores pueden modificar fotos de equipos",
+          },
+          { status: 403 },
+        );
+      }
+
       const userEmail = normalizeEmail(user.email);
       let canUpload = false;
       let allowedCurrentUrl = "";
@@ -76,18 +86,6 @@ export async function POST(request: NextRequest) {
         const player = await playerService.getPlayerById(ownerId);
         canUpload = userEmail === normalizeEmail(player?.email);
         allowedCurrentUrl = player?.profilePicture || "";
-      }
-
-      if (
-        (assetType === "team_logo" || assetType === "team_background") &&
-        ownerType === "team" &&
-        typeof ownerId === "string" &&
-        ownerId.trim()
-      ) {
-        const team = await teamService.getTeamById(ownerId);
-        canUpload =
-          userEmail === normalizeEmail(team?.contact?.email) || userEmail === normalizeEmail(team?.coach?.email);
-        allowedCurrentUrl = assetType === "team_logo" ? team?.logo || "" : team?.backgroundImage || "";
       }
 
       if (typeof currentUrl === "string" && currentUrl.trim() && currentUrl !== allowedCurrentUrl) {
