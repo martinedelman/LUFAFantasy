@@ -123,6 +123,7 @@ interface TeamStats {
     rushingYardsAllowed: number;
     touchdownsAllowed: number;
     interceptions: number;
+    pickSix: number;
     fumbleRecoveries: number;
     sacks: number;
     safeties: number;
@@ -236,6 +237,7 @@ const emptyTeamStats = (team: Team): TeamStats => ({
     rushingYardsAllowed: 0,
     touchdownsAllowed: 0,
     interceptions: 0,
+    pickSix: 0,
     fumbleRecoveries: 0,
     sacks: 0,
     safeties: 0,
@@ -308,6 +310,10 @@ const deriveTeamStatsFromGames = (team: Team, games: TeamGame[]): TeamStats => {
         if (event.type === "field_goal") stats.offensiveStats.fieldGoals += 1;
         if (event.type === "first_down") stats.offensiveStats.firstDowns += 1;
         if (event.type === "interception") stats.defensiveStats.interceptions += 1;
+        if (event.type === "pick_six") {
+          stats.defensiveStats.pickSix += 1;
+          stats.defensiveStats.interceptions += 1;
+        }
         if (event.type === "sack") stats.defensiveStats.sacks += 1;
         if (event.type === "safety") stats.defensiveStats.safeties += 1;
       } else if (event.type === "touchdown") {
@@ -1264,6 +1270,10 @@ export default function TeamViewerPage() {
                           <div>
                             <p className="text-sm text-gray-500">Intercepciones</p>
                             <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.interceptions}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Pick Six</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.pickSix}</p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Sacks</p>
