@@ -46,10 +46,9 @@ interface TournamentFormData {
     };
   };
   prizes: Array<{
-    position: number;
     description: string;
+    condition: string;
     amount: number;
-    trophy: string;
   }>;
   divisions: string[];
   participatingTeams: string[];
@@ -149,11 +148,10 @@ export default function EditTournamentPage() {
           },
           prizes:
             tournament.prizes?.map(
-              (prize: { position: number; description: string; amount?: number; trophy?: string }) => ({
-                position: prize.position,
+              (prize: { description: string; condition?: string; amount?: number; position?: number }) => ({
                 description: prize.description,
+                condition: prize.condition ?? (prize.position ? `${prize.position}° lugar` : ""),
                 amount: prize.amount ?? 0,
-                trophy: prize.trophy ?? "",
               }),
             ) ?? [],
           divisions: tournament.divisions?.map((division: { _id: string }) => division._id) ?? [],
@@ -243,6 +241,29 @@ export default function EditTournamentPage() {
           [rule]: value,
         },
       },
+    }));
+  };
+
+  const handlePrizeChange = (index: number, field: string, value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      prizes: prev.prizes.map((prize, i) =>
+        i === index ? { ...prize, [field]: field === "amount" ? Number(value) : value } : prize,
+      ),
+    }));
+  };
+
+  const addPrize = () => {
+    setFormData((prev) => ({
+      ...prev,
+      prizes: [...prev.prizes, { description: "", condition: "", amount: 0 }],
+    }));
+  };
+
+  const removePrize = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      prizes: prev.prizes.filter((_, i) => i !== index),
     }));
   };
 
@@ -549,7 +570,7 @@ export default function EditTournamentPage() {
               </div>
               <div>
                 <label htmlFor="quarters" className="block text-sm font-medium text-gray-700 mb-2">
-                  Número de Cuartos
+                  Cantidad de tiempos
                 </label>
                 <input
                   id="quarters"
@@ -680,6 +701,76 @@ export default function EditTournamentPage() {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Premios</h2>
+              <button
+                type="button"
+                onClick={addPrize}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors"
+              >
+                + Agregar Premio
+              </button>
+            </div>
+
+            {formData.prizes.length === 0 ? (
+              <p className="text-sm text-gray-500">Aún no hay premios definidos para este torneo.</p>
+            ) : (
+              <div className="space-y-4">
+                {formData.prizes.map((prize, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-gray-200 rounded-lg"
+                  >
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Premio</label>
+                      <input
+                        type="text"
+                        value={prize.description}
+                        onChange={(e) => handlePrizeChange(index, "description", e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        placeholder="Ej: Medalla, entrada, beca"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Condición</label>
+                      <input
+                        type="text"
+                        value={prize.condition}
+                        onChange={(e) => handlePrizeChange(index, "condition", e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        placeholder="Ej: Ganar final, MVP, Fair Play"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Premio ($)</label>
+                      <div className="flex space-x-2">
+                        <input
+                          type="number"
+                          min="0"
+                          value={prize.amount}
+                          onChange={(e) => handlePrizeChange(index, "amount", e.target.value)}
+                          className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+                          placeholder="0"
+                        />
+                        {formData.prizes.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removePrize(index)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-md text-sm transition-colors"
+                            title="Eliminar premio"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">

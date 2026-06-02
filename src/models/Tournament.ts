@@ -21,10 +21,9 @@ const TournamentRulesSchema = new Schema<TournamentRules>({
 });
 
 const PrizeSchema = new Schema<Prize>({
-  position: { type: Number, required: true },
   description: { type: String, required: true },
+  condition: { type: String, required: true },
   amount: { type: Number },
-  trophy: { type: String },
 });
 
 const TournamentSchema = new Schema<Tournament>(

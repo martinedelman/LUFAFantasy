@@ -45,10 +45,9 @@ interface TournamentFormData {
     };
   };
   prizes: Array<{
-    position: number;
     description: string;
+    condition: string;
     amount: number;
-    trophy: string;
   }>;
   divisions: string[];
   participatingTeams: string[];
@@ -90,11 +89,7 @@ export default function NewTournamentPage() {
         fieldGoal: 3,
       },
     },
-    prizes: [
-      { position: 1, description: "Campeón", amount: 10000, trophy: "Copa de Oro" },
-      { position: 2, description: "Subcampeón", amount: 5000, trophy: "Copa de Plata" },
-      { position: 3, description: "Tercer Lugar", amount: 2500, trophy: "Copa de Bronce" },
-    ],
+    prizes: [{ description: "", condition: "", amount: 0 }],
     divisions: [],
     participatingTeams: [],
   });
@@ -263,7 +258,7 @@ export default function NewTournamentPage() {
     setFormData((prev) => ({
       ...prev,
       prizes: prev.prizes.map((prize, i) =>
-        i === index ? { ...prize, [field]: field === "amount" || field === "position" ? Number(value) : value } : prize,
+        i === index ? { ...prize, [field]: field === "amount" ? Number(value) : value } : prize,
       ),
     }));
   };
@@ -271,7 +266,7 @@ export default function NewTournamentPage() {
   const addPrize = () => {
     setFormData((prev) => ({
       ...prev,
-      prizes: [...prev.prizes, { position: prev.prizes.length + 1, description: "", amount: 0, trophy: "" }],
+      prizes: [...prev.prizes, { description: "", condition: "", amount: 0 }],
     }));
   };
 
@@ -533,7 +528,7 @@ export default function NewTournamentPage() {
 
               <div>
                 <label htmlFor="quarters" className="block text-sm font-medium text-gray-700 mb-2">
-                  Número de Cuartos
+                  Cantidad de tiempos
                 </label>
                 <input
                   type="number"
@@ -695,47 +690,38 @@ export default function NewTournamentPage() {
               {formData.prizes.map((prize, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 rounded-lg"
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-gray-200 rounded-lg"
                 >
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Posición</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={prize.position}
-                      onChange={(e) => handlePrizeChange(index, "position", e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Premio</label>
                     <input
                       type="text"
                       value={prize.description}
                       onChange={(e) => handlePrizeChange(index, "description", e.target.value)}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Ej: Campeón"
+                      placeholder="Ej: Medalla, entrada, beca"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Condición</label>
+                    <input
+                      type="text"
+                      value={prize.condition}
+                      onChange={(e) => handlePrizeChange(index, "condition", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Ej: Ganar final, MVP, Fair Play"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Premio ($)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={prize.amount}
-                      onChange={(e) => handlePrizeChange(index, "amount", e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Trofeo</label>
                     <div className="flex space-x-2">
                       <input
-                        type="text"
-                        value={prize.trophy}
-                        onChange={(e) => handlePrizeChange(index, "trophy", e.target.value)}
+                        type="number"
+                        min="0"
+                        value={prize.amount}
+                        onChange={(e) => handlePrizeChange(index, "amount", e.target.value)}
                         className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Ej: Copa de Oro"
+                        placeholder="0"
                       />
                       {formData.prizes.length > 1 && (
                         <button

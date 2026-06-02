@@ -53,10 +53,9 @@ export interface ScoringRules {
 }
 
 export interface Prize {
-  position: number;
   description: string;
+  condition: string;
   amount?: number;
-  trophy?: string;
 }
 
 export interface Division {

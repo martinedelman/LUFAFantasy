@@ -36,10 +36,9 @@ interface Tournament {
     };
   };
   prizes: Array<{
-    position: number;
     description: string;
-    amount: number;
-    trophy: string;
+    condition?: string;
+    amount?: number;
   }>;
   divisions?: Array<{
     _id: string;
@@ -131,6 +130,8 @@ export default function TournamentDetailPage() {
   const formatDivisionCategory = (category: string) => {
     return category.charAt(0).toUpperCase() + category.slice(1);
   };
+
+  const totalPrizeAmount = tournament?.prizes.reduce((total, prize) => total + (prize.amount ?? 0), 0) ?? 0;
 
   const getDivisionCapacity = (division: NonNullable<Tournament["divisions"]>[number]) => {
     const registeredTeams = division.teams?.length || 0;
@@ -292,20 +293,20 @@ export default function TournamentDetailPage() {
                     {tournament.rules.scoringRules.touchdown} pts
                   </p>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Extra Point (1 yd)</h3>
+                {/* <div>
+                  <h3 className="text-sm font-medium text-gray-500">Extra Point (2 yd)</h3>
                   <p className="mt-1 text-lg font-semibold text-gray-900">
                     {tournament.rules.scoringRules.extraPoint1Yard} pts
                   </p>
-                </div>
+                </div> */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Extra Point (5 yd)</h3>
+                  <h3 className="text-sm font-medium text-gray-500">Puntra extra (5 yd)</h3>
                   <p className="mt-1 text-lg font-semibold text-gray-900">
                     {tournament.rules.scoringRules.extraPoint5Yard} pts
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Extra Point (10 yd)</h3>
+                  <h3 className="text-sm font-medium text-gray-500">Punto extra (10 yd)</h3>
                   <p className="mt-1 text-lg font-semibold text-gray-900">
                     {tournament.rules.scoringRules.extraPoint10Yard} pts
                   </p>
@@ -314,12 +315,12 @@ export default function TournamentDetailPage() {
                   <h3 className="text-sm font-medium text-gray-500">Safety</h3>
                   <p className="mt-1 text-lg font-semibold text-gray-900">{tournament.rules.scoringRules.safety} pts</p>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Field Goal</h3>
+                {/* <div>
+                  <h3 className="text-sm font-medium text-gray-500">Gol de Campo</h3>
                   <p className="mt-1 text-lg font-semibold text-gray-900">
                     {tournament.rules.scoringRules.fieldGoal} pts
                   </p>
-                </div>
+                </div> */}
               </div>
 
               {tournament.rules.overtimeRules && (
@@ -422,68 +423,23 @@ export default function TournamentDetailPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">🏆 Premios</h2>
               <div className="space-y-4">
-                {tournament.prizes.map((prize) => (
-                  <div key={prize.position} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                {tournament.prizes.length === 0 && <p className="text-sm text-gray-500">No hay premios definidos.</p>}
+                {tournament.prizes.map((prize, index) => (
+                  <div
+                    key={`${prize.description}-${prize.condition || "sin-condicion"}-${index}`}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg font-bold text-gray-900">{prize.position}°</span>
-                        <span className="text-sm font-medium text-gray-900">{prize.description}</span>
+                      <p className="text-sm font-medium text-gray-900">{prize.description}</p>
+                      {prize.condition && <p className="text-xs text-gray-500">Condición: {prize.condition}</p>}
+                    </div>
+                    {totalPrizeAmount > 0 && (
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-green-600">{formatCurrency(prize.amount ?? 0)}</p>
                       </div>
-                      <p className="text-xs text-gray-500">{prize.trophy}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-green-600">{formatCurrency(prize.amount)}</p>
-                    </div>
+                    )}
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Estadísticas Rápidas */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">📊 Estadísticas</h2>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Divisiones</span>
-                  <span className="text-sm font-medium text-gray-900">{tournament.divisions?.length || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Equipos Registrados</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {tournament.divisions?.reduce((total, div) => total + (div.teams?.length || 0), 0) || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Premio Total</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {formatCurrency(tournament.prizes.reduce((total, prize) => total + prize.amount, 0))}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Acciones Rápidas */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Acciones</h2>
-              <div className="space-y-2">
-                <Link
-                  href={`/tournaments/${tournament._id}/games`}
-                  className="block w-full bg-green-600 hover:bg-green-700 text-white text-center px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Ver Partidos
-                </Link>
-                <Link
-                  href={`/tournaments/${tournament._id}/standings`}
-                  className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Ver Posiciones
-                </Link>
-                <Link
-                  href={`/teams?tournament=${tournament._id}`}
-                  className="block w-full bg-purple-600 hover:bg-purple-700 text-white text-center px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Ver Equipos
-                </Link>
               </div>
             </div>
           </div>

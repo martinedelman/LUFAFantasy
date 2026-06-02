@@ -21,10 +21,9 @@ export interface TournamentRules {
 }
 
 export interface TournamentPrize {
-  position: number;
   description: string;
-  amount: number;
-  trophy: string;
+  condition: string;
+  amount?: number;
 }
 
 /**
