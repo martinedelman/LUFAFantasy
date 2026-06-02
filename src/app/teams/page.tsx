@@ -10,6 +10,7 @@ import Pagination from "@/components/Pagination";
 import Tag from "@/components/Tag";
 import Card from "@/components/Card";
 import { useAuth } from "@/hooks/useAuth";
+import { useCachedState } from "@/hooks/useCachedState";
 
 interface Team {
   _id: string;
@@ -77,15 +78,17 @@ function TeamsPageContent() {
     hasNext: false,
     hasPrev: false,
   });
-  const [filters, setFilters] = useState({
+  const [filters, setFilters, , filtersHydrated] = useCachedState("filters:teams", {
     division: "",
     status: "",
   });
 
   useEffect(() => {
+    if (!tournamentId) return;
+
     setFilters((prev) => ({ ...prev, division: "" }));
     setCurrentPage(1);
-  }, [tournamentId]);
+  }, [setFilters, tournamentId]);
 
   const fetchTeams = useCallback(
     async (page = 1) => {
@@ -122,8 +125,10 @@ function TeamsPageContent() {
     [filters.division, filters.status, tournamentId],
   );
   useEffect(() => {
+    if (!filtersHydrated) return;
+
     fetchTeams(currentPage);
-  }, [currentPage, filters, fetchTeams]);
+  }, [currentPage, fetchTeams, filters, filtersHydrated]);
 
   useEffect(() => {
     const fetchDivisions = async () => {

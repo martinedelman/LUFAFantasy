@@ -5,6 +5,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import Pagination from "@/components/Pagination";
 import Avatar from "@/components/Avatar";
+import { useCachedState } from "@/hooks/useCachedState";
 
 interface PlayerStatistic {
   _id: string;
@@ -96,7 +97,10 @@ interface TeamStatistic {
 }
 
 export default function StatisticsPage() {
-  const [activeTab, setActiveTab] = useState<"players" | "teams">("players");
+  const [activeTab, setActiveTab, , tabHydrated] = useCachedState<"players" | "teams">(
+    "filters:statistics:tab",
+    "players",
+  );
   const [playerStats, setPlayerStats] = useState<PlayerStatistic[]>([]);
   const [teamStats, setTeamStats] = useState<TeamStatistic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +113,7 @@ export default function StatisticsPage() {
     hasNext: false,
     hasPrev: false,
   });
-  const [filters, setFilters] = useState({
+  const [filters, setFilters, , filtersHydrated] = useCachedState("filters:statistics", {
     tournament: "",
     division: "",
     sortBy: "passing.touchdowns",
@@ -185,12 +189,14 @@ export default function StatisticsPage() {
   );
 
   useEffect(() => {
+    if (!tabHydrated || !filtersHydrated) return;
+
     if (activeTab === "players") {
       fetchPlayerStatistics(1);
     } else {
       fetchTeamStatistics(1);
     }
-  }, [activeTab, fetchPlayerStatistics, fetchTeamStatistics]);
+  }, [activeTab, fetchPlayerStatistics, fetchTeamStatistics, filtersHydrated, tabHydrated]);
 
   const handlePageChange = (page: number) => {
     if (activeTab === "players") {

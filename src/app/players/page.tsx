@@ -7,6 +7,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import Card from "@/components/Card";
 import { useAuth } from "@/hooks/useAuth";
+import { useCachedState } from "@/hooks/useCachedState";
 import type { ApiResponseDto, PaginationDto, PlayerResponseDto } from "@/app/DTOs";
 
 interface PlayerListItem extends Omit<PlayerResponseDto, "team"> {
@@ -66,7 +67,7 @@ export default function PlayersPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<PaginationDto>(initialPagination);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters, resetCachedFilters, filtersHydrated] = useCachedState("filters:players", {
     position: "",
     team: "",
     status: "",
@@ -122,11 +123,13 @@ export default function PlayersPage() {
   );
 
   useEffect(() => {
+    if (!filtersHydrated) return;
+
     setPlayers([]);
     setCurrentPage(1);
     setPagination(initialPagination);
     fetchPlayers({ page: 1, append: false });
-  }, [fetchPlayers]);
+  }, [fetchPlayers, filtersHydrated]);
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -310,7 +313,7 @@ export default function PlayersPage() {
           </div>
           <div className="flex items-end">
             <button
-              onClick={() => setFilters({ position: "", team: "", status: "", search: "" })}
+              onClick={() => resetCachedFilters()}
               className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               Limpiar filtros

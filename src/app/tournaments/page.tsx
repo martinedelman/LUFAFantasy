@@ -8,6 +8,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import Pagination from "@/components/Pagination";
 import Tag from "@/components/Tag";
+import { useCachedState } from "@/hooks/useCachedState";
 
 interface Tournament {
   _id: string;
@@ -49,7 +50,7 @@ export default function TournamentsPage() {
     hasNext: false,
     hasPrev: false,
   });
-  const [filters, setFilters] = useState({
+  const [filters, setFilters, , filtersHydrated] = useCachedState("filters:tournaments", {
     status: "",
     year: "",
   });
@@ -108,8 +109,10 @@ export default function TournamentsPage() {
   }, [fetchAvailableYears]);
 
   useEffect(() => {
+    if (!filtersHydrated) return;
+
     fetchTournaments(currentPage);
-  }, [currentPage, fetchTournaments, filters]);
+  }, [currentPage, fetchTournaments, filters, filtersHydrated]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

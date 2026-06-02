@@ -7,6 +7,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import Table, { TableColumn } from "@/components/Table";
 import Avatar from "@/components/Avatar";
+import { useCachedState } from "@/hooks/useCachedState";
 
 interface Standing {
   _id: string;
@@ -59,26 +60,44 @@ export default function StandingsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTournament, setSelectedTournament] = useState("");
-  const [selectedDivision, setSelectedDivision] = useState("");
+  const [filters, setFilters, resetCachedFilters, filtersHydrated] = useCachedState("filters:standings", {
+    tournament: "",
+    division: "",
+  });
+  const selectedTournament = filters.tournament;
+  const selectedDivision = filters.division;
 
-  const fetchTournaments = async () => {
+  const fetchTournaments = useCallback(async () => {
     try {
       const response = await fetch("/api/tournaments?status=active");
       const data = await response.json();
       if (data.success && data.data.length > 0) {
         setTournaments(data.data);
-        const firstTourney = data.data[0];
-        setSelectedTournament(firstTourney._id);
-        // Select first division automatically
-        if (firstTourney.divisions && firstTourney.divisions.length > 0) {
-          setSelectedDivision(firstTourney.divisions[0]._id);
+        const currentTournament = data.data.find((tournament: Tournament) => tournament._id === selectedTournament);
+
+        if (currentTournament) {
+          const currentDivisionExists = currentTournament.divisions?.some(
+            (division: Tournament["divisions"][number]) => division._id === selectedDivision,
+          );
+          if (!currentDivisionExists) {
+            setFilters((prev) => ({
+              ...prev,
+              division: currentTournament.divisions?.[0]?._id || "",
+            }));
+          }
+        } else {
+          const firstTourney = data.data[0];
+          setFilters((prev) => ({
+            ...prev,
+            tournament: firstTourney._id,
+            division: firstTourney.divisions?.[0]?._id || "",
+          }));
         }
       }
     } catch (err) {
       console.error("Error fetching tournaments:", err);
     }
-  };
+  }, [selectedTournament, selectedDivision, setFilters]);
 
   const fetchStandings = useCallback(async () => {
     if (!selectedDivision) {
@@ -109,8 +128,12 @@ export default function StandingsPage() {
   }, [selectedDivision]);
 
   useEffect(() => {
+    if (!filtersHydrated) {
+      return;
+    }
+
     fetchTournaments();
-  }, []);
+  }, [filtersHydrated, fetchTournaments]);
 
   useEffect(() => {
     if (selectedDivision) {
@@ -252,11 +275,13 @@ export default function StandingsPage() {
               id="tournament"
               value={selectedTournament}
               onChange={(e) => {
-                setSelectedTournament(e.target.value);
-                const tourney = tournaments.find((t) => t._id === e.target.value);
-                if (tourney && tourney.divisions.length > 0) {
-                  setSelectedDivision(tourney.divisions[0]._id);
-                }
+                const tournamentId = e.target.value;
+                const tourney = tournaments.find((t) => t._id === tournamentId);
+                setFilters((prev) => ({
+                  ...prev,
+                  tournament: tournamentId,
+                  division: tourney && tourney.divisions.length > 0 ? tourney.divisions[0]._id : "",
+                }));
               }}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
             >
@@ -276,7 +301,7 @@ export default function StandingsPage() {
             <select
               id="division"
               value={selectedDivision}
-              onChange={(e) => setSelectedDivision(e.target.value)}
+              onChange={(e) => setFilters((prev) => ({ ...prev, division: e.target.value }))}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
               disabled={!selectedTournament}
               required
@@ -295,8 +320,7 @@ export default function StandingsPage() {
           <div className="flex items-end">
             <button
               onClick={() => {
-                setSelectedTournament("");
-                setSelectedDivision("");
+                resetCachedFilters();
                 setStandings([]);
               }}
               className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"

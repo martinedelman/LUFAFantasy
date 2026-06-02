@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import { useCachedState } from "@/hooks/useCachedState";
 
 type DivisionOption = {
   _id: string;
@@ -77,7 +78,7 @@ const METRICS: RankingMetric[] = [
 
 export default function RankingsPage() {
   const [divisions, setDivisions] = useState<DivisionOption[]>([]);
-  const [selectedDivision, setSelectedDivision] = useState("");
+  const [selectedDivision, setSelectedDivision, , filtersHydrated] = useCachedState("filters:rankings", "");
   const [rankingsByMetric, setRankingsByMetric] = useState<Record<string, PlayerStatsRow[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,6 +121,8 @@ export default function RankingsPage() {
   }, []);
 
   useEffect(() => {
+    if (!filtersHydrated) return;
+
     const loadData = async () => {
       try {
         setLoading(true);
@@ -135,7 +138,7 @@ export default function RankingsPage() {
     };
 
     loadData();
-  }, [fetchDivisions, fetchRankings, selectedDivision]);
+  }, [fetchDivisions, fetchRankings, filtersHydrated, selectedDivision]);
 
   const selectedDivisionName =
     divisions.find((division) => division._id === selectedDivision)?.name || "Todas las divisiones";

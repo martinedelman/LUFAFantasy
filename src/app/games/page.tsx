@@ -7,6 +7,7 @@ import FilterAccordion from "@/components/FilterAccordion";
 import Pagination from "@/components/Pagination";
 import Avatar from "@/components/Avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { useCachedState } from "@/hooks/useCachedState";
 import Link from "next/link";
 
 type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
@@ -146,30 +147,6 @@ const INITIAL_FILTERS: GameFilters = {
   upcoming: true,
 };
 
-const GAMES_FILTERS_STORAGE_KEY = "lufa:games:filters";
-
-function getInitialFilters(): GameFilters {
-  return INITIAL_FILTERS;
-}
-
-function readStoredFilters(): GameFilters {
-  try {
-    const storedFilters = window.sessionStorage.getItem(GAMES_FILTERS_STORAGE_KEY);
-    if (!storedFilters) return INITIAL_FILTERS;
-
-    const parsedFilters = JSON.parse(storedFilters) as Partial<GameFilters>;
-
-    return {
-      status: typeof parsedFilters.status === "string" ? parsedFilters.status : INITIAL_FILTERS.status,
-      tournament: typeof parsedFilters.tournament === "string" ? parsedFilters.tournament : INITIAL_FILTERS.tournament,
-      division: typeof parsedFilters.division === "string" ? parsedFilters.division : INITIAL_FILTERS.division,
-      upcoming: typeof parsedFilters.upcoming === "boolean" ? parsedFilters.upcoming : INITIAL_FILTERS.upcoming,
-    };
-  } catch {
-    return INITIAL_FILTERS;
-  }
-}
-
 function toDateTimeLocal(isoDate: string) {
   const date = new Date(isoDate);
   const offset = date.getTimezoneOffset();
@@ -226,8 +203,10 @@ export default function GamesPage() {
     hasNext: false,
     hasPrev: false,
   });
-  const [filters, setFilters] = useState<GameFilters>(() => getInitialFilters());
-  const [filtersHydrated, setFiltersHydrated] = useState(false);
+  const [filters, setFilters, resetCachedFilters, filtersHydrated] = useCachedState<GameFilters>(
+    "filters:games",
+    INITIAL_FILTERS,
+  );
 
   const [form, setForm] = useState<GameFormState>(INITIAL_FORM);
   const [showForm, setShowForm] = useState(false);
@@ -349,19 +328,10 @@ export default function GamesPage() {
   }, [fetchJudges]);
 
   useEffect(() => {
-    setFilters(readStoredFilters());
-    setFiltersHydrated(true);
-  }, []);
-
-  useEffect(() => {
     if (!filtersHydrated) return;
 
-    window.sessionStorage.setItem(GAMES_FILTERS_STORAGE_KEY, JSON.stringify(filters));
-  }, [filters, filtersHydrated]);
-
-  useEffect(() => {
     fetchGames(1);
-  }, [fetchGames]);
+  }, [fetchGames, filtersHydrated]);
 
   useEffect(() => {
     fetchTeamsForDivision(form.division);
@@ -1205,7 +1175,10 @@ export default function GamesPage() {
 
           <div className="flex items-end">
             <button
-              onClick={() => setFilters({ ...INITIAL_FILTERS })}
+              onClick={() => {
+                resetCachedFilters();
+                setCurrentPage(1);
+              }}
               className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               Limpiar Filtros
