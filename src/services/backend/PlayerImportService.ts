@@ -1,6 +1,8 @@
 import { google } from "googleapis";
 import { EmergencyContact, Player, PlayerPosition } from "@/entities/Player";
 import { Team } from "@/entities/Team";
+import { PlayerImportMigrationModel } from "@/models";
+import connectToDatabase from "@/lib/mongodb";
 import { PlayerService } from "./PlayerService";
 import { TeamService } from "./TeamService";
 
@@ -50,6 +52,7 @@ export interface PlayerImportResult {
   created: number;
   updated: number;
   skipped: number;
+  alreadyMigrated: number;
   createdPlayers: CreatedPlayerImportResult[];
   errors: PlayerImportError[];
   dryRun: boolean;
@@ -109,9 +112,7 @@ function parseRequiredDate(value: string, fieldName: string) {
     throw new Error(`${fieldName} es requerido`);
   }
 
-  const dayFirstMatch = trimmedValue.match(
-    /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/,
-  );
+  const dayFirstMatch = trimmedValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
   if (dayFirstMatch) {
     const [, day, month, rawYear, hour = "0", minute = "0", second = "0"] = dayFirstMatch;
     const year = rawYear.length === 2 ? `20${rawYear}` : rawYear;
@@ -251,6 +252,12 @@ function getReferenceId(value: unknown) {
   return reference.toString ? reference.toString() : "";
 }
 
+function getSourceKey(row: PlayerImportRow): string {
+  const email = row["Email (a utilizar en usuario de la web de LUFA)"].trim().toLowerCase();
+  const marcaTemporal = row["Marca temporal"].trim();
+  return `${email}::${marcaTemporal}`;
+}
+
 function buildEmergencyContact(row: PlayerImportRow): EmergencyContact | undefined {
   const emergencyContact: EmergencyContact = {
     name: row["Nombre del contacto"].trim() || undefined,
@@ -289,18 +296,47 @@ export class PlayerImportService {
   }
 
   async importRows(rows: PlayerImportRow[], dryRun = false): Promise<PlayerImportResult> {
+    await connectToDatabase();
+
     const result: PlayerImportResult = {
       created: 0,
       updated: 0,
       skipped: 0,
+      alreadyMigrated: 0,
       createdPlayers: [],
       errors: [],
       dryRun,
     };
 
+    // Single query to prefetch all already-migrated sourceKeys → O(1) per lookup
+    const allSourceKeys = rows.map((row) => getSourceKey(row));
+    const migratedRecords = (await PlayerImportMigrationModel.find(
+      { sourceKey: { $in: allSourceKeys } },
+      { sourceKey: 1, _id: 0 },
+    ).lean()) as Array<{ sourceKey: string }>;
+    const migratedKeys = new Set(migratedRecords.map((r) => r.sourceKey));
+
+    // Collect successful migrations to flush in a single insertMany at the end
+    type PendingMigration = {
+      sourceKey: string;
+      email: string;
+      marcaTemporal: string;
+      firstName: string;
+      lastName: string;
+      playerId?: string;
+    };
+    const pendingMigrations: PendingMigration[] = [];
+
     for (const [index, row] of rows.entries()) {
       const rowNumber = index + 2;
       const email = row["Email (a utilizar en usuario de la web de LUFA)"].trim().toLowerCase();
+      const sourceKey = getSourceKey(row);
+
+      // Skip rows already imported successfully in a previous run
+      if (migratedKeys.has(sourceKey)) {
+        result.alreadyMigrated += 1;
+        continue;
+      }
 
       try {
         const payload = await this.mapRowToPayload(row);
@@ -316,22 +352,45 @@ export class PlayerImportService {
           continue;
         }
 
+        let playerId: string | undefined;
         if (existingPlayer?.id) {
           await this.playerService.updatePlayer(existingPlayer.id, payload);
           result.updated += 1;
+          playerId = existingPlayer.id;
         } else {
           const createdPlayer = await this.playerService.createPlayer({ ...payload, status: "active" });
           result.created += 1;
           result.createdPlayers.push(this.toCreatedPlayerResult(payload, rowNumber, createdPlayer.id));
+          playerId = createdPlayer.id;
         }
+
+        // Queue for bulk insert — only after a successful create/update
+        pendingMigrations.push({
+          sourceKey,
+          email,
+          marcaTemporal: row["Marca temporal"].trim(),
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          ...(playerId && { playerId }),
+        });
       } catch (error) {
+        const message = error instanceof Error ? error.message : "Error desconocido";
+        console.error(`[PlayerImportService] Fila ${rowNumber} (${email || "sin email"}): ${message}`);
         result.skipped += 1;
         result.errors.push({
           rowNumber,
           email: email || undefined,
-          message: error instanceof Error ? error.message : "Error desconocido",
+          message,
         });
+        // Do NOT queue for migration — row stays pending for the next cron run
       }
+    }
+
+    // Single bulk insert for all successful migrations.
+    // ordered: false → continues on duplicate key errors (concurrent cron runs),
+    // ignoring already-inserted docs without throwing.
+    if (pendingMigrations.length > 0) {
+      await PlayerImportMigrationModel.insertMany(pendingMigrations, { ordered: false });
     }
 
     return result;
