@@ -143,6 +143,7 @@ export default function ProfilePage() {
                   <dt className="text-sm font-medium text-gray-500">Miembro desde</dt>
                   <dd className="text-sm text-gray-900">
                     {new Date("2025-01-15").toLocaleDateString("es-ES", {
+                      timeZone: "UTC",
                       year: "numeric",
                       month: "long",
                       day: "numeric",

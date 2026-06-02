@@ -279,6 +279,7 @@ export default function PlayerProfilePage() {
     }
 
     return date.toLocaleDateString("es-ES", {
+      timeZone: "UTC",
       year: "numeric",
       month: "long",
       day: "numeric",
