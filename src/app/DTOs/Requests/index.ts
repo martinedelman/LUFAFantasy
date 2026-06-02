@@ -1,4 +1,5 @@
 export type { CreateDivisionRequestDto } from "./CreateDivisionRequestDto";
+export type { CreateJudgeRequestDto } from "./CreateJudgeRequestDto";
 export type { CreateGameRequestDto } from "./CreateGameRequestDto";
 export type { CreatePlayerRequestDto } from "./CreatePlayerRequestDto";
 export type { CreateTeamRequestDto } from "./CreateTeamRequestDto";

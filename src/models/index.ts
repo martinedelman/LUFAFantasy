@@ -12,3 +12,4 @@ export { VenueModel } from "./Venue";
 export { SeasonModel } from "./Season";
 export { UserModel } from "./User";
 export { PlayerImportMigrationModel } from "./PlayerImportMigration";
+export { JudgeModel } from "./Judge";

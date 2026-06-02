@@ -1,8 +1,10 @@
 export type { ApiResponseDto } from "./ApiResponseDto";
+export type { AdminSystemStatsResponseDto } from "./AdminSystemStatsResponseDto";
 export type { DashboardStatsResponseDto } from "./DashboardStatsResponseDto";
 export type { DivisionResponseDto } from "./DivisionResponseDto";
 export type { GameEventResponseDto, GameLiveResponseDto } from "./GameLiveResponseDto";
 export type { GameResponseDto } from "./GameResponseDto";
+export type { JudgeResponseDto } from "./JudgeResponseDto";
 export type { NextGameResponseDto } from "./NextGameResponseDto";
 export type { PaginatedResponseDto } from "./PaginatedResponseDto";
 export type { PaginationDto } from "./PaginationDto";

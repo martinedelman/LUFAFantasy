@@ -12,5 +12,7 @@ export { EmailService } from "./EmailService";
 export { OtpService } from "./OtpService";
 export { DashboardService } from "./DashboardService";
 export { WeeklyDigestEmailService } from "./WeeklyDigestEmailService";
+export { JudgeService } from "./JudgeService";
+export { AdminService } from "./AdminService";
 // Exportar factories desde entities
 export { UserFactory } from "../../entities/factories/UserFactory";

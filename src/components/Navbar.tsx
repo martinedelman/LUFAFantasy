@@ -312,6 +312,15 @@ export default function Navbar() {
                     >
                       Mi Perfil
                     </Link>
+                    {user.role === "admin" && (
+                      <Link
+                        href="/admin"
+                        className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Panel Admin
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         handleSignOut();

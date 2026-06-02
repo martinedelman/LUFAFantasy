@@ -195,6 +195,14 @@ export interface Official {
   certification?: string;
 }
 
+export interface Judge {
+  _id?: string;
+  firstName: string;
+  lastName: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface WeatherConditions {
   temperature?: number;
   humidity?: number;
