@@ -43,6 +43,72 @@ interface TeamCarouselItem {
   };
 }
 
+interface FixedHeroSectionProps {
+  image: string;
+  ariaLabel: string;
+  className?: string;
+  backgroundPosition?: string;
+  mobileBackgroundPosition?: string;
+  children?: React.ReactNode;
+}
+
+function FixedHeroSection({
+  image,
+  ariaLabel,
+  className,
+  backgroundPosition = "center center",
+  mobileBackgroundPosition,
+  children,
+}: FixedHeroSectionProps) {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const updateHeroOffset = () => {
+      const element = sectionRef.current;
+      if (!element) {
+        return;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const maxOffset = Math.max(0, viewportHeight - rect.height);
+      const nextOffset = Math.min(Math.max(-rect.top, 0), maxOffset);
+
+      element.style.setProperty("--hero-offset", `${nextOffset}px`);
+    };
+
+    updateHeroOffset();
+
+    window.addEventListener("scroll", updateHeroOffset, { passive: true });
+    window.addEventListener("resize", updateHeroOffset);
+    window.addEventListener("orientationchange", updateHeroOffset);
+
+    return () => {
+      window.removeEventListener("scroll", updateHeroOffset);
+      window.removeEventListener("resize", updateHeroOffset);
+      window.removeEventListener("orientationchange", updateHeroOffset);
+    };
+  }, []);
+
+  return (
+    <section
+      ref={sectionRef}
+      className={`hero-fixed-section ${className || ""}`}
+      aria-label={ariaLabel}
+      style={
+        {
+          "--hero-background-image": `linear-gradient(to bottom, rgba(10, 10, 10, 0.46), rgba(10, 10, 10, 0.46)), url(${image})`,
+          "--hero-background-position": backgroundPosition,
+          "--hero-background-position-mobile": mobileBackgroundPosition || backgroundPosition,
+        } as React.CSSProperties
+      }
+    >
+      <div className="hero-fixed-section__bg" aria-hidden="true" />
+      {children ? <div className="hero-fixed-section__content">{children}</div> : null}
+    </section>
+  );
+}
+
 export default function Home() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [teams, setTeams] = useState<TeamCarouselItem[]>([]);
@@ -100,13 +166,6 @@ export default function Home() {
       .toUpperCase()
       .slice(0, 2);
   };
-
-  const heroStyle = (image: string): React.CSSProperties => ({
-    backgroundImage: `linear-gradient(to bottom, rgba(10, 10, 10, 0.46), rgba(10, 10, 10, 0.46)), url(${image})`,
-    backgroundPosition: "center",
-    backgroundSize: "cover",
-    backgroundAttachment: "fixed",
-  });
 
   const carouselTeams = teams.length > 0 ? [...teams, ...teams] : [];
 
@@ -178,10 +237,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[rgb(248,250,252)] text-slate-950">
-      <section
-        className="relative flex min-h-[calc(100dvh-70px)] items-center justify-center"
-        aria-label="LUFA Flag"
-        style={heroStyle("/Hero1.JPG")}
+      <FixedHeroSection
+        className="flex min-h-[calc(100dvh-70px)] items-center justify-center"
+        ariaLabel="LUFA Flag"
+        image="/Hero1.JPG"
       >
         <div className="px-4 text-center text-white">
           <p className="text-sm sm:text-base font-semibold tracking-[0.35em] uppercase">Bienvenidos</p>
@@ -195,7 +254,7 @@ export default function Home() {
             ¡Únete a la revolución deportiva!
           </p>
         </div>
-      </section>
+      </FixedHeroSection>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -294,7 +353,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="hero-2 h-[66vh] min-h-[320px]" aria-label="LUFA Flag" />
+      <FixedHeroSection
+        className="h-[66vh] min-h-[320px]"
+        ariaLabel="LUFA Flag"
+        image="/Hero2.JPG"
+        mobileBackgroundPosition="70% center"
+      />
 
       <section className="mx-auto py-12">
         <article className="py-2">
@@ -358,7 +422,7 @@ export default function Home() {
         </article>
       </section>
 
-      <section className="h-[66vh] min-h-[320px]" aria-label="LUFA Flag" style={heroStyle("/Hero3.JPG")} />
+      <FixedHeroSection className="h-[66vh] min-h-[320px]" ariaLabel="LUFA Flag" image="/Hero3.JPG" />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-10">
@@ -423,7 +487,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="h-[66vh] min-h-[320px]" aria-label="LUFA Flag" style={heroStyle("/Hero4.JPG")} />
+      <FixedHeroSection className="h-[66vh] min-h-[320px]" ariaLabel="LUFA Flag" image="/Hero4.JPG" />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-12 cursor-default">

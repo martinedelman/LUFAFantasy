@@ -191,16 +191,41 @@ button {
 }
 
 /* Hero2: shift subject into view on mobile (subject is ~75% from left) */
-.hero-2 {
-  background-image: linear-gradient(to bottom, rgba(30, 30, 30, 0.46), rgba(30, 30, 30, 0.46)), url(/Hero2.JPG);
-  background-position: center;
+.hero-fixed-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-fixed-section__bg {
+  position: absolute;
+  inset: 0;
+  background-image: var(--hero-background-image);
+  background-position: var(--hero-background-position, center center);
   background-size: cover;
+  background-repeat: no-repeat;
   background-attachment: fixed;
 }
 
+.hero-fixed-section__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
 @media (max-width: 639px) {
-  .hero-2 {
-    background-position: 70% center;
+  .hero-fixed-section__bg {
+    background-position: var(--hero-background-position-mobile, var(--hero-background-position, center center));
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  .hero-fixed-section__bg {
+    top: calc(-1 * var(--hero-offset, 0px));
+    bottom: auto;
+    height: 100vh;
+    background-attachment: scroll;
+    transform: translateZ(0);
+    will-change: top;
   }
 }
 
