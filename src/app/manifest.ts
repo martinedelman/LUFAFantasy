@@ -12,9 +12,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#16a34a",
     icons: [
       {
-        src: "/lufa_flag_icon.jpeg",
-        sizes: "225x225",
-        type: "image/jpeg",
+        src: "/icon.png",
+        sizes: "2160x2160",
+        type: "image/png",
       },
     ],
   };

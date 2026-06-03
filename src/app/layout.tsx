@@ -48,17 +48,17 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/lufa_flag_icon.jpeg",
-        type: "image/jpeg",
-        sizes: "225x225",
+        url: "/icon.png",
+        type: "image/png",
+        sizes: "2160x2160",
       },
     ],
-    shortcut: "/lufa_flag_icon.jpeg",
+    shortcut: "/icon.png",
     apple: [
       {
-        url: "/lufa_flag_icon.jpeg",
-        type: "image/jpeg",
-        sizes: "225x225",
+        url: "/apple-icon.png",
+        type: "image/png",
+        sizes: "2160x2160",
       },
     ],
   },
