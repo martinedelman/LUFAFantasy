@@ -22,7 +22,7 @@ export default function CreatePlayerPage() {
     profilePicture: "",
     email: "",
     phone: "",
-    dateOfBirth: "",
+    dateOfBirth: "1900-01-01",
     team: "",
     jerseyNumber: "",
     position: "QB",
