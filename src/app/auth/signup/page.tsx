@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function SignUpPage() {
@@ -172,9 +173,9 @@ export default function SignUpPage() {
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="flex items-center">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Creando cuenta...
+                <div className="flex items-center justify-center gap-2">
+                  <LoadingSpinner size="sm" color="white" />
+                  <span>Creando cuenta...</span>
                 </div>
               ) : (
                 "Crear Cuenta"

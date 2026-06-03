@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Team {
@@ -48,8 +49,7 @@ export default function EditPlayerPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [playerEmail, setPlayerEmail] = useState("");
   const canEdit =
-    !!user &&
-    (user.role === "admin" || user.email.trim().toLowerCase() === playerEmail.trim().toLowerCase());
+    !!user && (user.role === "admin" || user.email.trim().toLowerCase() === playerEmail.trim().toLowerCase());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -154,7 +154,12 @@ export default function EditPlayerPage() {
 
   if (isAuthLoading || loadingData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">Cargando jugador...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">Cargando jugador...</p>
+        </div>
+      </div>
     );
   }
 
@@ -403,11 +408,17 @@ export default function EditPlayerPage() {
             <div className="col-span-2">
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 disabled:opacity-50"
+                className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 disabled={loading}
               >
-                {" "}
-                {loading ? "Guardando..." : "Guardar Cambios"}
+                {loading ? (
+                  <>
+                    <LoadingSpinner size="sm" color="white" />
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  "Guardar Cambios"
+                )}
               </button>
             </div>
           </form>

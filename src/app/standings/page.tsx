@@ -259,7 +259,11 @@ export default function StandingsPage() {
   ];
 
   if (loading && standings.length === 0) {
-    return <LoadingSpinner size="lg" />;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
   }
 
   return (

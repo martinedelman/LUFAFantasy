@@ -341,7 +341,13 @@ export default function Home() {
             <p className="italic">¡Conoce a los protagonistas de la temporada!</p>
           </div>
 
-          {teams.length > 0 ? (
+          {loading ? (
+            <div className="mt-6 rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-8">
+              <div className="flex items-center justify-center">
+                <LoadingSpinner size="lg" />
+              </div>
+            </div>
+          ) : teams.length > 0 ? (
             <div className="mt-6 team-slider-mask select-none">
               <div
                 ref={sliderRef}

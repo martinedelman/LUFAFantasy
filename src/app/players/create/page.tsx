@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
 import ImageUploader from "@/components/ImageUploader";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Team {
   _id: string;
@@ -486,10 +487,17 @@ export default function CreatePlayerPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                   disabled={loading}
                 >
-                  {loading ? "Creando..." : "Crear Jugador"}
+                  {loading ? (
+                    <>
+                      <LoadingSpinner size="sm" color="white" />
+                      <span>Creando...</span>
+                    </>
+                  ) : (
+                    "Crear Jugador"
+                  )}
                 </button>{" "}
               </div>
             </form>
