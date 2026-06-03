@@ -76,7 +76,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       await gameService.completeGame(id);
     }
 
-    invalidateCacheByPrefix("standings");
+    invalidateCacheByPrefix(["standings", "rankings"]);
 
     return NextResponse.json({
       success: true,

@@ -27,7 +27,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       player: body.player,
       points: body.points === undefined || body.points === null ? undefined : Number(body.points),
     });
-    invalidateCacheByPrefix("standings");
+    invalidateCacheByPrefix(["standings", "rankings"]);
 
     return NextResponse.json({
       success: true,

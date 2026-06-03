@@ -14,7 +14,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
 
     const game = await gameService.completeGame(id);
-    invalidateCacheByPrefix("standings");
+    invalidateCacheByPrefix(["standings", "rankings"]);
 
     return NextResponse.json({
       success: true,
