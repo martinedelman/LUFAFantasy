@@ -4,11 +4,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
+import PageHero from "@/components/PageHero";
 import Pagination from "@/components/Pagination";
 import Avatar from "@/components/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useCachedState } from "@/hooks/useCachedState";
 import Link from "next/link";
+
+const gamesHero = {
+  path: "/games",
+  eyebrow: "Calendario competitivo",
+  title: "Partidos",
+};
 
 type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
 
@@ -705,652 +712,656 @@ export default function GamesPage() {
     />
   );
 
-  if (loading && games.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="md:flex md:items-center md:justify-end mb-8">
-        <div className="mt-4 flex md:mt-0 md:ml-4">
-          {canManageGames &&
-            (!showForm ? (
-              <button
-                onClick={openCreateForm}
-                className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+    <>
+      <PageHero {...gamesHero}>
+        <FilterAccordion
+          className="overflow-hidden rounded-lg border border-white/25 bg-white/92 text-slate-900 shadow-[0_18px_44px_rgba(8,27,43,0.28)] backdrop-blur-md"
+          buttonClassName="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-900 sm:px-5"
+          contentClassName="px-4 pb-4 sm:px-5 sm:pb-5"
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div>
+              <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700">
+                Estado
+              </label>
+              <select
+                id="status-filter"
+                value={filters.status}
+                onChange={(e) => handleFilterChange("status", e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm"
               >
-                Programar Partido
-              </button>
-            ) : (
-              <button
-                onClick={closeForm}
-                className="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                Cancelar
-              </button>
-            ))}
-        </div>
-      </div>
-
-      {canManageGames && showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeForm}>
-          <div
-            className="w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-lg bg-white shadow-xl"
-            onClick={(event) => event.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="game-form-title"
-          >
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 id="game-form-title" className="text-lg font-semibold text-gray-900">
-                  {form.id ? "Editar Partido" : "Nuevo Partido"}
-                </h2>
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  className="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Cerrar
-                </button>
-              </div>
-
-              {editingGame && (
-                <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-                  <p className="font-semibold">Información actual</p>
-                  <p className="mt-1">
-                    {getTeamDisplayName(editingGame.homeTeam)} vs {getTeamDisplayName(editingGame.awayTeam)} ·{" "}
-                    {formatDate(editingGame.scheduledDate)} · {formatTime(editingGame.scheduledDate)}
-                  </p>
-                  <p className="mt-1">
-                    {editingGame.venue.name}, {editingGame.venue.address}
-                  </p>
-                </div>
-              )}
-
-              {formError && <ErrorMessage message={formError} />}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="tournament" className="block text-sm font-medium text-gray-700 mb-1">
-                    Torneo
-                  </label>
-                  <select
-                    id="tournament"
-                    value={form.tournament}
-                    onChange={(e) => handleFormChange("tournament", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Seleccionar torneo</option>
-                    {tournaments.map((tournament) => (
-                      <option key={tournament._id} value={tournament._id}>
-                        {tournament.name} ({tournament.year})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
-                    División
-                  </label>
-                  <select
-                    id="division"
-                    value={form.division}
-                    onChange={(e) => handleFormChange("division", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Seleccionar división</option>
-                    {filteredDivisionsForForm.map((division) => (
-                      <option key={division._id} value={division._id}>
-                        {division.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha y hora
-                  </label>
-                  <input
-                    id="scheduledDate"
-                    type="datetime-local"
-                    value={form.scheduledDate}
-                    onChange={(e) => handleFormChange("scheduledDate", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="homeTeam" className="block text-sm font-medium text-gray-700 mb-1">
-                    Equipo local
-                  </label>
-                  <select
-                    id="homeTeam"
-                    value={form.homeTeam}
-                    onChange={(e) => handleFormChange("homeTeam", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">TBD</option>
-                    {teams.map((team) => (
-                      <option key={team._id} value={team._id}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="awayTeam" className="block text-sm font-medium text-gray-700 mb-1">
-                    Equipo visitante
-                  </label>
-                  <select
-                    id="awayTeam"
-                    value={form.awayTeam}
-                    onChange={(e) => handleFormChange("awayTeam", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">TBD</option>
-                    {teams.map((team) => (
-                      <option key={team._id} value={team._id}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                    Estado
-                  </label>
-                  <select
-                    id="status"
-                    value={form.status}
-                    onChange={(e) => handleFormChange("status", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="scheduled">Programado</option>
-                    <option value="in_progress">En Curso</option>
-                    <option value="completed">Completado</option>
-                    <option value="postponed">Pospuesto</option>
-                    <option value="cancelled">Cancelado</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="week" className="block text-sm font-medium text-gray-700 mb-1">
-                    Semana
-                  </label>
-                  <input
-                    id="week"
-                    type="number"
-                    min={1}
-                    value={form.week}
-                    onChange={(e) => handleFormChange("week", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="round" className="block text-sm font-medium text-gray-700 mb-1">
-                    Ronda
-                  </label>
-                  <input
-                    id="round"
-                    type="text"
-                    value={form.round}
-                    onChange={(e) => handleFormChange("round", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Ej. Cuartos de final"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="venueName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Venue (nombre)
-                  </label>
-                  <input
-                    id="venueName"
-                    type="text"
-                    value={form.venueName}
-                    onChange={(e) => handleFormChange("venueName", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="refereeJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
-                    Referee
-                  </label>
-                  <select
-                    id="refereeJudgeId"
-                    value={form.refereeJudgeId}
-                    onChange={(e) => handleFormChange("refereeJudgeId", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Seleccionar juez</option>
-                    {judges.map((judge) => (
-                      <option
-                        key={judge._id}
-                        value={judge._id}
-                        disabled={isJudgeSelectedInAnotherRole(judge._id, "refereeJudgeId")}
-                      >
-                        {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="downJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
-                    Down judge
-                  </label>
-                  <select
-                    id="downJudgeId"
-                    value={form.downJudgeId}
-                    onChange={(e) => handleFormChange("downJudgeId", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Seleccionar juez</option>
-                    {judges.map((judge) => (
-                      <option
-                        key={judge._id}
-                        value={judge._id}
-                        disabled={isJudgeSelectedInAnotherRole(judge._id, "downJudgeId")}
-                      >
-                        {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="sideJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
-                    Side judge
-                  </label>
-                  <select
-                    id="sideJudgeId"
-                    value={form.sideJudgeId}
-                    onChange={(e) => handleFormChange("sideJudgeId", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Seleccionar juez</option>
-                    {judges.map((judge) => (
-                      <option
-                        key={judge._id}
-                        value={judge._id}
-                        disabled={isJudgeSelectedInAnotherRole(judge._id, "sideJudgeId")}
-                      >
-                        {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="tableJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
-                    Juez de mesa
-                  </label>
-                  <select
-                    id="tableJudgeId"
-                    value={form.tableJudgeId}
-                    onChange={(e) => handleFormChange("tableJudgeId", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Seleccionar juez</option>
-                    {judges.map((judge) => (
-                      <option
-                        key={judge._id}
-                        value={judge._id}
-                        disabled={isJudgeSelectedInAnotherRole(judge._id, "tableJudgeId")}
-                      >
-                        {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label htmlFor="venueAddress" className="block text-sm font-medium text-gray-700 mb-1">
-                    Venue (dirección)
-                  </label>
-                  <input
-                    id="venueAddress"
-                    type="text"
-                    value={form.venueAddress}
-                    onChange={(e) => handleFormChange("venueAddress", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-                  Notas
-                </label>
-                <textarea
-                  id="notes"
-                  value={form.notes}
-                  onChange={(e) => handleFormChange("notes", e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
-                />
-              </div>
-
-              {editingGame && editingGame.status === "scheduled" && (
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-sm font-semibold text-amber-900">Walk Over</p>
-                  <p className="mt-1 text-sm text-amber-800">
-                    Marca el partido como WO con resultado automático 14-0. No se asignarán puntos a jugadores.
-                  </p>
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleWalkOver(editingGame, "home")}
-                      disabled={walkOverLoadingGameId === editingGame._id}
-                      className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      WO Local
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleWalkOver(editingGame, "away")}
-                      disabled={walkOverLoadingGameId === editingGame._id}
-                      className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      WO Visitante
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  className="border border-gray-300 bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  {saving ? "Guardando..." : form.id ? "Actualizar Partido" : "Crear Partido"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <FilterAccordion className="mb-6 overflow-hidden rounded-lg bg-white shadow-sm" contentClassName="px-6 pb-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <div>
-            <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700">
-              Estado
-            </label>
-            <select
-              id="status-filter"
-              value={filters.status}
-              onChange={(e) => handleFilterChange("status", e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
-            >
-              <option value="">Todos los estados</option>
-              <option value="scheduled">Programados</option>
-              <option value="in_progress">En Curso</option>
-              <option value="completed">Completados</option>
-              <option value="postponed">Pospuestos</option>
-              <option value="cancelled">Cancelados</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="tournament-filter" className="block text-sm font-medium text-gray-700">
-              Torneo
-            </label>
-            <select
-              id="tournament-filter"
-              value={filters.tournament}
-              onChange={(e) => handleFilterChange("tournament", e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
-            >
-              <option value="">Todos</option>
-              {tournaments.map((tournament) => (
-                <option key={tournament._id} value={tournament._id}>
-                  {tournament.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="division-filter" className="block text-sm font-medium text-gray-700">
-              División
-            </label>
-            <select
-              id="division-filter"
-              value={filters.division}
-              onChange={(e) => handleFilterChange("division", e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
-            >
-              <option value="">Todas</option>
-              {filteredDivisionsForFilter.map((division) => (
-                <option key={division._id} value={division._id}>
-                  {division.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="upcoming-filter" className="block text-sm font-medium text-gray-700">
-              Vista
-            </label>
-            <select
-              id="upcoming-filter"
-              value={filters.upcoming ? "upcoming" : "all"}
-              onChange={(e) => handleFilterChange("upcoming", e.target.value === "upcoming")}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
-            >
-              <option value="all">Todos los partidos</option>
-              <option value="upcoming">Próximos partidos</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button
-              onClick={() => {
-                resetCachedFilters();
-                setCurrentPage(1);
-              }}
-              className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              Limpiar Filtros
-            </button>
-          </div>
-        </div>
-      </FilterAccordion>
-
-      {error && (
-        <div className="mb-6">
-          <ErrorMessage message={error} onRetry={() => fetchGames(currentPage)} />
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {games.map((game) => (
-          <Link
-            key={game._id}
-            href={`/games/${game._id}`}
-            className="relative block overflow-hidden rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6"
-            aria-label={`Ver match ${game.homeTeam?.name || "TBD"} vs ${game.awayTeam?.name || "TBD"}`}
-          >
-            <div className="absolute left-1/2 top-0 z-10 hidden -translate-x-1/2 sm:block">
-              {getStatusBadge(game.status, "top")}
-            </div>
-            <div className="sm:hidden">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-sm text-gray-700 font-medium break-words">{game.venue.name}</div>
-                  <div className="mt-1 text-xs text-gray-500 break-words">{game.venue.address}</div>
-                </div>
-                <div className="-mr-4 flex shrink-0 flex-col items-end gap-1">
-                  <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
-                    {formatDateTimeCompact(game.scheduledDate)}
-                  </div>
-                  {getStatusBadge(game.status, "right")}
-                </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <div className="w-[36%] flex flex-col items-center text-center">
-                  {renderTeamAvatar(game.homeTeam, "sm")}
-                  <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
-                    {game.homeTeam?.name || "TBD"}
-                  </div>
-                </div>
-
-                <div className="w-[28%] text-center">
-                  {game.status === "completed" || game.status === "in_progress" ? (
-                    <div className="text-4xl font-bold text-blue-900 leading-none">
-                      {game.score.home.total}:{game.score.away.total}
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="text-base font-semibold text-gray-500">vs</div>
-                      <div className="text-xs text-gray-400">{formatTime(game.scheduledDate)}</div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="w-[36%] flex flex-col items-center text-center">
-                  {renderTeamAvatar(game.awayTeam, "sm")}
-                  <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
-                    {game.awayTeam?.name || "TBD"}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3 text-xs text-gray-500 text-center">
-                {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
-                {game.round ? ` · ${game.round}` : ""}
-              </div>
+                <option value="">Todos los estados</option>
+                <option value="scheduled">Programados</option>
+                <option value="in_progress">En Curso</option>
+                <option value="completed">Completados</option>
+                <option value="postponed">Pospuestos</option>
+                <option value="cancelled">Cancelados</option>
+              </select>
             </div>
 
-            <div className="hidden sm:block">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex-1">
-                  <div className="mb-4 flex items-start justify-between gap-4">
+            <div>
+              <label htmlFor="tournament-filter" className="block text-sm font-medium text-gray-700">
+                Torneo
+              </label>
+              <select
+                id="tournament-filter"
+                value={filters.tournament}
+                onChange={(e) => handleFilterChange("tournament", e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm"
+              >
+                <option value="">Todos</option>
+                {tournaments.map((tournament) => (
+                  <option key={tournament._id} value={tournament._id}>
+                    {tournament.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="division-filter" className="block text-sm font-medium text-gray-700">
+                División
+              </label>
+              <select
+                id="division-filter"
+                value={filters.division}
+                onChange={(e) => handleFilterChange("division", e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm"
+              >
+                <option value="">Todas</option>
+                {filteredDivisionsForFilter.map((division) => (
+                  <option key={division._id} value={division._id}>
+                    {division.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="upcoming-filter" className="block text-sm font-medium text-gray-700">
+                Vista
+              </label>
+              <select
+                id="upcoming-filter"
+                value={filters.upcoming ? "upcoming" : "all"}
+                onChange={(e) => handleFilterChange("upcoming", e.target.value === "upcoming")}
+                className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm"
+              >
+                <option value="all">Todos los partidos</option>
+                <option value="upcoming">Próximos partidos</option>
+              </select>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  resetCachedFilters();
+                  setCurrentPage(1);
+                }}
+                className="inline-flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+                Limpiar Filtros
+              </button>
+            </div>
+            {canManageGames && (
+              <div className="flex items-end">
+                {!showForm ? (
+                  <button
+                    onClick={openCreateForm}
+                    className="inline-flex w-full items-center justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    Programar Partido
+                  </button>
+                ) : (
+                  <button
+                    onClick={closeForm}
+                    className="inline-flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </FilterAccordion>
+      </PageHero>
+
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {canManageGames && showForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeForm}>
+            <div
+              className="w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-lg bg-white shadow-xl"
+              onClick={(event) => event.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="game-form-title"
+            >
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 id="game-form-title" className="text-lg font-semibold text-gray-900">
+                    {form.id ? "Editar Partido" : "Nuevo Partido"}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={closeForm}
+                    className="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+
+                {editingGame && (
+                  <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                    <p className="font-semibold">Información actual</p>
+                    <p className="mt-1">
+                      {getTeamDisplayName(editingGame.homeTeam)} vs {getTeamDisplayName(editingGame.awayTeam)} ·{" "}
+                      {formatDate(editingGame.scheduledDate)} · {formatTime(editingGame.scheduledDate)}
+                    </p>
+                    <p className="mt-1">
+                      {editingGame.venue.name}, {editingGame.venue.address}
+                    </p>
+                  </div>
+                )}
+
+                {formError && <ErrorMessage message={formError} />}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="tournament" className="block text-sm font-medium text-gray-700 mb-1">
+                      Torneo
+                    </label>
+                    <select
+                      id="tournament"
+                      value={form.tournament}
+                      onChange={(e) => handleFormChange("tournament", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Seleccionar torneo</option>
+                      {tournaments.map((tournament) => (
+                        <option key={tournament._id} value={tournament._id}>
+                          {tournament.name} ({tournament.year})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
+                      División
+                    </label>
+                    <select
+                      id="division"
+                      value={form.division}
+                      onChange={(e) => handleFormChange("division", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Seleccionar división</option>
+                      {filteredDivisionsForForm.map((division) => (
+                        <option key={division._id} value={division._id}>
+                          {division.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 mb-1">
+                      Fecha y hora
+                    </label>
+                    <input
+                      id="scheduledDate"
+                      type="datetime-local"
+                      value={form.scheduledDate}
+                      onChange={(e) => handleFormChange("scheduledDate", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="homeTeam" className="block text-sm font-medium text-gray-700 mb-1">
+                      Equipo local
+                    </label>
+                    <select
+                      id="homeTeam"
+                      value={form.homeTeam}
+                      onChange={(e) => handleFormChange("homeTeam", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">TBD</option>
+                      {teams.map((team) => (
+                        <option key={team._id} value={team._id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="awayTeam" className="block text-sm font-medium text-gray-700 mb-1">
+                      Equipo visitante
+                    </label>
+                    <select
+                      id="awayTeam"
+                      value={form.awayTeam}
+                      onChange={(e) => handleFormChange("awayTeam", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">TBD</option>
+                      {teams.map((team) => (
+                        <option key={team._id} value={team._id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                      Estado
+                    </label>
+                    <select
+                      id="status"
+                      value={form.status}
+                      onChange={(e) => handleFormChange("status", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="scheduled">Programado</option>
+                      <option value="in_progress">En Curso</option>
+                      <option value="completed">Completado</option>
+                      <option value="postponed">Pospuesto</option>
+                      <option value="cancelled">Cancelado</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="week" className="block text-sm font-medium text-gray-700 mb-1">
+                      Semana
+                    </label>
+                    <input
+                      id="week"
+                      type="number"
+                      min={1}
+                      value={form.week}
+                      onChange={(e) => handleFormChange("week", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="round" className="block text-sm font-medium text-gray-700 mb-1">
+                      Ronda
+                    </label>
+                    <input
+                      id="round"
+                      type="text"
+                      value={form.round}
+                      onChange={(e) => handleFormChange("round", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Ej. Cuartos de final"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="venueName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Venue (nombre)
+                    </label>
+                    <input
+                      id="venueName"
+                      type="text"
+                      value={form.venueName}
+                      onChange={(e) => handleFormChange("venueName", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="refereeJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
+                      Referee
+                    </label>
+                    <select
+                      id="refereeJudgeId"
+                      value={form.refereeJudgeId}
+                      onChange={(e) => handleFormChange("refereeJudgeId", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Seleccionar juez</option>
+                      {judges.map((judge) => (
+                        <option
+                          key={judge._id}
+                          value={judge._id}
+                          disabled={isJudgeSelectedInAnotherRole(judge._id, "refereeJudgeId")}
+                        >
+                          {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="downJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
+                      Down judge
+                    </label>
+                    <select
+                      id="downJudgeId"
+                      value={form.downJudgeId}
+                      onChange={(e) => handleFormChange("downJudgeId", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Seleccionar juez</option>
+                      {judges.map((judge) => (
+                        <option
+                          key={judge._id}
+                          value={judge._id}
+                          disabled={isJudgeSelectedInAnotherRole(judge._id, "downJudgeId")}
+                        >
+                          {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="sideJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
+                      Side judge
+                    </label>
+                    <select
+                      id="sideJudgeId"
+                      value={form.sideJudgeId}
+                      onChange={(e) => handleFormChange("sideJudgeId", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Seleccionar juez</option>
+                      {judges.map((judge) => (
+                        <option
+                          key={judge._id}
+                          value={judge._id}
+                          disabled={isJudgeSelectedInAnotherRole(judge._id, "sideJudgeId")}
+                        >
+                          {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="tableJudgeId" className="block text-sm font-medium text-gray-700 mb-1">
+                      Juez de mesa
+                    </label>
+                    <select
+                      id="tableJudgeId"
+                      value={form.tableJudgeId}
+                      onChange={(e) => handleFormChange("tableJudgeId", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Seleccionar juez</option>
+                      {judges.map((judge) => (
+                        <option
+                          key={judge._id}
+                          value={judge._id}
+                          disabled={isJudgeSelectedInAnotherRole(judge._id, "tableJudgeId")}
+                        >
+                          {judge.fullName || `${judge.firstName} ${judge.lastName}`.trim()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="venueAddress" className="block text-sm font-medium text-gray-700 mb-1">
+                      Venue (dirección)
+                    </label>
+                    <input
+                      id="venueAddress"
+                      type="text"
+                      value={form.venueAddress}
+                      onChange={(e) => handleFormChange("venueAddress", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                    Notas
+                  </label>
+                  <textarea
+                    id="notes"
+                    value={form.notes}
+                    onChange={(e) => handleFormChange("notes", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
+
+                {editingGame && editingGame.status === "scheduled" && (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-semibold text-amber-900">Walk Over</p>
+                    <p className="mt-1 text-sm text-amber-800">
+                      Marca el partido como WO con resultado automático 14-0. No se asignarán puntos a jugadores.
+                    </p>
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleWalkOver(editingGame, "home")}
+                        disabled={walkOverLoadingGameId === editingGame._id}
+                        className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                      >
+                        WO Local
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleWalkOver(editingGame, "away")}
+                        disabled={walkOverLoadingGameId === editingGame._id}
+                        className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                      >
+                        WO Visitante
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={closeForm}
+                    className="border border-gray-300 bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    {saving ? "Guardando..." : form.id ? "Actualizar Partido" : "Crear Partido"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6">
+            <ErrorMessage message={error} onRetry={() => fetchGames(currentPage)} />
+          </div>
+        )}
+
+        {loading && games.length === 0 ? (
+          <div className="flex min-h-[300px] items-center justify-center rounded-lg bg-white shadow-sm">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {games.map((game) => (
+              <Link
+                key={game._id}
+                href={`/games/${game._id}`}
+                className="relative block overflow-hidden rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6"
+                aria-label={`Ver match ${game.homeTeam?.name || "TBD"} vs ${game.awayTeam?.name || "TBD"}`}
+              >
+                <div className="absolute left-1/2 top-0 z-10 hidden -translate-x-1/2 sm:block">
+                  {getStatusBadge(game.status, "top")}
+                </div>
+                <div className="sm:hidden">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-gray-700">{game.venue.name}</div>
-                      <div className="mt-1 text-sm text-gray-500">{game.venue.address}</div>
+                      <div className="text-sm text-gray-700 font-medium break-words">{game.venue.name}</div>
+                      <div className="mt-1 text-xs text-gray-500 break-words">{game.venue.address}</div>
                     </div>
-                    <div className="-mr-6 flex shrink-0 flex-col items-end gap-1">
-                      <div className="pr-6 text-right text-sm text-gray-500">
-                        <div>{formatDate(game.scheduledDate)}</div>
-                        <div>{formatTime(game.scheduledDate)}</div>
+                    <div className="-mr-4 flex shrink-0 flex-col items-end gap-1">
+                      <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
+                        {formatDateTimeCompact(game.scheduledDate)}
                       </div>
+                      {getStatusBadge(game.status, "right")}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-center space-x-8 mb-4">
-                    <div className="flex items-center space-x-3 flex-1 justify-end">
-                      <div className="text-right">
-                        <div className="font-semibold text-gray-900">{game.homeTeam?.name || "TBD"}</div>
-                        {game.homeTeam && !game.homeTeam.logo && game.homeTeam.shortName && (
-                          <div className="text-sm text-gray-500">{game.homeTeam.shortName}</div>
-                        )}
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <div className="w-[36%] flex flex-col items-center text-center">
+                      {renderTeamAvatar(game.homeTeam, "sm")}
+                      <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
+                        {game.homeTeam?.name || "TBD"}
                       </div>
-                      {renderTeamAvatar(game.homeTeam, "md")}
                     </div>
 
-                    <div className="flex min-w-24 flex-col items-center">
+                    <div className="w-[28%] text-center">
                       {game.status === "completed" || game.status === "in_progress" ? (
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-gray-900">
-                            {game.score.home.total} - {game.score.away.total}
-                          </div>
+                        <div className="text-4xl font-bold text-blue-900 leading-none">
+                          {game.score.home.total}:{game.score.away.total}
                         </div>
                       ) : (
-                        <div className="text-center">
-                          <div className="text-lg font-medium text-gray-500">vs</div>
-                          <div className="text-sm text-gray-400">{formatTime(game.scheduledDate)}</div>
+                        <div>
+                          <div className="text-base font-semibold text-gray-500">vs</div>
+                          <div className="text-xs text-gray-400">{formatTime(game.scheduledDate)}</div>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center space-x-3 flex-1">
-                      {renderTeamAvatar(game.awayTeam, "md")}
-                      <div>
-                        <div className="font-semibold text-gray-900">{game.awayTeam?.name || "TBD"}</div>
-                        {game.awayTeam && !game.awayTeam.logo && game.awayTeam.shortName && (
-                          <div className="text-sm text-gray-500">{game.awayTeam.shortName}</div>
-                        )}
+                    <div className="w-[36%] flex flex-col items-center text-center">
+                      {renderTeamAvatar(game.awayTeam, "sm")}
+                      <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
+                        {game.awayTeam?.name || "TBD"}
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-center text-sm text-gray-500">
+                  <div className="mt-3 text-xs text-gray-500 text-center">
                     {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
                     {game.round ? ` · ${game.round}` : ""}
                   </div>
                 </div>
+
+                <div className="hidden sm:block">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex-1">
+                      <div className="mb-4 flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-gray-700">{game.venue.name}</div>
+                          <div className="mt-1 text-sm text-gray-500">{game.venue.address}</div>
+                        </div>
+                        <div className="-mr-6 flex shrink-0 flex-col items-end gap-1">
+                          <div className="pr-6 text-right text-sm text-gray-500">
+                            <div>{formatDate(game.scheduledDate)}</div>
+                            <div>{formatTime(game.scheduledDate)}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-center space-x-8 mb-4">
+                        <div className="flex items-center space-x-3 flex-1 justify-end">
+                          <div className="text-right">
+                            <div className="font-semibold text-gray-900">{game.homeTeam?.name || "TBD"}</div>
+                            {game.homeTeam && !game.homeTeam.logo && game.homeTeam.shortName && (
+                              <div className="text-sm text-gray-500">{game.homeTeam.shortName}</div>
+                            )}
+                          </div>
+                          {renderTeamAvatar(game.homeTeam, "md")}
+                        </div>
+
+                        <div className="flex min-w-24 flex-col items-center">
+                          {game.status === "completed" || game.status === "in_progress" ? (
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-gray-900">
+                                {game.score.home.total} - {game.score.away.total}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <div className="text-lg font-medium text-gray-500">vs</div>
+                              <div className="text-sm text-gray-400">{formatTime(game.scheduledDate)}</div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center space-x-3 flex-1">
+                          {renderTeamAvatar(game.awayTeam, "md")}
+                          <div>
+                            <div className="font-semibold text-gray-900">{game.awayTeam?.name || "TBD"}</div>
+                            {game.awayTeam && !game.awayTeam.logo && game.awayTeam.shortName && (
+                              <div className="text-sm text-gray-500">{game.awayTeam.shortName}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-center text-sm text-gray-500">
+                        {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
+                        {game.round ? ` · ${game.round}` : ""}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {games.length === 0 && !loading && (
+          <div className="text-center py-12 bg-white rounded-lg shadow">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No hay partidos</h3>
+            <p className="mt-1 text-sm text-gray-500">Comienza programando partidos para tus torneos.</p>
+            {canManageGames && (
+              <div className="mt-6">
+                <button
+                  onClick={openCreateForm}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                >
+                  Programar Partido
+                </button>
               </div>
-            </div>
-          </Link>
-        ))}
+            )}
+          </div>
+        )}
+
+        {games.length > 0 && (
+          <Pagination
+            currentPage={pagination.current}
+            totalPages={pagination.pages}
+            hasNext={pagination.hasNext}
+            hasPrev={pagination.hasPrev}
+            onPageChange={handlePageChange}
+          />
+        )}
       </div>
-
-      {games.length === 0 && !loading && (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No hay partidos</h3>
-          <p className="mt-1 text-sm text-gray-500">Comienza programando partidos para tus torneos.</p>
-          {canManageGames && (
-            <div className="mt-6">
-              <button
-                onClick={openCreateForm}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-              >
-                Programar Partido
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {games.length > 0 && (
-        <Pagination
-          currentPage={pagination.current}
-          totalPages={pagination.pages}
-          hasNext={pagination.hasNext}
-          hasPrev={pagination.hasPrev}
-          onPageChange={handlePageChange}
-        />
-      )}
-    </div>
+    </>
   );
 }
