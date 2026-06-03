@@ -220,12 +220,7 @@ button {
 
 @supports (-webkit-touch-callout: none) {
   .hero-fixed-section__bg {
-    top: calc(-1 * var(--hero-offset, 0px));
-    bottom: auto;
-    height: 100vh;
     background-attachment: scroll;
-    transform: translateZ(0);
-    will-change: top;
   }
 }
 

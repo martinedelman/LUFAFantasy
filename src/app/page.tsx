@@ -60,39 +60,8 @@ function FixedHeroSection({
   mobileBackgroundPosition,
   children,
 }: FixedHeroSectionProps) {
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const updateHeroOffset = () => {
-      const element = sectionRef.current;
-      if (!element) {
-        return;
-      }
-
-      const rect = element.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const maxOffset = Math.max(0, viewportHeight - rect.height);
-      const nextOffset = Math.min(Math.max(-rect.top, 0), maxOffset);
-
-      element.style.setProperty("--hero-offset", `${nextOffset}px`);
-    };
-
-    updateHeroOffset();
-
-    window.addEventListener("scroll", updateHeroOffset, { passive: true });
-    window.addEventListener("resize", updateHeroOffset);
-    window.addEventListener("orientationchange", updateHeroOffset);
-
-    return () => {
-      window.removeEventListener("scroll", updateHeroOffset);
-      window.removeEventListener("resize", updateHeroOffset);
-      window.removeEventListener("orientationchange", updateHeroOffset);
-    };
-  }, []);
-
   return (
     <section
-      ref={sectionRef}
       className={`hero-fixed-section ${className || ""}`}
       aria-label={ariaLabel}
       style={
