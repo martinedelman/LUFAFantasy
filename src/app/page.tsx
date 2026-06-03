@@ -4,6 +4,26 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
+const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://flag.lufa.com.uy").replace(/\/$/, "");
+
+const sportsOrganizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SportsOrganization",
+  name: "LUFA Flag",
+  url: `${appUrl}/`,
+  sport: "Flag Football",
+  areaServed: {
+    "@type": "Country",
+    name: "Uruguay",
+  },
+  parentOrganization: {
+    "@type": "Organization",
+    name: "Liga Uruguaya de Football Americano",
+    url: "https://www.lufa.com.uy/",
+  },
+  sameAs: ["https://www.instagram.com/lufaflag.uy/"],
+};
+
 interface DashboardStats {
   activeTournaments: number;
   totalTeams: number;
@@ -206,6 +226,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[rgb(248,250,252)] text-slate-950">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsOrganizationJsonLd) }}
+      />
+
       <FixedHeroSection
         className="flex min-h-[calc(100dvh-70px)] items-center justify-center"
         ariaLabel="LUFA Flag"

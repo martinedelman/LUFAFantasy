@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const siteName = "LUFA Flag";
 const siteDescription =
-  "Liga Uruguaya de Football Americano: toda la información sobre Flag Football incluyendo partidos, equipos, jugadores, rankings, estadísticas y tabla de posiciones.";
+  "Flag Football en Uruguay: partidos, equipos, jugadores, rankings, estadísticas y tabla de posiciones de LUFA Flag.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     locale: "es_UY",
     url: "/",
     siteName,
-    title: "LUFA Flag",
+    title: "LUFA Flag | Flag Football en Uruguay",
     description: siteDescription,
     images: [
       {
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LUFA Flag",
+    title: "LUFA Flag | Flag Football en Uruguay",
     description: siteDescription,
     images: ["/Hero1.JPG"],
   },
