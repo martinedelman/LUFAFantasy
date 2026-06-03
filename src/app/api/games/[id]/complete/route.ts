@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toGameResponseDto } from "@/app/DTOs";
 
 const gameService = new GameService();
@@ -13,6 +14,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
 
     const game = await gameService.completeGame(id);
+    invalidateCacheByPrefix("standings");
 
     return NextResponse.json({
       success: true,

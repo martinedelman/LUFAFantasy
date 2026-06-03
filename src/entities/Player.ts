@@ -144,7 +144,7 @@ export class Player extends AggregateRoot {
     if (
       this.jerseyNumber !== undefined &&
       this.jerseyNumber !== null &&
-      (this.jerseyNumber < 0 || this.jerseyNumber > 99)
+      (!Number.isInteger(this.jerseyNumber) || this.jerseyNumber < 0 || this.jerseyNumber > 99)
     ) {
       errors.push("El número de camiseta debe estar entre 0 y 99");
     }
@@ -170,9 +170,11 @@ export class Player extends AggregateRoot {
       errors.push("Email del contacto de emergencia inválido");
     }
 
-    const age = this.age();
-    if (age < 5 || age > 100) {
-      errors.push("Edad del jugador inválida");
+    const birthDateTimestamp = this.dateOfBirth.getTime();
+    if (Number.isNaN(birthDateTimestamp)) {
+      errors.push("Fecha de nacimiento inválida");
+    } else if (birthDateTimestamp > Date.now()) {
+      errors.push("Fecha de nacimiento no puede ser futura");
     }
 
     return {

@@ -56,7 +56,11 @@ export class PlayerService {
       return undefined;
     }
 
-    if (value === null || value === "") {
+    if (value === null) {
+      return null;
+    }
+
+    if (typeof value === "string" && value.trim().length === 0) {
       return null;
     }
 
@@ -66,7 +70,23 @@ export class PlayerService {
       throw new Error("Número de camiseta inválido");
     }
 
+    if (!Number.isInteger(parsedValue) || parsedValue < 0 || parsedValue > 99) {
+      throw new Error("El número de camiseta debe estar entre 0 y 99");
+    }
+
     return parsedValue;
+  }
+
+  private normalizeSecondaryPosition(value: unknown): PlayerPosition | undefined {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    if (typeof value === "string" && value.trim().length === 0) {
+      return undefined;
+    }
+
+    return value as PlayerPosition;
   }
 
   /**
@@ -80,7 +100,7 @@ export class PlayerService {
     team: string;
     jerseyNumber?: number | null;
     position: PlayerPosition;
-    secondaryPosition?: PlayerPosition;
+    secondaryPosition?: PlayerPosition | null | "";
     email?: string;
     phone?: string;
     height?: number;
@@ -91,6 +111,7 @@ export class PlayerService {
     registrationDate?: Date;
   }): Promise<Player> {
     const jerseyNumber = this.normalizeJerseyNumber(data.jerseyNumber);
+    const secondaryPosition = this.normalizeSecondaryPosition(data.secondaryPosition);
 
     // Verificar que el equipo existe
     const team = await this.teamRepo.findById(data.team);
@@ -113,7 +134,7 @@ export class PlayerService {
       data.team,
       jerseyNumber,
       data.position,
-      data.secondaryPosition,
+      secondaryPosition,
       data.registrationDate || new Date(),
       data.status || "active",
       data.email,
@@ -214,7 +235,7 @@ export class PlayerService {
       team: string;
       jerseyNumber?: number | null;
       position: PlayerPosition;
-      secondaryPosition: PlayerPosition;
+      secondaryPosition: PlayerPosition | null | "";
       email: string;
       phone: string;
       height: number;
@@ -231,6 +252,7 @@ export class PlayerService {
     }
 
     const requestedJerseyNumber = this.normalizeJerseyNumber(data.jerseyNumber);
+    const secondaryPosition = this.normalizeSecondaryPosition(data.secondaryPosition);
     const jerseyNumber = requestedJerseyNumber !== undefined ? requestedJerseyNumber : player.jerseyNumber;
     const currentTeamId = this.getReferenceId(player.team);
     const teamId = data.team || currentTeamId;
@@ -254,7 +276,7 @@ export class PlayerService {
       teamId,
       jerseyNumber,
       data.position || player.position,
-      data.secondaryPosition !== undefined ? data.secondaryPosition : player.secondaryPosition,
+      data.secondaryPosition !== undefined ? secondaryPosition : player.secondaryPosition,
       data.registrationDate || player.registrationDate,
       data.status || player.status,
       data.email !== undefined ? data.email : player.email,

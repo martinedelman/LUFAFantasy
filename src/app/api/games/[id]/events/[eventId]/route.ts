@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { GameEventType } from "@/entities/Game";
 
@@ -26,6 +27,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       player: body.player,
       points: body.points === undefined || body.points === null ? undefined : Number(body.points),
     });
+    invalidateCacheByPrefix("standings");
 
     return NextResponse.json({
       success: true,
@@ -45,6 +47,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const { id, eventId } = await params;
 
     const updatedGame = await gameService.removeGameEvent(id, eventId);
+    invalidateCacheByPrefix("standings");
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { UpdateGameScoreRequestDto } from "@/app/DTOs";
 
@@ -74,6 +75,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.status === "completed") {
       await gameService.completeGame(id);
     }
+
+    invalidateCacheByPrefix("standings");
 
     return NextResponse.json({
       success: true,

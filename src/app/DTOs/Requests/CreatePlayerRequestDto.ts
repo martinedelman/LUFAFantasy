@@ -8,7 +8,7 @@ export interface CreatePlayerRequestDto {
   team: string;
   jerseyNumber?: number | null;
   position: PlayerPosition;
-  secondaryPosition?: PlayerPosition;
+  secondaryPosition?: PlayerPosition | null;
   email?: string;
   phone?: string;
   height?: number;

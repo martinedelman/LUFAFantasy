@@ -3,6 +3,7 @@ import { AuthService, PlayerService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import { toPlayerResponseDto } from "@/app/DTOs";
+import { PlayerPosition } from "@/entities/Player";
 import type { UpdatePlayerRequestDto } from "@/app/DTOs";
 
 const playerService = new PlayerService();
@@ -27,6 +28,18 @@ function parseOptionalDate(value: unknown, fieldLabel: string): Date | undefined
   }
 
   return parsedDate;
+}
+
+function normalizeSecondaryPosition(value: unknown): PlayerPosition | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (typeof value === "string" && value.trim().length === 0) {
+    return undefined;
+  }
+
+  return value as PlayerPosition;
 }
 
 /**
@@ -113,7 +126,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       phone: body.phone,
       jerseyNumber: body.jerseyNumber,
       position: body.position,
-      secondaryPosition: body.secondaryPosition,
+      secondaryPosition: normalizeSecondaryPosition(body.secondaryPosition),
       height: body.height,
       weight: body.weight,
       experience: body.experience,

@@ -287,7 +287,7 @@ export default function CreatePlayerPage() {
                       id="jerseyNumber"
                       name="jerseyNumber"
                       type="number"
-                      min="1"
+                      min="0"
                       max="99"
                       value={form.jerseyNumber}
                       onChange={handleChange}

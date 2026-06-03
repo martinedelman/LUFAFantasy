@@ -10,7 +10,7 @@ export interface UpdatePlayerRequestDto {
   phone?: string;
   jerseyNumber?: number | null;
   position?: PlayerPosition;
-  secondaryPosition?: PlayerPosition;
+  secondaryPosition?: PlayerPosition | null;
   height?: number;
   weight?: number;
   experience?: string;

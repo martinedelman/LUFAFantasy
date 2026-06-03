@@ -20,6 +20,18 @@ function parseRequiredDate(value: unknown, fieldLabel: string): Date {
   return parsedDate;
 }
 
+function normalizeSecondaryPosition(value: unknown): PlayerPosition | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (typeof value === "string" && value.trim().length === 0) {
+    return undefined;
+  }
+
+  return value as PlayerPosition;
+}
+
 /**
  * GET /api/players - Obtiene todos los jugadores con filtros y paginación
  */
@@ -32,7 +44,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status") as PlayerStatus | null;
     const search = searchParams.get("search");
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limit = parseInt(searchParams.get("limit") || "20");
 
     if (email) {
       const player = await playerService.getPlayerByEmail(email);
@@ -122,7 +134,7 @@ export async function POST(request: NextRequest) {
       team: body.team,
       jerseyNumber: body.jerseyNumber,
       position: body.position,
-      secondaryPosition: body.secondaryPosition,
+      secondaryPosition: normalizeSecondaryPosition(body.secondaryPosition),
       email: body.email,
       phone: body.phone,
       height: body.height,
