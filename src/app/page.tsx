@@ -235,6 +235,7 @@ export default function Home() {
         className="flex min-h-[calc(100dvh-70px)] items-center justify-center"
         ariaLabel="LUFA Flag"
         image="/Hero1.JPG"
+        backgroundPosition="40% center"
       >
         <div className="px-4 text-center text-white">
           <p className="text-sm sm:text-base font-semibold tracking-[0.35em] uppercase">Bienvenidos</p>
@@ -351,7 +352,7 @@ export default function Home() {
         className="h-[66vh] min-h-[320px]"
         ariaLabel="LUFA Flag"
         image="/Hero2.JPG"
-        mobileBackgroundPosition="70% center"
+        mobileBackgroundPosition="20% center"
       />
 
       <section className="mx-auto py-12">
