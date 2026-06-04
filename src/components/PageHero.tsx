@@ -24,7 +24,7 @@ export default function PageHero({ path, eyebrow, title, imageSrc = "/Hero1.JPG"
         className="absolute inset-0 -z-20 bg-cover bg-center"
         style={
           {
-            backgroundImage: `linear-gradient(90deg, rgba(8, 27, 43, 0.9) 0%, rgba(8, 27, 43, 0.72) 48%, rgba(8, 27, 43, 0.34) 100%), url('${imageSrc}')`,
+            backgroundImage: `linear-gradient(90deg, rgba(8, 27, 43, 0.8) 0%, rgba(8, 27, 43, 0.32) 60%, rgba(8, 27, 43, 0.24) 100%), url('${imageSrc}')`,
             backgroundPosition: "center 42%",
           } as CSSProperties
         }
