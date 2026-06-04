@@ -415,22 +415,22 @@ export default function PlayerProfilePage() {
                         <span className="text-sm text-gray-600">Edad:</span>
                         <span className="text-sm font-medium text-gray-900">{formatAge(player.dateOfBirth)}</span>
                       </div>
-                      <div className="flex justify-between">
+                      {/* <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Fecha de nacimiento:</span>
                         <span className="text-sm font-medium text-gray-900">{formatDate(player.dateOfBirth)}</span>
-                      </div>
+                      </div> */}
                       {player.height && (
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Altura:</span>
                           <span className="text-sm font-medium text-gray-900">{player.height} cm</span>
                         </div>
                       )}
-                      {player.weight && (
+                      {/* {player.weight && (
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Peso:</span>
                           <span className="text-sm font-medium text-gray-900">{player.weight} kg</span>
                         </div>
-                      )}
+                      )} */}
                       {player.experience && (
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Experiencia:</span>
