@@ -3,6 +3,7 @@ import { AuthService } from "@/services/backend";
 import { setSessionCookie } from "@/lib/auth";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { apiErrorResponse } from "@/lib/apiError";
+import { safeTrack } from "@/lib/serverAnalytics";
 import { toUserResponseDto } from "@/app/DTOs";
 import type { LoginRequestDto } from "@/app/DTOs";
 
@@ -41,6 +42,11 @@ export async function POST(request: NextRequest) {
     });
 
     setSessionCookie(response, token);
+    if (user.role !== "admin") {
+      await safeTrack("Login completed", {
+        userRole: user.role,
+      });
+    }
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error desconocido";

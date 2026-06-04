@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AuthService, PlayerService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
+import { safeTrack } from "@/lib/serverAnalytics";
 import { toPlayerResponseDto } from "@/app/DTOs";
 import { PlayerPosition } from "@/entities/Player";
 import type { UpdatePlayerRequestDto } from "@/app/DTOs";
@@ -133,6 +134,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       emergencyContact: body.emergencyContact,
       status: body.status,
     });
+
+    if (user.role !== "admin") {
+      await safeTrack("Player updated", {
+        playerId: updatedPlayer.id || id,
+        teamId: updatedPlayer.team,
+        position: updatedPlayer.position,
+        status: updatedPlayer.status,
+        userRole: user.role,
+        changedProfilePicture: body.profilePicture !== undefined && body.profilePicture !== player.profilePicture,
+      });
+    }
 
     return NextResponse.json({
       success: true,

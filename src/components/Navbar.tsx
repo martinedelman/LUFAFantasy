@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { track } from "@vercel/analytics";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
@@ -25,7 +26,25 @@ export default function Navbar() {
   const userMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const { user, signOut } = useAuth();
 
+  const trackNavigation = (label: string, href: string, location: "desktop" | "mobile") => {
+    if (user?.role === "admin") return;
+
+    track("Navigation clicked", {
+      label,
+      href,
+      location,
+      isAuthenticated: Boolean(user),
+      userRole: user?.role || "guest",
+    });
+  };
+
   const handleSignOut = () => {
+    if (user?.role !== "admin") {
+      track("Logout clicked", {
+        location: isMenuOpen ? "mobile" : "desktop",
+        userRole: user?.role || "unknown",
+      });
+    }
     signOut();
     setIsUserMenuOpen(false);
   };
@@ -98,6 +117,7 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={() => trackNavigation(item.name, item.href, "desktop")}
                   className={`${linkBaseClass} ${
                     pathname === item.href
                       ? "bg-white/16 text-white border-white/20 shadow-sm"
@@ -140,7 +160,11 @@ export default function Navbar() {
                         </span>
                       )}
                     </div>{" "}
-                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100">
+                    <Link
+                      href="/profile"
+                      onClick={() => trackNavigation("Mi Perfil", "/profile", "desktop")}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
+                    >
                       Mi Perfil
                     </Link>
                     {user.role === "admin" && (
@@ -149,22 +173,32 @@ export default function Navbar() {
                         <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Administración
                         </div>
-                        <Link href="/teams/create" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100">
+                        <Link
+                          href="/teams/create"
+                          onClick={() => trackNavigation("Crear Equipo", "/teams/create", "desktop")}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
+                        >
                           Crear Equipo
                         </Link>
                         <Link
                           href="/players/create"
+                          onClick={() => trackNavigation("Crear Jugador", "/players/create", "desktop")}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
                         >
                           Crear Jugador
                         </Link>
                         <Link
                           href="/tournaments/new"
+                          onClick={() => trackNavigation("Crear Torneo", "/tournaments/new", "desktop")}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
                         >
                           Crear Torneo
                         </Link>
-                        <Link href="/admin" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100">
+                        <Link
+                          href="/admin"
+                          onClick={() => trackNavigation("Panel Admin", "/admin", "desktop")}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
+                        >
                           Panel Admin
                         </Link>
                       </>
@@ -180,11 +214,16 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link href="/auth/signin" className="text-green-50/90 hover:text-white transition-colors text-sm">
+                <Link
+                  href="/auth/signin"
+                  onClick={() => trackNavigation("Iniciar Sesión", "/auth/signin", "desktop")}
+                  className="text-green-50/90 hover:text-white transition-colors text-sm"
+                >
                   Iniciar Sesión
                 </Link>
                 <Link
                   href="/auth/signup"
+                  onClick={() => trackNavigation("Registrarse", "/auth/signup", "desktop")}
                   className="bg-white/12 hover:bg-white/18 border border-white/15 px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm"
                 >
                   Registrarse
@@ -197,6 +236,7 @@ export default function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Ir a lufa.com.uy"
+              onClick={() => trackNavigation("LUFA external", "https://lufa.com.uy", "desktop")}
               className="h-8 w-8 md:h-9 md:w-9 rounded-md overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10 transition-transform hover:scale-110"
             >
               <Image
@@ -233,6 +273,7 @@ export default function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Ir a lufa.com.uy"
+              onClick={() => trackNavigation("LUFA external", "https://lufa.com.uy", "mobile")}
               className="h-8 w-8 rounded-md overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10 transition-transform hover:scale-110"
             >
               <Image
@@ -263,7 +304,10 @@ export default function Navbar() {
                       ? "bg-white/16 text-white"
                       : "text-green-50/90 hover:bg-white/10 hover:text-white"
                   }`}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => {
+                    trackNavigation(item.name, item.href, "mobile");
+                    setIsMenuOpen(false);
+                  }}
                 >
                   <span>{item.name}</span>
                 </Link>
@@ -276,14 +320,20 @@ export default function Navbar() {
                     <Link
                       href="/auth/signin"
                       className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={() => {
+                        trackNavigation("Iniciar Sesión", "/auth/signin", "mobile");
+                        setIsMenuOpen(false);
+                      }}
                     >
                       Iniciar Sesión
                     </Link>
                     <Link
                       href="/auth/signup"
                       className="block px-3 py-2 rounded-xl text-base font-medium bg-white/12 border border-white/15 hover:bg-white/18"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={() => {
+                        trackNavigation("Registrarse", "/auth/signup", "mobile");
+                        setIsMenuOpen(false);
+                      }}
                     >
                       Registrarse
                     </Link>
@@ -308,7 +358,10 @@ export default function Navbar() {
                     <Link
                       href="/profile"
                       className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={() => {
+                        trackNavigation("Mi Perfil", "/profile", "mobile");
+                        setIsMenuOpen(false);
+                      }}
                     >
                       Mi Perfil
                     </Link>
@@ -316,7 +369,10 @@ export default function Navbar() {
                       <Link
                         href="/admin"
                         className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={() => {
+                          trackNavigation("Panel Admin", "/admin", "mobile");
+                          setIsMenuOpen(false);
+                        }}
                       >
                         Panel Admin
                       </Link>

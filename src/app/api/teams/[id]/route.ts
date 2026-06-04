@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { TeamService, AuthService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
+import { safeTrack } from "@/lib/serverAnalytics";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toTeamResponseDto } from "@/app/DTOs";
 import type { UpdateTeamRequestDto } from "@/app/DTOs";
@@ -153,6 +154,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     });
 
     invalidateCacheByPrefix(TEAM_RELATED_CACHE_PREFIXES);
+    if (user.role !== "admin") {
+      await safeTrack("Team updated", {
+        teamId: updatedTeam.id || id,
+        teamName: updatedTeam.name,
+        divisionId: updatedTeam.division,
+        status: updatedTeam.status,
+        userRole: user.role,
+        changedMedia: isChangingTeamMedia,
+      });
+    }
 
     return NextResponse.json({
       success: true,

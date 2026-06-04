@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/services/backend";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { apiErrorResponse } from "@/lib/apiError";
+import { safeTrack } from "@/lib/serverAnalytics";
 import { toRegisteredUserResponseDto } from "@/app/DTOs";
 import type { UserRegistrationRequestDto } from "@/app/DTOs";
 
@@ -49,6 +50,10 @@ export async function POST(request: NextRequest) {
       email: email.toLowerCase().trim(),
       password,
       role: "user",
+    });
+
+    await safeTrack("Registration requested", {
+      userRole: user.role,
     });
 
     return NextResponse.json(

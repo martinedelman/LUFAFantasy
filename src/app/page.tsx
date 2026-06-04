@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { track } from "@vercel/analytics";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://flag.lufa.com.uy").replace(/\/$/, "");
@@ -154,6 +155,13 @@ export default function Home() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const trackHomeAction = (action: string, destination: string) => {
+    track("Home action clicked", {
+      action,
+      destination,
+    });
   };
 
   const carouselTeams = teams.length > 0 ? [...teams, ...teams] : [];
@@ -391,6 +399,13 @@ export default function Home() {
                   <Link
                     key={`${team._id}-${index}`}
                     href={`/teams/${team._id}`}
+                    onClick={() =>
+                      track("Team carousel clicked", {
+                        teamId: team._id,
+                        teamName: team.name,
+                        division: team.division.name,
+                      })
+                    }
                     className="team-slide-card rounded-2xl bg-[rgb(255,255,255)] flex flex-col items-center gap-3 py-4 my-4 mx-3 sm:mx-4 w-[40vw] sm:w-[10vw] shadow-sm border-2 border-transparent transition-all hover:shadow-lg  hover:border-blue-300"
                     aria-label={`Ver equipo ${team.name}`}
                   >
@@ -598,13 +613,19 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <button
-              onClick={() => (window.location.href = "/teams")}
+              onClick={() => {
+                trackHomeAction("explore_teams", "/teams");
+                window.location.href = "/teams";
+              }}
               className="bg-slate-950 text-white hover:bg-slate-700 font-bold py-3 px-6 rounded-lg transition"
             >
               👥 Explora los equipos
             </button>
             <button
-              onClick={() => (window.location.href = "/tournaments")}
+              onClick={() => {
+                trackHomeAction("view_tournaments", "/tournaments");
+                window.location.href = "/tournaments";
+              }}
               className="border border-slate-300 text-slate-950 hover:border-slate-500 font-bold py-3 px-6 rounded-lg transition"
             >
               🏆 Ver torneos
@@ -619,7 +640,10 @@ export default function Home() {
             jugadores favoritos y vive la competencia.
           </p>
           <button
-            onClick={() => (window.location.href = "/tournaments")}
+            onClick={() => {
+              trackHomeAction("explore_lufa_flag", "/tournaments");
+              window.location.href = "/tournaments";
+            }}
             className="bg-slate-950 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-lg transition text-lg"
           >
             Explorar LUFA Flag →
@@ -635,6 +659,7 @@ export default function Home() {
               href="https://www.linkedin.com/in/medelman01/"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackHomeAction("linkedin_footer", "https://www.linkedin.com/in/medelman01/")}
               className="font-semibold text-white underline decoration-white/35 underline-offset-4 transition hover:decoration-white"
             >
               Martín Edelman

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService, BlobStorageService, PlayerService, TeamService } from "@/services/backend";
+import { AuthService, BlobStorageService, PlayerService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
+import { safeTrack } from "@/lib/serverAnalytics";
 import type { BlobAssetType } from "@/services/backend/BlobStorageService";
 
 const authService = new AuthService();
 const blobStorageService = new BlobStorageService();
 const playerService = new PlayerService();
-const teamService = new TeamService();
 
 const VALID_ASSET_TYPES: BlobAssetType[] = ["team_logo", "team_background", "player_profile_picture"];
 
@@ -103,9 +103,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const currentUrlValue = typeof currentUrl === "string" ? currentUrl.trim() : "";
+    const operation = currentUrlValue.length > 0 ? "updated" : "created";
     const uploadedFile =
-      typeof currentUrl === "string" && currentUrl.trim().length > 0
-        ? await blobStorageService.update(currentUrl, {
+      operation === "updated"
+        ? await blobStorageService.update(currentUrlValue, {
             file,
             assetType: assetType as BlobAssetType,
           })
@@ -113,6 +115,17 @@ export async function POST(request: NextRequest) {
             file,
             assetType: assetType as BlobAssetType,
           });
+
+    if (user.role !== "admin") {
+      await safeTrack("Media uploaded", {
+        assetType,
+        operation,
+        ownerType: typeof ownerType === "string" ? ownerType : null,
+        userRole: user.role,
+        contentType: uploadedFile.contentType || null,
+        size: uploadedFile.size ?? null,
+      });
+    }
 
     return NextResponse.json(
       {
