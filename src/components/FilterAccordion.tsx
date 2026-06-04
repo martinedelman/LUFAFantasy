@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 
 interface FilterAccordionProps {
   children: ReactNode;
@@ -20,6 +20,55 @@ export default function FilterAccordion({
   contentClassName = "px-6 pb-6",
 }: FilterAccordionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [shouldRenderContent, setShouldRenderContent] = useState(defaultOpen);
+  const [contentMaxHeight, setContentMaxHeight] = useState(defaultOpen ? "none" : "0px");
+  const [contentOpacity, setContentOpacity] = useState(defaultOpen ? 1 : 0);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const animationDuration = 300;
+
+    if (isOpen) {
+      setShouldRenderContent(true);
+      setContentMaxHeight("0px");
+      setContentOpacity(0);
+
+      let secondFrameId: number | undefined;
+      const firstFrameId = window.requestAnimationFrame(() => {
+        secondFrameId = window.requestAnimationFrame(() => {
+          setContentMaxHeight(`${contentRef.current?.scrollHeight || 0}px`);
+          setContentOpacity(1);
+        });
+      });
+
+      return () => {
+        window.cancelAnimationFrame(firstFrameId);
+        if (secondFrameId !== undefined) {
+          window.cancelAnimationFrame(secondFrameId);
+        }
+      };
+    }
+
+    if (!shouldRenderContent) {
+      return undefined;
+    }
+
+    setContentMaxHeight(`${contentRef.current?.scrollHeight || 0}px`);
+
+    const frameId = window.requestAnimationFrame(() => {
+      setContentMaxHeight("0px");
+      setContentOpacity(0);
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      setShouldRenderContent(false);
+    }, animationDuration);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [isOpen, shouldRenderContent]);
 
   return (
     <div className={className}>
@@ -44,7 +93,17 @@ export default function FilterAccordion({
         </svg>
       </button>
 
-      {isOpen && <div className={contentClassName}>{children}</div>}
+      {shouldRenderContent && (
+        <div
+          aria-hidden={!isOpen}
+          className="overflow-hidden transition-[max-height,opacity] duration-300 ease-out"
+          style={{ maxHeight: contentMaxHeight, opacity: contentOpacity }}
+        >
+          <div ref={contentRef}>
+            <div className={contentClassName}>{children}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

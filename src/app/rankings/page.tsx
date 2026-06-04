@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import FilterAccordion from "@/components/FilterAccordion";
+import PageHero from "@/components/PageHero";
 import { useCachedState } from "@/hooks/useCachedState";
+
+const rankingsHero = {
+  path: "/rankings",
+  eyebrow: "Rendimiento individual",
+  title: "Rankings",
+  imageSrc: "/Rankings.JPG",
+};
 
 type DivisionOption = {
   _id: string;
@@ -145,34 +154,37 @@ export default function RankingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">Rankings</h1>
-          <p className="mt-1 text-sm text-gray-600">Top 10 de jugadores por estadística, filtrado por división</p>
-        </div>
-      </div>
+      <PageHero {...rankingsHero}>
+        <FilterAccordion
+          className="overflow-hidden rounded-lg border border-white/25 bg-white/92 text-slate-900 shadow-[0_18px_44px_rgba(8,27,43,0.28)] backdrop-blur-md"
+          buttonClassName="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-900 sm:px-5"
+          contentClassName="px-4 pb-4 sm:px-5 sm:pb-5"
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label htmlFor="rankings-division" className="block text-sm font-medium text-gray-700">
+                División
+              </label>
+              <select
+                id="rankings-division"
+                value={selectedDivision}
+                onChange={(event) => setSelectedDivision(event.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="">Todas las divisiones</option>
+                {divisions.map((division) => (
+                  <option key={division._id} value={division._id}>
+                    {division.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-gray-500">Mostrando: {selectedDivisionName}</p>
+            </div>
+          </div>
+        </FilterAccordion>
+      </PageHero>
 
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="bg-white rounded-lg shadow p-4">
-          <label htmlFor="rankings-division" className="block text-sm font-medium text-gray-700 mb-2">
-            División
-          </label>
-          <select
-            id="rankings-division"
-            value={selectedDivision}
-            onChange={(event) => setSelectedDivision(event.target.value)}
-            className="w-full md:w-80 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          >
-            <option value="">Todas las divisiones</option>
-            {divisions.map((division) => (
-              <option key={division._id} value={division._id}>
-                {division.name}
-              </option>
-            ))}
-          </select>
-          <p className="mt-2 text-xs text-gray-500">Mostrando: {selectedDivisionName}</p>
-        </div>
-
         {error && <ErrorMessage message={error} />}
 
         {loading ? (
