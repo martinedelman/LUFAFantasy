@@ -446,6 +446,14 @@ export default function MatchPage() {
               </Link>
             )}
             <Link
+              href={`/games/${game._id}/print-template`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-md bg-gray-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-gray-800"
+            >
+              Imprimir Plantilla
+            </Link>
+            <Link
               href={`/games?edit=${game._id}`}
               className="rounded-md bg-green-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-green-700"
             >

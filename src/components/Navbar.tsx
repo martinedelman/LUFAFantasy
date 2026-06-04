@@ -18,6 +18,7 @@ const navigation = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const isPrintTemplateRoute = pathname?.includes("/print-template");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
@@ -89,6 +90,10 @@ export default function Navbar() {
       document.removeEventListener("pointerdown", handlePointerDown);
     };
   }, [isUserMenuOpen]);
+
+  if (isPrintTemplateRoute) {
+    return null;
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-blue-900/70 text-white backdrop-blur-xl shadow-2xl h-[70px]">
