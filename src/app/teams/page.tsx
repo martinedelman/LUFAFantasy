@@ -17,6 +17,7 @@ const teamsHero = {
   path: "/teams",
   eyebrow: "Equipos LUFA",
   title: "Equipos",
+  imageSrc: "/Teams.JPG",
 };
 
 interface Team {

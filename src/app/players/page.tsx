@@ -15,6 +15,7 @@ const playersHero = {
   path: "/players",
   eyebrow: "Jugadores de la liga",
   title: "Jugadores",
+  imageSrc: "/Players.JPG",
 };
 
 interface PlayerListItem extends Omit<PlayerResponseDto, "team"> {

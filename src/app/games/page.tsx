@@ -15,6 +15,7 @@ const gamesHero = {
   path: "/games",
   eyebrow: "Calendario competitivo",
   title: "Partidos",
+  imageSrc: "/Games.JPG",
 };
 
 type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";

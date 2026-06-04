@@ -11,6 +11,7 @@ const rankingsHero = {
   path: "/rankings",
   eyebrow: "Rendimiento individual",
   title: "Rankings",
+  imageSrc: "/Rankings.JPG",
 };
 
 type DivisionOption = {

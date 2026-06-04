@@ -14,6 +14,7 @@ const tournamentsHero = {
   path: "/tournaments",
   eyebrow: "Temporada LUFA Flag",
   title: "Torneos",
+  imageSrc: "/Tournaments.JPG",
 };
 
 interface Tournament {

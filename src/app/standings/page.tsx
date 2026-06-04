@@ -13,6 +13,7 @@ const standingsHero = {
   path: "/standings",
   eyebrow: "Tabla de temporada",
   title: "Posiciones",
+  imageSrc: "/Standings.JPG",
 };
 
 interface Standing {
