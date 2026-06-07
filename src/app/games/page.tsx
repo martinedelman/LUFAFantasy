@@ -516,17 +516,19 @@ export default function GamesPage() {
       return;
     }
 
-    const selectedJudgeIds = [form.refereeJudgeId, form.downJudgeId, form.sideJudgeId, form.tableJudgeId];
-
-    if (selectedJudgeIds.some((judgeId) => !judgeId)) {
-      setFormError("Debes seleccionar Referee, Down judge, Side judge y Juez de mesa.");
-      return;
-    }
+    const selectedJudgeIds = [form.refereeJudgeId, form.downJudgeId, form.sideJudgeId, form.tableJudgeId].filter(Boolean);
 
     if (new Set(selectedJudgeIds).size !== selectedJudgeIds.length) {
       setFormError("Un juez no se puede repetir en un partido.");
       return;
     }
+
+    const officials = [
+      { role: "referee", judgeId: form.refereeJudgeId },
+      { role: "down_judge", judgeId: form.downJudgeId },
+      { role: "side_judge", judgeId: form.sideJudgeId },
+      { role: "table_judge", judgeId: form.tableJudgeId },
+    ].filter((official) => official.judgeId);
 
     const payload: Record<string, unknown> = {
       tournament: form.tournament,
@@ -536,12 +538,7 @@ export default function GamesPage() {
       scheduledDate: new Date(form.scheduledDate).toISOString(),
       status: form.status,
       round: form.round.trim(),
-      officials: [
-        { role: "referee", judgeId: form.refereeJudgeId },
-        { role: "down_judge", judgeId: form.downJudgeId },
-        { role: "side_judge", judgeId: form.sideJudgeId },
-        { role: "table_judge", judgeId: form.tableJudgeId },
-      ],
+      officials,
       venue: {
         name: form.venueName.trim(),
         address: form.venueAddress.trim(),
@@ -1029,7 +1026,6 @@ export default function GamesPage() {
                       value={form.refereeJudgeId}
                       onChange={(e) => handleFormChange("refereeJudgeId", e.target.value)}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
                     >
                       <option value="">Seleccionar juez</option>
                       {judges.map((judge) => (
@@ -1053,7 +1049,6 @@ export default function GamesPage() {
                       value={form.downJudgeId}
                       onChange={(e) => handleFormChange("downJudgeId", e.target.value)}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
                     >
                       <option value="">Seleccionar juez</option>
                       {judges.map((judge) => (
@@ -1077,7 +1072,6 @@ export default function GamesPage() {
                       value={form.sideJudgeId}
                       onChange={(e) => handleFormChange("sideJudgeId", e.target.value)}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
                     >
                       <option value="">Seleccionar juez</option>
                       {judges.map((judge) => (
@@ -1101,7 +1095,6 @@ export default function GamesPage() {
                       value={form.tableJudgeId}
                       onChange={(e) => handleFormChange("tableJudgeId", e.target.value)}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
                     >
                       <option value="">Seleccionar juez</option>
                       {judges.map((judge) => (
