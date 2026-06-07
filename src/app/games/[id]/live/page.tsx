@@ -44,6 +44,9 @@ type EventDraft = {
   points: string;
 };
 
+type JerseyDrafts = Record<string, string>;
+type JerseyMessages = Record<string, string | null>;
+
 const getReadableTextColor = (backgroundColor?: string) => {
   if (!backgroundColor || !/^#[0-9A-Fa-f]{6}$/.test(backgroundColor)) {
     return "#ffffff";
@@ -106,6 +109,10 @@ export default function LiveMatchPage() {
   const [eventMessage, setEventMessage] = useState<string | null>(null);
   const [eventError, setEventError] = useState<string | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [jerseyDrafts, setJerseyDrafts] = useState<JerseyDrafts>({});
+  const [savingJerseyPlayerId, setSavingJerseyPlayerId] = useState<string | null>(null);
+  const [jerseyErrors, setJerseyErrors] = useState<JerseyMessages>({});
+  const [jerseyMessages, setJerseyMessages] = useState<JerseyMessages>({});
 
   const fetchGameData = useCallback(async () => {
     try {
@@ -149,6 +156,18 @@ export default function LiveMatchPage() {
   useEffect(() => {
     fetchGameData();
   }, [fetchGameData]);
+
+  useEffect(() => {
+    setJerseyDrafts((previousDrafts) => {
+      const nextDrafts = { ...previousDrafts };
+      [...homePlayers, ...awayPlayers].forEach((player) => {
+        if (nextDrafts[player._id] === undefined) {
+          nextDrafts[player._id] = player.jerseyNumber == null ? "" : String(player.jerseyNumber);
+        }
+      });
+      return nextDrafts;
+    });
+  }, [awayPlayers, homePlayers]);
 
   const toggleHomePlayer = (playerId: string) => {
     setSelectedHomePlayers((prev) => {
@@ -287,6 +306,96 @@ export default function LiveMatchPage() {
   }, [awayPlayers, game?.presentPlayers, game?.status, homePlayers, playersById]);
 
   const eventPlayers = presentPlayersBySide[eventDraft.teamSide];
+
+  const updatePlayerInRosters = (updatedPlayer: PlayerApiResponse) => {
+    const updateRoster = (players: PlayerApiResponse[]) =>
+      sortPlayersByJerseyNumber(players.map((player) => (player._id === updatedPlayer._id ? updatedPlayer : player)));
+
+    setHomePlayers(updateRoster);
+    setAwayPlayers(updateRoster);
+  };
+
+  const setJerseyDraft = (playerId: string, value: string) => {
+    setJerseyDrafts((prev) => ({
+      ...prev,
+      [playerId]: value,
+    }));
+    setJerseyErrors((prev) => ({
+      ...prev,
+      [playerId]: null,
+    }));
+    setJerseyMessages((prev) => ({
+      ...prev,
+      [playerId]: null,
+    }));
+  };
+
+  const handleSaveJerseyNumber = async (player: PlayerApiResponse) => {
+    const draftValue = jerseyDrafts[player._id] ?? "";
+    const jerseyNumber = draftValue.trim() === "" ? null : Number(draftValue);
+
+    if (jerseyNumber !== null && (!Number.isInteger(jerseyNumber) || jerseyNumber < 0 || jerseyNumber > 99)) {
+      setJerseyErrors((prev) => ({
+        ...prev,
+        [player._id]: "Usá un número entre 0 y 99.",
+      }));
+      return;
+    }
+
+    if ((player.jerseyNumber ?? null) === jerseyNumber) {
+      setJerseyMessages((prev) => ({
+        ...prev,
+        [player._id]: "Sin cambios.",
+      }));
+      return;
+    }
+
+    try {
+      setSavingJerseyPlayerId(player._id);
+      setJerseyErrors((prev) => ({
+        ...prev,
+        [player._id]: null,
+      }));
+      setJerseyMessages((prev) => ({
+        ...prev,
+        [player._id]: null,
+      }));
+
+      const response = await fetch(`/api/players/${player._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ jerseyNumber }),
+      });
+      const data: ApiResponse<PlayerApiResponse> = await response.json();
+
+      if (!response.ok || !data.success || !data.data) {
+        setJerseyErrors((prev) => ({
+          ...prev,
+          [player._id]: data.message || "No se pudo actualizar.",
+        }));
+        return;
+      }
+
+      updatePlayerInRosters(data.data);
+      setJerseyDrafts((prev) => ({
+        ...prev,
+        [player._id]: data.data?.jerseyNumber == null ? "" : String(data.data.jerseyNumber),
+      }));
+      setJerseyMessages((prev) => ({
+        ...prev,
+        [player._id]: "Actualizado.",
+      }));
+    } catch {
+      setJerseyErrors((prev) => ({
+        ...prev,
+        [player._id]: "Error de conexión.",
+      }));
+    } finally {
+      setSavingJerseyPlayerId(null);
+    }
+  };
 
   const setEventTeamSide = (teamSide: TeamSide) => {
     setEventDraft((prev) => ({
@@ -539,6 +648,88 @@ export default function LiveMatchPage() {
     return typeof reference === "string" ? reference : reference._id;
   };
 
+  const renderJerseyQuickEditor = (player: PlayerApiResponse) => {
+    const isSaving = savingJerseyPlayerId === player._id;
+    const draftValue = jerseyDrafts[player._id] ?? "";
+
+    return (
+      <div className="w-full sm:w-auto">
+        <div className="flex items-center gap-2">
+          <label className="sr-only" htmlFor={`jersey-${player._id}`}>
+            Camiseta de {player.firstName} {player.lastName}
+          </label>
+          <input
+            id={`jersey-${player._id}`}
+            type="number"
+            min={0}
+            max={99}
+            inputMode="numeric"
+            value={draftValue}
+            onChange={(event) => setJerseyDraft(player._id, event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                handleSaveJerseyNumber(player);
+              }
+            }}
+            className="h-10 w-20 rounded-md border border-gray-300 px-2 text-center text-base font-bold text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            placeholder="S/N"
+            disabled={isSaving}
+          />
+          <button
+            type="button"
+            onClick={() => handleSaveJerseyNumber(player)}
+            disabled={isSaving}
+            className="h-10 rounded-md bg-gray-900 px-3 text-sm font-bold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+          >
+            {isSaving ? "..." : "OK"}
+          </button>
+        </div>
+        {(jerseyErrors[player._id] || jerseyMessages[player._id]) && (
+          <p className={`mt-2 text-xs ${jerseyErrors[player._id] ? "text-red-600" : "text-green-700"}`}>
+            {jerseyErrors[player._id] || jerseyMessages[player._id]}
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  const renderPlayerSelectionRow = (side: TeamSide, player: PlayerApiResponse) => {
+    const selectedPlayers = side === "home" ? selectedHomePlayers : selectedAwayPlayers;
+    const togglePlayer = side === "home" ? toggleHomePlayer : toggleAwayPlayer;
+    const isSelected = selectedPlayers.has(player._id);
+
+    return (
+      <div
+        key={player._id}
+        className={`flex flex-col gap-3 border-b p-3 hover:bg-gray-50 sm:flex-row sm:items-center ${
+          isSelected ? "bg-blue-100" : ""
+        }`}
+      >
+        <label className="flex min-w-0 flex-1 cursor-pointer items-center">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => togglePlayer(player._id)}
+            className="h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+          />
+          <div className="ml-3 min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="shrink-0 font-bold text-gray-700">
+                {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"}
+              </span>
+              <span className="truncate text-gray-900">
+                {player.firstName} {player.lastName}
+              </span>
+            </div>
+            <span className="text-xs text-gray-500">{formatPlayerPositions(player)}</span>
+          </div>
+        </label>
+        {renderJerseyQuickEditor(player)}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
@@ -685,7 +876,9 @@ export default function LiveMatchPage() {
               <div className="bg-white rounded-lg shadow mb-4">
                 <div className="p-4 border-b">
                   <h2 className="font-bold text-gray-900 text-center">Seleccionar Jugadores Presentes</h2>
-                  <p className="text-sm text-gray-500 text-center mt-1">Mínimo 4 jugadores por equipo</p>
+                  <p className="text-sm text-gray-500 text-center mt-1">
+                    Mínimo 4 jugadores por equipo. Podés corregir camisetas antes de iniciar.
+                  </p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-0 md:gap-0">
@@ -722,32 +915,7 @@ export default function LiveMatchPage() {
                           No hay jugadores activos en este equipo
                         </div>
                       ) : (
-                        homePlayers.map((player) => (
-                          <label
-                            key={player._id}
-                            className={`flex items-center p-3 border-b cursor-pointer hover:bg-gray-50 ${
-                              selectedHomePlayers.has(player._id) ? "bg-blue-100" : ""
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedHomePlayers.has(player._id)}
-                              onChange={() => toggleHomePlayer(player._id)}
-                              className="h-5 w-5 text-green-600 rounded border-gray-300 focus:ring-green-500"
-                            />
-                            <div className="ml-3 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-gray-700">
-                                  {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"}
-                                </span>
-                                <span className="text-gray-900">
-                                  {player.firstName} {player.lastName}
-                                </span>
-                              </div>
-                              <span className="text-xs text-gray-500">{formatPlayerPositions(player)}</span>
-                            </div>
-                          </label>
-                        ))
+                        homePlayers.map((player) => renderPlayerSelectionRow("home", player))
                       )}
                     </div>
                   </div>
@@ -785,32 +953,7 @@ export default function LiveMatchPage() {
                           No hay jugadores activos en este equipo
                         </div>
                       ) : (
-                        awayPlayers.map((player) => (
-                          <label
-                            key={player._id}
-                            className={`flex items-center p-3 border-b cursor-pointer hover:bg-gray-50 ${
-                              selectedAwayPlayers.has(player._id) ? "bg-blue-100" : ""
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedAwayPlayers.has(player._id)}
-                              onChange={() => toggleAwayPlayer(player._id)}
-                              className="h-5 w-5 text-green-600 rounded border-gray-300 focus:ring-green-500"
-                            />
-                            <div className="ml-3 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-gray-700">
-                                  {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"}
-                                </span>
-                                <span className="text-gray-900">
-                                  {player.firstName} {player.lastName}
-                                </span>
-                              </div>
-                              <span className="text-xs text-gray-500">{formatPlayerPositions(player)}</span>
-                            </div>
-                          </label>
-                        ))
+                        awayPlayers.map((player) => renderPlayerSelectionRow("away", player))
                       )}
                     </div>
                   </div>
