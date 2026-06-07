@@ -17,6 +17,7 @@ interface CreateGameEventInput {
   team: string;
   player?: string;
   points?: number;
+  details?: unknown;
 }
 
 interface StoredGameEvent {
@@ -26,6 +27,7 @@ interface StoredGameEvent {
   team: string | { _id?: string };
   player?: string | { _id?: string };
   points?: number;
+  details?: unknown;
 }
 
 /**
@@ -190,6 +192,7 @@ export class GameService {
       player: eventData.player || undefined,
       points: safePoints,
       description: this.getEventDescription(eventData.type, safePoints),
+      details: eventData.details,
     };
 
     const nextScore =
@@ -279,6 +282,7 @@ export class GameService {
       player: eventData.player || undefined,
       points: safePoints,
       description: this.getEventDescription(eventData.type, safePoints),
+      details: eventData.details,
     };
 
     const gameWithEvents = game as Game & { events?: StoredGameEvent[] };
@@ -296,6 +300,7 @@ export class GameService {
         team: event.team,
         player: event.player,
         points: event.points,
+        details: event.details,
       };
     });
 
@@ -326,6 +331,21 @@ export class GameService {
 
     // Actualizar en DB con validación atómica del estado
     const updatedGame = await this.gameRepo.startGame(id, presentPlayers);
+    await this.recalculateStandingsForGame(updatedGame);
+
+    return updatedGame;
+  }
+
+  async updatePresentPlayers(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game> {
+    if (presentPlayers.home.length < 4) {
+      throw new Error("Se requieren al menos 4 jugadores del equipo local");
+    }
+
+    if (presentPlayers.away.length < 4) {
+      throw new Error("Se requieren al menos 4 jugadores del equipo visitante");
+    }
+
+    const updatedGame = await this.gameRepo.updatePresentPlayers(id, presentPlayers);
     await this.recalculateStandingsForGame(updatedGame);
 
     return updatedGame;

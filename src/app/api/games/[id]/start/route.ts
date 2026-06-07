@@ -3,6 +3,7 @@ import { AuthService, GameService } from "@/services/backend";
 import { apiErrorResponse } from "@/lib/apiError";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { toGameResponseDto } from "@/app/DTOs";
+import type { Game } from "@/entities/Game";
 
 const gameService = new GameService();
 const authService = new AuthService();
@@ -31,15 +32,28 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const body = (await request.json()) as StartGameRequest;
-
-    const updatedGame = await gameService.startGame(id, {
+    const presentPlayers = {
       home: body.presentPlayers?.home || [],
       away: body.presentPlayers?.away || [],
-    });
+    };
+
+    const game = await gameService.getGameById(id);
+    if (!game) {
+      throw new Error("Partido no encontrado");
+    }
+
+    let updatedGame: Game;
+    if (game.status === "scheduled") {
+      updatedGame = await gameService.startGame(id, presentPlayers);
+    } else if (game.status === "in_progress") {
+      updatedGame = await gameService.updatePresentPlayers(id, presentPlayers);
+    } else {
+      throw new Error("Solo se pueden actualizar jugadores presentes en partidos programados o en progreso");
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Partido iniciado exitosamente",
+      message: game.status === "scheduled" ? "Partido iniciado exitosamente" : "Jugadores presentes actualizados",
       data: toGameResponseDto(updatedGame),
     });
   } catch (error) {

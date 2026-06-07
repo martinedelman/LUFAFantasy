@@ -7,9 +7,9 @@ import type { CreateGameRequestDto, UpdateGameRequestDto } from "@/app/DTOs";
 
 const gameService = new GameService();
 const judgeService = new JudgeService();
-const REQUIRED_OFFICIAL_ROLES = ["referee", "down_judge", "side_judge", "table_judge"] as const;
+const OFFICIAL_ROLES = ["referee", "down_judge", "side_judge", "table_judge"] as const;
 
-type OfficialRole = (typeof REQUIRED_OFFICIAL_ROLES)[number];
+type OfficialRole = (typeof OFFICIAL_ROLES)[number];
 type OfficialAssignment = {
   judgeId: string;
   role: OfficialRole;
@@ -28,30 +28,21 @@ function normalizeAssignments(assignments: CreateGameRequestDto["officials"]): O
     .filter((assignment) => assignment.judgeId.length > 0);
 }
 
-async function resolveOfficials(assignments: CreateGameRequestDto["officials"], required = false) {
+async function resolveOfficials(assignments: CreateGameRequestDto["officials"]) {
   const normalizedAssignments = normalizeAssignments(assignments);
 
   if (normalizedAssignments.length === 0) {
-    if (required) {
-      throw new Error("Debes seleccionar los 4 jueces del partido");
-    }
-
     return [];
   }
 
-  if (normalizedAssignments.length !== REQUIRED_OFFICIAL_ROLES.length) {
-    throw new Error("Debes seleccionar los 4 jueces del partido");
+  const invalidRole = normalizedAssignments.some((assignment) => !OFFICIAL_ROLES.includes(assignment.role));
+  if (invalidRole) {
+    throw new Error("Rol de juez inválido");
   }
 
   const roleSet = new Set(normalizedAssignments.map((assignment) => assignment.role));
-  if (roleSet.size !== REQUIRED_OFFICIAL_ROLES.length) {
+  if (roleSet.size !== normalizedAssignments.length) {
     throw new Error("Los roles de jueces no pueden repetirse");
-  }
-
-  for (const requiredRole of REQUIRED_OFFICIAL_ROLES) {
-    if (!roleSet.has(requiredRole)) {
-      throw new Error("Debes asignar Referee, Down judge, Side judge y Juez de mesa");
-    }
   }
 
   const judgeIds = normalizedAssignments.map((assignment) => assignment.judgeId);
@@ -145,7 +136,7 @@ export async function POST(request: NextRequest) {
       division: body.division,
       homeTeam: body.homeTeam || null,
       awayTeam: body.awayTeam || null,
-      officials: await resolveOfficials(body.officials, true),
+      officials: await resolveOfficials(body.officials),
       venue: body.venue,
       scheduledDate: new Date(body.scheduledDate),
       week: body.week,

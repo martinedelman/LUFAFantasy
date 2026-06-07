@@ -15,6 +15,7 @@ interface CreateGameEventRequest {
   team: string;
   player: string;
   points?: number;
+  details?: unknown;
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       team: body.team,
       player: body.player,
       points: body.points === undefined || body.points === null ? undefined : Number(body.points),
+      details: body.details,
     });
     invalidateCacheByPrefix(["standings", "rankings"]);
 
