@@ -20,15 +20,15 @@ const QUARTERS: { key: QuarterKey; label: string }[] = [
 
 const EVENT_TYPES: { value: GameEventType; label: string; points?: number }[] = [
   { value: "touchdown", label: "TD", points: 6 },
-  { value: "extra_point", label: "Extra +1", points: 1 },
-  { value: "extra_point", label: "Conversión +2", points: 2 },
+  { value: "extra_point", label: "Punto Extra +1", points: 1 },
+  { value: "extra_point", label: "Punto Extra +2", points: 2 },
   { value: "safety", label: "Safety", points: 2 },
   { value: "interception", label: "Intercepción" },
-  { value: "pick_six", label: "PICK SIX", points: 6 },
+  { value: "pick_six", label: "Pick Six", points: 6 },
   { value: "sack", label: "Sack" },
   { value: "penalty", label: "Castigo" },
   { value: "unsportsmanlike", label: "Actitud Antideportiva" },
-  { value: "first_down", label: "1st Down" },
+  // { value: "first_down", label: "1st Down" },
 ];
 
 const highContrastControlStyle = {
@@ -455,19 +455,22 @@ export default function LiveMatchPage() {
       setEventError(null);
       setEventMessage(null);
 
-      const response = await fetch(editingEventId ? `/api/games/${gameId}/events/${editingEventId}` : `/api/games/${gameId}/events`, {
-        method: editingEventId ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        editingEventId ? `/api/games/${gameId}/events/${editingEventId}` : `/api/games/${gameId}/events`,
+        {
+          method: editingEventId ? "PATCH" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            quarter: currentQuarterNumber,
+            type: eventDraft.type,
+            team,
+            player: eventDraft.player,
+            points,
+          }),
         },
-        body: JSON.stringify({
-          quarter: currentQuarterNumber,
-          type: eventDraft.type,
-          team,
-          player: eventDraft.player,
-          points,
-        }),
-      });
+      );
 
       const data: ApiResponse<GameApiResponse> = await response.json();
 
@@ -643,7 +646,9 @@ export default function LiveMatchPage() {
       : `${player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} ${player.firstName} ${player.lastName}`;
   };
 
-  const getEventReferenceId = (reference?: GameApiResponse["events"][number]["team"] | GameApiResponse["events"][number]["player"]) => {
+  const getEventReferenceId = (
+    reference?: GameApiResponse["events"][number]["team"] | GameApiResponse["events"][number]["player"],
+  ) => {
     if (!reference) return "";
     return typeof reference === "string" ? reference : reference._id;
   };
@@ -1016,7 +1021,11 @@ export default function LiveMatchPage() {
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h2 className="font-bold text-gray-900">
-                        {game.status === "completed" ? "Corregir jugadas" : editingEventId ? "Editar evento" : "Registrar evento"}
+                        {game.status === "completed"
+                          ? "Corregir jugadas"
+                          : editingEventId
+                            ? "Editar evento"
+                            : "Registrar evento"}
                       </h2>
                       <p className="text-sm text-gray-500">
                         {game.status === "completed"
