@@ -364,6 +364,42 @@ export class MongoGameRepository implements IGameRepository {
     return doc;
   }
 
+  async updatePresentPlayers(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game> {
+    await connectToDatabase();
+
+    const doc = await GameModel.findOneAndUpdate(
+      {
+        _id: id,
+        status: "in_progress",
+      },
+      {
+        $set: {
+          presentPlayers,
+        },
+      },
+      { new: true, runValidators: true },
+    )
+      .populate("homeTeam")
+      .populate("awayTeam")
+      .populate("tournament")
+      .populate("division")
+      .populate("presentPlayers.home")
+      .populate("presentPlayers.away")
+      .populate("events.team")
+      .populate("events.player")
+      .exec();
+
+    if (!doc) {
+      const existing = await GameModel.findById(id).select("_id").exec();
+      if (!existing) {
+        throw new Error("Partido no encontrado");
+      }
+      throw new Error("Solo se pueden actualizar jugadores presentes en partidos en progreso");
+    }
+
+    return doc;
+  }
+
   async updateStatus(id: string, status: GameStatus): Promise<Game> {
     await connectToDatabase();
     const nextState: Record<string, unknown> = { status };

@@ -57,6 +57,11 @@ export interface IGameRepository extends IRepository<Game> {
   startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game>;
 
   /**
+   * Actualiza los jugadores presentes de un partido en curso
+   */
+  updatePresentPlayers(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game>;
+
+  /**
    * Actualiza el estado de un partido
    */
   updateStatus(id: string, status: GameStatus): Promise<Game>;

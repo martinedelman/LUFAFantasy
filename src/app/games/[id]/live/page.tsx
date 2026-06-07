@@ -42,6 +42,7 @@ type EventDraft = {
   type: GameEventType;
   player: string;
   points: string;
+  description: string;
 };
 
 type JerseyDrafts = Record<string, string>;
@@ -85,6 +86,15 @@ const getReferenceId = (reference?: string | { _id?: string } | null) => {
   return typeof reference === "string" ? reference : reference._id || "";
 };
 
+const requiresPenaltyDescription = (type: GameEventType) => type === "penalty" || type === "unsportsmanlike";
+
+const getPenaltyDescription = (details: unknown) => {
+  if (!details || typeof details !== "object") return "";
+
+  const description = (details as { description?: unknown }).description;
+  return typeof description === "string" ? description : "";
+};
+
 export default function LiveMatchPage() {
   const params = useParams();
   const router = useRouter();
@@ -97,6 +107,7 @@ export default function LiveMatchPage() {
   const [selectedAwayPlayers, setSelectedAwayPlayers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+  const [managingPresentPlayers, setManagingPresentPlayers] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentQuarter, setCurrentQuarter] = useState<QuarterKey>("q1");
   const [eventDraft, setEventDraft] = useState<EventDraft>({
@@ -104,6 +115,7 @@ export default function LiveMatchPage() {
     type: "touchdown",
     player: "",
     points: "6",
+    description: "",
   });
   const [savingEvent, setSavingEvent] = useState(false);
   const [eventMessage, setEventMessage] = useState<string | null>(null);
@@ -158,6 +170,15 @@ export default function LiveMatchPage() {
   }, [fetchGameData]);
 
   useEffect(() => {
+    if (!game || game.status === "scheduled") {
+      return;
+    }
+
+    setSelectedHomePlayers(new Set((game.presentPlayers?.home || []).map(getReferenceId).filter(Boolean)));
+    setSelectedAwayPlayers(new Set((game.presentPlayers?.away || []).map(getReferenceId).filter(Boolean)));
+  }, [game]);
+
+  useEffect(() => {
     setJerseyDrafts((previousDrafts) => {
       const nextDrafts = { ...previousDrafts };
       [...homePlayers, ...awayPlayers].forEach((player) => {
@@ -209,10 +230,10 @@ export default function LiveMatchPage() {
     setSelectedAwayPlayers(new Set());
   };
 
-  const canStartGame = selectedHomePlayers.size >= 4 && selectedAwayPlayers.size >= 4;
+  const canSavePresentPlayers = selectedHomePlayers.size >= 4 && selectedAwayPlayers.size >= 4;
 
-  const handleStartGame = async () => {
-    if (!canStartGame || !game) return;
+  const handleSavePresentPlayers = async () => {
+    if (!canSavePresentPlayers || !game) return;
 
     try {
       setStarting(true);
@@ -234,19 +255,34 @@ export default function LiveMatchPage() {
       const data: ApiResponse<GameApiResponse> = await response.json();
 
       if (!data.success) {
-        setError(data.message || "Error al iniciar partido");
+        setError(data.message || "Error al guardar jugadores presentes");
         return;
       }
 
       // Actualizar el estado del juego
       if (data.data) {
         setGame(data.data);
+        setManagingPresentPlayers(false);
       }
     } catch {
-      setError("Error de conexión al iniciar partido");
+      setError("Error de conexión al guardar jugadores presentes");
     } finally {
       setStarting(false);
     }
+  };
+
+  const openPresentPlayersManager = () => {
+    setSelectedHomePlayers(new Set((game?.presentPlayers?.home || []).map(getReferenceId).filter(Boolean)));
+    setSelectedAwayPlayers(new Set((game?.presentPlayers?.away || []).map(getReferenceId).filter(Boolean)));
+    setManagingPresentPlayers(true);
+    setError(null);
+  };
+
+  const cancelPresentPlayersManager = () => {
+    setSelectedHomePlayers(new Set((game?.presentPlayers?.home || []).map(getReferenceId).filter(Boolean)));
+    setSelectedAwayPlayers(new Set((game?.presentPlayers?.away || []).map(getReferenceId).filter(Boolean)));
+    setManagingPresentPlayers(false);
+    setError(null);
   };
 
   const teamNames = useMemo(
@@ -306,6 +342,7 @@ export default function LiveMatchPage() {
   }, [awayPlayers, game?.presentPlayers, game?.status, homePlayers, playersById]);
 
   const eventPlayers = presentPlayersBySide[eventDraft.teamSide];
+  const isPenaltyEventSelected = requiresPenaltyDescription(eventDraft.type);
 
   const updatePlayerInRosters = (updatedPlayer: PlayerApiResponse) => {
     const updateRoster = (players: PlayerApiResponse[]) =>
@@ -411,7 +448,8 @@ export default function LiveMatchPage() {
     setEventDraft((prev) => ({
       ...prev,
       type,
-      points: points === undefined ? "" : String(points),
+      points: requiresPenaltyDescription(type) ? "" : points === undefined ? "" : String(points),
+      description: requiresPenaltyDescription(type) ? prev.description : "",
     }));
     setEventMessage(null);
     setEventError(null);
@@ -424,6 +462,7 @@ export default function LiveMatchPage() {
       type: "touchdown",
       player: "",
       points: "6",
+      description: "",
     });
     setCurrentQuarter("q1");
     setEventMessage(null);
@@ -444,8 +483,15 @@ export default function LiveMatchPage() {
       return;
     }
 
-    const points = eventDraft.points === "" ? undefined : Number(eventDraft.points);
-    if (points !== undefined && (!Number.isFinite(points) || points < 0)) {
+    const isPenaltyEvent = requiresPenaltyDescription(eventDraft.type);
+    const penaltyDescription = eventDraft.description.trim();
+    if (isPenaltyEvent && !penaltyDescription) {
+      setEventError("Describe qué tipo de penalidad hubo");
+      return;
+    }
+
+    const points = isPenaltyEvent || eventDraft.points === "" ? undefined : Number(eventDraft.points);
+    if (!isPenaltyEvent && points !== undefined && (!Number.isFinite(points) || points < 0)) {
       setEventError("Los puntos deben ser 0 o más");
       return;
     }
@@ -468,6 +514,7 @@ export default function LiveMatchPage() {
             team,
             player: eventDraft.player,
             points,
+            details: isPenaltyEvent ? { description: penaltyDescription } : null,
           }),
         },
       );
@@ -487,6 +534,7 @@ export default function LiveMatchPage() {
         setEventDraft((prev) => ({
           ...prev,
           player: "",
+          description: isPenaltyEvent ? "" : prev.description,
         }));
         setEventMessage(points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.");
       }
@@ -508,7 +556,8 @@ export default function LiveMatchPage() {
       teamSide,
       type: event.type,
       player: getEventReferenceId(event.player),
-      points: event.points === undefined || event.points === null ? "" : String(event.points),
+      points: requiresPenaltyDescription(event.type) || event.points === undefined || event.points === null ? "" : String(event.points),
+      description: requiresPenaltyDescription(event.type) ? getPenaltyDescription(event.details) : "",
     });
     setCurrentQuarter(event.quarter === 5 ? "overtime" : event.quarter === 2 ? "q2" : "q1");
     setEventMessage(null);
@@ -794,6 +843,9 @@ export default function LiveMatchPage() {
     );
   }
 
+  const showPresentPlayersSelection = game.status === "scheduled" || managingPresentPlayers;
+  const presentPlayersActionLabel = game.status === "scheduled" ? "Iniciar Partido" : "Guardar jugadores";
+
   return (
     <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
       <div className="min-h-screen bg-gray-50">
@@ -875,14 +927,16 @@ export default function LiveMatchPage() {
             </div>
           )}
 
-          {game.status === "scheduled" ? (
+          {showPresentPlayersSelection ? (
             <>
               {/* Player Selection */}
               <div className="bg-white rounded-lg shadow mb-4">
                 <div className="p-4 border-b">
-                  <h2 className="font-bold text-gray-900 text-center">Seleccionar Jugadores Presentes</h2>
+                  <h2 className="font-bold text-gray-900 text-center">
+                    {game.status === "scheduled" ? "Seleccionar Jugadores Presentes" : "Agregar jugadores"}
+                  </h2>
                   <p className="text-sm text-gray-500 text-center mt-1">
-                    Mínimo 4 jugadores por equipo. Podés corregir camisetas antes de iniciar.
+                    Mínimo 4 jugadores por equipo. Podés corregir camisetas antes de guardar.
                   </p>
                 </div>
 
@@ -969,10 +1023,10 @@ export default function LiveMatchPage() {
               <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 md:relative md:bg-transparent md:border-t-0 md:p-0">
                 <div className="max-w-4xl mx-auto">
                   <button
-                    onClick={handleStartGame}
-                    disabled={!canStartGame || starting}
+                    onClick={handleSavePresentPlayers}
+                    disabled={!canSavePresentPlayers || starting}
                     className={`w-full py-4 rounded-lg font-bold text-lg transition-colors ${
-                      canStartGame && !starting
+                      canSavePresentPlayers && !starting
                         ? "bg-green-600 hover:bg-green-700 text-white"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
@@ -995,12 +1049,12 @@ export default function LiveMatchPage() {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        Iniciando partido...
+                        Guardando jugadores...
                       </span>
                     ) : (
                       <>
-                        Iniciar Partido
-                        {!canStartGame && (
+                        {presentPlayersActionLabel}
+                        {!canSavePresentPlayers && (
                           <span className="block text-sm font-normal mt-1">
                             Selecciona al menos 4 jugadores de cada equipo
                           </span>
@@ -1008,6 +1062,16 @@ export default function LiveMatchPage() {
                       </>
                     )}
                   </button>
+                  {managingPresentPlayers && (
+                    <button
+                      type="button"
+                      onClick={cancelPresentPlayersManager}
+                      disabled={starting}
+                      className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      Cancelar
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1102,7 +1166,7 @@ export default function LiveMatchPage() {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+                  <div className={`grid gap-3 ${isPenaltyEventSelected ? "sm:grid-cols-[1fr_1fr]" : "sm:grid-cols-[1fr_120px]"}`}>
                     <div>
                       <label className="mb-2 block text-sm font-semibold text-gray-700">Jugador</label>
                       <select
@@ -1124,22 +1188,40 @@ export default function LiveMatchPage() {
                         ))}
                       </select>
                     </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700">Puntos</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={eventDraft.points}
-                        onChange={(event) =>
-                          setEventDraft((prev) => ({
-                            ...prev,
-                            points: event.target.value,
-                          }))
-                        }
-                        className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                        placeholder="0"
-                      />
-                    </div>
+                    {isPenaltyEventSelected ? (
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-gray-700">Descripción</label>
+                        <input
+                          type="text"
+                          value={eventDraft.description}
+                          onChange={(event) =>
+                            setEventDraft((prev) => ({
+                              ...prev,
+                              description: event.target.value,
+                            }))
+                          }
+                          className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          placeholder="Ej. Holding, offside, protestas"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-gray-700">Puntos</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={eventDraft.points}
+                          onChange={(event) =>
+                            setEventDraft((prev) => ({
+                              ...prev,
+                              points: event.target.value,
+                            }))
+                          }
+                          className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          placeholder="0"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -1180,6 +1262,9 @@ export default function LiveMatchPage() {
                               {event.quarter === 5 ? "ET" : `${event.quarter}T`} · {getEventTeamName(event.team)}
                               {event.player ? ` · ${getEventPlayerName(event.player)}` : ""}
                             </p>
+                            {requiresPenaltyDescription(event.type) && getPenaltyDescription(event.details) && (
+                              <p className="mt-1 text-sm text-gray-700">{getPenaltyDescription(event.details)}</p>
+                            )}
                           </div>
                           <button
                             type="button"
@@ -1226,6 +1311,14 @@ export default function LiveMatchPage() {
 
               {game.status === "in_progress" && (
                 <div className="mt-4 border-t border-gray-200 bg-white px-4 py-4">
+                  <button
+                    type="button"
+                    onClick={openPresentPlayersManager}
+                    disabled={savingEvent}
+                    className="mb-3 w-full rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm font-bold text-green-900 transition-colors hover:bg-green-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    Agregar jugadores
+                  </button>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <button
                       onClick={handleEndHalf}
