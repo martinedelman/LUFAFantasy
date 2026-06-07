@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
+import type { UserRole } from "@/entities/User";
 
 export const SESSION_COOKIE_NAME = "lufa_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
@@ -8,7 +9,7 @@ export interface SessionPayload {
   userId: string;
   name: string;
   email: string;
-  role: "admin" | "user";
+  role: UserRole;
 }
 
 function getJwtSecret() {

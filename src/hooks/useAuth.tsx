@@ -1,11 +1,12 @@
 "use client";
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import type { UserRole } from "@/entities/User";
 
 interface User {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "user";
+  role: UserRole;
   avatar?: string;
 }
 

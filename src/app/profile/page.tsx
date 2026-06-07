@@ -130,10 +130,14 @@ export default function ProfilePage() {
                 <div className="mt-4">
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      user.role === "admin" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
+                      user.role === "admin"
+                        ? "bg-green-100 text-green-800"
+                        : user.role === "juez"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-blue-100 text-blue-800"
                     }`}
                   >
-                    {user.role === "admin" ? "Administrador" : "Usuario"}
+                    {user.role === "admin" ? "Administrador" : user.role === "juez" ? "Juez" : "Usuario"}
                   </span>
                 </div>
               </div>

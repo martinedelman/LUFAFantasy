@@ -1,4 +1,5 @@
 import { User } from "../../entities/User";
+import type { UserRole } from "../../entities/User";
 import RepositoryContainer from "../../repositories";
 import { verifySessionToken, createSessionToken } from "@/lib/auth";
 import { EmailService } from "./EmailService";
@@ -45,7 +46,7 @@ export class AuthService {
   /**
    * Registra un nuevo usuario
    */
-  async register(data: { email: string; password: string; name: string; role?: "user" | "admin" }): Promise<User> {
+  async register(data: { email: string; password: string; name: string; role?: UserRole }): Promise<User> {
     // Verificar que el email no esté en uso
     const existingUser = await this.userRepo.findByEmail(data.email);
     if (existingUser) {
@@ -125,6 +126,15 @@ export class AuthService {
     try {
       const user = await this.verifyToken(token);
       return user.isAdmin() && user.isActive;
+    } catch {
+      return false;
+    }
+  }
+
+  async verifyLiveMatchAccess(token: string): Promise<boolean> {
+    try {
+      const user = await this.verifyToken(token);
+      return user.canUseLiveMatch();
     } catch {
       return false;
     }

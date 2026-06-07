@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GameService } from "@/services/backend";
+import { AuthService, GameService } from "@/services/backend";
 import { apiErrorResponse } from "@/lib/apiError";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { GameEventType } from "@/entities/Game";
 
 const gameService = new GameService();
+const authService = new AuthService();
 
 interface UpdateGameEventRequest {
   quarter: number;
@@ -18,6 +20,19 @@ interface UpdateGameEventRequest {
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
     const { id, eventId } = await params;
+    const token = getSessionTokenFromRequest(request);
+    const canUseLiveMatch = token ? await authService.verifyLiveMatchAccess(token) : false;
+
+    if (!canUseLiveMatch) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo administradores o jueces pueden usar Live Match",
+        },
+        { status: token ? 403 : 401 },
+      );
+    }
+
     const body = (await request.json()) as UpdateGameEventRequest;
 
     const updatedGame = await gameService.updateGameEvent(id, eventId, {
@@ -45,6 +60,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
     const { id, eventId } = await params;
+    const token = getSessionTokenFromRequest(request);
+    const canUseLiveMatch = token ? await authService.verifyLiveMatchAccess(token) : false;
+
+    if (!canUseLiveMatch) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo administradores o jueces pueden usar Live Match",
+        },
+        { status: token ? 403 : 401 },
+      );
+    }
 
     const updatedGame = await gameService.removeGameEvent(id, eventId);
     invalidateCacheByPrefix(["standings", "rankings"]);

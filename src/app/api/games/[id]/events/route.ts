@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GameService } from "@/services/backend";
+import { AuthService, GameService } from "@/services/backend";
 import { apiErrorResponse } from "@/lib/apiError";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { GameEventType } from "@/entities/Game";
 
 const gameService = new GameService();
+const authService = new AuthService();
 
 interface CreateGameEventRequest {
   quarter: number;
@@ -18,6 +20,19 @@ interface CreateGameEventRequest {
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const token = getSessionTokenFromRequest(request);
+    const canUseLiveMatch = token ? await authService.verifyLiveMatchAccess(token) : false;
+
+    if (!canUseLiveMatch) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo administradores o jueces pueden usar Live Match",
+        },
+        { status: token ? 403 : 401 },
+      );
+    }
+
     const body = (await request.json()) as CreateGameEventRequest;
 
     const updatedGame = await gameService.addGameEvent(id, {

@@ -147,6 +147,7 @@ export default function MatchPage() {
   const gameId = params?.id as string;
   const { user } = useAuth();
   const canManageGame = user?.role === "admin";
+  const canUseLiveMatch = user?.role === "admin" || user?.role === "juez";
 
   const [game, setGame] = useState<GameApiResponse | null>(null);
   const [homeRoster, setHomeRoster] = useState<PlayerApiResponse[]>([]);
@@ -435,7 +436,7 @@ export default function MatchPage() {
           <Tag label={status.label} type={status.type} />
         </div>
 
-        {canManageGame && (
+        {canUseLiveMatch && (
           <div className="mb-5 flex flex-wrap justify-end gap-2">
             {(game.status === "scheduled" || game.status === "in_progress" || game.status === "completed") && (
               <Link
@@ -445,20 +446,24 @@ export default function MatchPage() {
                 {game.status === "completed" ? "Corregir Live" : "Live Match"}
               </Link>
             )}
-            <Link
-              href={`/games/${game._id}/print-template`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-md bg-gray-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-gray-800"
-            >
-              Imprimir Plantilla
-            </Link>
-            <Link
-              href={`/games?edit=${game._id}`}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-green-700"
-            >
-              Editar partido
-            </Link>
+            {canManageGame && (
+              <>
+                <Link
+                  href={`/games/${game._id}/print-template`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-md bg-gray-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-gray-800"
+                >
+                  Imprimir Plantilla
+                </Link>
+                <Link
+                  href={`/games?edit=${game._id}`}
+                  className="rounded-md bg-green-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-green-700"
+                >
+                  Editar partido
+                </Link>
+              </>
+            )}
           </div>
         )}
 

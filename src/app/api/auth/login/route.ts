@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     });
 
     setSessionCookie(response, token);
-    if (user.role !== "admin") {
+    if (user.role === "user") {
       await safeTrack("Login completed", {
         userRole: user.role,
       });

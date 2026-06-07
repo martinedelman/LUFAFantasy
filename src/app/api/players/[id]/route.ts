@@ -43,6 +43,12 @@ function normalizeSecondaryPosition(value: unknown): PlayerPosition | undefined 
   return value as PlayerPosition;
 }
 
+function isJerseyOnlyUpdate(body: UpdatePlayerRequestDto) {
+  const allowedFields = new Set(["jerseyNumber"]);
+  const fields = Object.keys(body);
+  return fields.length === 1 && fields.every((field) => allowedFields.has(field));
+}
+
 /**
  * GET /api/players/:id - Obtiene un jugador por ID
  */
@@ -103,18 +109,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const canEdit = user.role === "admin" || normalizeEmail(user.email) === normalizeEmail(player.email);
+    const body = (await request.json()) as UpdatePlayerRequestDto;
+    const canEdit =
+      user.role === "admin" ||
+      normalizeEmail(user.email) === normalizeEmail(player.email) ||
+      (user.role === "juez" && isJerseyOnlyUpdate(body));
     if (!canEdit) {
       return NextResponse.json(
         {
           success: false,
-          message: "No autorizado. Solo el jugador asociado a este email o un administrador puede editarlo",
+          message: "No autorizado. Solo el jugador, un administrador o un juez desde Live Match puede editarlo",
         },
         { status: 403 },
       );
     }
 
-    const body = (await request.json()) as UpdatePlayerRequestDto;
     const dateOfBirth = parseOptionalDate(body.dateOfBirth, "dateOfBirth");
 
     const updatedPlayer = await playerService.updatePlayer(id, {
@@ -135,7 +144,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       status: body.status,
     });
 
-    if (user.role !== "admin") {
+    if (user.role === "user") {
       await safeTrack("Player updated", {
         playerId: updatedPlayer.id || id,
         teamId: updatedPlayer.team,

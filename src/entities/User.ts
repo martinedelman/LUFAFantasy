@@ -1,7 +1,7 @@
 import { AggregateRoot } from "./base/AggregateRoot";
 import * as bcrypt from "bcryptjs";
 
-export type UserRole = "user" | "admin";
+export type UserRole = "user" | "admin" | "juez";
 
 /**
  * Entity: User (Usuario del sistema)
@@ -37,6 +37,14 @@ export class User extends AggregateRoot {
    */
   public isAdmin(): boolean {
     return this.role === "admin";
+  }
+
+  public isJudge(): boolean {
+    return this.role === "juez";
+  }
+
+  public canUseLiveMatch(): boolean {
+    return (this.isAdmin() || this.isJudge()) && this.isActive;
   }
 
   /**
@@ -75,7 +83,7 @@ export class User extends AggregateRoot {
       errors.push("El nombre es requerido");
     }
 
-    if (!["user", "admin"].includes(this.role)) {
+    if (!["user", "admin", "juez"].includes(this.role)) {
       errors.push("Rol inválido");
     }
 

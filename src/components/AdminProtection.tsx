@@ -2,15 +2,18 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import type { UserRole } from "@/entities/User";
 
 interface AdminProtectionProps {
   children: React.ReactNode;
   fallbackMessage?: string;
+  allowedRoles?: readonly UserRole[];
 }
 
 export default function AdminProtection({
   children,
   fallbackMessage = "Solo los administradores pueden acceder a esta página.",
+  allowedRoles = ["admin"],
 }: AdminProtectionProps) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
@@ -50,7 +53,7 @@ export default function AdminProtection({
     );
   }
 
-  if (user.role !== "admin") {
+  if (!allowedRoles.includes(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-lg shadow text-center max-w-md">

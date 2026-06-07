@@ -44,6 +44,9 @@ type EventDraft = {
   points: string;
 };
 
+const LIVE_MATCH_ROLES = ["admin", "juez"] as const;
+const LIVE_MATCH_ACCESS_MESSAGE = "Solo administradores o jueces pueden acceder al modo Live Match.";
+
 const getReadableTextColor = (backgroundColor?: string) => {
   if (!backgroundColor || !/^#[0-9A-Fa-f]{6}$/.test(backgroundColor)) {
     return "#ffffff";
@@ -346,19 +349,22 @@ export default function LiveMatchPage() {
       setEventError(null);
       setEventMessage(null);
 
-      const response = await fetch(editingEventId ? `/api/games/${gameId}/events/${editingEventId}` : `/api/games/${gameId}/events`, {
-        method: editingEventId ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        editingEventId ? `/api/games/${gameId}/events/${editingEventId}` : `/api/games/${gameId}/events`,
+        {
+          method: editingEventId ? "PATCH" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            quarter: currentQuarterNumber,
+            type: eventDraft.type,
+            team,
+            player: eventDraft.player,
+            points,
+          }),
         },
-        body: JSON.stringify({
-          quarter: currentQuarterNumber,
-          type: eventDraft.type,
-          team,
-          player: eventDraft.player,
-          points,
-        }),
-      });
+      );
 
       const data: ApiResponse<GameApiResponse> = await response.json();
 
@@ -534,14 +540,16 @@ export default function LiveMatchPage() {
       : `${player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} ${player.firstName} ${player.lastName}`;
   };
 
-  const getEventReferenceId = (reference?: GameApiResponse["events"][number]["team"] | GameApiResponse["events"][number]["player"]) => {
+  const getEventReferenceId = (
+    reference?: GameApiResponse["events"][number]["team"] | GameApiResponse["events"][number]["player"],
+  ) => {
     if (!reference) return "";
     return typeof reference === "string" ? reference : reference._id;
   };
 
   if (loading) {
     return (
-      <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
+      <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <LoadingSpinner />
         </div>
@@ -551,7 +559,7 @@ export default function LiveMatchPage() {
 
   if (error && !game) {
     return (
-      <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
+      <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
         <div className="min-h-screen bg-gray-50 p-4">
           <ErrorMessage message={error} />
           <div className="mt-4 text-center">
@@ -566,7 +574,7 @@ export default function LiveMatchPage() {
 
   if (!game) {
     return (
-      <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
+      <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
         <div className="min-h-screen bg-gray-50 p-4">
           <ErrorMessage message="Partido no encontrado" />
         </div>
@@ -577,7 +585,7 @@ export default function LiveMatchPage() {
   // If game is postponed or cancelled, show an end-state message.
   if (game.status === "postponed" || game.status === "cancelled") {
     return (
-      <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
+      <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
         <div className="min-h-screen bg-gray-50 p-4">
           <div className="max-w-lg mx-auto">
             <div className="bg-white rounded-lg shadow p-6 text-center">
@@ -599,7 +607,7 @@ export default function LiveMatchPage() {
   }
 
   return (
-    <AdminProtection fallbackMessage="Solo los administradores pueden acceder al modo Live Match.">
+    <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white shadow">
@@ -873,7 +881,11 @@ export default function LiveMatchPage() {
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h2 className="font-bold text-gray-900">
-                        {game.status === "completed" ? "Corregir jugadas" : editingEventId ? "Editar evento" : "Registrar evento"}
+                        {game.status === "completed"
+                          ? "Corregir jugadas"
+                          : editingEventId
+                            ? "Editar evento"
+                            : "Registrar evento"}
                       </h2>
                       <p className="text-sm text-gray-500">
                         {game.status === "completed"
