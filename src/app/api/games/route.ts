@@ -92,8 +92,9 @@ export async function GET(request: NextRequest) {
     });
 
     if (upcoming) {
-      const now = Date.now();
-      games = games.filter((game) => new Date(game.scheduledDate).getTime() >= now);
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      games = games.filter((game) => new Date(game.scheduledDate).getTime() >= startOfToday.getTime());
     }
 
     // Convertir entities a formato API
