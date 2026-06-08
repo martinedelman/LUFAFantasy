@@ -7,12 +7,19 @@ import RepositoryContainer from "@/repositories";
 import { OtpVerificationModel, type OtpPurpose } from "@/models/OtpVerification";
 
 const REGISTRATION_OTP_TTL_MINUTES = 15;
+const PASSWORD_RESET_OTP_TTL_MINUTES = 15;
 
 export interface RegistrationOtp {
   token: string;
   code: string;
   expiresAt: Date;
   verificationUrl: string;
+}
+
+export interface PasswordResetOtp {
+  code: string;
+  expiresAt: Date;
+  expiresInMinutes: number;
 }
 
 function getAppUrl() {
@@ -123,5 +130,90 @@ export class OtpService {
     });
 
     return { user, sessionToken };
+  }
+
+  async createPasswordResetOtp(user: User): Promise<PasswordResetOtp> {
+    if (!user.id) {
+      throw new Error("Usuario inválido para generar OTP");
+    }
+
+    await connectToDatabase();
+
+    const purpose: OtpPurpose = "password_reset";
+    const token = crypto.randomBytes(32).toString("hex");
+    const code = generateNumericCode();
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_OTP_TTL_MINUTES * 60 * 1000);
+
+    await OtpVerificationModel.updateMany(
+      {
+        userId: new mongoose.Types.ObjectId(user.id),
+        purpose,
+        consumedAt: { $exists: false },
+      },
+      {
+        $set: {
+          consumedAt: new Date(),
+        },
+      },
+    ).exec();
+
+    await OtpVerificationModel.create({
+      userId: new mongoose.Types.ObjectId(user.id),
+      email: user.email,
+      purpose,
+      tokenHash: hashOtpValue(token),
+      codeHash: hashOtpValue(code),
+      expiresAt,
+      attempts: 0,
+      maxAttempts: 5,
+    });
+
+    return {
+      code,
+      expiresAt,
+      expiresInMinutes: PASSWORD_RESET_OTP_TTL_MINUTES,
+    };
+  }
+
+  async verifyPasswordResetOtp(data: { email: string; code: string }): Promise<User> {
+    await connectToDatabase();
+
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const otp = await OtpVerificationModel.findOne({
+      email: normalizedEmail,
+      purpose: "password_reset",
+      consumedAt: { $exists: false },
+    })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    if (!otp) {
+      throw new Error("Código inválido");
+    }
+
+    if (otp.expiresAt.getTime() < Date.now()) {
+      throw new Error("El código expiró");
+    }
+
+    if (otp.attempts >= otp.maxAttempts) {
+      throw new Error("Se superó el máximo de intentos");
+    }
+
+    const isCodeValid = otp.codeHash === hashOtpValue(data.code.trim());
+    if (!isCodeValid) {
+      otp.attempts += 1;
+      await otp.save();
+      throw new Error("Código inválido");
+    }
+
+    otp.consumedAt = new Date();
+    await otp.save();
+
+    const user = await this.userRepo.findById(otp.userId.toString());
+    if (!user) {
+      throw new Error("Usuario no encontrado");
+    }
+
+    return user;
   }
 }

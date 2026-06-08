@@ -94,6 +94,11 @@ export default function SignInPage() {
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
                 placeholder="••••••••"
               />
+              <div className="mt-2 text-right">
+                <Link href="/auth/forgot-password" className="text-sm font-medium text-green-600 hover:text-green-500">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
             </div>
           </div>
 

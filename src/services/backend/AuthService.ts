@@ -96,6 +96,39 @@ export class AuthService {
     return { user, token: sessionToken };
   }
 
+  async requestPasswordReset(email: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await this.userRepo.findByEmail(normalizedEmail);
+
+    if (!user || !user.isActive) {
+      return;
+    }
+
+    const otp = await this.otpService.createPasswordResetOtp(user);
+    await this.emailService.sendTemplate({
+      name: "password-reset",
+      to: user.email,
+      data: {
+        name: user.name,
+        code: otp.code,
+        expiresInMinutes: otp.expiresInMinutes,
+      },
+    });
+  }
+
+  async resetPassword(data: { email: string; code: string; password: string }): Promise<void> {
+    if (data.password.length < 6) {
+      throw new Error("La contraseña debe tener al menos 6 caracteres");
+    }
+
+    const user = await this.otpService.verifyPasswordResetOtp({
+      email: data.email,
+      code: data.code,
+    });
+    const passwordHash = await User.hashPassword(data.password);
+    await this.userRepo.updatePasswordHash(user.id!, passwordHash);
+  }
+
   /**
    * Verifica un token y retorna el usuario
    */

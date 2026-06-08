@@ -19,4 +19,9 @@ export interface IUserRepository extends IRepository<User> {
    * Actualiza el estado activo de un usuario
    */
   updateActiveStatus(id: string, isActive: boolean): Promise<User>;
+
+  /**
+   * Actualiza el hash de contraseña de un usuario
+   */
+  updatePasswordHash(id: string, passwordHash: string): Promise<User>;
 }

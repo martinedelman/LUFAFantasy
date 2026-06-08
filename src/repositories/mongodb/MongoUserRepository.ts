@@ -101,4 +101,24 @@ export class MongoUserRepository implements IUserRepository {
 
     return user;
   }
+
+  async updatePasswordHash(id: string, passwordHash: string): Promise<User> {
+    await connectToDatabase();
+    const doc: IUser | null = await UserModel.findByIdAndUpdate(
+      id,
+      { $set: { password: passwordHash } },
+      { new: true, runValidators: true },
+    ).exec();
+
+    if (!doc) {
+      throw new Error("Usuario no encontrado");
+    }
+
+    const user = UserFactory.fromDatabase(doc);
+    if (!user) {
+      throw new Error("Error al actualizar contraseña");
+    }
+
+    return user;
+  }
 }

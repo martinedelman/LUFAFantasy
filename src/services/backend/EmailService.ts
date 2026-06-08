@@ -23,11 +23,22 @@ export interface RegistrationVerificationTemplateData {
   expiresInMinutes: number;
 }
 
+export interface PasswordResetTemplateData {
+  name: string;
+  code: string;
+  expiresInMinutes: number;
+}
+
 export type EmailTemplate =
   | {
       name: "registration-verification";
       to: string;
       data: RegistrationVerificationTemplateData;
+    }
+  | {
+      name: "password-reset";
+      to: string;
+      data: PasswordResetTemplateData;
     };
 
 function getMailFrom() {
@@ -88,6 +99,33 @@ function renderRegistrationVerification(data: RegistrationVerificationTemplateDa
   };
 }
 
+function renderPasswordReset(data: PasswordResetTemplateData): EmailMessage {
+  const safeName = escapeHtml(data.name);
+  const safeCode = escapeHtml(data.code);
+
+  return {
+    to: "",
+    subject: "Código para restaurar tu contraseña en LUFA Fantasy",
+    text: [
+      `Hola ${data.name},`,
+      "Recibimos una solicitud para restaurar tu contraseña de LUFA Fantasy.",
+      `Código: ${data.code}`,
+      `El código expira en ${data.expiresInMinutes} minutos.`,
+      "Si no solicitaste este cambio, podés ignorar este correo.",
+    ].join("\n\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5;">
+        <h1 style="font-size: 22px; margin-bottom: 12px;">Restaurar contraseña</h1>
+        <p>Hola ${safeName},</p>
+        <p>Usá este código para crear una nueva contraseña en LUFA Fantasy:</p>
+        <p style="font-size: 28px; letter-spacing: 6px; font-weight: 700; margin: 14px 0;">${safeCode}</p>
+        <p>Este código expira en ${data.expiresInMinutes} minutos.</p>
+        <p style="color: #6b7280; font-size: 13px;">Si no solicitaste este cambio, podés ignorar este correo.</p>
+      </div>
+    `,
+  };
+}
+
 export class EmailService {
   private transporter: Transporter | null = null;
 
@@ -132,6 +170,14 @@ export class EmailService {
   async sendTemplate(template: EmailTemplate) {
     if (template.name === "registration-verification") {
       const message = renderRegistrationVerification(template.data);
+      return this.send({
+        ...message,
+        to: template.to,
+      });
+    }
+
+    if (template.name === "password-reset") {
+      const message = renderPasswordReset(template.data);
       return this.send({
         ...message,
         to: template.to,
