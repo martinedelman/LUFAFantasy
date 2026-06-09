@@ -5,6 +5,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
 import Skeleton from "@/components/Skeleton";
+import Link from "next/link";
 import { useCachedState } from "@/hooks/useCachedState";
 
 const rankingsHero = {
@@ -279,7 +280,10 @@ export default function RankingsPage() {
                             const teamName = row.player?.team?.name || row.player?.team?.shortName || "-";
 
                             return (
-                              <tr key={`${metric.key}-${row.player?._id || index}`} className="block sm:table-row">
+                              <tr
+                                key={`${metric.key}-${row.player?._id || index}`}
+                                className="block sm:table-row group hover:bg-gray-50 transition-colors duration-150"
+                              >
                                 <td className="block px-4 pt-4 align-middle  sm:table-cell sm:py-3">
                                   <span
                                     className={`inline-flex h-6 w-6 items-center justify-center rounded-full  px-2 text-sm font-bold ${getRankStyles(position)}`}
@@ -291,11 +295,20 @@ export default function RankingsPage() {
                                   <div className="min-w-0">
                                     <div className="flex flex-wrap items-center gap-2">
                                       {row.player?.jerseyNumber != null && (
-                                        <span className="rounded-md bg-blue-50 min-w-10 px-2 py-0.5 text-xs text-center font-bold text-blue-800">
+                                        <span className="rounded-md bg-blue-50 min-w-10 px-2 py-0.5 text-xs text-center font-bold text-blue-800 transition-colors duration-150 group-hover:bg-blue-100">
                                           #{row.player.jerseyNumber}
                                         </span>
                                       )}
-                                      <span className="font-semibold text-gray-900">{playerName}</span>
+                                      {row.player ? (
+                                        <Link
+                                          href={`/players/${row.player._id}`}
+                                          className="font-semibold text-sm text-gray-900 hover:text-green-600 transition-colors duration-150"
+                                        >
+                                          {playerName}
+                                        </Link>
+                                      ) : (
+                                        <span className="font-semibold text-sm text-gray-900">{playerName}</span>
+                                      )}
                                     </div>
                                     <p className="mt-1 text-xs font-medium text-gray-500 md:hidden">{teamName}</p>
                                   </div>
@@ -304,7 +317,7 @@ export default function RankingsPage() {
                                   {teamName}
                                 </td>
                                 <td className="block px-4 pb-4 text-left align-middle sm:table-cell sm:py-3 sm:text-right">
-                                  <span className="inline-flex min-w-16 justify-center rounded-full  px-3 py-1.5 text-sm font-bold text-black">
+                                  <span className="inline-flex min-w-16 justify-center rounded-full px-3 py-1.5 text-sm font-bold text-black transform transition-transform duration-150 group-hover:translate-x-1">
                                     {formatRankingValue(metric, row.value)}
                                   </span>
                                 </td>
