@@ -5,6 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import InlineFeedback, { type FeedbackVariant } from "@/components/InlineFeedback";
+import Modal from "@/components/Modal";
+import Toast from "@/components/Toast";
 import type { ApiResponse, GameApiResponse, GameEventType, PlayerApiResponse } from "@/types";
 
 type QuarterKey = "q1" | "q2" | "q3" | "q4" | "overtime";
@@ -49,6 +52,18 @@ const LIVE_MATCH_ROLES = ["admin", "juez"] as const;
 const LIVE_MATCH_ACCESS_MESSAGE = "Solo administradores o jueces pueden acceder al modo Live Match.";
 type JerseyDrafts = Record<string, string>;
 type JerseyMessages = Record<string, string | null>;
+type LiveToastState = {
+  variant: Extract<FeedbackVariant, "info" | "warning" | "error">;
+  title?: string;
+  message: string;
+};
+type PendingConfirmation = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  variant: Extract<FeedbackVariant, "warning" | "error">;
+  onConfirm: () => Promise<void> | void;
+};
 
 const getReadableTextColor = (backgroundColor?: string) => {
   if (!backgroundColor || !/^#[0-9A-Fa-f]{6}$/.test(backgroundColor)) {
@@ -120,8 +135,8 @@ export default function LiveMatchPage() {
     description: "",
   });
   const [savingEvent, setSavingEvent] = useState(false);
-  const [eventMessage, setEventMessage] = useState<string | null>(null);
-  const [eventError, setEventError] = useState<string | null>(null);
+  const [toast, setToast] = useState<LiveToastState | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [jerseyDrafts, setJerseyDrafts] = useState<JerseyDrafts>({});
   const [savingJerseyPlayerId, setSavingJerseyPlayerId] = useState<string | null>(null);
@@ -239,7 +254,7 @@ export default function LiveMatchPage() {
 
     try {
       setStarting(true);
-      setError(null);
+      setToast(null);
 
       const response = await fetch(`/api/games/${gameId}/start`, {
         method: "PATCH",
@@ -257,7 +272,7 @@ export default function LiveMatchPage() {
       const data: ApiResponse<GameApiResponse> = await response.json();
 
       if (!data.success) {
-        setError(data.message || "Error al guardar jugadores presentes");
+        showLiveToast("error", data.message || "Error al guardar jugadores presentes.");
         return;
       }
 
@@ -265,9 +280,10 @@ export default function LiveMatchPage() {
       if (data.data) {
         setGame(data.data);
         setManagingPresentPlayers(false);
+        showLiveToast("info", "Jugadores presentes guardados correctamente.");
       }
     } catch {
-      setError("Error de conexión al guardar jugadores presentes");
+      showLiveToast("error", "Error de conexión al guardar jugadores presentes.");
     } finally {
       setStarting(false);
     }
@@ -311,6 +327,10 @@ export default function LiveMatchPage() {
 
   const liveScoreHome = game?.score?.home?.total ?? 0;
   const liveScoreAway = game?.score?.away?.total ?? 0;
+
+  const showLiveToast = useCallback((variant: LiveToastState["variant"], message: string, title?: string) => {
+    setToast({ variant, message, title });
+  }, []);
 
   const currentQuarterNumber = useMemo(() => {
     if (currentQuarter === "overtime") return 5;
@@ -442,8 +462,7 @@ export default function LiveMatchPage() {
       teamSide,
       player: "",
     }));
-    setEventMessage(null);
-    setEventError(null);
+    setToast(null);
   };
 
   const selectEventType = (type: GameEventType, points?: number) => {
@@ -453,8 +472,7 @@ export default function LiveMatchPage() {
       points: requiresPenaltyDescription(type) ? "" : points === undefined ? "" : String(points),
       description: requiresPenaltyDescription(type) ? prev.description : "",
     }));
-    setEventMessage(null);
-    setEventError(null);
+    setToast(null);
   };
 
   const resetEventDraft = () => {
@@ -467,8 +485,7 @@ export default function LiveMatchPage() {
       description: "",
     });
     setCurrentQuarter("q1");
-    setEventMessage(null);
-    setEventError(null);
+    setToast(null);
   };
 
   const handleAddGameEvent = async () => {
@@ -476,32 +493,31 @@ export default function LiveMatchPage() {
 
     const team = game[`${eventDraft.teamSide}Team`]?._id;
     if (!team) {
-      setEventError("Selecciona un equipo válido");
+      showLiveToast("error", "Seleccioná un equipo válido antes de registrar la jugada.");
       return;
     }
 
     if (eventDraft.type !== "quarter_end" && eventDraft.type !== "game_end" && !eventDraft.player) {
-      setEventError("Selecciona el jugador del evento");
+      showLiveToast("error", "Seleccioná el jugador del evento.");
       return;
     }
 
     const isPenaltyEvent = requiresPenaltyDescription(eventDraft.type);
     const penaltyDescription = eventDraft.description.trim();
     if (isPenaltyEvent && !penaltyDescription) {
-      setEventError("Describe qué tipo de penalidad hubo");
+      showLiveToast("error", "Describí qué tipo de penalidad hubo.");
       return;
     }
 
     const points = isPenaltyEvent || eventDraft.points === "" ? undefined : Number(eventDraft.points);
     if (!isPenaltyEvent && points !== undefined && (!Number.isFinite(points) || points < 0)) {
-      setEventError("Los puntos deben ser 0 o más");
+      showLiveToast("error", "Los puntos deben ser 0 o más.");
       return;
     }
 
     try {
       setSavingEvent(true);
-      setEventError(null);
-      setEventMessage(null);
+      setToast(null);
 
       const response = await fetch(
         editingEventId ? `/api/games/${gameId}/events/${editingEventId}` : `/api/games/${gameId}/events`,
@@ -524,24 +540,24 @@ export default function LiveMatchPage() {
       const data: ApiResponse<GameApiResponse> = await response.json();
 
       if (!response.ok || !data.success || !data.data) {
-        setEventError(data.message || "No se pudo registrar el evento");
+        showLiveToast("error", data.message || "No se pudo registrar el evento.");
         return;
       }
 
       setGame(data.data);
       if (editingEventId) {
         setEditingEventId(null);
-        setEventMessage("Evento actualizado y marcador recalculado.");
+        showLiveToast("info", "Evento actualizado y marcador recalculado.");
       } else {
         setEventDraft((prev) => ({
           ...prev,
           player: "",
           description: isPenaltyEvent ? "" : prev.description,
         }));
-        setEventMessage(points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.");
+        showLiveToast("info", points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.");
       }
     } catch {
-      setEventError("Error de conexión al registrar el evento");
+      showLiveToast("error", "Error de conexión al registrar el evento.");
     } finally {
       setSavingEvent(false);
     }
@@ -565,21 +581,15 @@ export default function LiveMatchPage() {
       description: requiresPenaltyDescription(event.type) ? getPenaltyDescription(event.details) : "",
     });
     setCurrentQuarter(event.quarter === 5 ? "overtime" : event.quarter === 2 ? "q2" : "q1");
-    setEventMessage(null);
-    setEventError(null);
+    setToast(null);
   };
 
-  const handleDeleteGameEvent = async (eventId?: string) => {
+  const deleteGameEvent = async (eventId: string) => {
     if (!game || !eventId) return;
-
-    if (!confirm("¿Querés eliminar este evento del historial?")) {
-      return;
-    }
 
     try {
       setSavingEvent(true);
-      setEventError(null);
-      setEventMessage(null);
+      setToast(null);
 
       const response = await fetch(`/api/games/${gameId}/events/${eventId}`, {
         method: "DELETE",
@@ -588,17 +598,32 @@ export default function LiveMatchPage() {
       const data: ApiResponse<GameApiResponse> = await response.json();
 
       if (!response.ok || !data.success) {
-        setEventError(data.message || "No se pudo eliminar el evento");
+        showLiveToast("error", data.message || "No se pudo eliminar el evento.");
         return;
       }
 
       await fetchGameData();
-      setEventMessage("Evento eliminado correctamente.");
+      showLiveToast("info", "Evento eliminado correctamente.");
     } catch {
-      setEventError("Error de conexión al eliminar el evento");
+      showLiveToast("error", "Error de conexión al eliminar el evento.");
     } finally {
       setSavingEvent(false);
     }
+  };
+
+  const handleDeleteGameEvent = (eventId?: string) => {
+    if (!eventId) return;
+
+    setPendingConfirmation({
+      title: "Eliminar evento",
+      message: "Esta acción quita el evento del historial y recalcula el partido. Podés registrar el evento nuevamente si fue un error.",
+      confirmLabel: "Eliminar evento",
+      variant: "error",
+      onConfirm: async () => {
+        setPendingConfirmation(null);
+        await deleteGameEvent(eventId);
+      },
+    });
   };
 
   const handleEndHalf = async () => {
@@ -606,14 +631,13 @@ export default function LiveMatchPage() {
 
     const team = game[`${eventDraft.teamSide}Team`]?._id;
     if (!team) {
-      setEventError("Selecciona un equipo válido");
+      showLiveToast("error", "Seleccioná un equipo válido antes de terminar la mitad.");
       return;
     }
 
     try {
       setSavingEvent(true);
-      setEventError(null);
-      setEventMessage(null);
+      setToast(null);
 
       const response = await fetch(`/api/games/${gameId}/events`, {
         method: "POST",
@@ -630,7 +654,7 @@ export default function LiveMatchPage() {
       const data: ApiResponse<GameApiResponse> = await response.json();
 
       if (!response.ok || !data.success || !data.data) {
-        setEventError(data.message || "No se pudo registrar el fin de mitad");
+        showLiveToast("error", data.message || "No se pudo registrar el fin de mitad.");
         return;
       }
 
@@ -638,25 +662,20 @@ export default function LiveMatchPage() {
       if (currentQuarter === "q1") {
         setCurrentQuarter("q2");
       }
-      setEventMessage("Mitad registrada correctamente.");
+      showLiveToast("info", "Mitad registrada correctamente.");
     } catch {
-      setEventError("Error de conexión al registrar el fin de mitad");
+      showLiveToast("error", "Error de conexión al registrar el fin de mitad.");
     } finally {
       setSavingEvent(false);
     }
   };
 
-  const handleEndGame = async () => {
+  const completeGame = async () => {
     if (!game) return;
-
-    if (!confirm("¿Querés finalizar el partido?")) {
-      return;
-    }
 
     try {
       setSavingEvent(true);
-      setEventError(null);
-      setEventMessage(null);
+      setToast(null);
 
       const response = await fetch(`/api/games/${gameId}/complete`, {
         method: "PATCH",
@@ -665,17 +684,30 @@ export default function LiveMatchPage() {
       const data: ApiResponse<GameApiResponse> = await response.json();
 
       if (!response.ok || !data.success || !data.data) {
-        setEventError(data.message || "No se pudo finalizar el partido");
+        showLiveToast("error", data.message || "No se pudo finalizar el partido.");
         return;
       }
 
       setGame(data.data);
-      setEventMessage("Partido finalizado correctamente.");
+      showLiveToast("info", "Partido finalizado correctamente.");
     } catch {
-      setEventError("Error de conexión al finalizar el partido");
+      showLiveToast("error", "Error de conexión al finalizar el partido.");
     } finally {
       setSavingEvent(false);
     }
+  };
+
+  const handleEndGame = () => {
+    setPendingConfirmation({
+      title: "Finalizar partido",
+      message: "El partido quedará cerrado con el marcador actual. Después solo se podrá corregir desde el modo Corrección Live.",
+      confirmLabel: "Finalizar partido",
+      variant: "warning",
+      onConfirm: async () => {
+        setPendingConfirmation(null);
+        await completeGame();
+      },
+    });
   };
 
   const getEventTypeLabel = (type: GameEventType) => {
@@ -744,10 +776,17 @@ export default function LiveMatchPage() {
             {isSaving ? "..." : "OK"}
           </button>
         </div>
-        {(jerseyErrors[player._id] || jerseyMessages[player._id]) && (
-          <p className={`mt-2 text-xs ${jerseyErrors[player._id] ? "text-red-600" : "text-green-700"}`}>
-            {jerseyErrors[player._id] || jerseyMessages[player._id]}
-          </p>
+        {jerseyErrors[player._id] && (
+          <InlineFeedback
+            compact
+            className="mt-2"
+            variant="error"
+            title="Camiseta inválida"
+            message={jerseyErrors[player._id]}
+          />
+        )}
+        {!jerseyErrors[player._id] && jerseyMessages[player._id] && (
+          <InlineFeedback compact className="mt-2" variant="info" title="Camiseta" message={jerseyMessages[player._id]} />
         )}
       </div>
     );
@@ -854,6 +893,37 @@ export default function LiveMatchPage() {
   return (
     <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
       <div className="min-h-screen bg-gray-50">
+        <Toast
+          open={Boolean(toast)}
+          variant={toast?.variant}
+          title={toast?.title}
+          message={toast?.message || ""}
+          durationMs={toast?.variant === "info" ? 5000 : null}
+          onClose={() => setToast(null)}
+        />
+        <Modal
+          open={Boolean(pendingConfirmation)}
+          title={pendingConfirmation?.title || ""}
+          variant={pendingConfirmation?.variant || "warning"}
+          onClose={() => setPendingConfirmation(null)}
+          secondaryAction={{
+            label: "Cancelar",
+            onClick: () => setPendingConfirmation(null),
+            disabled: savingEvent,
+          }}
+          primaryAction={
+            pendingConfirmation
+              ? {
+                  label: pendingConfirmation.confirmLabel,
+                  onClick: pendingConfirmation.onConfirm,
+                  variant: pendingConfirmation.variant === "error" ? "danger" : "primary",
+                  disabled: savingEvent,
+                }
+              : undefined
+          }
+        >
+          <p>{pendingConfirmation?.message}</p>
+        </Modal>
         {/* Header */}
         <div className="bg-white shadow">
           <div className="max-w-4xl mx-auto px-4 py-4">
@@ -1137,16 +1207,6 @@ export default function LiveMatchPage() {
                 </div>
 
                 <div className="space-y-4 p-4">
-                  {(eventError || eventMessage) && (
-                    <div
-                      className={`rounded-lg p-3 text-sm ${
-                        eventError ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
-                      }`}
-                    >
-                      {eventError || eventMessage}
-                    </div>
-                  )}
-
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-gray-700">Tipo</label>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
+import InlineFeedback from "@/components/InlineFeedback";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Division {
@@ -604,9 +605,13 @@ export default function EditTeamPage() {
                     />
                   </div>
                   {!canManageTeamPhotos && (
-                    <div className="md:col-span-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                      Solo usuarios con rol Admin pueden modificar las fotos del equipo.
-                    </div>
+                    <InlineFeedback
+                      compact
+                      className="md:col-span-2"
+                      variant="warning"
+                      title="Fotos bloqueadas"
+                      message="Solo usuarios con rol Admin pueden modificar las fotos del equipo."
+                    />
                   )}
                   <div>
                     <label htmlFor="registrationDate" className="block text-sm font-medium text-gray-700 mb-1">
@@ -624,13 +629,7 @@ export default function EditTeamPage() {
                 </div>
               </div>
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                  <div className="flex">
-                    <div className="text-red-600 text-sm">{error}</div>
-                  </div>
-                </div>
-              )}
+              {error && <InlineFeedback variant="error" title="No pudimos guardar el equipo" message={error} />}
 
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <button

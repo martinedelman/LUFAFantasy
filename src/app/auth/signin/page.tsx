@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -12,11 +13,35 @@ export default function SignInPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const router = useRouter();
   const { signIn } = useAuth();
 
+  const validateField = (name: string, value: string) => {
+    if (name === "email" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return "Ingresá un email válido.";
+    }
+
+    if (name === "password" && value && value.length < 6) {
+      return "La contraseña debe tener al menos 6 caracteres.";
+    }
+
+    return "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nextFieldErrors = {
+      email: validateField("email", formData.email),
+      password: validateField("password", formData.password),
+    };
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.values(nextFieldErrors).some(Boolean)) {
+      setError("Revisá los campos marcados antes de iniciar sesión.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -39,10 +64,16 @@ export default function SignInPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextValue = e.target.value;
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [e.target.name]: nextValue,
     }));
+    setFieldErrors((prev) => ({
+      ...prev,
+      [e.target.name]: validateField(e.target.name, nextValue),
+    }));
+    if (error) setError("");
   };
 
   return (
@@ -57,9 +88,7 @@ export default function SignInPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{error}</div>
-          )}
+          {error && <InlineFeedback variant="error" title="No pudimos iniciar sesión" message={error} />}
 
           <div className="space-y-4">
             <div>
@@ -74,9 +103,22 @@ export default function SignInPage() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? "email-error" : undefined}
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm ${
+                  fieldErrors.email ? "border-red-300 bg-red-50" : "border-gray-300"
+                }`}
                 placeholder="tu@email.com"
               />
+              {fieldErrors.email && (
+                <InlineFeedback
+                  compact
+                  className="mt-2"
+                  variant="error"
+                  title="Email inválido"
+                  message={<span id="email-error">{fieldErrors.email}</span>}
+                />
+              )}
             </div>
 
             <div>
@@ -91,9 +133,22 @@ export default function SignInPage() {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? "password-error" : undefined}
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm ${
+                  fieldErrors.password ? "border-red-300 bg-red-50" : "border-gray-300"
+                }`}
                 placeholder="••••••••"
               />
+              {fieldErrors.password && (
+                <InlineFeedback
+                  compact
+                  className="mt-2"
+                  variant="error"
+                  title="Contraseña incompleta"
+                  message={<span id="password-error">{fieldErrors.password}</span>}
+                />
+              )}
               <div className="mt-2 text-right">
                 <Link href="/auth/forgot-password" className="text-sm font-medium text-green-600 hover:text-green-500">
                   ¿Olvidaste tu contraseña?

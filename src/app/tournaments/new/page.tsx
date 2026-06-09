@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import InlineFeedback from "@/components/InlineFeedback";
 import { useAuth } from "@/hooks/useAuth";
 
 interface DivisionOption {
@@ -145,19 +146,13 @@ export default function NewTournamentPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full text-center">
-          <div className="bg-red-50 border border-red-200 rounded-md p-6">
-            <div className="flex justify-center mb-4">
-              <svg className="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-red-800 mb-2">Acceso Restringido</h3>
-            <p className="text-red-600 mb-4">Solo los administradores pueden crear torneos.</p>
+          <div className="rounded-md bg-white p-6 shadow">
+            <InlineFeedback
+              variant="error"
+              title="Acceso restringido"
+              message="Solo los administradores pueden crear torneos."
+              className="mb-4 text-left"
+            />
             <div className="space-y-2">
               <Link
                 href="/tournaments"
@@ -340,7 +335,7 @@ export default function NewTournamentPage() {
 
       <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">{error}</div>}
+          {error && <InlineFeedback variant="error" title="No pudimos crear el torneo" message={error} />}
 
           {/* Información Básica */}
           <div className="bg-white rounded-lg shadow p-6">

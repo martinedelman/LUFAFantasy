@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -13,26 +14,44 @@ export default function SignUpPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
   const { signUp } = useAuth();
 
+  const validateForm = (data = formData) => {
+    const nextErrors: Record<string, string> = {};
+
+    if (data.name.trim() && data.name.trim().length < 3) {
+      nextErrors.name = "Ingresá nombre y apellido o un nombre reconocible.";
+    }
+
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      nextErrors.email = "Ingresá un email válido.";
+    }
+
+    if (data.password && data.password.length < 6) {
+      nextErrors.password = "La contraseña debe tener al menos 6 caracteres.";
+    }
+
+    if (data.confirmPassword && data.password !== data.confirmPassword) {
+      nextErrors.confirmPassword = "Las contraseñas no coinciden.";
+    }
+
+    return nextErrors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nextFieldErrors = validateForm();
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setError("Revisá los campos marcados antes de crear la cuenta.");
+      return;
+    }
+
     setLoading(true);
     setError("");
-
-    // Validaciones del lado del cliente
-    if (formData.password !== formData.confirmPassword) {
-      setError("Las contraseñas no coinciden");
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
-      setLoading(false);
-      return;
-    }
 
     try {
       const result = await signUp(formData.name, formData.email, formData.password);
@@ -51,11 +70,30 @@ export default function SignUpPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
+    const nextFormData = {
+      ...formData,
       [e.target.name]: e.target.value,
-    }));
+    };
+    setFormData(nextFormData);
+    setFieldErrors(validateForm(nextFormData));
+    if (error) setError("");
   };
+
+  const inputClassName = (fieldName: string) =>
+    `mt-1 appearance-none relative block w-full px-3 py-2 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm ${
+      fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
+    }`;
+
+  const renderFieldError = (fieldName: string, title: string) =>
+    fieldErrors[fieldName] ? (
+      <InlineFeedback
+        compact
+        className="mt-2"
+        variant="error"
+        title={title}
+        message={<span id={`${fieldName}-error`}>{fieldErrors[fieldName]}</span>}
+      />
+    ) : null;
 
   if (success) {
     return (
@@ -93,9 +131,7 @@ export default function SignUpPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{error}</div>
-          )}
+          {error && <InlineFeedback variant="error" title="No pudimos crear la cuenta" message={error} />}
 
           <div className="space-y-4">
             <div>
@@ -110,9 +146,12 @@ export default function SignUpPage() {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                aria-invalid={Boolean(fieldErrors.name)}
+                aria-describedby={fieldErrors.name ? "name-error" : undefined}
+                className={inputClassName("name")}
                 placeholder="Juan Pérez"
               />
+              {renderFieldError("name", "Nombre incompleto")}
             </div>
 
             <div>
@@ -127,9 +166,12 @@ export default function SignUpPage() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? "email-error" : undefined}
+                className={inputClassName("email")}
                 placeholder="tu@email.com"
               />
+              {renderFieldError("email", "Email inválido")}
             </div>
 
             <div>
@@ -144,9 +186,12 @@ export default function SignUpPage() {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? "password-error" : undefined}
+                className={inputClassName("password")}
                 placeholder="••••••••"
               />
+              {renderFieldError("password", "Contraseña corta")}
             </div>
 
             <div>
@@ -161,9 +206,12 @@ export default function SignUpPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                aria-invalid={Boolean(fieldErrors.confirmPassword)}
+                aria-describedby={fieldErrors.confirmPassword ? "confirmPassword-error" : undefined}
+                className={inputClassName("confirmPassword")}
                 placeholder="••••••••"
               />
+              {renderFieldError("confirmPassword", "Confirmación distinta")}
             </div>
           </div>
           <div>

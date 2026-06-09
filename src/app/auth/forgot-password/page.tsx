@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 type Step = "request" | "confirm";
@@ -17,9 +18,41 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const validateEmail = (value: string) => {
+    if (!value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "";
+    return "Ingresá un email válido.";
+  };
+
+  const validateResetFields = (values = { code, password, confirmPassword }) => {
+    const nextErrors: Record<string, string> = {};
+
+    if (values.code && !/^\d{6}$/.test(values.code)) {
+      nextErrors.code = "El código debe tener 6 números.";
+    }
+
+    if (values.password && values.password.length < 6) {
+      nextErrors.password = "La contraseña debe tener al menos 6 caracteres.";
+    }
+
+    if (values.confirmPassword && values.password !== values.confirmPassword) {
+      nextErrors.confirmPassword = "Las contraseñas no coinciden.";
+    }
+
+    return nextErrors;
+  };
 
   const requestCode = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const emailError = validateEmail(email);
+    setFieldErrors(emailError ? { email: emailError } : {});
+
+    if (emailError) {
+      setError("Revisá el email antes de pedir el código.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     setMessage("");
@@ -50,21 +83,17 @@ export default function ForgotPasswordPage() {
 
   const resetPassword = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const nextFieldErrors = validateResetFields();
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setError("Revisá los campos marcados antes de actualizar la contraseña.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     setMessage("");
-
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
-      setLoading(false);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
-      setLoading(false);
-      return;
-    }
 
     try {
       const response = await fetch("/api/auth/password-reset/confirm", {
@@ -109,10 +138,8 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{error}</div>}
-        {message && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm">{message}</div>
-        )}
+        {error && <InlineFeedback variant="error" title="No pudimos continuar" message={error} />}
+        {message && <InlineFeedback variant="success" title="Revisá tu correo" message={message} />}
 
         {step === "request" ? (
           <form className="mt-8 space-y-6" onSubmit={requestCode}>
@@ -127,10 +154,27 @@ export default function ForgotPasswordPage() {
                 autoComplete="email"
                 required
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setFieldErrors((prev) => ({ ...prev, email: validateEmail(event.target.value) }));
+                  if (error) setError("");
+                }}
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? "email-error" : undefined}
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm ${
+                  fieldErrors.email ? "border-red-300 bg-red-50" : "border-gray-300"
+                }`}
                 placeholder="tu@email.com"
               />
+              {fieldErrors.email && (
+                <InlineFeedback
+                  compact
+                  className="mt-2"
+                  variant="error"
+                  title="Email inválido"
+                  message={<span id="email-error">{fieldErrors.email}</span>}
+                />
+              )}
             </div>
 
             <button
@@ -162,10 +206,28 @@ export default function ForgotPasswordPage() {
                   inputMode="numeric"
                   required
                   value={code}
-                  onChange={(event) => setCode(event.target.value)}
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                  onChange={(event) => {
+                    const nextValue = event.target.value.replace(/\D/g, "").slice(0, 6);
+                    setCode(nextValue);
+                    setFieldErrors(validateResetFields({ code: nextValue, password, confirmPassword }));
+                    if (error) setError("");
+                  }}
+                  aria-invalid={Boolean(fieldErrors.code)}
+                  aria-describedby={fieldErrors.code ? "code-error" : undefined}
+                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm ${
+                    fieldErrors.code ? "border-red-300 bg-red-50" : "border-gray-300"
+                  }`}
                   placeholder="123456"
                 />
+                {fieldErrors.code && (
+                  <InlineFeedback
+                    compact
+                    className="mt-2"
+                    variant="error"
+                    title="Código incompleto"
+                    message={<span id="code-error">{fieldErrors.code}</span>}
+                  />
+                )}
               </div>
 
               <div>
@@ -179,10 +241,28 @@ export default function ForgotPasswordPage() {
                   autoComplete="new-password"
                   required
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    setPassword(nextValue);
+                    setFieldErrors(validateResetFields({ code, password: nextValue, confirmPassword }));
+                    if (error) setError("");
+                  }}
+                  aria-invalid={Boolean(fieldErrors.password)}
+                  aria-describedby={fieldErrors.password ? "password-error" : undefined}
+                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm ${
+                    fieldErrors.password ? "border-red-300 bg-red-50" : "border-gray-300"
+                  }`}
                   placeholder="••••••••"
                 />
+                {fieldErrors.password && (
+                  <InlineFeedback
+                    compact
+                    className="mt-2"
+                    variant="error"
+                    title="Contraseña corta"
+                    message={<span id="password-error">{fieldErrors.password}</span>}
+                  />
+                )}
               </div>
 
               <div>
@@ -196,10 +276,28 @@ export default function ForgotPasswordPage() {
                   autoComplete="new-password"
                   required
                   value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    setConfirmPassword(nextValue);
+                    setFieldErrors(validateResetFields({ code, password, confirmPassword: nextValue }));
+                    if (error) setError("");
+                  }}
+                  aria-invalid={Boolean(fieldErrors.confirmPassword)}
+                  aria-describedby={fieldErrors.confirmPassword ? "confirmPassword-error" : undefined}
+                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm ${
+                    fieldErrors.confirmPassword ? "border-red-300 bg-red-50" : "border-gray-300"
+                  }`}
                   placeholder="••••••••"
                 />
+                {fieldErrors.confirmPassword && (
+                  <InlineFeedback
+                    compact
+                    className="mt-2"
+                    variant="error"
+                    title="Confirmación distinta"
+                    message={<span id="confirmPassword-error">{fieldErrors.confirmPassword}</span>}
+                  />
+                )}
               </div>
             </div>
 

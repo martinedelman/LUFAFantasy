@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AdminProtection from "@/components/AdminProtection";
+import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import type { AdminSystemStatsResponseDto, ApiResponseDto, CreateJudgeRequestDto, JudgeResponseDto } from "@/app/DTOs";
 
@@ -139,7 +140,7 @@ export default function AdminPage() {
           </header>
 
           {error ? (
-            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
+            <InlineFeedback variant="error" title="No pudimos cargar el panel" message={error} />
           ) : loading ? (
             <div className="rounded-lg bg-white p-6 shadow">
               <div className="flex min-h-[220px] items-center justify-center">
@@ -193,8 +194,10 @@ export default function AdminPage() {
                       />
                     </div>
 
-                    {formError && <p className="text-sm text-red-600">{formError}</p>}
-                    {formSuccess && <p className="text-sm text-green-700">{formSuccess}</p>}
+                    {formError && (
+                      <InlineFeedback compact variant="error" title="No pudimos crear el juez" message={formError} />
+                    )}
+                    {formSuccess && <InlineFeedback compact variant="success" title="Juez creado" message={formSuccess} />}
 
                     <button
                       type="submit"

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
+import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -193,7 +194,7 @@ export default function EditPlayerPage() {
           <h1 className="text-3xl font-bold mb-6">Editar Jugador</h1>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6">{error}</div>
+            <InlineFeedback className="mb-6" variant="error" title="No pudimos guardar el jugador" message={error} />
           )}
 
           <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow grid grid-cols-2 gap-4">

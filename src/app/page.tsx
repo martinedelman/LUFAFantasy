@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
+import InlineFeedback from "@/components/InlineFeedback";
 import Skeleton from "@/components/Skeleton";
 
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://flag.lufa.com.uy").replace(/\/$/, "");
@@ -278,10 +279,7 @@ export default function Home() {
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-lg text-red-600 mb-4">Error al cargar los datos</p>
-          <p className="text-slate-600">{error}</p>
-        </div>
+        <InlineFeedback variant="error" title="No pudimos cargar el dashboard" message={error} />
       </div>
     );
   }
