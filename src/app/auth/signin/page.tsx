@@ -59,7 +59,6 @@ export default function SignInPage() {
         return;
       }
 
-      // Redirigir al dashboard
       router.push("/");
       router.refresh();
     } catch {
@@ -112,8 +111,7 @@ export default function SignInPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Correo Electrónico <span className="text-red-600">*</span>
-                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+                Correo Electrónico
               </label>
               <input
                 id="email"
@@ -135,8 +133,7 @@ export default function SignInPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Contraseña <span className="text-red-600">*</span>
-                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+                Contraseña
               </label>
               <input
                 id="password"

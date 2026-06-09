@@ -143,8 +143,7 @@ export default function SignUpPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Nombre Completo <span className="text-red-600">*</span>
-                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+                Nombre Completo
               </label>
               <input
                 id="name"
@@ -164,8 +163,7 @@ export default function SignUpPage() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Correo Electrónico <span className="text-red-600">*</span>
-                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+                Correo Electrónico
               </label>
               <input
                 id="email"
@@ -185,8 +183,7 @@ export default function SignUpPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Contraseña <span className="text-red-600">*</span>
-                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+                Contraseña
               </label>
               <input
                 id="password"
@@ -206,8 +203,7 @@ export default function SignUpPage() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirmar Contraseña <span className="text-red-600">*</span>
-                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+                Confirmar Contraseña
               </label>
               <input
                 id="confirmPassword"
