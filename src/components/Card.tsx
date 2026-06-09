@@ -1,6 +1,10 @@
+"use client";
+
 import React from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import Skeleton from "@/components/Skeleton";
 
 interface CardAction {
   label: string;
@@ -53,8 +57,38 @@ export default function Card({
   aspectRatio = "auto",
   infoPlacement = "content",
 }: CardProps) {
-  const hasBackground = Boolean(backgroundImage);
+  const [backgroundState, setBackgroundState] = useState<"loading" | "loaded" | "error">(
+    backgroundImage ? "loading" : "error",
+  );
+  const hasBackground = Boolean(backgroundImage) && backgroundState === "loaded";
+  const isBackgroundLoading = Boolean(backgroundImage) && backgroundState === "loading";
   const aspectClass = aspectRatio === "16:9" ? "aspect-video" : aspectRatio === "3:2" ? "aspect-[3/2]" : "";
+
+  useEffect(() => {
+    if (!backgroundImage) {
+      setBackgroundState("error");
+      return;
+    }
+
+    let isActive = true;
+    const image = new Image();
+    setBackgroundState("loading");
+    image.onload = () => {
+      if (isActive) setBackgroundState("loaded");
+    };
+    image.onerror = () => {
+      if (isActive) setBackgroundState("error");
+    };
+    image.src = backgroundImage;
+
+    if (image.complete) {
+      setBackgroundState(image.naturalWidth > 0 ? "loaded" : "error");
+    }
+
+    return () => {
+      isActive = false;
+    };
+  }, [backgroundImage]);
 
   const getIcon = () => {
     if (!icon) return null;
@@ -85,8 +119,8 @@ export default function Card({
         hasBackground ? "bg-gray-900" : "bg-slate-50"
       } ${aspectClass}`}
       onClick={onCardClick}
-      style={backgroundImage ? { backgroundImage: `url(${backgroundImage})` } : undefined}
     >
+      {isBackgroundLoading && <Skeleton className="absolute inset-0 rounded-lg" />}
       {hasBackground && (
         <>
           <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }} />

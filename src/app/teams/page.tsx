@@ -3,13 +3,13 @@
 import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
 import Pagination from "@/components/Pagination";
 import Tag from "@/components/Tag";
 import Card from "@/components/Card";
+import Skeleton from "@/components/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useCachedState } from "@/hooks/useCachedState";
 
@@ -66,6 +66,64 @@ interface DivisionsApiResponse {
   success: boolean;
   data: Division[];
   message?: string;
+}
+
+function TeamCardSkeleton() {
+  return (
+    <div className="skeleton-card relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-6 shadow-xs">
+      <Skeleton className="absolute inset-0 rounded-lg opacity-70" />
+      <div className="relative z-10 flex h-full flex-col">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <Skeleton className="h-12 w-12 shrink-0 rounded-full" />
+            <div className="min-w-0 space-y-2">
+              <Skeleton className="h-4 w-32 max-w-[42vw]" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <Skeleton className="h-6 w-16 rounded-full" />
+        </div>
+        <div className="mt-auto flex items-center gap-2">
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TeamsGridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Cargando equipos">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <TeamCardSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
+
+function TeamsPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="bg-brand-900 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-5">
+          <Skeleton className="h-4 w-28 bg-white/25" />
+          <Skeleton className="h-10 w-48 bg-white/25" />
+          <div className="rounded-lg border border-white/25 bg-white/80 p-5">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+          <TeamsGridSkeleton />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function TeamsPageContent() {
@@ -259,9 +317,7 @@ function TeamsPageContent() {
         {/* Teams Grid */}
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           {loading && teams.length === 0 ? (
-            <div className="flex min-h-[300px] items-center justify-center">
-              <LoadingSpinner size="lg" />
-            </div>
+            <TeamsGridSkeleton />
           ) : teams.length === 0 ? (
             <div className="text-center py-12">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -352,13 +408,7 @@ function TeamsPageContent() {
 
 export default function TeamsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex justify-center items-center min-h-screen">
-          <LoadingSpinner size="lg" />
-        </div>
-      }
-    >
+    <Suspense fallback={<TeamsPageSkeleton />}>
       <TeamsPageContent />
     </Suspense>
   );

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import Skeleton from "@/components/Skeleton";
 
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://flag.lufa.com.uy").replace(/\/$/, "");
 
@@ -96,6 +96,60 @@ function FixedHeroSection({
       <div className="hero-fixed-section__bg" aria-hidden="true" />
       {children ? <div className="hero-fixed-section__content">{children}</div> : null}
     </section>
+  );
+}
+
+function UpcomingGameSkeleton() {
+  return (
+    <div className="skeleton-card flex min-h-[116px] w-full items-center rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4">
+      <div className="flex w-full flex-col-reverse items-center gap-4 md:flex-row md:justify-between">
+        <div className="w-full min-w-0 flex-1 space-y-3 text-center md:text-left">
+          <Skeleton className="mx-auto h-4 w-56 max-w-full md:mx-0" />
+          <Skeleton className="mx-auto h-3 w-44 max-w-full md:mx-0" />
+        </div>
+        <div className="flex w-full shrink-0 flex-col items-center gap-3 md:w-auto md:items-end">
+          <Skeleton className="h-7 w-28 rounded-full" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TopPlayerSkeleton() {
+  return (
+    <div className="skeleton-card flex min-h-[116px] w-full items-center justify-between rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4">
+      <div className="flex w-full items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
+          <div className="min-w-0 space-y-2">
+            <Skeleton className="h-4 w-32 max-w-[44vw]" />
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        </div>
+        <div className="shrink-0 space-y-2">
+          <Skeleton className="ml-auto h-7 w-10" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TeamCarouselSkeleton() {
+  return (
+    <div className="mt-6 team-slider-mask select-none" aria-label="Cargando equipos destacados">
+      <div className="team-slider-track">
+        {Array.from({ length: 10 }).map((_, index) => (
+          <div key={index} className="team-slide-card skeleton-card">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <Skeleton className="mt-3 h-4 w-24 max-w-full" />
+            <Skeleton className="h-3 w-20 max-w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -267,9 +321,11 @@ export default function Home() {
             </header>
             <div className="p-6 space-y-4">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <LoadingSpinner />
-                </div>
+                <>
+                  <UpcomingGameSkeleton />
+                  <UpcomingGameSkeleton />
+                  <UpcomingGameSkeleton />
+                </>
               ) : stats?.nextGames && stats.nextGames.length > 0 ? (
                 stats.nextGames.map((game) => (
                   <div
@@ -312,9 +368,11 @@ export default function Home() {
             </header>
             <div className="p-6 space-y-4">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <LoadingSpinner />
-                </div>
+                <>
+                  <TopPlayerSkeleton />
+                  <TopPlayerSkeleton />
+                  <TopPlayerSkeleton />
+                </>
               ) : stats?.topPlayers && stats.topPlayers.length > 0 ? (
                 stats.topPlayers.map((player, idx) => (
                   <div
@@ -369,18 +427,19 @@ export default function Home() {
             <h3 className="text-2xl font-bold text-slate-950 px-6">Equipos Actuales</h3>
             <p className="text-justify">
               Actualmente la LUFA cuenta con{" "}
-              <span className="font-semibold">{stats?.totalTeams || 0} equipos activos</span> compitiendo en la liga.
+              {loading ? (
+                <Skeleton as="span" className="inline-block h-4 w-32 align-[-2px]" />
+              ) : (
+                <span className="font-semibold">{stats?.totalTeams || 0} equipos activos</span>
+              )}{" "}
+              compitiendo en la liga.
               Cada equipo representa una comunidad apasionada por el Flag Football y la competencia.
             </p>
             <p className="italic">¡Conoce a los protagonistas de la temporada!</p>
           </div>
 
           {loading ? (
-            <div className="mt-6 rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-8">
-              <div className="flex items-center justify-center">
-                <LoadingSpinner size="lg" />
-              </div>
-            </div>
+            <TeamCarouselSkeleton />
           ) : teams.length > 0 ? (
             <div className="mt-6 team-slider-mask select-none">
               <div

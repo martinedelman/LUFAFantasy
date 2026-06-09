@@ -59,6 +59,28 @@ button {
   cursor: pointer;
 }
 
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: linear-gradient(110deg, #e7eef5 8%, #f5f9fc 18%, #e7eef5 33%);
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.45s ease-in-out infinite;
+}
+
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  transform: translateX(-100%);
+  animation: skeleton-sheen 1.8s ease-in-out infinite;
+}
+
+.skeleton-card {
+  animation: skeleton-card-rise 1.8s ease-in-out infinite;
+}
+
 /* Overrides globales para clases usadas en pantallas existentes */
 .bg-gray-50,
 .bg-slate-50 {
@@ -284,10 +306,42 @@ button {
   }
 }
 
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+@keyframes skeleton-sheen {
+  0% {
+    transform: translateX(-100%);
+  }
+  55%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes skeleton-card-rise {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .coming-soon-scan,
   .coming-soon-bar,
-  .coming-soon-tile {
+  .coming-soon-tile,
+  .skeleton-shimmer,
+  .skeleton-shimmer::after,
+  .skeleton-card {
     animation: none;
   }
 }
