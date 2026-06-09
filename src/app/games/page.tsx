@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
 import Pagination from "@/components/Pagination";
 import Avatar from "@/components/Avatar";
+import Skeleton from "@/components/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useCachedState } from "@/hooks/useCachedState";
 import Link from "next/link";
@@ -191,6 +191,62 @@ function getDivisionDisplayName(division: DivisionOption | string | null | undef
   };
 
   return division.category ? categoryLabel[division.category] || division.category : division.name || "División";
+}
+
+function GameCardSkeleton() {
+  return (
+    <div className="relative overflow-hidden rounded-lg bg-white p-4 shadow-md sm:p-6" aria-label="Cargando partido">
+      <div className="hidden sm:block">
+        <Skeleton className="absolute left-1/2 top-0 h-7 w-28 -translate-x-1/2 rounded-b-md" />
+      </div>
+
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-4 w-36 rounded" />
+          <Skeleton className="h-3 w-52 max-w-full rounded" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-20 rounded" />
+          <Skeleton className="ml-auto h-3 w-14 rounded" />
+        </div>
+      </div>
+
+      <div className="mt-6 flex items-center justify-between gap-4">
+        <div className="flex flex-1 items-center justify-end gap-3">
+          <div className="hidden space-y-2 text-right sm:block">
+            <Skeleton className="h-4 w-28 rounded" />
+            <Skeleton className="ml-auto h-3 w-16 rounded" />
+          </div>
+          <Skeleton className="h-12 w-12 rounded-full" />
+        </div>
+
+        <div className="flex min-w-24 flex-col items-center gap-2">
+          <Skeleton className="h-5 w-8 rounded" />
+          <Skeleton className="h-3 w-12 rounded" />
+        </div>
+
+        <div className="flex flex-1 items-center gap-3">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="hidden space-y-2 sm:block">
+            <Skeleton className="h-4 w-28 rounded" />
+            <Skeleton className="h-3 w-16 rounded" />
+          </div>
+        </div>
+      </div>
+
+      <Skeleton className="mx-auto mt-5 h-3 w-48 max-w-full rounded" />
+    </div>
+  );
+}
+
+function GamesSkeletonList() {
+  return (
+    <div className="space-y-4" aria-label="Cargando partidos">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <GameCardSkeleton key={index} />
+      ))}
+    </div>
+  );
 }
 
 export default function GamesPage() {
@@ -1258,9 +1314,7 @@ export default function GamesPage() {
         )}
 
         {loading && games.length === 0 ? (
-          <div className="flex min-h-[300px] items-center justify-center rounded-lg bg-white shadow-sm">
-            <LoadingSpinner size="lg" />
-          </div>
+          <GamesSkeletonList />
         ) : (
           <div className="space-y-4">
             {games.map((game) => (

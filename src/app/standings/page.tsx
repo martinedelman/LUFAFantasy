@@ -7,6 +7,7 @@ import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
 import Table, { TableColumn } from "@/components/Table";
 import Avatar from "@/components/Avatar";
+import Skeleton from "@/components/Skeleton";
 import { useCachedState } from "@/hooks/useCachedState";
 
 const standingsHero = {
@@ -61,6 +62,71 @@ interface Tournament {
   }[];
 }
 
+function StandingsSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-lg bg-white shadow-sm" aria-label="Cargando posiciones">
+      <div className="hidden overflow-x-auto md:block">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              {["Pos", "Equipo", "G", "P", "E", "%", "PF", "PC", "DIF", "Racha"].map((label) => (
+                <th
+                  key={label}
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                >
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {Array.from({ length: 6 }).map((_, rowIndex) => (
+              <tr key={rowIndex}>
+                <td className="px-6 py-4">
+                  <Skeleton className="mx-auto h-5 w-6 rounded" />
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-4 w-32 rounded" />
+                  </div>
+                </td>
+                {Array.from({ length: 8 }).map((__, cellIndex) => (
+                  <td key={cellIndex} className="px-6 py-4">
+                    <Skeleton className="mx-auto h-4 w-10 rounded" />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="space-y-3 p-4 md:hidden">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="rounded-lg border border-gray-100 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-3 w-20 rounded" />
+                </div>
+              </div>
+              <Skeleton className="h-6 w-10 rounded-full" />
+            </div>
+            <div className="mt-4 grid grid-cols-4 gap-3">
+              {Array.from({ length: 4 }).map((__, metricIndex) => (
+                <Skeleton key={metricIndex} className="h-8 rounded-md" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function StandingsPage() {
   const router = useRouter();
   const [standings, setStandings] = useState<Standing[]>([]);
@@ -100,9 +166,12 @@ export default function StandingsPage() {
             division: firstTourney.divisions?.[0]?._id || "",
           }));
         }
+      } else {
+        setLoading(false);
       }
     } catch (err) {
       console.error("Error fetching tournaments:", err);
+      setLoading(false);
     }
   }, [selectedTournament, selectedDivision, setFilters]);
 
@@ -345,16 +414,20 @@ export default function StandingsPage() {
         )}
 
         {/* Standings Table */}
-        {selectedDivision && (
+        {(selectedDivision || loading) && (
           <div>
-            <Table<Standing>
-              columns={columns}
-              data={standings}
-              loading={loading}
-              emptyMessage="No hay equipos en esta división"
-              idKey="_id"
-              onRowClick={(standing) => router.push(`/teams/${standing.team._id}`)}
-            />
+            {loading ? (
+              <StandingsSkeleton />
+            ) : (
+              <Table<Standing>
+                columns={columns}
+                data={standings}
+                loading={false}
+                emptyMessage="No hay equipos en esta división"
+                idKey="_id"
+                onRowClick={(standing) => router.push(`/teams/${standing.team._id}`)}
+              />
+            )}
           </div>
         )}
 

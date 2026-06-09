@@ -2,11 +2,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
 import Card from "@/components/Card";
+import Skeleton from "@/components/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useCachedState } from "@/hooks/useCachedState";
 import type { ApiResponseDto, PaginationDto, PlayerResponseDto } from "@/app/DTOs";
@@ -62,6 +62,46 @@ const initialPagination: PaginationDto = {
   hasNext: false,
   hasPrev: false,
 };
+
+function PlayerCardSkeleton() {
+  return (
+    <div className="rounded-lg border border-gray-100 bg-white p-5 shadow-sm" aria-label="Cargando jugador">
+      <div className="flex items-start gap-4">
+        <Skeleton className="h-14 w-14 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-5 w-36 max-w-full rounded" />
+          <Skeleton className="h-3 w-28 rounded" />
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-3">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-4 w-32 rounded" />
+        </div>
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-4 w-24 rounded" />
+        </div>
+      </div>
+
+      <div className="mt-6 flex gap-2">
+        <Skeleton className="h-7 w-20 rounded-full" />
+        <Skeleton className="h-7 w-16 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
+function PlayersSkeletonGrid({ count = PAGE_SIZE }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Cargando jugadores">
+      {Array.from({ length: count }).map((_, index) => (
+        <PlayerCardSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
 
 export default function PlayersPage() {
   const { user } = useAuth();
@@ -340,9 +380,7 @@ export default function PlayersPage() {
         {/* Players Grid */}
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           {loading && players.length === 0 && (
-            <div className="flex justify-center items-center py-4 ">
-              <LoadingSpinner size="md" />
-            </div>
+            <PlayersSkeletonGrid />
           )}
           {players.length === 0 && !loading && (
             <div className="text-center py-12">
@@ -421,7 +459,11 @@ export default function PlayersPage() {
               </div>
 
               <div ref={loadMoreRef} className="flex justify-center items-center py-6">
-                {loadingMore && <LoadingSpinner size="md" />}
+                {loadingMore && (
+                  <div className="w-full">
+                    <PlayersSkeletonGrid count={4} />
+                  </div>
+                )}
                 {!pagination.hasNext && !loadingMore && (
                   <p className="text-sm text-gray-500">Has llegado al final de la lista</p>
                 )}
