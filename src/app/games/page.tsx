@@ -203,6 +203,7 @@ export default function GamesPage() {
   const [saving, setSaving] = useState(false);
   const [walkOverLoadingGameId, setWalkOverLoadingGameId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -403,7 +404,62 @@ export default function GamesPage() {
 
       return { ...prev, [key]: value };
     });
+    setFieldErrors((prev) => ({ ...prev, [key]: validateGameField(key, value) }));
+    setFormError(null);
   };
+
+  const validateGameField = (key: keyof GameFormState, value: string) => {
+    if (["tournament", "division", "scheduledDate", "venueName", "venueAddress"].includes(key) && !value.trim()) {
+      return "Este campo es obligatorio.";
+    }
+
+    if ((key === "homeTeam" || key === "awayTeam") && value && form.homeTeam && form.awayTeam) {
+      const nextHomeTeam = key === "homeTeam" ? value : form.homeTeam;
+      const nextAwayTeam = key === "awayTeam" ? value : form.awayTeam;
+      if (nextHomeTeam && nextAwayTeam && nextHomeTeam === nextAwayTeam) {
+        return "El equipo local y visitante no pueden ser el mismo.";
+      }
+    }
+
+    return "";
+  };
+
+  const validateGameForm = () => {
+    const nextErrors: Record<string, string> = {};
+    (["tournament", "division", "scheduledDate", "venueName", "venueAddress"] as Array<keyof GameFormState>).forEach(
+      (key) => {
+        const message = validateGameField(key, form[key] ?? "");
+        if (message) nextErrors[key] = message;
+      },
+    );
+
+    if (form.homeTeam && form.awayTeam && form.homeTeam === form.awayTeam) {
+      nextErrors.awayTeam = "El equipo local y visitante no pueden ser el mismo.";
+    }
+
+    return nextErrors;
+  };
+
+  const requiredLabel = (label: string) => (
+    <>
+      {label} <span className="text-red-600">*</span>
+      <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+    </>
+  );
+
+  const formInputClassName = (fieldName: keyof GameFormState) =>
+    `w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+      fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
+    }`;
+
+  const renderFieldError = (fieldName: keyof GameFormState) =>
+    fieldErrors[fieldName] ? (
+      <span id={`game-${fieldName}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
+    ) : null;
+
+  const isGameFormReady = Object.keys(validateGameForm()).length === 0;
 
   const openCreateForm = () => {
     if (!canManageGames) return;
@@ -411,6 +467,7 @@ export default function GamesPage() {
     setEditingGame(null);
     setTeams([]);
     setFormError(null);
+    setFieldErrors({});
     setShowForm(true);
   };
 
@@ -449,6 +506,7 @@ export default function GamesPage() {
       });
       setEditingGame(game);
       setFormError(null);
+      setFieldErrors({});
       setShowForm(true);
     },
     [canManageGames, fetchTeamsForDivision],
@@ -459,6 +517,7 @@ export default function GamesPage() {
     setForm(INITIAL_FORM);
     setEditingGame(null);
     setFormError(null);
+    setFieldErrors({});
   };
 
   useEffect(() => {
@@ -495,24 +554,10 @@ export default function GamesPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
+    const nextFieldErrors = validateGameForm();
+    setFieldErrors(nextFieldErrors);
 
-    if (!form.tournament || !form.division) {
-      setFormError("Selecciona torneo y división.");
-      return;
-    }
-
-    if (!form.scheduledDate) {
-      setFormError("La fecha y hora programada es requerida.");
-      return;
-    }
-
-    if (!form.venueName.trim() || !form.venueAddress.trim()) {
-      setFormError("El venue requiere nombre y dirección.");
-      return;
-    }
-
-    if (form.homeTeam && form.awayTeam && form.homeTeam === form.awayTeam) {
-      setFormError("El equipo local y visitante no pueden ser el mismo.");
+    if (Object.keys(nextFieldErrors).length > 0) {
       return;
     }
 
@@ -867,13 +912,15 @@ export default function GamesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label htmlFor="tournament" className="block text-sm font-medium text-gray-700 mb-1">
-                      Torneo
+                      {requiredLabel("Torneo")}
                     </label>
                     <select
                       id="tournament"
                       value={form.tournament}
                       onChange={(e) => handleFormChange("tournament", e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.tournament)}
+                      aria-describedby={fieldErrors.tournament ? "game-tournament-error" : undefined}
+                      className={formInputClassName("tournament")}
                       required
                     >
                       <option value="">Seleccionar torneo</option>
@@ -883,17 +930,20 @@ export default function GamesPage() {
                         </option>
                       ))}
                     </select>
+                    {renderFieldError("tournament")}
                   </div>
 
                   <div>
                     <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
-                      División
+                      {requiredLabel("División")}
                     </label>
                     <select
                       id="division"
                       value={form.division}
                       onChange={(e) => handleFormChange("division", e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.division)}
+                      aria-describedby={fieldErrors.division ? "game-division-error" : undefined}
+                      className={formInputClassName("division")}
                       required
                     >
                       <option value="">Seleccionar división</option>
@@ -903,20 +953,24 @@ export default function GamesPage() {
                         </option>
                       ))}
                     </select>
+                    {renderFieldError("division")}
                   </div>
 
                   <div>
                     <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 mb-1">
-                      Fecha y hora
+                      {requiredLabel("Fecha y hora")}
                     </label>
                     <input
                       id="scheduledDate"
                       type="datetime-local"
                       value={form.scheduledDate}
                       onChange={(e) => handleFormChange("scheduledDate", e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.scheduledDate)}
+                      aria-describedby={fieldErrors.scheduledDate ? "game-scheduledDate-error" : undefined}
+                      className={formInputClassName("scheduledDate")}
                       required
                     />
+                    {renderFieldError("scheduledDate")}
                   </div>
 
                   <div>
@@ -927,7 +981,9 @@ export default function GamesPage() {
                       id="homeTeam"
                       value={form.homeTeam}
                       onChange={(e) => handleFormChange("homeTeam", e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.homeTeam)}
+                      aria-describedby={fieldErrors.homeTeam ? "game-homeTeam-error" : undefined}
+                      className={formInputClassName("homeTeam")}
                     >
                       <option value="">TBD</option>
                       {teams.map((team) => (
@@ -936,6 +992,7 @@ export default function GamesPage() {
                         </option>
                       ))}
                     </select>
+                    {renderFieldError("homeTeam")}
                   </div>
 
                   <div>
@@ -946,7 +1003,9 @@ export default function GamesPage() {
                       id="awayTeam"
                       value={form.awayTeam}
                       onChange={(e) => handleFormChange("awayTeam", e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.awayTeam)}
+                      aria-describedby={fieldErrors.awayTeam ? "game-awayTeam-error" : undefined}
+                      className={formInputClassName("awayTeam")}
                     >
                       <option value="">TBD</option>
                       {teams.map((team) => (
@@ -955,6 +1014,7 @@ export default function GamesPage() {
                         </option>
                       ))}
                     </select>
+                    {renderFieldError("awayTeam")}
                   </div>
 
                   <div>
@@ -1005,16 +1065,19 @@ export default function GamesPage() {
 
                   <div>
                     <label htmlFor="venueName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Venue (nombre)
+                      {requiredLabel("Venue (nombre)")}
                     </label>
                     <input
                       id="venueName"
                       type="text"
                       value={form.venueName}
                       onChange={(e) => handleFormChange("venueName", e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.venueName)}
+                      aria-describedby={fieldErrors.venueName ? "game-venueName-error" : undefined}
+                      className={formInputClassName("venueName")}
                       required
                     />
+                    {renderFieldError("venueName")}
                   </div>
 
                   <div>
@@ -1111,16 +1174,19 @@ export default function GamesPage() {
 
                   <div className="md:col-span-2">
                     <label htmlFor="venueAddress" className="block text-sm font-medium text-gray-700 mb-1">
-                      Venue (dirección)
+                      {requiredLabel("Venue (dirección)")}
                     </label>
                     <input
                       id="venueAddress"
                       type="text"
                       value={form.venueAddress}
                       onChange={(e) => handleFormChange("venueAddress", e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.venueAddress)}
+                      aria-describedby={fieldErrors.venueAddress ? "game-venueAddress-error" : undefined}
+                      className={formInputClassName("venueAddress")}
                       required
                     />
+                    {renderFieldError("venueAddress")}
                   </div>
                 </div>
 
@@ -1174,7 +1240,7 @@ export default function GamesPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || !isGameFormReady}
                     className="bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     {saving ? "Guardando..." : form.id ? "Actualizar Partido" : "Crear Partido"}

@@ -59,8 +59,16 @@ export default function CreateTeamPage() {
   const validateField = (name: string, value: string) => {
     const trimmed = value.trim();
 
-    if (name === "name" && trimmed && trimmed.length < 3) {
+    if (name === "name" && !trimmed) {
+      return "Este campo es obligatorio.";
+    }
+
+    if (name === "name" && trimmed.length < 3) {
       return "El nombre del equipo debe tener al menos 3 caracteres.";
+    }
+
+    if (name === "shortName" && trimmed && trimmed.length < 2) {
+      return "Ingresá al menos 2 caracteres.";
     }
 
     if (name === "shortName" && trimmed.length > 12) {
@@ -152,16 +160,21 @@ export default function CreateTeamPage() {
       fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
     }`;
 
-  const renderFieldError = (fieldName: string, title = "Revisá este campo") =>
+  const renderFieldError = (fieldName: string) =>
     fieldErrors[fieldName] ? (
-      <InlineFeedback
-        compact
-        className="mt-2"
-        variant="error"
-        title={title}
-        message={<span id={`${fieldName.replace(/\./g, "-")}-error`}>{fieldErrors[fieldName]}</span>}
-      />
+      <span id={`${fieldName.replace(/\./g, "-")}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
     ) : null;
+
+  const requiredLabel = (label: string) => (
+    <>
+      {label} <span className="text-red-600">*</span>
+      <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+    </>
+  );
+
+  const isFormReady = Object.keys(validateForm()).length === 0 && !loadingDivisions;
 
   const toNullable = (value: string) => {
     const trimmed = value.trim();
@@ -226,7 +239,7 @@ export default function CreateTeamPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre del Equipo *
+                      {requiredLabel("Nombre del Equipo")}
                     </label>
                     <input
                       id="name"
@@ -239,7 +252,7 @@ export default function CreateTeamPage() {
                       className={inputClassName("name")}
                       required
                     />
-                    {renderFieldError("name", "Nombre incompleto")}
+                    {renderFieldError("name")}
                   </div>
                   <div>
                     <label htmlFor="shortName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -254,12 +267,16 @@ export default function CreateTeamPage() {
                       aria-invalid={Boolean(fieldErrors.shortName)}
                       aria-describedby={fieldErrors.shortName ? "shortName-error" : undefined}
                       className={inputClassName("shortName")}
+                      maxLength={12}
                     />
-                    {renderFieldError("shortName", "Nombre corto largo")}
+                    <span className="mt-1 block text-xs text-gray-500">
+                      Quedan {Math.max(0, 12 - form.shortName.length)} caracteres.
+                    </span>
+                    {renderFieldError("shortName")}
                   </div>
                   <div>
                     <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
-                      División *
+                      {requiredLabel("División")}
                     </label>
                     <select
                       id="division"
@@ -279,7 +296,7 @@ export default function CreateTeamPage() {
                         </option>
                       ))}
                     </select>
-                    {renderFieldError("division", "División requerida")}
+                    {renderFieldError("division")}
                   </div>
                   <div>
                     <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
@@ -306,7 +323,7 @@ export default function CreateTeamPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="colors.primary" className="block text-sm font-medium text-gray-700 mb-1">
-                      Color Primario *
+                      {requiredLabel("Color Primario")}
                     </label>
                     <input
                       id="colors.primary"
@@ -352,7 +369,7 @@ export default function CreateTeamPage() {
                       aria-describedby={fieldErrors["contact.email"] ? "contact-email-error" : undefined}
                       className={inputClassName("contact.email")}
                     />
-                    {renderFieldError("contact.email", "Email inválido")}
+                    {renderFieldError("contact.email")}
                   </div>
                   <div>
                     <label htmlFor="contact.phone" className="block text-sm font-medium text-gray-700 mb-1">
@@ -428,7 +445,7 @@ export default function CreateTeamPage() {
                           }
                           className={inputClassName(`coaches.${coachIndex}.email`)}
                         />
-                        {renderFieldError(`coaches.${coachIndex}.email`, "Email inválido")}
+                        {renderFieldError(`coaches.${coachIndex}.email`)}
                       </div>
                       <div>
                         <label
@@ -535,7 +552,7 @@ export default function CreateTeamPage() {
                 <button
                   type="submit"
                   className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-                  disabled={loading}
+                  disabled={loading || !isFormReady}
                 >
                   {loading ? (
                     <>

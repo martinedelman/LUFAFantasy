@@ -28,6 +28,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const fetchData = async () => {
     const [statsResponse, judgesResponse] = await Promise.all([
@@ -73,9 +74,13 @@ export default function AdminPage() {
 
     const firstName = form.firstName.trim();
     const lastName = form.lastName.trim();
+    const nextFieldErrors: Record<string, string> = {};
 
-    if (!firstName || !lastName) {
-      setFormError("Nombre y apellido son requeridos");
+    if (!firstName) nextFieldErrors.firstName = "Este campo es obligatorio.";
+    if (!lastName) nextFieldErrors.lastName = "Este campo es obligatorio.";
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.keys(nextFieldErrors).length > 0) {
       return;
     }
 
@@ -98,6 +103,7 @@ export default function AdminPage() {
       const createdJudge = payload.data;
 
       setForm({ firstName: "", lastName: "" });
+      setFieldErrors({});
       setJudges((current) =>
         [...current, createdJudge].sort((left, right) =>
           `${left.lastName} ${left.firstName}`.localeCompare(`${right.lastName} ${right.firstName}`, "es", {
@@ -128,6 +134,17 @@ export default function AdminPage() {
       { label: "Partidos En Curso", value: stats.inProgressGames },
     ],
     [stats],
+  );
+  const isJudgeFormReady = form.firstName.trim().length > 0 && form.lastName.trim().length > 0;
+  const inputClassName = (fieldName: string) =>
+    `w-full rounded-md border px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 ${
+      fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
+    }`;
+  const requiredLabel = (label: string) => (
+    <>
+      {label} <span className="text-red-600">*</span>
+      <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+    </>
   );
 
   return (
@@ -166,32 +183,54 @@ export default function AdminPage() {
                   <form className="mt-5 space-y-4" onSubmit={handleCreateJudge}>
                     <div>
                       <label htmlFor="firstName" className="mb-1 block text-sm font-medium text-gray-700">
-                        Nombre
+                        {requiredLabel("Nombre")}
                       </label>
                       <input
                         id="firstName"
                         type="text"
                         value={form.firstName}
-                        onChange={(event) => setForm((current) => ({ ...current, firstName: event.target.value }))}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                        onChange={(event) => {
+                          setForm((current) => ({ ...current, firstName: event.target.value }));
+                          setFieldErrors((current) => ({ ...current, firstName: event.target.value.trim() ? "" : current.firstName }));
+                          setFormError(null);
+                        }}
+                        aria-invalid={Boolean(fieldErrors.firstName)}
+                        aria-describedby={fieldErrors.firstName ? "judge-firstName-error" : undefined}
+                        className={inputClassName("firstName")}
                         placeholder="Ej: Juan"
                         required
                       />
+                      {fieldErrors.firstName && (
+                        <span id="judge-firstName-error" className="mt-1 block text-xs font-medium text-red-600">
+                          {fieldErrors.firstName}
+                        </span>
+                      )}
                     </div>
 
                     <div>
                       <label htmlFor="lastName" className="mb-1 block text-sm font-medium text-gray-700">
-                        Apellido
+                        {requiredLabel("Apellido")}
                       </label>
                       <input
                         id="lastName"
                         type="text"
                         value={form.lastName}
-                        onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                        onChange={(event) => {
+                          setForm((current) => ({ ...current, lastName: event.target.value }));
+                          setFieldErrors((current) => ({ ...current, lastName: event.target.value.trim() ? "" : current.lastName }));
+                          setFormError(null);
+                        }}
+                        aria-invalid={Boolean(fieldErrors.lastName)}
+                        aria-describedby={fieldErrors.lastName ? "judge-lastName-error" : undefined}
+                        className={inputClassName("lastName")}
                         placeholder="Ej: Pérez"
                         required
                       />
+                      {fieldErrors.lastName && (
+                        <span id="judge-lastName-error" className="mt-1 block text-xs font-medium text-red-600">
+                          {fieldErrors.lastName}
+                        </span>
+                      )}
                     </div>
 
                     {formError && (
@@ -201,7 +240,7 @@ export default function AdminPage() {
 
                     <button
                       type="submit"
-                      disabled={submitting}
+                      disabled={submitting || !isJudgeFormReady}
                       className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {submitting ? (

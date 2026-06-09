@@ -50,7 +50,11 @@ export default function CreatePlayerPage() {
   const validateField = (name: string, value: string) => {
     const trimmed = value.trim();
 
-    if ((name === "firstName" || name === "lastName") && trimmed && trimmed.length < 2) {
+    if ((name === "firstName" || name === "lastName") && !trimmed) {
+      return "Este campo es obligatorio.";
+    }
+
+    if ((name === "firstName" || name === "lastName") && trimmed.length < 2) {
       return "Debe tener al menos 2 caracteres.";
     }
 
@@ -60,6 +64,10 @@ export default function CreatePlayerPage() {
 
     if (name === "team" && !trimmed) {
       return "Seleccioná un equipo.";
+    }
+
+    if ((name === "dateOfBirth" || name === "position") && !trimmed) {
+      return "Este campo es obligatorio.";
     }
 
     if (name === "jerseyNumber") {
@@ -92,8 +100,10 @@ export default function CreatePlayerPage() {
       ["firstName", form.firstName],
       ["lastName", form.lastName],
       ["email", form.email],
+      ["dateOfBirth", form.dateOfBirth],
       ["team", form.team],
       ["jerseyNumber", form.jerseyNumber],
+      ["position", form.position],
       ["height", form.height],
       ["weight", form.weight],
       ["emergencyContact.email", form.emergencyContact.email],
@@ -151,16 +161,21 @@ export default function CreatePlayerPage() {
       fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
     }`;
 
-  const renderFieldError = (fieldName: string, title = "Revisá este campo") =>
+  const renderFieldError = (fieldName: string) =>
     fieldErrors[fieldName] ? (
-      <InlineFeedback
-        compact
-        className="mt-2"
-        variant="error"
-        title={title}
-        message={<span id={`${fieldName.replace(/\./g, "-")}-error`}>{fieldErrors[fieldName]}</span>}
-      />
+      <span id={`${fieldName.replace(/\./g, "-")}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
     ) : null;
+
+  const requiredLabel = (label: string) => (
+    <>
+      {label} <span className="text-red-600">*</span>
+      <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+    </>
+  );
+
+  const isFormReady = Object.keys(validateForm()).length === 0 && !loadingTeams;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,7 +278,7 @@ export default function CreatePlayerPage() {
                   </div>
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre *
+                      {requiredLabel("Nombre")}
                     </label>
                     <input
                       id="firstName"
@@ -276,11 +291,11 @@ export default function CreatePlayerPage() {
                       className={inputClassName("firstName")}
                       required
                     />
-                    {renderFieldError("firstName", "Nombre incompleto")}
+                    {renderFieldError("firstName")}
                   </div>
                   <div>
                     <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Apellido *
+                      {requiredLabel("Apellido")}
                     </label>
                     <input
                       id="lastName"
@@ -293,7 +308,7 @@ export default function CreatePlayerPage() {
                       className={inputClassName("lastName")}
                       required
                     />
-                    {renderFieldError("lastName", "Apellido incompleto")}
+                    {renderFieldError("lastName")}
                   </div>
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -309,7 +324,7 @@ export default function CreatePlayerPage() {
                       aria-describedby={fieldErrors.email ? "email-error" : undefined}
                       className={inputClassName("email")}
                     />
-                    {renderFieldError("email", "Email inválido")}
+                    {renderFieldError("email")}
                   </div>
                   <div>
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
@@ -326,7 +341,7 @@ export default function CreatePlayerPage() {
                   </div>
                   <div>
                     <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">
-                      Fecha de Nacimiento *
+                      {requiredLabel("Fecha de Nacimiento")}
                     </label>
                     <input
                       id="dateOfBirth"
@@ -334,9 +349,12 @@ export default function CreatePlayerPage() {
                       type="date"
                       value={form.dateOfBirth}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.dateOfBirth)}
+                      aria-describedby={fieldErrors.dateOfBirth ? "dateOfBirth-error" : undefined}
+                      className={inputClassName("dateOfBirth")}
                       required
                     />
+                    {renderFieldError("dateOfBirth")}
                   </div>
                   <div>
                     <label htmlFor="registrationDate" className="block text-sm font-medium text-gray-700 mb-1">
@@ -360,7 +378,7 @@ export default function CreatePlayerPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="team" className="block text-sm font-medium text-gray-700 mb-1">
-                      Equipo *
+                      {requiredLabel("Equipo")}
                     </label>
                     <select
                       id="team"
@@ -380,11 +398,11 @@ export default function CreatePlayerPage() {
                         </option>
                       ))}
                     </select>
-                    {renderFieldError("team", "Equipo requerido")}
+                    {renderFieldError("team")}
                   </div>
                   <div>
                     <label htmlFor="jerseyNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                      Número de Camiseta *
+                      {requiredLabel("Número de Camiseta")}
                     </label>
                     <input
                       id="jerseyNumber"
@@ -399,18 +417,20 @@ export default function CreatePlayerPage() {
                       className={inputClassName("jerseyNumber")}
                       required
                     />
-                    {renderFieldError("jerseyNumber", "Número inválido")}
+                    {renderFieldError("jerseyNumber")}
                   </div>
                   <div>
                     <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
-                      Posición *
+                      {requiredLabel("Posición")}
                     </label>
                     <select
                       id="position"
                       name="position"
                       value={form.position}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.position)}
+                      aria-describedby={fieldErrors.position ? "position-error" : undefined}
+                      className={inputClassName("position")}
                       required
                     >
                       <option value="QB">Quarterback (QB)</option>
@@ -423,6 +443,7 @@ export default function CreatePlayerPage() {
                       <option value="FS">Free Safety (FS)</option>
                       <option value="SS">Strong Safety (SS)</option>
                     </select>
+                    {renderFieldError("position")}
                   </div>
                   <div>
                     <label htmlFor="secondaryPosition" className="block text-sm font-medium text-gray-700 mb-1">
@@ -480,7 +501,7 @@ export default function CreatePlayerPage() {
                       aria-describedby={fieldErrors.height ? "height-error" : undefined}
                       className={inputClassName("height")}
                     />
-                    {renderFieldError("height", "Altura inválida")}
+                    {renderFieldError("height")}
                   </div>
                   <div>
                     <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
@@ -498,7 +519,7 @@ export default function CreatePlayerPage() {
                       aria-describedby={fieldErrors.weight ? "weight-error" : undefined}
                       className={inputClassName("weight")}
                     />
-                    {renderFieldError("weight", "Peso inválido")}
+                    {renderFieldError("weight")}
                   </div>
                   <div className="md:col-span-2">
                     <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-1">
@@ -578,7 +599,7 @@ export default function CreatePlayerPage() {
                       aria-describedby={fieldErrors["emergencyContact.email"] ? "emergencyContact-email-error" : undefined}
                       className={inputClassName("emergencyContact.email")}
                     />
-                    {renderFieldError("emergencyContact.email", "Email inválido")}
+                    {renderFieldError("emergencyContact.email")}
                   </div>
                 </div>
               </div>
@@ -596,7 +617,7 @@ export default function CreatePlayerPage() {
                 <button
                   type="submit"
                   className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-                  disabled={loading}
+                  disabled={loading || !isFormReady}
                 >
                   {loading ? (
                     <>

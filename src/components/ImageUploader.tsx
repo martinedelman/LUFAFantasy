@@ -2,7 +2,6 @@
 
 import { ChangeEvent, KeyboardEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
-import InlineFeedback from "@/components/InlineFeedback";
 import Modal from "@/components/Modal";
 
 type UploadAssetType = "team_logo" | "team_background" | "player_profile_picture";
@@ -352,7 +351,7 @@ export default function ImageUploader({
       <p className="mt-1 text-xs text-gray-500">Formatos soportados: JPG, PNG, WEBP, GIF, SVG. Máximo 5MB.</p>
 
       {isUploading && <p className="mt-2 text-sm text-blue-600">Subiendo imagen...</p>}
-      {error && <InlineFeedback className="mt-2" variant="error" title="Imagen no válida" message={error} compact />}
+      {error && <span className="mt-1 block text-xs font-medium text-red-600">{error}</span>}
 
       {cropImage && cropDimensions && (
         <Modal

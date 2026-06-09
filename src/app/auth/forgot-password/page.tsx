@@ -21,22 +21,29 @@ export default function ForgotPasswordPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const validateEmail = (value: string) => {
-    if (!value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "";
+    if (!value.trim()) return "Este campo es obligatorio.";
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return "";
     return "Ingresá un email válido.";
   };
 
   const validateResetFields = (values = { code, password, confirmPassword }) => {
     const nextErrors: Record<string, string> = {};
 
-    if (values.code && !/^\d{6}$/.test(values.code)) {
+    if (!values.code) {
+      nextErrors.code = "Este campo es obligatorio.";
+    } else if (!/^\d{6}$/.test(values.code)) {
       nextErrors.code = "El código debe tener 6 números.";
     }
 
-    if (values.password && values.password.length < 6) {
+    if (!values.password) {
+      nextErrors.password = "Este campo es obligatorio.";
+    } else if (values.password.length < 6) {
       nextErrors.password = "La contraseña debe tener al menos 6 caracteres.";
     }
 
-    if (values.confirmPassword && values.password !== values.confirmPassword) {
+    if (!values.confirmPassword) {
+      nextErrors.confirmPassword = "Este campo es obligatorio.";
+    } else if (values.password !== values.confirmPassword) {
       nextErrors.confirmPassword = "Las contraseñas no coinciden.";
     }
 
@@ -80,6 +87,17 @@ export default function ForgotPasswordPage() {
       setLoading(false);
     }
   };
+
+  const isRequestReady = !validateEmail(email);
+  const resetFieldErrors = validateResetFields();
+  const isResetReady = Object.keys(resetFieldErrors).length === 0;
+
+  const renderFieldError = (fieldName: string) =>
+    fieldErrors[fieldName] ? (
+      <span id={`${fieldName}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
+    ) : null;
 
   const resetPassword = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -145,7 +163,8 @@ export default function ForgotPasswordPage() {
           <form className="mt-8 space-y-6" onSubmit={requestCode}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Correo Electrónico
+                Correo Electrónico <span className="text-red-600">*</span>
+                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
               </label>
               <input
                 id="email"
@@ -166,20 +185,12 @@ export default function ForgotPasswordPage() {
                 }`}
                 placeholder="tu@email.com"
               />
-              {fieldErrors.email && (
-                <InlineFeedback
-                  compact
-                  className="mt-2"
-                  variant="error"
-                  title="Email inválido"
-                  message={<span id="email-error">{fieldErrors.email}</span>}
-                />
-              )}
+              {renderFieldError("email")}
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !isRequestReady}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
@@ -197,7 +208,8 @@ export default function ForgotPasswordPage() {
             <div className="space-y-4">
               <div>
                 <label htmlFor="code" className="block text-sm font-medium text-gray-700">
-                  Código de verificación
+                  Código de verificación <span className="text-red-600">*</span>
+                  <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
                 </label>
                 <input
                   id="code"
@@ -219,20 +231,14 @@ export default function ForgotPasswordPage() {
                   }`}
                   placeholder="123456"
                 />
-                {fieldErrors.code && (
-                  <InlineFeedback
-                    compact
-                    className="mt-2"
-                    variant="error"
-                    title="Código incompleto"
-                    message={<span id="code-error">{fieldErrors.code}</span>}
-                  />
-                )}
+                <span className="mt-1 block text-xs text-gray-500">Faltan {Math.max(0, 6 - code.length)} números.</span>
+                {renderFieldError("code")}
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Nueva contraseña
+                  Nueva contraseña <span className="text-red-600">*</span>
+                  <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
                 </label>
                 <input
                   id="password"
@@ -254,20 +260,13 @@ export default function ForgotPasswordPage() {
                   }`}
                   placeholder="••••••••"
                 />
-                {fieldErrors.password && (
-                  <InlineFeedback
-                    compact
-                    className="mt-2"
-                    variant="error"
-                    title="Contraseña corta"
-                    message={<span id="password-error">{fieldErrors.password}</span>}
-                  />
-                )}
+                {renderFieldError("password")}
               </div>
 
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                  Confirmar contraseña
+                  Confirmar contraseña <span className="text-red-600">*</span>
+                  <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
                 </label>
                 <input
                   id="confirmPassword"
@@ -289,21 +288,13 @@ export default function ForgotPasswordPage() {
                   }`}
                   placeholder="••••••••"
                 />
-                {fieldErrors.confirmPassword && (
-                  <InlineFeedback
-                    compact
-                    className="mt-2"
-                    variant="error"
-                    title="Confirmación distinta"
-                    message={<span id="confirmPassword-error">{fieldErrors.confirmPassword}</span>}
-                  />
-                )}
+                {renderFieldError("confirmPassword")}
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !isResetReady}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (

@@ -16,6 +16,7 @@ function VerifyRegistrationForm() {
   const [codeError, setCodeError] = useState("");
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const code = digits.join("");
+  const isCodeReady = Boolean(token) && code.length === 6 && !codeError;
 
   const focusInput = (index: number) => {
     inputRefs.current[index]?.focus();
@@ -129,7 +130,8 @@ function VerifyRegistrationForm() {
 
       <div>
         <label htmlFor="otp-0" className="block text-sm font-medium text-gray-700 text-center">
-          Código de verificación
+          Código de verificación <span className="text-red-600">*</span>
+          <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
         </label>
         <div className="mt-4 flex justify-center gap-2 sm:gap-3">
           {digits.map((digit, index) => (
@@ -158,20 +160,19 @@ function VerifyRegistrationForm() {
             />
           ))}
         </div>
+        <span className="mt-2 block text-center text-xs text-gray-500">
+          Faltan {Math.max(0, 6 - code.length)} números.
+        </span>
         {codeError && (
-          <InlineFeedback
-            compact
-            className="mx-auto mt-3 max-w-xs"
-            variant="error"
-            title="Código incompleto"
-            message={<span id="code-error">{codeError}</span>}
-          />
+          <span id="code-error" className="mx-auto mt-1 block max-w-xs text-center text-xs font-medium text-red-600">
+            {codeError}
+          </span>
         )}
       </div>
 
       <button
         type="submit"
-        disabled={loading || !token || code.length < 6}
+        disabled={loading || !isCodeReady}
         className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (

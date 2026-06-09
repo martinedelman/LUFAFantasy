@@ -21,19 +21,27 @@ export default function SignUpPage() {
   const validateForm = (data = formData) => {
     const nextErrors: Record<string, string> = {};
 
-    if (data.name.trim() && data.name.trim().length < 3) {
+    if (!data.name.trim()) {
+      nextErrors.name = "Este campo es obligatorio.";
+    } else if (data.name.trim().length < 3) {
       nextErrors.name = "Ingresá nombre y apellido o un nombre reconocible.";
     }
 
-    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    if (!data.email.trim()) {
+      nextErrors.email = "Este campo es obligatorio.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
       nextErrors.email = "Ingresá un email válido.";
     }
 
-    if (data.password && data.password.length < 6) {
+    if (!data.password) {
+      nextErrors.password = "Este campo es obligatorio.";
+    } else if (data.password.length < 6) {
       nextErrors.password = "La contraseña debe tener al menos 6 caracteres.";
     }
 
-    if (data.confirmPassword && data.password !== data.confirmPassword) {
+    if (!data.confirmPassword) {
+      nextErrors.confirmPassword = "Este campo es obligatorio.";
+    } else if (data.password !== data.confirmPassword) {
       nextErrors.confirmPassword = "Las contraseñas no coinciden.";
     }
 
@@ -79,20 +87,19 @@ export default function SignUpPage() {
     if (error) setError("");
   };
 
+  const currentFormErrors = validateForm();
+  const isFormReady = Object.keys(currentFormErrors).length === 0;
+
   const inputClassName = (fieldName: string) =>
     `mt-1 appearance-none relative block w-full px-3 py-2 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm ${
       fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
     }`;
 
-  const renderFieldError = (fieldName: string, title: string) =>
+  const renderFieldError = (fieldName: string) =>
     fieldErrors[fieldName] ? (
-      <InlineFeedback
-        compact
-        className="mt-2"
-        variant="error"
-        title={title}
-        message={<span id={`${fieldName}-error`}>{fieldErrors[fieldName]}</span>}
-      />
+      <span id={`${fieldName}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
     ) : null;
 
   if (success) {
@@ -136,7 +143,8 @@ export default function SignUpPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Nombre Completo
+                Nombre Completo <span className="text-red-600">*</span>
+                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
               </label>
               <input
                 id="name"
@@ -151,12 +159,13 @@ export default function SignUpPage() {
                 className={inputClassName("name")}
                 placeholder="Juan Pérez"
               />
-              {renderFieldError("name", "Nombre incompleto")}
+              {renderFieldError("name")}
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Correo Electrónico
+                Correo Electrónico <span className="text-red-600">*</span>
+                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
               </label>
               <input
                 id="email"
@@ -171,12 +180,13 @@ export default function SignUpPage() {
                 className={inputClassName("email")}
                 placeholder="tu@email.com"
               />
-              {renderFieldError("email", "Email inválido")}
+              {renderFieldError("email")}
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Contraseña
+                Contraseña <span className="text-red-600">*</span>
+                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
               </label>
               <input
                 id="password"
@@ -191,12 +201,13 @@ export default function SignUpPage() {
                 className={inputClassName("password")}
                 placeholder="••••••••"
               />
-              {renderFieldError("password", "Contraseña corta")}
+              {renderFieldError("password")}
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirmar Contraseña
+                Confirmar Contraseña <span className="text-red-600">*</span>
+                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
               </label>
               <input
                 id="confirmPassword"
@@ -211,13 +222,13 @@ export default function SignUpPage() {
                 className={inputClassName("confirmPassword")}
                 placeholder="••••••••"
               />
-              {renderFieldError("confirmPassword", "Confirmación distinta")}
+              {renderFieldError("confirmPassword")}
             </div>
           </div>
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !isFormReady}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (

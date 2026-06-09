@@ -18,11 +18,17 @@ export default function SignInPage() {
   const { signIn } = useAuth();
 
   const validateField = (name: string, value: string) => {
-    if (name === "email" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return "Este campo es obligatorio.";
+    }
+
+    if (name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       return "Ingresá un email válido.";
     }
 
-    if (name === "password" && value && value.length < 6) {
+    if (name === "password" && value.length < 6) {
       return "La contraseña debe tener al menos 6 caracteres.";
     }
 
@@ -76,6 +82,19 @@ export default function SignInPage() {
     if (error) setError("");
   };
 
+  const isFormReady =
+    formData.email.trim().length > 0 &&
+    formData.password.length >= 6 &&
+    !validateField("email", formData.email) &&
+    !validateField("password", formData.password);
+
+  const renderFieldError = (fieldName: "email" | "password") =>
+    fieldErrors[fieldName] ? (
+      <span id={`${fieldName}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
+    ) : null;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -93,7 +112,8 @@ export default function SignInPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Correo Electrónico
+                Correo Electrónico <span className="text-red-600">*</span>
+                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
               </label>
               <input
                 id="email"
@@ -110,20 +130,13 @@ export default function SignInPage() {
                 }`}
                 placeholder="tu@email.com"
               />
-              {fieldErrors.email && (
-                <InlineFeedback
-                  compact
-                  className="mt-2"
-                  variant="error"
-                  title="Email inválido"
-                  message={<span id="email-error">{fieldErrors.email}</span>}
-                />
-              )}
+              {renderFieldError("email")}
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Contraseña
+                Contraseña <span className="text-red-600">*</span>
+                <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
               </label>
               <input
                 id="password"
@@ -140,15 +153,7 @@ export default function SignInPage() {
                 }`}
                 placeholder="••••••••"
               />
-              {fieldErrors.password && (
-                <InlineFeedback
-                  compact
-                  className="mt-2"
-                  variant="error"
-                  title="Contraseña incompleta"
-                  message={<span id="password-error">{fieldErrors.password}</span>}
-                />
-              )}
+              {renderFieldError("password")}
               <div className="mt-2 text-right">
                 <Link href="/auth/forgot-password" className="text-sm font-medium text-green-600 hover:text-green-500">
                   ¿Olvidaste tu contraseña?
@@ -160,7 +165,7 @@ export default function SignInPage() {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !isFormReady}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
