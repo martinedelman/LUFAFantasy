@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
 import ImageUploader from "@/components/ImageUploader";
+import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Division {
@@ -51,8 +52,56 @@ export default function CreateTeamPage() {
   });
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [loadingDivisions, setLoadingDivisions] = useState(true);
+
+  const validateField = (name: string, value: string) => {
+    const trimmed = value.trim();
+
+    if (name === "name" && !trimmed) {
+      return "Este campo es obligatorio.";
+    }
+
+    if (name === "name" && trimmed.length < 3) {
+      return "El nombre del equipo debe tener al menos 3 caracteres.";
+    }
+
+    if (name === "shortName" && trimmed && trimmed.length < 2) {
+      return "Ingresá al menos 2 caracteres.";
+    }
+
+    if (name === "shortName" && trimmed.length > 12) {
+      return "Usá 12 caracteres o menos para que entre bien en las cards.";
+    }
+
+    if (name === "division" && !trimmed) {
+      return "Seleccioná una división.";
+    }
+
+    if ((name === "contact.email" || name.includes(".email")) && trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      return "Ingresá un email válido.";
+    }
+
+    return "";
+  };
+
+  const validateForm = () => {
+    const nextErrors: Record<string, string> = {};
+    [
+      ["name", form.name],
+      ["shortName", form.shortName],
+      ["division", form.division],
+      ["contact.email", form.contact.email],
+      ["coaches.0.email", form.coaches[0].email],
+      ["coaches.1.email", form.coaches[1].email],
+    ].forEach(([name, value]) => {
+      const message = validateField(name, value);
+      if (message) nextErrors[name] = message;
+    });
+
+    return nextErrors;
+  };
 
   useEffect(() => {
     const fetchDivisions = async () => {
@@ -86,14 +135,46 @@ export default function CreateTeamPage() {
     } else {
       setForm({ ...form, [name]: value });
     }
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: validateField(name, value),
+    }));
+    if (error) setError("");
   };
 
   const handleCoachChange = (index: number, field: "name" | "email" | "phone" | "experience", value: string) => {
+    const fieldName = `coaches.${index}.${field}`;
     setForm((prev) => ({
       ...prev,
       coaches: prev.coaches.map((coach, coachIndex) => (coachIndex === index ? { ...coach, [field]: value } : coach)),
     }));
+    setFieldErrors((prev) => ({
+      ...prev,
+      [fieldName]: validateField(fieldName, value),
+    }));
+    if (error) setError("");
   };
+
+  const inputClassName = (fieldName: string) =>
+    `w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+      fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
+    }`;
+
+  const renderFieldError = (fieldName: string) =>
+    fieldErrors[fieldName] ? (
+      <span id={`${fieldName.replace(/\./g, "-")}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
+    ) : null;
+
+  const requiredLabel = (label: string) => (
+    <>
+      {label} <span className="text-red-600">*</span>
+      <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+    </>
+  );
+
+  const isFormReady = Object.keys(validateForm()).length === 0 && !loadingDivisions;
 
   const toNullable = (value: string) => {
     const trimmed = value.trim();
@@ -102,6 +183,14 @@ export default function CreateTeamPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nextFieldErrors = validateForm();
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.values(nextFieldErrors).some(Boolean)) {
+      setError("Revisá los campos marcados antes de crear el equipo.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
@@ -150,7 +239,7 @@ export default function CreateTeamPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre del Equipo *
+                      {requiredLabel("Nombre del Equipo")}
                     </label>
                     <input
                       id="name"
@@ -158,9 +247,12 @@ export default function CreateTeamPage() {
                       type="text"
                       value={form.name}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.name)}
+                      aria-describedby={fieldErrors.name ? "name-error" : undefined}
+                      className={inputClassName("name")}
                       required
                     />
+                    {renderFieldError("name")}
                   </div>
                   <div>
                     <label htmlFor="shortName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -172,19 +264,28 @@ export default function CreateTeamPage() {
                       type="text"
                       value={form.shortName}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.shortName)}
+                      aria-describedby={fieldErrors.shortName ? "shortName-error" : undefined}
+                      className={inputClassName("shortName")}
+                      maxLength={12}
                     />
+                    <span className="mt-1 block text-xs text-gray-500">
+                      Quedan {Math.max(0, 12 - form.shortName.length)} caracteres.
+                    </span>
+                    {renderFieldError("shortName")}
                   </div>
                   <div>
                     <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
-                      División *
+                      {requiredLabel("División")}
                     </label>
                     <select
                       id="division"
                       name="division"
                       value={form.division}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.division)}
+                      aria-describedby={fieldErrors.division ? "division-error" : undefined}
+                      className={inputClassName("division")}
                       required
                       disabled={loadingDivisions}
                     >
@@ -195,6 +296,7 @@ export default function CreateTeamPage() {
                         </option>
                       ))}
                     </select>
+                    {renderFieldError("division")}
                   </div>
                   <div>
                     <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
@@ -221,7 +323,7 @@ export default function CreateTeamPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="colors.primary" className="block text-sm font-medium text-gray-700 mb-1">
-                      Color Primario *
+                      {requiredLabel("Color Primario")}
                     </label>
                     <input
                       id="colors.primary"
@@ -263,8 +365,11 @@ export default function CreateTeamPage() {
                       type="email"
                       value={form.contact.email}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors["contact.email"])}
+                      aria-describedby={fieldErrors["contact.email"] ? "contact-email-error" : undefined}
+                      className={inputClassName("contact.email")}
                     />
+                    {renderFieldError("contact.email")}
                   </div>
                   <div>
                     <label htmlFor="contact.phone" className="block text-sm font-medium text-gray-700 mb-1">
@@ -332,8 +437,15 @@ export default function CreateTeamPage() {
                           type="email"
                           value={form.coaches[coachIndex].email}
                           onChange={(event) => handleCoachChange(coachIndex, "email", event.target.value)}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          aria-invalid={Boolean(fieldErrors[`coaches.${coachIndex}.email`])}
+                          aria-describedby={
+                            fieldErrors[`coaches.${coachIndex}.email`]
+                              ? `coaches-${coachIndex}-email-error`
+                              : undefined
+                          }
+                          className={inputClassName(`coaches.${coachIndex}.email`)}
                         />
+                        {renderFieldError(`coaches.${coachIndex}.email`)}
                       </div>
                       <div>
                         <label
@@ -427,13 +539,7 @@ export default function CreateTeamPage() {
                 </div>
               </div>
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                  <div className="flex">
-                    <div className="text-red-600 text-sm">{error}</div>
-                  </div>
-                </div>
-              )}
+              {error && <InlineFeedback variant="error" title="No pudimos crear el equipo" message={error} />}
 
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <button
@@ -446,7 +552,7 @@ export default function CreateTeamPage() {
                 <button
                   type="submit"
                   className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-                  disabled={loading}
+                  disabled={loading || !isFormReady}
                 >
                   {loading ? (
                     <>

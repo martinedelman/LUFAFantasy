@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import Avatar from "@/components/Avatar";
+import InlineFeedback from "@/components/InlineFeedback";
+import RevealOnScroll from "@/components/RevealOnScroll";
+import Skeleton from "@/components/Skeleton";
 
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://flag.lufa.com.uy").replace(/\/$/, "");
 
@@ -38,12 +41,17 @@ interface DashboardStats {
     venue: string;
     scheduledDate: string;
     status: string;
+    score?: {
+      home: number;
+      away: number;
+    };
   }>;
   topPlayers: Array<{
     id: string;
     name: string;
     position: string;
     secondaryPosition?: string;
+    profilePicture?: string;
     team: string;
     stat: number;
     statLabel: string;
@@ -99,6 +107,60 @@ function FixedHeroSection({
   );
 }
 
+function UpcomingGameSkeleton() {
+  return (
+    <div className="skeleton-card flex min-h-[116px] w-full items-center rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4">
+      <div className="flex w-full flex-col-reverse items-center gap-4 md:flex-row md:justify-between">
+        <div className="w-full min-w-0 flex-1 space-y-3 text-center md:text-left">
+          <Skeleton className="mx-auto h-4 w-56 max-w-full md:mx-0" />
+          <Skeleton className="mx-auto h-3 w-44 max-w-full md:mx-0" />
+        </div>
+        <div className="flex w-full shrink-0 flex-col items-center gap-3 md:w-auto md:items-end">
+          <Skeleton className="h-7 w-28 rounded-full" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TopPlayerSkeleton() {
+  return (
+    <div className="skeleton-card flex min-h-[116px] w-full items-center justify-between rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4">
+      <div className="flex w-full items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
+          <div className="min-w-0 space-y-2">
+            <Skeleton className="h-4 w-32 max-w-[44vw]" />
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        </div>
+        <div className="shrink-0 space-y-2">
+          <Skeleton className="ml-auto h-7 w-10" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TeamCarouselSkeleton() {
+  return (
+    <div className="mt-6 team-slider-mask select-none" aria-label="Cargando equipos destacados">
+      <div className="team-slider-track">
+        {Array.from({ length: 10 }).map((_, index) => (
+          <div key={index} className="team-slide-card skeleton-card">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <Skeleton className="mt-3 h-4 w-24 max-w-full" />
+            <Skeleton className="h-3 w-20 max-w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [teams, setTeams] = useState<TeamCarouselItem[]>([]);
@@ -146,6 +208,22 @@ export default function Home() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const getGameStatusCopy = (status: string) => {
+    if (status === "in_progress") {
+      return {
+        label: "En vivo",
+        detail: "Marcador en vivo",
+        className: "border-red-200 bg-red-50 text-red-700",
+      };
+    }
+
+    return {
+      label: "Programado",
+      detail: "Próximo partido",
+      className: "border-slate-200 bg-white text-slate-700",
+    };
   };
 
   const getInitials = (name: string) => {
@@ -224,10 +302,7 @@ export default function Home() {
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-lg text-red-600 mb-4">Error al cargar los datos</p>
-          <p className="text-slate-600">{error}</p>
-        </div>
+        <InlineFeedback variant="error" title="No pudimos cargar el dashboard" message={error} />
       </div>
     );
   }
@@ -267,37 +342,60 @@ export default function Home() {
             </header>
             <div className="p-6 space-y-4">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <LoadingSpinner />
-                </div>
+                <>
+                  <UpcomingGameSkeleton />
+                  <UpcomingGameSkeleton />
+                  <UpcomingGameSkeleton />
+                </>
               ) : stats?.nextGames && stats.nextGames.length > 0 ? (
-                stats.nextGames.map((game) => (
-                  <div
-                    key={game.id}
-                    className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 w-full min-h-[116px] flex items-center"
-                  >
-                    <div className="flex flex-col-reverse md:flex-row md:justify-between items-center gap-4 w-full">
-                      <div className="min-w-0 flex-1 text-center md:text-left">
-                        <p className="font-semibold text-slate-950">
-                          {game.homeTeam} <span className="text-slate-500">vs</span> {game.awayTeam}
-                        </p>
-                        <p className="text-sm text-slate-600 mt-3">
-                          {game.division} • {game.venue}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-center md:items-end gap-2 shrink-0 text-center md:text-right w-full md:w-auto">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                            game.status === "scheduled" ? "bg-slate-200 text-slate-700" : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {game.status === "scheduled" ? "📋 Programado" : "🔴 En vivo"}
-                        </span>
-                        <p className="text-xs mt-2 text-slate-700">⏰ {formatDate(game.scheduledDate)}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                stats.nextGames.map((game, index) => {
+                  const statusCopy = getGameStatusCopy(game.status);
+                  const gameHref = `/games/${game.id}`;
+                  const isLive = game.status === "in_progress";
+
+                  return (
+                    <RevealOnScroll key={game.id} delayMs={index * 70}>
+                      <Link
+                        key={game.id}
+                        href={gameHref}
+                        aria-label={`Ver detalle de ${game.homeTeam} vs ${game.awayTeam}`}
+                        onClick={() => trackHomeAction("open_upcoming_game", gameHref)}
+                        className="group flex min-h-[116px] w-full items-center rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                      >
+                        <div className="flex flex-col-reverse md:flex-row md:justify-between items-center gap-4 w-full">
+                          <div className="min-w-0 flex-1 text-center md:text-left">
+                            <p className="font-semibold text-slate-950 group-hover:text-brand-700">
+                              {game.homeTeam} <span className="text-slate-500">vs</span> {game.awayTeam}
+                            </p>
+                            <p className="text-sm text-slate-600 mt-3">
+                              {game.division} • {game.venue}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-center md:items-end gap-2 shrink-0 text-center md:text-right w-full md:w-auto">
+                            {!isLive ? (
+                              <span
+                                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusCopy.className}`}
+                              >
+                                {statusCopy.label}
+                              </span>
+                            ) : null}
+                            {isLive ? (
+                              <div className="min-w-[112px] rounded-lg bg-slate-950 px-3 py-2 text-white">
+                                <p className="text-[11px] font-semibold uppercase tracking-wide text-red-200">
+                                  {statusCopy.detail}
+                                </p>
+                                <p className="text-2xl font-black leading-none">
+                                  {game.score?.home ?? 0} - {game.score?.away ?? 0}
+                                </p>
+                              </div>
+                            ) : null}
+                            <p className="text-xs mt-1 text-slate-700">{formatDate(game.scheduledDate)}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    </RevealOnScroll>
+                  );
+                })
               ) : (
                 <div className="text-center py-12">
                   <p className="text-xl text-slate-600">No hay partidos próximos programados</p>
@@ -312,40 +410,58 @@ export default function Home() {
             </header>
             <div className="p-6 space-y-4">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <LoadingSpinner />
-                </div>
+                <>
+                  <TopPlayerSkeleton />
+                  <TopPlayerSkeleton />
+                  <TopPlayerSkeleton />
+                </>
               ) : stats?.topPlayers && stats.topPlayers.length > 0 ? (
-                stats.topPlayers.map((player, idx) => (
-                  <div
-                    key={player.id}
-                    className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 min-h-[116px] flex items-center justify-between w-full"
-                  >
-                    <div className="flex items-center justify-between gap-3 w-full">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="relative shrink-0">
-                          <div className="w-11 h-11 rounded-full border border-slate-300 bg-[rgb(255,255,255)] text-xs font-semibold text-slate-700 flex items-center justify-center">
-                            {getInitials(player.name)}
+                stats.topPlayers.map((player, idx) => {
+                  const playerHref = `/players/${player.id}`;
+
+                  return (
+                    <RevealOnScroll key={player.id} delayMs={idx * 70}>
+                      <Link
+                        key={player.id}
+                        href={playerHref}
+                        aria-label={`Ver perfil de ${player.name}`}
+                        onClick={() => trackHomeAction("open_top_player", playerHref)}
+                        className="group flex min-h-[116px] w-full items-center justify-between rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                      >
+                        <div className="flex items-center justify-between gap-3 w-full">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="relative shrink-0">
+                              <Avatar
+                                imageUrl={player.profilePicture}
+                                alt={player.name}
+                                fallback={getInitials(player.name)}
+                                backgroundColor="rgb(255,255,255)"
+                                className="h-11 w-11 border border-slate-300 text-xs"
+                                fallbackClassName="text-xs font-semibold text-black"
+                              />
+                              {idx === 0 && <span className="absolute -top-2 -right-2 text-base">🥇</span>}
+                              {idx === 1 && <span className="absolute -top-2 -right-2 text-base">🥈</span>}
+                              {idx === 2 && <span className="absolute -top-2 -right-2 text-base">🥉</span>}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-slate-950 truncate group-hover:text-brand-700">
+                                {player.name}
+                              </p>
+                              <p className="text-sm text-slate-600 truncate">
+                                {[player.position, player.secondaryPosition].filter(Boolean).join(" / ")}
+                              </p>
+                              <p className="text-xs text-slate-500 truncate">{player.team}</p>
+                            </div>
                           </div>
-                          {idx === 0 && <span className="absolute -top-2 -right-2 text-base">🥇</span>}
-                          {idx === 1 && <span className="absolute -top-2 -right-2 text-base">🥈</span>}
-                          {idx === 2 && <span className="absolute -top-2 -right-2 text-base">🥉</span>}
+                          <div className="text-right shrink-0">
+                            <p className="text-2xl font-semibold text-brand-700">{player.stat}</p>
+                            <p className="text-xs text-slate-600 font-medium">{player.statLabel}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-slate-950 truncate">{player.name}</p>
-                          <p className="text-sm text-slate-600 truncate">
-                            {[player.position, player.secondaryPosition].filter(Boolean).join(" / ")}
-                          </p>
-                          <p className="text-xs text-slate-500 truncate">{player.team}</p>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-2xl font-semibold text-brand-700">{player.stat}</p>
-                        <p className="text-xs text-slate-600 font-medium">{player.statLabel}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                      </Link>
+                    </RevealOnScroll>
+                  );
+                })
               ) : (
                 <div className="text-center py-8">
                   <p className="text-slate-600">No hay datos disponibles</p>
@@ -369,18 +485,19 @@ export default function Home() {
             <h3 className="text-2xl font-bold text-slate-950 px-6">Equipos Actuales</h3>
             <p className="text-justify">
               Actualmente la LUFA cuenta con{" "}
-              <span className="font-semibold">{stats?.totalTeams || 0} equipos activos</span> compitiendo en la liga.
-              Cada equipo representa una comunidad apasionada por el Flag Football y la competencia.
+              {loading ? (
+                <Skeleton as="span" className="inline-block h-4 w-32 align-[-2px]" />
+              ) : (
+                <span className="font-semibold">{stats?.totalTeams || 0} equipos activos</span>
+              )}{" "}
+              compitiendo en la liga. Cada equipo representa una comunidad apasionada por el Flag Football y la
+              competencia.
             </p>
             <p className="italic">¡Conoce a los protagonistas de la temporada!</p>
           </div>
 
           {loading ? (
-            <div className="mt-6 rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-8">
-              <div className="flex items-center justify-center">
-                <LoadingSpinner size="lg" />
-              </div>
-            </div>
+            <TeamCarouselSkeleton />
           ) : teams.length > 0 ? (
             <div className="mt-6 team-slider-mask select-none">
               <div
@@ -543,19 +660,18 @@ export default function Home() {
                 description:
                   "No requiere equipamiento pesado como cascos o hombreras, lo que facilita su práctica y organización.",
               },
-            ].map((benefit) => (
-              <div
-                key={benefit.title}
-                className="rounded-xl border border-slate-200 bg-[rgb(255,255,255)] p-6 transition hover:border-brand-600 hover:shadow-md"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-2xl leading-none">{benefit.icon}</div>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-slate-950 mb-2 text-lg">{benefit.title}</h4>
-                    <p className="text-sm text-slate-700 leading-relaxed">{benefit.description}</p>
+            ].map((benefit, index) => (
+              <RevealOnScroll key={benefit.title} delayMs={index * 60}>
+                <div className="rounded-xl border border-slate-200 bg-[rgb(255,255,255)] p-6 transition hover:border-brand-600 hover:shadow-md">
+                  <div className="flex items-start gap-4">
+                    <div className="text-2xl leading-none">{benefit.icon}</div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-950 mb-2 text-lg">{benefit.title}</h4>
+                      <p className="text-sm text-slate-700 leading-relaxed">{benefit.description}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </RevealOnScroll>
             ))}
           </div>
         </div>
@@ -583,16 +699,18 @@ export default function Home() {
                 title: "La intensidad de un deporte profesional",
                 desc: "Competencias serias con resultados reales",
               },
-            ].map((item) => (
-              <div key={item.title} className="rounded-lg border border-slate-200 bg-[rgb(248,250,252)] p-5">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">{item.icon}</span>
-                  <div>
-                    <h4 className="font-bold text-slate-950 mb-1">{item.title}</h4>
-                    <p className="text-slate-600 text-sm">{item.desc}</p>
+            ].map((item, index) => (
+              <RevealOnScroll key={item.title} delayMs={index * 60}>
+                <div className="rounded-lg border border-slate-200 bg-[rgb(248,250,252)] p-5">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">{item.icon}</span>
+                    <div>
+                      <h4 className="font-bold text-slate-950 mb-1">{item.title}</h4>
+                      <p className="text-slate-600 text-sm">{item.desc}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </RevealOnScroll>
             ))}
           </div>
           <div className="mt-8 text-center pt-8 border-t border-slate-200">

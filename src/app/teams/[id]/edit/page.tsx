@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
+import InlineFeedback from "@/components/InlineFeedback";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Division {
@@ -58,6 +59,7 @@ export default function EditTeamPage() {
   });
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [teamEmails, setTeamEmails] = useState({ contact: "", coaches: [] as string[] });
@@ -159,6 +161,8 @@ export default function EditTeamPage() {
     } else {
       setForm({ ...form, [name]: value });
     }
+    setFieldErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+    if (error) setError("");
   };
 
   const handleSocialMediaChange = (platform: "facebook" | "instagram" | "x", value: string) => {
@@ -175,11 +179,67 @@ export default function EditTeamPage() {
   };
 
   const handleCoachChange = (index: number, field: "name" | "email" | "phone" | "experience", value: string) => {
+    const fieldName = `coaches.${index}.${field}`;
     setForm((prev) => ({
       ...prev,
       coaches: prev.coaches.map((coach, coachIndex) => (coachIndex === index ? { ...coach, [field]: value } : coach)),
     }));
+    setFieldErrors((prev) => ({ ...prev, [fieldName]: validateField(fieldName, value) }));
+    if (error) setError("");
   };
+
+  const validateField = (name: string, value: string) => {
+    const trimmed = value.trim();
+
+    if (name === "name" && !trimmed) return "Este campo es obligatorio.";
+    if (name === "name" && trimmed.length < 3) return "El nombre del equipo debe tener al menos 3 caracteres.";
+    if (name === "shortName" && trimmed && trimmed.length < 2) return "Ingresá al menos 2 caracteres.";
+    if (name === "shortName" && trimmed.length > 12) return "Usá 12 caracteres o menos.";
+    if (name === "division" && !trimmed) return "Seleccioná una división.";
+    if ((name === "contact.email" || name.includes(".email")) && trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      return "Ingresá un email válido.";
+    }
+
+    return "";
+  };
+
+  const validateForm = () => {
+    const nextErrors: Record<string, string> = {};
+    [
+      ["name", form.name],
+      ["shortName", form.shortName],
+      ["division", form.division],
+      ["contact.email", form.contact.email],
+      ["coaches.0.email", form.coaches[0].email],
+      ["coaches.1.email", form.coaches[1].email],
+    ].forEach(([name, value]) => {
+      const message = validateField(name, value);
+      if (message) nextErrors[name] = message;
+    });
+
+    return nextErrors;
+  };
+
+  const inputClassName = (fieldName: string) =>
+    `w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+      fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
+    }`;
+
+  const renderFieldError = (fieldName: string) =>
+    fieldErrors[fieldName] ? (
+      <span id={`${fieldName.replace(/\./g, "-")}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
+    ) : null;
+
+  const requiredLabel = (label: string) => (
+    <>
+      {label} <span className="text-red-600">*</span>
+      <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+    </>
+  );
+
+  const isFormReady = Object.keys(validateForm()).length === 0;
 
   const toNullable = (value: string) => {
     const trimmed = value.trim();
@@ -188,6 +248,14 @@ export default function EditTeamPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nextFieldErrors = validateForm();
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setError("Revisá los campos marcados antes de guardar el equipo.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
@@ -283,7 +351,7 @@ export default function EditTeamPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre del Equipo *
+                      {requiredLabel("Nombre del Equipo")}
                     </label>
                     <input
                       id="name"
@@ -291,9 +359,12 @@ export default function EditTeamPage() {
                       type="text"
                       value={form.name}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.name)}
+                      aria-describedby={fieldErrors.name ? "name-error" : undefined}
+                      className={inputClassName("name")}
                       required
                     />
+                    {renderFieldError("name")}
                   </div>
                   <div>
                     <label htmlFor="shortName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -305,19 +376,28 @@ export default function EditTeamPage() {
                       type="text"
                       value={form.shortName}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.shortName)}
+                      aria-describedby={fieldErrors.shortName ? "shortName-error" : undefined}
+                      className={inputClassName("shortName")}
+                      maxLength={12}
                     />
+                    <span className="mt-1 block text-xs text-gray-500">
+                      Quedan {Math.max(0, 12 - form.shortName.length)} caracteres.
+                    </span>
+                    {renderFieldError("shortName")}
                   </div>
                   <div>
                     <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
-                      División *
+                      {requiredLabel("División")}
                     </label>
                     <select
                       id="division"
                       name="division"
                       value={form.division}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors.division)}
+                      aria-describedby={fieldErrors.division ? "division-error" : undefined}
+                      className={inputClassName("division")}
                       required
                     >
                       <option value="">Seleccionar división</option>
@@ -327,6 +407,7 @@ export default function EditTeamPage() {
                         </option>
                       ))}
                     </select>
+                    {renderFieldError("division")}
                   </div>
                   <div>
                     <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
@@ -353,7 +434,7 @@ export default function EditTeamPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="colors.primary" className="block text-sm font-medium text-gray-700 mb-1">
-                      Color Primario *
+                      {requiredLabel("Color Primario")}
                     </label>
                     <input
                       id="colors.primary"
@@ -395,8 +476,11 @@ export default function EditTeamPage() {
                       type="email"
                       value={form.contact.email}
                       onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      aria-invalid={Boolean(fieldErrors["contact.email"])}
+                      aria-describedby={fieldErrors["contact.email"] ? "contact-email-error" : undefined}
+                      className={inputClassName("contact.email")}
                     />
+                    {renderFieldError("contact.email")}
                   </div>
                   <div>
                     <label htmlFor="contact.phone" className="block text-sm font-medium text-gray-700 mb-1">
@@ -512,8 +596,15 @@ export default function EditTeamPage() {
                           type="email"
                           value={form.coaches[coachIndex].email}
                           onChange={(event) => handleCoachChange(coachIndex, "email", event.target.value)}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          aria-invalid={Boolean(fieldErrors[`coaches.${coachIndex}.email`])}
+                          aria-describedby={
+                            fieldErrors[`coaches.${coachIndex}.email`]
+                              ? `coaches-${coachIndex}-email-error`
+                              : undefined
+                          }
+                          className={inputClassName(`coaches.${coachIndex}.email`)}
                         />
+                        {renderFieldError(`coaches.${coachIndex}.email`)}
                       </div>
                       <div>
                         <label
@@ -604,9 +695,13 @@ export default function EditTeamPage() {
                     />
                   </div>
                   {!canManageTeamPhotos && (
-                    <div className="md:col-span-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                      Solo usuarios con rol Admin pueden modificar las fotos del equipo.
-                    </div>
+                    <InlineFeedback
+                      compact
+                      className="md:col-span-2"
+                      variant="warning"
+                      title="Fotos bloqueadas"
+                      message="Solo usuarios con rol Admin pueden modificar las fotos del equipo."
+                    />
                   )}
                   <div>
                     <label htmlFor="registrationDate" className="block text-sm font-medium text-gray-700 mb-1">
@@ -624,13 +719,7 @@ export default function EditTeamPage() {
                 </div>
               </div>
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                  <div className="flex">
-                    <div className="text-red-600 text-sm">{error}</div>
-                  </div>
-                </div>
-              )}
+              {error && <InlineFeedback variant="error" title="No pudimos guardar el equipo" message={error} />}
 
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <button
@@ -643,7 +732,7 @@ export default function EditTeamPage() {
                 <button
                   type="submit"
                   className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading}
+                  disabled={loading || !isFormReady}
                 >
                   {" "}
                   {loading ? "Guardando..." : "Guardar Cambios"}

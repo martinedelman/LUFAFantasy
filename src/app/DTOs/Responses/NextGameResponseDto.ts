@@ -6,4 +6,8 @@ export interface NextGameResponseDto {
   venue: string;
   scheduledDate: string;
   status: string;
+  score: {
+    home: number;
+    away: number;
+  };
 }

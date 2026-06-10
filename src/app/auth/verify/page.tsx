@@ -3,6 +3,7 @@
 import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 function VerifyRegistrationForm() {
@@ -12,8 +13,10 @@ function VerifyRegistrationForm() {
   const [digits, setDigits] = useState(Array(6).fill(""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [codeError, setCodeError] = useState("");
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const code = digits.join("");
+  const isCodeReady = Boolean(token) && code.length === 6 && !codeError;
 
   const focusInput = (index: number) => {
     inputRefs.current[index]?.focus();
@@ -29,6 +32,7 @@ function VerifyRegistrationForm() {
     });
 
     setDigits(nextDigits);
+    setCodeError(nextDigits.join("").length === 6 ? "" : "El código debe tener 6 números.");
 
     const nextFocusIndex = Math.min(startIndex + pastedDigits.length, 5);
     window.requestAnimationFrame(() => focusInput(nextFocusIndex));
@@ -44,6 +48,8 @@ function VerifyRegistrationForm() {
     const nextDigits = [...digits];
     nextDigits[index] = digit;
     setDigits(nextDigits);
+    setCodeError(nextDigits.join("").length === 6 || nextDigits.every((nextDigit) => !nextDigit) ? "" : "El código debe tener 6 números.");
+    if (error) setError("");
 
     if (digit && index < 5) {
       window.requestAnimationFrame(() => focusInput(index + 1));
@@ -77,6 +83,11 @@ function VerifyRegistrationForm() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (code.length < 6) {
+      setCodeError("El código debe tener 6 números.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -107,19 +118,20 @@ function VerifyRegistrationForm() {
 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{error}</div>
-      )}
+      {error && <InlineFeedback variant="error" title="No pudimos verificar la cuenta" message={error} />}
 
       {!token && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-md text-sm">
-          Abrí el link que te enviamos por email para verificar tu cuenta.
-        </div>
+        <InlineFeedback
+          variant="warning"
+          title="Falta el link de verificación"
+          message="Abrí el link que te enviamos por email para verificar tu cuenta."
+        />
       )}
 
       <div>
         <label htmlFor="otp-0" className="block text-sm font-medium text-gray-700 text-center">
-          Código de verificación
+          Código de verificación <span className="text-red-600">*</span>
+          <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
         </label>
         <div className="mt-4 flex justify-center gap-2 sm:gap-3">
           {digits.map((digit, index) => (
@@ -139,16 +151,28 @@ function VerifyRegistrationForm() {
               onChange={(event) => handleDigitChange(index, event.target.value)}
               onKeyDown={(event) => handleKeyDown(index, event)}
               onPaste={(event) => handlePaste(index, event)}
-              className="h-12 w-11 rounded-md border border-gray-300 bg-white text-center text-xl font-semibold text-gray-900 shadow-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500 sm:h-14 sm:w-12 sm:text-2xl"
+              aria-invalid={Boolean(codeError)}
+              aria-describedby={codeError ? "code-error" : undefined}
+              className={`h-12 w-11 rounded-md border bg-white text-center text-xl font-semibold text-gray-900 shadow-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500 sm:h-14 sm:w-12 sm:text-2xl ${
+                codeError ? "border-red-300" : "border-gray-300"
+              }`}
               aria-label={`Dígito ${index + 1} del código`}
             />
           ))}
         </div>
+        <span className="mt-2 block text-center text-xs text-gray-500">
+          Faltan {Math.max(0, 6 - code.length)} números.
+        </span>
+        {codeError && (
+          <span id="code-error" className="mx-auto mt-1 block max-w-xs text-center text-xs font-medium text-red-600">
+            {codeError}
+          </span>
+        )}
       </div>
 
       <button
         type="submit"
-        disabled={loading || !token || code.length < 6}
+        disabled={loading || !isCodeReady}
         className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (

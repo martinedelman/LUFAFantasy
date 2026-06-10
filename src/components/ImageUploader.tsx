@@ -2,6 +2,7 @@
 
 import { ChangeEvent, KeyboardEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
+import Modal from "@/components/Modal";
 
 type UploadAssetType = "team_logo" | "team_background" | "player_profile_picture";
 
@@ -350,87 +351,71 @@ export default function ImageUploader({
       <p className="mt-1 text-xs text-gray-500">Formatos soportados: JPG, PNG, WEBP, GIF, SVG. Máximo 5MB.</p>
 
       {isUploading && <p className="mt-2 text-sm text-blue-600">Subiendo imagen...</p>}
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <span className="mt-1 block text-xs font-medium text-red-600">{error}</span>}
 
       {cropImage && cropDimensions && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={`${inputId}-crop-title`}
+        <Modal
+          open
+          title="Ajustar foto de perfil"
+          variant="info"
+          onClose={closeCropEditor}
+          secondaryAction={{
+            label: "Cancelar",
+            onClick: closeCropEditor,
+            disabled: isUploading,
+          }}
+          primaryAction={{
+            label: "Usar foto",
+            onClick: uploadCroppedImage,
+            disabled: isUploading,
+          }}
         >
-          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl">
-            <div className="mb-4">
-              <h2 id={`${inputId}-crop-title`} className="text-lg font-semibold text-gray-900">
-                Ajustar foto de perfil
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">Arrastra la imagen y ajusta el zoom para recortarla 1:1.</p>
-            </div>
+          <p>Arrastra la imagen y ajusta el zoom para recortarla 1:1.</p>
 
-            <div className="flex justify-center">
-              <div
-                className="relative overflow-hidden rounded-lg bg-gray-900 touch-none cursor-move"
-                style={{ width: cropSize, height: cropSize }}
-                role="application"
-                tabIndex={0}
-                aria-label="Área de recorte. Usa las flechas para mover la imagen."
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                onKeyDown={handleCropKeyDown}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- The crop editor previews a local blob URL before upload. */}
-                <img
-                  src={cropImage.url}
-                  alt="Vista previa del recorte"
-                  draggable={false}
-                  className="absolute left-1/2 top-1/2 max-w-none select-none"
-                  style={{
-                    width: cropDimensions.width,
-                    height: cropDimensions.height,
-                    transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
-                  }}
-                />
-                <div className="pointer-events-none absolute inset-0 ring-2 ring-white/90" />
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.24)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.24)_1px,transparent_1px)] bg-[size:33.333%_33.333%]" />
-              </div>
-            </div>
-
-            <label htmlFor={`${inputId}-zoom`} className="mt-5 block text-sm font-medium text-gray-700">
-              Zoom
-            </label>
-            <input
-              id={`${inputId}-zoom`}
-              type="range"
-              min={MIN_ZOOM}
-              max={MAX_ZOOM}
-              step="0.01"
-              value={zoom}
-              onChange={handleZoomChange}
-              className="mt-2 w-full accent-green-600"
-            />
-
-            <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={closeCropEditor}
-                disabled={isUploading}
-                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={uploadCroppedImage}
-                disabled={isUploading}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-              >
-                Usar foto
-              </button>
+          <div className="mt-4 flex justify-center">
+            <div
+              className="relative overflow-hidden rounded-lg bg-gray-900 touch-none cursor-move"
+              style={{ width: cropSize, height: cropSize }}
+              role="application"
+              tabIndex={0}
+              aria-label="Área de recorte. Usa las flechas para mover la imagen."
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              onKeyDown={handleCropKeyDown}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- The crop editor previews a local blob URL before upload. */}
+              <img
+                src={cropImage.url}
+                alt="Vista previa del recorte"
+                draggable={false}
+                className="absolute left-1/2 top-1/2 max-w-none select-none"
+                style={{
+                  width: cropDimensions.width,
+                  height: cropDimensions.height,
+                  transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
+                }}
+              />
+              <div className="pointer-events-none absolute inset-0 ring-2 ring-white/90" />
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.24)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.24)_1px,transparent_1px)] bg-[size:33.333%_33.333%]" />
             </div>
           </div>
-        </div>
+
+          <label htmlFor={`${inputId}-zoom`} className="mt-5 block text-sm font-medium text-gray-700">
+            Zoom
+          </label>
+          <input
+            id={`${inputId}-zoom`}
+            type="range"
+            min={MIN_ZOOM}
+            max={MAX_ZOOM}
+            step="0.01"
+            value={zoom}
+            onChange={handleZoomChange}
+            className="mt-2 w-full accent-green-600"
+          />
+        </Modal>
       )}
     </div>
   );

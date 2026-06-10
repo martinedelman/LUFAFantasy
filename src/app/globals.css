@@ -59,6 +59,84 @@ button {
   cursor: pointer;
 }
 
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: linear-gradient(110deg, #e7eef5 8%, #f5f9fc 18%, #e7eef5 33%);
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.45s ease-in-out infinite;
+}
+
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  transform: translateX(-100%);
+  animation: skeleton-sheen 1.8s ease-in-out infinite;
+}
+
+.skeleton-card {
+  animation: skeleton-card-rise 1.8s ease-in-out infinite;
+}
+
+.card-reveal {
+  opacity: 0;
+  transform: translate3d(0, -18px, 0) scale(0.985);
+  transform-origin: center top;
+  transition:
+    opacity 420ms ease,
+    transform 620ms cubic-bezier(0.18, 0.92, 0.25, 1.12);
+  will-change: opacity, transform;
+}
+
+.card-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.toast-motion {
+  transform-origin: top right;
+  will-change: opacity, transform;
+  cursor: grab;
+  opacity: var(--toast-opacity, 1);
+  transform: translate3d(0, var(--toast-drag-y, 0), 0);
+}
+
+.toast-motion.is-entering {
+  animation: toast-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.toast-motion.is-leaving {
+  animation: toast-exit 240ms ease-in both;
+}
+
+.toast-motion.is-dragging {
+  animation: none;
+  cursor: grabbing;
+  transition: none;
+}
+
+.live-event-submit {
+  position: relative;
+  overflow: hidden;
+}
+
+.live-event-submit.is-saving {
+  animation: live-event-submit-pulse 1.15s ease-in-out infinite;
+}
+
+.live-event-submit.is-saving::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-115%);
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.28) 48%, transparent 78%);
+  animation: live-event-submit-sheen 1.05s ease-in-out infinite;
+  pointer-events: none;
+}
+
 /* Overrides globales para clases usadas en pantallas existentes */
 .bg-gray-50,
 .bg-slate-50 {
@@ -284,10 +362,99 @@ button {
   }
 }
 
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+@keyframes skeleton-sheen {
+  0% {
+    transform: translateX(-100%);
+  }
+  55%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes skeleton-card-rise {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes toast-enter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, calc(-100vh - 24px), 0) scale(0.98);
+  }
+  72% {
+    opacity: 1;
+    transform: translate3d(0, 8px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, var(--toast-drag-y, 0), 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, calc(-100vh - 24px), 0) scale(0.98);
+  }
+}
+
+@keyframes live-event-submit-pulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 10px 26px rgba(29, 78, 216, 0.28);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.01);
+    box-shadow: 0 16px 34px rgba(29, 78, 216, 0.36);
+  }
+}
+
+@keyframes live-event-submit-sheen {
+  0% {
+    transform: translateX(-115%);
+  }
+  62%,
+  100% {
+    transform: translateX(115%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .coming-soon-scan,
   .coming-soon-bar,
-  .coming-soon-tile {
+  .coming-soon-tile,
+  .skeleton-shimmer,
+  .skeleton-shimmer::after,
+  .skeleton-card,
+  .card-reveal,
+  .toast-motion,
+  .toast-motion.is-entering,
+  .toast-motion.is-leaving,
+  .live-event-submit.is-saving,
+  .live-event-submit.is-saving::after {
     animation: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

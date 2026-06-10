@@ -1,4 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
+import Skeleton from "@/components/Skeleton";
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type AvatarShape = "circle" | "rounded";
@@ -47,8 +51,51 @@ export default function Avatar({
     shapeClasses[shape],
     className,
   );
+  const [imageState, setImageState] = useState<"loading" | "loaded" | "error">(imageUrl ? "loading" : "error");
+
+  useEffect(() => {
+    if (!imageUrl) {
+      setImageState("error");
+      return;
+    }
+
+    let isActive = true;
+    const image = new Image();
+    setImageState("loading");
+    image.onload = () => {
+      if (isActive) setImageState("loaded");
+    };
+    image.onerror = () => {
+      if (isActive) setImageState("error");
+    };
+    image.src = imageUrl;
+
+    if (image.complete) {
+      setImageState(image.naturalWidth > 0 ? "loaded" : "error");
+    }
+
+    return () => {
+      isActive = false;
+    };
+  }, [imageUrl]);
 
   if (imageUrl) {
+    if (imageState === "loading") {
+      return (
+        <div className={mergeClasses(baseClasses, "relative bg-slate-100")} aria-label={alt || "Cargando avatar"}>
+          <Skeleton className="absolute inset-0" />
+        </div>
+      );
+    }
+
+    if (imageState === "error") {
+      return (
+        <div className={baseClasses} style={{ backgroundColor }} aria-label={alt || "Avatar fallback"}>
+          <span className={mergeClasses("font-bold text-white", fallbackClassName)}>{fallback}</span>
+        </div>
+      );
+    }
+
     return (
       <div
         className={mergeClasses(baseClasses, " border-none  bg-cover bg-center")}

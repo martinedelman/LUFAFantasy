@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import InlineFeedback from "@/components/InlineFeedback";
 import { useAuth } from "@/hooks/useAuth";
 
 interface DivisionOption {
@@ -98,6 +99,7 @@ export default function EditTournamentPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<TournamentFormData>(defaultForm);
   const [availableDivisions, setAvailableDivisions] = useState<DivisionOption[]>([]);
   const [loadingDivisions, setLoadingDivisions] = useState(true);
@@ -229,6 +231,8 @@ export default function EditTournamentPage() {
       ...prev,
       [name]: type === "number" ? Number(value) : value,
     }));
+    setFieldErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+    if (error) setError("");
   };
 
   const handleScoringRuleChange = (rule: string, value: number) => {
@@ -287,6 +291,8 @@ export default function EditTournamentPage() {
         participatingTeams: nextParticipatingTeams,
       };
     });
+    setFieldErrors((prev) => ({ ...prev, divisions: "" }));
+    if (error) setError("");
   };
 
   const handleTeamToggle = (teamId: string) => {
@@ -296,19 +302,65 @@ export default function EditTournamentPage() {
         ? prev.participatingTeams.filter((id) => id !== teamId)
         : [...prev.participatingTeams, teamId],
     }));
+    setFieldErrors((prev) => ({ ...prev, participatingTeams: "" }));
+    if (error) setError("");
   };
+
+  const validateField = (name: string, value: string) => {
+    if (["name", "registrationDeadline", "startDate", "endDate"].includes(name) && !value.trim()) {
+      return "Este campo es obligatorio.";
+    }
+
+    return "";
+  };
+
+  const validateForm = () => {
+    const nextErrors: Record<string, string> = {};
+    [
+      ["name", formData.name],
+      ["registrationDeadline", formData.registrationDeadline],
+      ["startDate", formData.startDate],
+      ["endDate", formData.endDate],
+    ].forEach(([name, value]) => {
+      const message = validateField(name, value);
+      if (message) nextErrors[name] = message;
+    });
+
+    if (formData.divisions.length === 0) nextErrors.divisions = "Seleccioná al menos una división.";
+    if (formData.participatingTeams.length === 0) nextErrors.participatingTeams = "Seleccioná al menos un equipo participante.";
+
+    return nextErrors;
+  };
+
+  const requiredLabel = (label: string) => (
+    <>
+      {label} <span className="text-red-600">*</span>
+      <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+    </>
+  );
+
+  const inputClassName = (fieldName: string) =>
+    `w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+      fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
+    }`;
+
+  const renderFieldError = (fieldName: string) =>
+    fieldErrors[fieldName] ? (
+      <span id={`${fieldName}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
+    ) : null;
+
+  const isFormReady = Object.keys(validateForm()).length === 0 && !loadingDivisions && !loadingTeams;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    const nextFieldErrors = validateForm();
+    setFieldErrors(nextFieldErrors);
 
-    if (formData.divisions.length === 0) {
-      setError("Debes seleccionar al menos una división");
-      return;
-    }
-
-    if (formData.participatingTeams.length === 0) {
-      setError("Debes seleccionar al menos un equipo participante");
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setError("Revisá los campos marcados antes de guardar el torneo.");
       return;
     }
 
@@ -398,14 +450,14 @@ export default function EditTournamentPage() {
 
       <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">{error}</div>}
+          {error && <InlineFeedback variant="error" title="No pudimos guardar el torneo" message={error} />}
 
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Información Básica</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre del Torneo *
+                  {requiredLabel("Nombre del Torneo")}
                 </label>
                 <input
                   id="name"
@@ -414,12 +466,15 @@ export default function EditTournamentPage() {
                   required
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(fieldErrors.name)}
+                  aria-describedby={fieldErrors.name ? "name-error" : undefined}
+                  className={inputClassName("name")}
                 />
+                {renderFieldError("name")}
               </div>
               <div>
                 <label htmlFor="season" className="block text-sm font-medium text-gray-700 mb-2">
-                  Temporada *
+                  {requiredLabel("Temporada")}
                 </label>
                 <select
                   id="season"
@@ -438,7 +493,7 @@ export default function EditTournamentPage() {
               </div>
               <div>
                 <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-2">
-                  Año *
+                  {requiredLabel("Año")}
                 </label>
                 <input
                   id="year"
@@ -455,7 +510,7 @@ export default function EditTournamentPage() {
               </div>
               <div>
                 <label htmlFor="format" className="block text-sm font-medium text-gray-700 mb-2">
-                  Formato *
+                  {requiredLabel("Formato")}
                 </label>
                 <select
                   id="format"
@@ -472,7 +527,7 @@ export default function EditTournamentPage() {
               </div>
               <div>
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-                  Estado *
+                  {requiredLabel("Estado")}
                 </label>
                 <select
                   id="status"
@@ -508,7 +563,7 @@ export default function EditTournamentPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label htmlFor="registrationDeadline" className="block text-sm font-medium text-gray-700 mb-2">
-                  Registro *
+                  {requiredLabel("Registro")}
                 </label>
                 <input
                   id="registrationDeadline"
@@ -517,12 +572,15 @@ export default function EditTournamentPage() {
                   required
                   value={formData.registrationDeadline}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(fieldErrors.registrationDeadline)}
+                  aria-describedby={fieldErrors.registrationDeadline ? "registrationDeadline-error" : undefined}
+                  className={inputClassName("registrationDeadline")}
                 />
+                {renderFieldError("registrationDeadline")}
               </div>
               <div>
                 <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
-                  Inicio *
+                  {requiredLabel("Inicio")}
                 </label>
                 <input
                   id="startDate"
@@ -531,12 +589,15 @@ export default function EditTournamentPage() {
                   required
                   value={formData.startDate}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(fieldErrors.startDate)}
+                  aria-describedby={fieldErrors.startDate ? "startDate-error" : undefined}
+                  className={inputClassName("startDate")}
                 />
+                {renderFieldError("startDate")}
               </div>
               <div>
                 <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
-                  Fin *
+                  {requiredLabel("Fin")}
                 </label>
                 <input
                   id="endDate"
@@ -545,8 +606,11 @@ export default function EditTournamentPage() {
                   required
                   value={formData.endDate}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  aria-invalid={Boolean(fieldErrors.endDate)}
+                  aria-describedby={fieldErrors.endDate ? "endDate-error" : undefined}
+                  className={inputClassName("endDate")}
                 />
+                {renderFieldError("endDate")}
               </div>
             </div>
           </div>
@@ -774,7 +838,10 @@ export default function EditTournamentPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Divisiones</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">Divisiones</h2>
+            <p className="mb-4 text-xs font-medium text-gray-500">
+              <span className="text-red-600">*</span> Obligatorio
+            </p>
             {loadingDivisions ? (
               <p className="text-sm text-gray-500">Cargando divisiones...</p>
             ) : availableDivisions.length === 0 ? (
@@ -807,10 +874,14 @@ export default function EditTournamentPage() {
                 })}
               </div>
             )}
+            {renderFieldError("divisions")}
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Equipos Participantes</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">Equipos Participantes</h2>
+            <p className="mb-4 text-xs font-medium text-gray-500">
+              <span className="text-red-600">*</span> Obligatorio
+            </p>
             {loadingTeams ? (
               <p className="text-sm text-gray-500">Cargando equipos...</p>
             ) : formData.divisions.length === 0 ? (
@@ -851,6 +922,7 @@ export default function EditTournamentPage() {
                 ))}
               </div>
             )}
+            {renderFieldError("participatingTeams")}
           </div>
 
           <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
@@ -862,8 +934,8 @@ export default function EditTournamentPage() {
             </Link>
             <button
               type="submit"
-              disabled={saving}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors disabled:opacity-50"
+              disabled={saving || !isFormReady}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? "Guardando..." : "Guardar cambios"}
             </button>

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
+import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -45,6 +46,7 @@ export default function EditPlayerPage() {
   });
   const [teams, setTeams] = useState<Team[]>([]);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [playerEmail, setPlayerEmail] = useState("");
@@ -122,10 +124,92 @@ export default function EditPlayerPage() {
     } else {
       setForm({ ...form, [name]: value });
     }
+    setFieldErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+    if (error) setError("");
   };
+
+  const validateField = (name: string, value: string) => {
+    const trimmed = value.trim();
+
+    if ((name === "firstName" || name === "lastName") && !trimmed) return "Este campo es obligatorio.";
+    if ((name === "firstName" || name === "lastName") && trimmed.length < 2) return "Debe tener al menos 2 caracteres.";
+    if ((name === "email" || name === "emergencyContact.email") && trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      return "Ingresá un email válido.";
+    }
+    if ((name === "dateOfBirth" || name === "team" || name === "position" || name === "registrationDate") && !trimmed) {
+      return "Este campo es obligatorio.";
+    }
+    if (name === "jerseyNumber") {
+      const jerseyNumber = Number(value);
+      if (!trimmed || !Number.isInteger(jerseyNumber) || jerseyNumber < 0 || jerseyNumber > 99) {
+        return "Usá un número entre 0 y 99.";
+      }
+    }
+    if (name === "height" && trimmed) {
+      const height = Number(value);
+      if (!Number.isFinite(height) || height < 120 || height > 230) return "Ingresá una altura realista en cm.";
+    }
+    if (name === "weight" && trimmed) {
+      const weight = Number(value);
+      if (!Number.isFinite(weight) || weight < 35 || weight > 220) return "Ingresá un peso realista en kg.";
+    }
+
+    return "";
+  };
+
+  const validateForm = () => {
+    const nextErrors: Record<string, string> = {};
+    [
+      ["firstName", form.firstName],
+      ["lastName", form.lastName],
+      ["email", form.email],
+      ["dateOfBirth", form.dateOfBirth],
+      ["jerseyNumber", form.jerseyNumber],
+      ["position", form.position],
+      ["registrationDate", form.registrationDate],
+      ["team", form.team],
+      ["height", form.height],
+      ["weight", form.weight],
+      ["emergencyContact.email", form.emergencyContact.email],
+    ].forEach(([name, value]) => {
+      const message = validateField(name, value);
+      if (message) nextErrors[name] = message;
+    });
+
+    return nextErrors;
+  };
+
+  const inputClassName = (fieldName: string) =>
+    `w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+      fieldErrors[fieldName] ? "border-red-300 bg-red-50" : "border-gray-300"
+    }`;
+
+  const renderFieldError = (fieldName: string) =>
+    fieldErrors[fieldName] ? (
+      <span id={`${fieldName.replace(/\./g, "-")}-error`} className="mt-1 block text-xs font-medium text-red-600">
+        {fieldErrors[fieldName]}
+      </span>
+    ) : null;
+
+  const requiredLabel = (label: string) => (
+    <>
+      {label} <span className="text-red-600">*</span>
+      <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
+    </>
+  );
+
+  const isFormReady = Object.keys(validateForm()).length === 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nextFieldErrors = validateForm();
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setError("Revisá los campos marcados antes de guardar el jugador.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
@@ -193,7 +277,7 @@ export default function EditPlayerPage() {
           <h1 className="text-3xl font-bold mb-6">Editar Jugador</h1>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6">{error}</div>
+            <InlineFeedback className="mb-6" variant="error" title="No pudimos guardar el jugador" message={error} />
           )}
 
           <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow grid grid-cols-2 gap-4">
@@ -220,30 +304,54 @@ export default function EditPlayerPage() {
                 placeholder="URL generada automáticamente"
               />
             </div>
-            <input
-              name="firstName"
-              value={form.firstName}
-              onChange={handleChange}
-              placeholder="Nombre"
-              className="w-full border px-3 py-2 rounded"
-              required
-            />{" "}
-            <input
-              name="lastName"
-              value={form.lastName}
-              onChange={handleChange}
-              placeholder="Apellido"
-              className="w-full border px-3 py-2 rounded"
-              required
-            />
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="Email"
-              className="w-full border px-3 py-2 rounded"
-            />
+            <div>
+              <label htmlFor="firstName" className="mb-1 block text-sm font-medium text-gray-700">
+                {requiredLabel("Nombre")}
+              </label>
+              <input
+                id="firstName"
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.firstName)}
+                aria-describedby={fieldErrors.firstName ? "firstName-error" : undefined}
+                className={inputClassName("firstName")}
+                required
+              />
+              {renderFieldError("firstName")}
+            </div>
+            <div>
+              <label htmlFor="lastName" className="mb-1 block text-sm font-medium text-gray-700">
+                {requiredLabel("Apellido")}
+              </label>
+              <input
+                id="lastName"
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.lastName)}
+                aria-describedby={fieldErrors.lastName ? "lastName-error" : undefined}
+                className={inputClassName("lastName")}
+                required
+              />
+              {renderFieldError("lastName")}
+            </div>
+            <div>
+              <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? "email-error" : undefined}
+                className={inputClassName("email")}
+              />
+              {renderFieldError("email")}
+            </div>
             <input
               name="phone"
               value={form.phone}
@@ -251,48 +359,81 @@ export default function EditPlayerPage() {
               placeholder="Teléfono"
               className="w-full border px-3 py-2 rounded"
             />
-            <input
-              name="dateOfBirth"
-              type="date"
-              value={form.dateOfBirth}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-              required
-            />
-            <input
-              name="jerseyNumber"
-              type="number"
-              value={form.jerseyNumber}
-              onChange={handleChange}
-              placeholder="Número de camiseta"
-              className="w-full border px-3 py-2 rounded"
-              min="0"
-              max="99"
-              required
-            />
+            <div>
+              <label htmlFor="dateOfBirth" className="mb-1 block text-sm font-medium text-gray-700">
+                {requiredLabel("Fecha de nacimiento")}
+              </label>
+              <input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                type="date"
+                value={form.dateOfBirth}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.dateOfBirth)}
+                aria-describedby={fieldErrors.dateOfBirth ? "dateOfBirth-error" : undefined}
+                className={inputClassName("dateOfBirth")}
+                required
+              />
+              {renderFieldError("dateOfBirth")}
+            </div>
+            <div>
+              <label htmlFor="jerseyNumber" className="mb-1 block text-sm font-medium text-gray-700">
+                {requiredLabel("Número de camiseta")}
+              </label>
+              <input
+                id="jerseyNumber"
+                name="jerseyNumber"
+                type="number"
+                value={form.jerseyNumber}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.jerseyNumber)}
+                aria-describedby={fieldErrors.jerseyNumber ? "jerseyNumber-error" : undefined}
+                className={inputClassName("jerseyNumber")}
+                min="0"
+                max="99"
+                required
+              />
+              {renderFieldError("jerseyNumber")}
+            </div>
             <div className="col-span-2">
               <h2 className="text-xl font-semibold mb-4 mt-6">Información Física</h2>
             </div>
-            <input
-              name="height"
-              type="number"
-              value={form.height}
-              onChange={handleChange}
-              placeholder="Altura (cm)"
-              className="w-full border px-3 py-2 rounded"
-              min="150"
-              max="220"
-            />
-            <input
-              name="weight"
-              type="number"
-              value={form.weight}
-              onChange={handleChange}
-              placeholder="Peso (kg)"
-              className="w-full border px-3 py-2 rounded"
-              min="50"
-              max="200"
-            />
+            <div>
+              <label htmlFor="height" className="mb-1 block text-sm font-medium text-gray-700">
+                Altura (cm)
+              </label>
+              <input
+                id="height"
+                name="height"
+                type="number"
+                value={form.height}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.height)}
+                aria-describedby={fieldErrors.height ? "height-error" : undefined}
+                className={inputClassName("height")}
+                min="150"
+                max="220"
+              />
+              {renderFieldError("height")}
+            </div>
+            <div>
+              <label htmlFor="weight" className="mb-1 block text-sm font-medium text-gray-700">
+                Peso (kg)
+              </label>
+              <input
+                id="weight"
+                name="weight"
+                type="number"
+                value={form.weight}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.weight)}
+                aria-describedby={fieldErrors.weight ? "weight-error" : undefined}
+                className={inputClassName("weight")}
+                min="50"
+                max="200"
+              />
+              {renderFieldError("weight")}
+            </div>
             <div className="col-span-2">
               <input
                 name="experience"
@@ -305,22 +446,32 @@ export default function EditPlayerPage() {
             <div className="col-span-2">
               <h2 className="text-xl font-semibold mb-4 mt-6">Información Deportiva</h2>
             </div>
-            <select
-              name="position"
-              value={form.position}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-            >
-              <option value="QB">Quarterback (QB)</option>
-              <option value="WR">Wide Receiver (WR)</option>
-              <option value="RB">Running Back (RB)</option>
-              <option value="C">Center (C)</option>
-              <option value="RS">Rusher (RS)</option>
-              <option value="LB">Linebacker (LB)</option>
-              <option value="CB">Cornerback (CB)</option>
-              <option value="FS">Free Safety (FS)</option>
-              <option value="SS">Strong Safety (SS)</option>
-            </select>
+            <div>
+              <label htmlFor="position" className="mb-1 block text-sm font-medium text-gray-700">
+                {requiredLabel("Posición")}
+              </label>
+              <select
+                id="position"
+                name="position"
+                value={form.position}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.position)}
+                aria-describedby={fieldErrors.position ? "position-error" : undefined}
+                className={inputClassName("position")}
+                required
+              >
+                <option value="QB">Quarterback (QB)</option>
+                <option value="WR">Wide Receiver (WR)</option>
+                <option value="RB">Running Back (RB)</option>
+                <option value="C">Center (C)</option>
+                <option value="RS">Rusher (RS)</option>
+                <option value="LB">Linebacker (LB)</option>
+                <option value="CB">Cornerback (CB)</option>
+                <option value="FS">Free Safety (FS)</option>
+                <option value="SS">Strong Safety (SS)</option>
+              </select>
+              {renderFieldError("position")}
+            </div>
             <select
               name="secondaryPosition"
               value={form.secondaryPosition}
@@ -363,36 +514,62 @@ export default function EditPlayerPage() {
               placeholder="Teléfono del contacto"
               className="w-full border px-3 py-2 rounded"
             />
-            <input
-              name="emergencyContact.email"
-              type="email"
-              value={form.emergencyContact.email}
-              onChange={handleChange}
-              placeholder="Email del contacto"
-              className="w-full border px-3 py-2 rounded"
-            />
-            <input
-              name="registrationDate"
-              type="date"
-              value={form.registrationDate}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-              required
-            />
-            <select
-              name="team"
-              value={form.team}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-              required
-            >
-              <option value="">Selecciona un equipo</option>
-              {teams.map((team) => (
-                <option key={team._id} value={team._id}>
-                  {team.name} - {team.shortName} ({team.division.name})
-                </option>
-              ))}
-            </select>
+            <div>
+              <label htmlFor="emergencyContact.email" className="mb-1 block text-sm font-medium text-gray-700">
+                Email del contacto
+              </label>
+              <input
+                id="emergencyContact.email"
+                name="emergencyContact.email"
+                type="email"
+                value={form.emergencyContact.email}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors["emergencyContact.email"])}
+                aria-describedby={fieldErrors["emergencyContact.email"] ? "emergencyContact-email-error" : undefined}
+                className={inputClassName("emergencyContact.email")}
+              />
+              {renderFieldError("emergencyContact.email")}
+            </div>
+            <div>
+              <label htmlFor="registrationDate" className="mb-1 block text-sm font-medium text-gray-700">
+                {requiredLabel("Fecha de registro")}
+              </label>
+              <input
+                id="registrationDate"
+                name="registrationDate"
+                type="date"
+                value={form.registrationDate}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.registrationDate)}
+                aria-describedby={fieldErrors.registrationDate ? "registrationDate-error" : undefined}
+                className={inputClassName("registrationDate")}
+                required
+              />
+              {renderFieldError("registrationDate")}
+            </div>
+            <div>
+              <label htmlFor="team" className="mb-1 block text-sm font-medium text-gray-700">
+                {requiredLabel("Equipo")}
+              </label>
+              <select
+                id="team"
+                name="team"
+                value={form.team}
+                onChange={handleChange}
+                aria-invalid={Boolean(fieldErrors.team)}
+                aria-describedby={fieldErrors.team ? "team-error" : undefined}
+                className={inputClassName("team")}
+                required
+              >
+                <option value="">Selecciona un equipo</option>
+                {teams.map((team) => (
+                  <option key={team._id} value={team._id}>
+                    {team.name} - {team.shortName} ({team.division.name})
+                  </option>
+                ))}
+              </select>
+              {renderFieldError("team")}
+            </div>
             <select
               name="status"
               value={form.status}
@@ -409,7 +586,7 @@ export default function EditPlayerPage() {
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
-                disabled={loading}
+                disabled={loading || !isFormReady}
               >
                 {loading ? (
                   <>

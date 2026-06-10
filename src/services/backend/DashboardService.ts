@@ -8,6 +8,7 @@ interface PlayerAggregateData {
   lastName: string;
   position: string;
   secondaryPosition?: string;
+  profilePicture?: string;
   teamName?: string;
   totalPoints: number;
 }
@@ -40,7 +41,7 @@ export class DashboardService {
           .populate("division", "name")
           .sort({ scheduledDate: 1 })
           .limit(nextGamesLimit)
-          .select("homeTeam awayTeam division venue scheduledDate status")
+          .select("homeTeam awayTeam division venue scheduledDate status score")
           .lean(),
         GameModel.aggregate([
           { $unwind: "$events" },
@@ -83,6 +84,7 @@ export class DashboardService {
               lastName: "$playerInfo.lastName",
               position: "$playerInfo.position",
               secondaryPosition: "$playerInfo.secondaryPosition",
+              profilePicture: "$playerInfo.profilePicture",
               teamName: "$teamInfo.name",
               totalPoints: { $ifNull: ["$totalPoints", 0] },
             },
@@ -92,15 +94,27 @@ export class DashboardService {
 
     const formattedNextGames = nextGamesData.map((game: Record<string, unknown>) => {
       const scheduledDate = game.scheduledDate;
+      const venue = game.venue as Record<string, unknown> | undefined;
+      const score = game.score as
+        | {
+            home?: { total?: number };
+            away?: { total?: number };
+          }
+        | undefined;
+
       return {
         id: String(game._id),
         homeTeam: ((game.homeTeam as Record<string, unknown>)?.name as string) || "N/A",
         awayTeam: ((game.awayTeam as Record<string, unknown>)?.name as string) || "N/A",
         division: ((game.division as Record<string, unknown>)?.name as string) || "N/A",
-        venue: ((game.venue as Record<string, unknown>)?.name as string) || "N/A",
+        venue: (venue?.name as string) || "N/A",
         scheduledDate:
           scheduledDate instanceof Date ? scheduledDate.toISOString() : new Date(scheduledDate as string).toISOString(),
         status: String(game.status),
+        score: {
+          home: Number(score?.home?.total ?? 0),
+          away: Number(score?.away?.total ?? 0),
+        },
       } as NextGameResponseDto;
     });
 
@@ -115,6 +129,7 @@ export class DashboardService {
         name: `${player.firstName} ${player.lastName}`,
         position: player.position,
         secondaryPosition: player.secondaryPosition,
+        profilePicture: player.profilePicture,
         team: player.teamName || "N/A",
         stat: player.totalPoints,
         statLabel: "PTS",

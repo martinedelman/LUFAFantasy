@@ -26,7 +26,7 @@ const STATUS_COPY: Record<
   GameApiResponse["status"],
   { label: string; type: "info" | "warning" | "success" | "error" }
 > = {
-  scheduled: { label: "Pendiente", type: "info" },
+  scheduled: { label: "Programado", type: "info" },
   in_progress: { label: "En curso", type: "success" },
   completed: { label: "Finalizado", type: "success" },
   postponed: { label: "Pospuesto", type: "warning" },
