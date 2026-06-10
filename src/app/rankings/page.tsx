@@ -124,10 +124,10 @@ function RankingsSkeletonGrid() {
 }
 
 function getRankStyles(position: number) {
-  if (position === 1) return "border border-amber-200 bg-amber-50 text-amber-800";
-  if (position === 2) return "border border-slate-200 bg-slate-100 text-slate-700";
-  if (position === 3) return "border border-orange-200 bg-orange-50 text-orange-800";
-  return "border-gray-200 bg-white text-gray-700";
+  if (position === 1) return "border-amber-200 bg-amber-50 text-amber-800";
+  if (position === 2) return "border-slate-200 bg-slate-100 text-slate-700";
+  if (position === 3) return "border-orange-200 bg-orange-50 text-orange-800";
+  return "border-slate-200 bg-white text-slate-700";
 }
 
 function getMetricHelper(metric: RankingMetric) {
@@ -142,6 +142,11 @@ function formatRankingValue(metric: RankingMetric, value: number) {
   }
 
   return `${value}`;
+}
+
+function getValueLabel(metric: RankingMetric) {
+  if (metric.mode === "points" || metric.key === "globalPoints") return "pts";
+  return "total";
 }
 
 export default function RankingsPage() {
@@ -256,21 +261,20 @@ export default function RankingsPage() {
               return (
                 <RevealOnScroll key={metric.key} delayMs={(metricIndex % 2) * 80}>
                   <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <div className="border-b border-gray-200 bg-gray-50 px-4 py-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h2 className="text-base font-semibold text-gray-900">{metric.label}</h2>
-                        <p className="mt-1 text-xs font-medium text-gray-500">{getMetricHelper(metric)}</p>
+                    <div className="border-b border-gray-200 bg-gray-50 px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h2 className="text-base font-semibold text-gray-900">{metric.label}</h2>
+                          <p className="mt-1 text-xs font-medium text-gray-500">{getMetricHelper(metric)}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {rows.length === 0 ? (
-                    <div className="p-5 text-sm text-gray-500">No hay datos disponibles para este ranking.</div>
-                  ) : (
-                    <div className="overflow-hidden">
-                      <table className="min-w-full divide-y divide-gray-100">
-                        <tbody className="divide-y divide-gray-100 bg-white">
+                    {rows.length === 0 ? (
+                      <div className="p-5 text-sm text-gray-500">No hay datos disponibles para este ranking.</div>
+                    ) : (
+                      <div>
+                        <div className="space-y-2 bg-slate-50/70 p-3 sm:hidden">
                           {rows.map((row, index) => {
                             const position = index + 1;
                             const playerName = row.player
@@ -279,54 +283,109 @@ export default function RankingsPage() {
                             const teamName = row.player?.team?.name || row.player?.team?.shortName || "-";
 
                             return (
-                              <tr
+                              <div
                                 key={`${metric.key}-${row.player?._id || index}`}
-                                className="block sm:table-row group hover:bg-gray-50 transition-colors duration-150"
+                                className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg  bg-white px-3 py-3 shadow-2xs"
                               >
-                                <td className="block px-4 pt-4 align-middle  sm:table-cell sm:py-3">
-                                  <span
-                                    className={`inline-flex h-6 w-6 items-center justify-center rounded-full  px-2 text-sm font-bold ${getRankStyles(position)}`}
-                                  >
-                                    {position}
-                                  </span>
-                                </td>
-                                <td className="block px-4 py-2 align-middle sm:table-cell sm:py-3">
-                                  <div className="min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      {row.player?.jerseyNumber != null && (
-                                        <span className="rounded-md bg-blue-50 min-w-10 px-2 py-0.5 text-xs text-center font-bold text-blue-800 transition-colors duration-150 group-hover:bg-blue-100">
-                                          #{row.player.jerseyNumber}
-                                        </span>
-                                      )}
-                                      {row.player ? (
-                                        <Link
-                                          href={`/players/${row.player._id}`}
-                                          className="font-semibold text-sm text-gray-900 hover:text-green-600 transition-colors duration-150"
-                                        >
-                                          {playerName}
-                                        </Link>
-                                      ) : (
-                                        <span className="font-semibold text-sm text-gray-900">{playerName}</span>
-                                      )}
-                                    </div>
-                                    <p className="mt-1 text-xs font-medium text-gray-500 md:hidden">{teamName}</p>
+                                <span
+                                  className={`inline-flex h-9 w-9 items-center justify-center rounded-full border text-sm font-bold ${getRankStyles(position)}`}
+                                >
+                                  {position}
+                                </span>
+
+                                <div className="min-w-0">
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    {row.player?.jerseyNumber != null && (
+                                      <span className="shrink-0 rounded-md bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-800">
+                                        #{row.player.jerseyNumber}
+                                      </span>
+                                    )}
+                                    {row.player ? (
+                                      <Link
+                                        href={`/players/${row.player._id}`}
+                                        className="min-w-0 truncate text-sm font-semibold text-gray-900"
+                                      >
+                                        {playerName}
+                                      </Link>
+                                    ) : (
+                                      <span className="min-w-0 truncate text-sm font-semibold text-gray-900">
+                                        {playerName}
+                                      </span>
+                                    )}
                                   </div>
-                                </td>
-                                <td className="hidden px-4 py-3 text-sm font-medium text-gray-600 align-middle md:table-cell">
-                                  {teamName}
-                                </td>
-                                <td className="block px-4 pb-4 text-left align-middle sm:table-cell sm:py-3 sm:text-right">
-                                  <span className="inline-flex min-w-16 justify-center rounded-full px-3 py-1.5 text-sm font-bold text-black transform transition-transform duration-150 group-hover:translate-x-1">
-                                    {formatRankingValue(metric, row.value)}
-                                  </span>
-                                </td>
-                              </tr>
+                                  <p className="mt-1 truncate text-xs font-medium text-gray-500">{teamName}</p>
+                                </div>
+
+                                <div className="text-right">
+                                  <p className="text-base font-black leading-none text-slate-950">{row.value}</p>
+                                  <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                    {getValueLabel(metric)}
+                                  </p>
+                                </div>
+                              </div>
                             );
                           })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                        </div>
+
+                        <div className="hidden overflow-hidden sm:block">
+                          <table className="min-w-full divide-y divide-gray-100">
+                            <tbody className="divide-y divide-gray-100 bg-white">
+                              {rows.map((row, index) => {
+                                const position = index + 1;
+                                const playerName = row.player
+                                  ? `${row.player.firstName} ${row.player.lastName}`
+                                  : "Jugador no disponible";
+                                const teamName = row.player?.team?.name || row.player?.team?.shortName || "-";
+
+                                return (
+                                  <tr
+                                    key={`${metric.key}-${row.player?._id || index}`}
+                                    className="group transition-colors duration-150 hover:bg-gray-50"
+                                  >
+                                    <td className="px-4 py-3 align-middle">
+                                      <span
+                                        className={`inline-flex h-7 w-7 items-center justify-center rounded-full border text-sm font-bold ${getRankStyles(position)}`}
+                                      >
+                                        {position}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3 align-middle">
+                                      <div className="min-w-0">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          {row.player?.jerseyNumber != null && (
+                                            <span className="min-w-10 rounded-md bg-blue-50 px-2 py-0.5 text-center text-xs font-bold text-blue-800 transition-colors duration-150 group-hover:bg-blue-100">
+                                              #{row.player.jerseyNumber}
+                                            </span>
+                                          )}
+                                          {row.player ? (
+                                            <Link
+                                              href={`/players/${row.player._id}`}
+                                              className="text-sm font-semibold text-gray-900 transition-colors duration-150 hover:text-green-600"
+                                            >
+                                              {playerName}
+                                            </Link>
+                                          ) : (
+                                            <span className="text-sm font-semibold text-gray-900">{playerName}</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3 align-middle text-sm font-medium text-gray-600">
+                                      {teamName}
+                                    </td>
+                                    <td className="px-4 py-3 text-right align-middle">
+                                      <span className="inline-flex min-w-16 justify-center rounded-full px-3 py-1.5 text-sm font-bold text-black transition-transform duration-150 group-hover:translate-x-1">
+                                        {formatRankingValue(metric, row.value)}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
                   </section>
                 </RevealOnScroll>
               );
