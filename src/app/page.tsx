@@ -39,6 +39,10 @@ interface DashboardStats {
     venue: string;
     scheduledDate: string;
     status: string;
+    score?: {
+      home: number;
+      away: number;
+    };
   }>;
   topPlayers: Array<{
     id: string;
@@ -203,6 +207,22 @@ export default function Home() {
     });
   };
 
+  const getGameStatusCopy = (status: string) => {
+    if (status === "in_progress") {
+      return {
+        label: "En vivo",
+        detail: "Marcador en vivo",
+        className: "border-red-200 bg-red-50 text-red-700",
+      };
+    }
+
+    return {
+      label: "Programado",
+      detail: "Próximo partido",
+      className: "border-slate-200 bg-white text-slate-700",
+    };
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -325,33 +345,52 @@ export default function Home() {
                   <UpcomingGameSkeleton />
                 </>
               ) : stats?.nextGames && stats.nextGames.length > 0 ? (
-                stats.nextGames.map((game) => (
-                  <div
-                    key={game.id}
-                    className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 w-full min-h-[116px] flex items-center"
-                  >
-                    <div className="flex flex-col-reverse md:flex-row md:justify-between items-center gap-4 w-full">
-                      <div className="min-w-0 flex-1 text-center md:text-left">
-                        <p className="font-semibold text-slate-950">
-                          {game.homeTeam} <span className="text-slate-500">vs</span> {game.awayTeam}
-                        </p>
-                        <p className="text-sm text-slate-600 mt-3">
-                          {game.division} • {game.venue}
-                        </p>
+                stats.nextGames.map((game) => {
+                  const statusCopy = getGameStatusCopy(game.status);
+                  const gameHref = `/games/${game.id}`;
+                  const isLive = game.status === "in_progress";
+
+                  return (
+                    <Link
+                      key={game.id}
+                      href={gameHref}
+                      aria-label={`Ver detalle de ${game.homeTeam} vs ${game.awayTeam}`}
+                      onClick={() => trackHomeAction("open_upcoming_game", gameHref)}
+                      className="group flex min-h-[116px] w-full items-center rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                    >
+                      <div className="flex flex-col-reverse md:flex-row md:justify-between items-center gap-4 w-full">
+                        <div className="min-w-0 flex-1 text-center md:text-left">
+                          <p className="font-semibold text-slate-950 group-hover:text-brand-700">
+                            {game.homeTeam} <span className="text-slate-500">vs</span> {game.awayTeam}
+                          </p>
+                          <p className="text-sm text-slate-600 mt-3">
+                            {game.division} • {game.venue}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-center md:items-end gap-2 shrink-0 text-center md:text-right w-full md:w-auto">
+                          {!isLive ? (
+                            <span
+                              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusCopy.className}`}
+                            >
+                              {statusCopy.label}
+                            </span>
+                          ) : null}
+                          {isLive ? (
+                            <div className="min-w-[112px] rounded-lg bg-slate-950 px-3 py-2 text-white">
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-red-200">
+                                {statusCopy.detail}
+                              </p>
+                              <p className="text-2xl font-black leading-none">
+                                {game.score?.home ?? 0} - {game.score?.away ?? 0}
+                              </p>
+                            </div>
+                          ) : null}
+                          <p className="text-xs mt-1 text-slate-700">{formatDate(game.scheduledDate)}</p>
+                        </div>
                       </div>
-                      <div className="flex flex-col items-center md:items-end gap-2 shrink-0 text-center md:text-right w-full md:w-auto">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                            game.status === "scheduled" ? "bg-slate-200 text-slate-700" : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {game.status === "scheduled" ? "📋 Programado" : "🔴 En vivo"}
-                        </span>
-                        <p className="text-xs mt-2 text-slate-700">⏰ {formatDate(game.scheduledDate)}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                    </Link>
+                  );
+                })
               ) : (
                 <div className="text-center py-12">
                   <p className="text-xl text-slate-600">No hay partidos próximos programados</p>
@@ -430,8 +469,8 @@ export default function Home() {
               ) : (
                 <span className="font-semibold">{stats?.totalTeams || 0} equipos activos</span>
               )}{" "}
-              compitiendo en la liga.
-              Cada equipo representa una comunidad apasionada por el Flag Football y la competencia.
+              compitiendo en la liga. Cada equipo representa una comunidad apasionada por el Flag Football y la
+              competencia.
             </p>
             <p className="italic">¡Conoce a los protagonistas de la temporada!</p>
           </div>

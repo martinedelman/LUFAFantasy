@@ -40,7 +40,7 @@ export class DashboardService {
           .populate("division", "name")
           .sort({ scheduledDate: 1 })
           .limit(nextGamesLimit)
-          .select("homeTeam awayTeam division venue scheduledDate status")
+          .select("homeTeam awayTeam division venue scheduledDate status score")
           .lean(),
         GameModel.aggregate([
           { $unwind: "$events" },
@@ -92,15 +92,27 @@ export class DashboardService {
 
     const formattedNextGames = nextGamesData.map((game: Record<string, unknown>) => {
       const scheduledDate = game.scheduledDate;
+      const venue = game.venue as Record<string, unknown> | undefined;
+      const score = game.score as
+        | {
+            home?: { total?: number };
+            away?: { total?: number };
+          }
+        | undefined;
+
       return {
         id: String(game._id),
         homeTeam: ((game.homeTeam as Record<string, unknown>)?.name as string) || "N/A",
         awayTeam: ((game.awayTeam as Record<string, unknown>)?.name as string) || "N/A",
         division: ((game.division as Record<string, unknown>)?.name as string) || "N/A",
-        venue: ((game.venue as Record<string, unknown>)?.name as string) || "N/A",
+        venue: (venue?.name as string) || "N/A",
         scheduledDate:
           scheduledDate instanceof Date ? scheduledDate.toISOString() : new Date(scheduledDate as string).toISOString(),
         status: String(game.status),
+        score: {
+          home: Number(score?.home?.total ?? 0),
+          away: Number(score?.away?.total ?? 0),
+        },
       } as NextGameResponseDto;
     });
 
