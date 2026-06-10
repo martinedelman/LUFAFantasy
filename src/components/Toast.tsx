@@ -13,7 +13,7 @@ interface ToastProps {
   onClose: () => void;
 }
 
-const EXIT_ANIMATION_MS = 220;
+const EXIT_ANIMATION_MS = 240;
 const DRAG_CLOSE_THRESHOLD = -44;
 const DRAG_RESISTANCE = 0.35;
 
