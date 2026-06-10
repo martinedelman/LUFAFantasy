@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
-import { GameModel } from "@/models";
+import { GameEventModel } from "@/models";
 import { apiErrorResponse } from "@/lib/apiError";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
 import mongoose from "mongoose";
@@ -43,10 +43,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const gameMatch: Record<string, unknown> = {
-      status: { $in: ["in_progress", "completed"] },
-    };
-
+    const eventBaseMatch: Record<string, unknown> = {};
     if (division) {
       if (!mongoose.Types.ObjectId.isValid(division)) {
         return NextResponse.json(
@@ -58,19 +55,19 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      gameMatch.division = new mongoose.Types.ObjectId(division);
+      eventBaseMatch.division = new mongoose.Types.ObjectId(division);
     }
 
     const eventMatch: Record<string, unknown> =
       mode === "points"
         ? {
             $or: [
-              { "events.points": { $gt: 0 } },
-              { "events.details.qbStatValue": { $type: "number" } },
+              { points: { $gt: 0 } },
+              { qbStatValue: { $type: "number" } },
             ],
           }
         : {
-            "events.player": { $exists: true, $ne: null },
+            player: { $exists: true, $ne: null },
           };
 
     if (mode === "count") {
@@ -79,19 +76,36 @@ export async function GET(request: NextRequest) {
         eventTypeFilter.push("pick_six");
       }
 
-      eventMatch["events.type"] = { $in: eventTypeFilter };
+      eventMatch.type = { $in: eventTypeFilter };
     }
 
     if (pointsFilter !== null) {
-      eventMatch["events.points"] = pointsFilter;
+      eventMatch.points = pointsFilter;
     }
+
+    const activeGameStages: mongoose.PipelineStage[] = [
+      {
+        $lookup: {
+          from: "games",
+          localField: "game",
+          foreignField: "_id",
+          as: "gameInfo",
+        },
+      },
+      { $unwind: "$gameInfo" },
+      {
+        $match: {
+          "gameInfo.status": { $in: ["in_progress", "completed"] },
+        },
+      },
+    ];
 
     const rankingsPipeline: mongoose.PipelineStage[] =
       mode === "points"
         ? [
-            { $match: gameMatch },
-            { $unwind: "$events" },
+            { $match: eventBaseMatch },
             { $match: eventMatch },
+            ...activeGameStages,
             {
               $project: {
                 contributions: {
@@ -100,11 +114,11 @@ export async function GET(request: NextRequest) {
                       $cond: [
                         {
                           $and: [
-                            { $ne: ["$events.player", null] },
-                            { $gt: ["$events.points", 0] },
+                            { $ne: ["$player", null] },
+                            { $gt: ["$points", 0] },
                           ],
                         },
-                        [{ player: "$events.player", value: "$events.points" }],
+                        [{ player: "$player", value: "$points" }],
                         [],
                       ],
                     },
@@ -112,10 +126,10 @@ export async function GET(request: NextRequest) {
                       $cond: [
                         {
                           $and: [
-                            { $ne: ["$events.details.qb", null] },
+                            { $ne: ["$qb", null] },
                             {
                               $in: [
-                                { $type: "$events.details.qbStatValue" },
+                                { $type: "$qbStatValue" },
                                 ["double", "int", "long", "decimal"],
                               ],
                             },
@@ -123,15 +137,8 @@ export async function GET(request: NextRequest) {
                         },
                         [
                           {
-                            player: {
-                              $convert: {
-                                input: "$events.details.qb",
-                                to: "objectId",
-                                onError: null,
-                                onNull: null,
-                              },
-                            },
-                            value: "$events.details.qbStatValue",
+                            player: "$qb",
+                            value: "$qbStatValue",
                           },
                         ],
                         [],
@@ -188,12 +195,12 @@ export async function GET(request: NextRequest) {
             },
           ]
         : [
-            { $match: gameMatch },
-            { $unwind: "$events" },
+            { $match: eventBaseMatch },
             { $match: eventMatch },
+            ...activeGameStages,
             {
               $group: {
-                _id: "$events.player",
+                _id: "$player",
                 value: { $sum: 1 },
               },
             },
@@ -240,7 +247,7 @@ export async function GET(request: NextRequest) {
     const rankings = await getCachedValue(
       cacheKey,
       RANKINGS_CACHE_TTL_SECONDS * 1000,
-      () => GameModel.aggregate(rankingsPipeline),
+      () => GameEventModel.aggregate(rankingsPipeline),
       { tags: ["rankings"] },
     );
 

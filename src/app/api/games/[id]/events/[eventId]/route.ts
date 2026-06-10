@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       points: body.points === undefined || body.points === null ? undefined : Number(body.points),
       details: body.details,
     });
-    invalidateCacheByPrefix(["standings", "rankings"]);
+    invalidateCacheByPrefix(["standings", "rankings", "dashboard"]);
 
     return NextResponse.json({
       success: true,
@@ -76,7 +76,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const updatedGame = await gameService.removeGameEvent(id, eventId);
-    invalidateCacheByPrefix(["standings", "rankings"]);
+    invalidateCacheByPrefix(["standings", "rankings", "dashboard"]);
 
     return NextResponse.json({
       success: true,
