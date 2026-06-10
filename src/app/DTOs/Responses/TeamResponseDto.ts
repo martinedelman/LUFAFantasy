@@ -29,6 +29,7 @@ export interface TeamResponseDto {
   };
   registrationDate: string;
   status: TeamStatus;
+  canEdit?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
