@@ -411,36 +411,45 @@ export default function Home() {
                   <TopPlayerSkeleton />
                 </>
               ) : stats?.topPlayers && stats.topPlayers.length > 0 ? (
-                stats.topPlayers.map((player, idx) => (
-                  <div
-                    key={player.id}
-                    className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 min-h-[116px] flex items-center justify-between w-full"
-                  >
-                    <div className="flex items-center justify-between gap-3 w-full">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="relative shrink-0">
-                          <div className="w-11 h-11 rounded-full border border-slate-300 bg-[rgb(255,255,255)] text-xs font-semibold text-slate-700 flex items-center justify-center">
-                            {getInitials(player.name)}
+                stats.topPlayers.map((player, idx) => {
+                  const playerHref = `/players/${player.id}`;
+
+                  return (
+                    <Link
+                      key={player.id}
+                      href={playerHref}
+                      aria-label={`Ver perfil de ${player.name}`}
+                      onClick={() => trackHomeAction("open_top_player", playerHref)}
+                      className="group flex min-h-[116px] w-full items-center justify-between rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                    >
+                      <div className="flex items-center justify-between gap-3 w-full">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="relative shrink-0">
+                            <div className="w-11 h-11 rounded-full border border-slate-300 bg-[rgb(255,255,255)] text-xs font-semibold text-slate-700 flex items-center justify-center">
+                              {getInitials(player.name)}
+                            </div>
+                            {idx === 0 && <span className="absolute -top-2 -right-2 text-base">🥇</span>}
+                            {idx === 1 && <span className="absolute -top-2 -right-2 text-base">🥈</span>}
+                            {idx === 2 && <span className="absolute -top-2 -right-2 text-base">🥉</span>}
                           </div>
-                          {idx === 0 && <span className="absolute -top-2 -right-2 text-base">🥇</span>}
-                          {idx === 1 && <span className="absolute -top-2 -right-2 text-base">🥈</span>}
-                          {idx === 2 && <span className="absolute -top-2 -right-2 text-base">🥉</span>}
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-950 truncate group-hover:text-brand-700">
+                              {player.name}
+                            </p>
+                            <p className="text-sm text-slate-600 truncate">
+                              {[player.position, player.secondaryPosition].filter(Boolean).join(" / ")}
+                            </p>
+                            <p className="text-xs text-slate-500 truncate">{player.team}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-slate-950 truncate">{player.name}</p>
-                          <p className="text-sm text-slate-600 truncate">
-                            {[player.position, player.secondaryPosition].filter(Boolean).join(" / ")}
-                          </p>
-                          <p className="text-xs text-slate-500 truncate">{player.team}</p>
+                        <div className="text-right shrink-0">
+                          <p className="text-2xl font-semibold text-brand-700">{player.stat}</p>
+                          <p className="text-xs text-slate-600 font-medium">{player.statLabel}</p>
                         </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-2xl font-semibold text-brand-700">{player.stat}</p>
-                        <p className="text-xs text-slate-600 font-medium">{player.statLabel}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                    </Link>
+                  );
+                })
               ) : (
                 <div className="text-center py-8">
                   <p className="text-slate-600">No hay datos disponibles</p>
