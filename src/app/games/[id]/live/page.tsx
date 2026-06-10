@@ -365,6 +365,14 @@ export default function LiveMatchPage() {
 
   const eventPlayers = presentPlayersBySide[eventDraft.teamSide];
   const isPenaltyEventSelected = requiresPenaltyDescription(eventDraft.type);
+  const eventTeamId = game?.[`${eventDraft.teamSide}Team`]?._id;
+  const eventPoints = eventDraft.points === "" ? undefined : Number(eventDraft.points);
+  const isEventDraftReady =
+    Boolean(eventTeamId) &&
+    Boolean(eventDraft.player) &&
+    (isPenaltyEventSelected
+      ? eventDraft.description.trim().length > 0
+      : eventPoints !== undefined && Number.isFinite(eventPoints) && eventPoints >= 0);
 
   const updatePlayerInRosters = (updatedPlayer: PlayerApiResponse) => {
     const updateRoster = (players: PlayerApiResponse[]) =>
@@ -1293,10 +1301,37 @@ export default function LiveMatchPage() {
 
                   <button
                     onClick={handleAddGameEvent}
-                    disabled={savingEvent}
-                    className="w-full rounded-lg bg-blue-600 px-4 py-4 text-base font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+                    disabled={savingEvent || !isEventDraftReady}
+                    aria-busy={savingEvent}
+                    className={`live-event-submit w-full rounded-lg px-4 py-4 text-base font-bold transition-colors ${
+                      savingEvent
+                        ? "is-saving bg-blue-700 text-white shadow-[0_10px_26px_rgba(29,78,216,0.28)]"
+                        : isEventDraftReady
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "cursor-not-allowed bg-gray-300 text-gray-500"
+                    }`}
                   >
-                    {savingEvent ? "Guardando..." : editingEventId ? "Guardar cambios" : "Registrar evento"}
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {savingEvent && (
+                        <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-90"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4Z"
+                          />
+                        </svg>
+                      )}
+                      {savingEvent ? "Guardando evento..." : editingEventId ? "Guardar cambios" : "Registrar evento"}
+                    </span>
                   </button>
                   {editingEventId && (
                     <button
