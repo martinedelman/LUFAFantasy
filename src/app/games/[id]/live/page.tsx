@@ -365,14 +365,16 @@ export default function LiveMatchPage() {
 
   const eventPlayers = presentPlayersBySide[eventDraft.teamSide];
   const isPenaltyEventSelected = requiresPenaltyDescription(eventDraft.type);
-  const eventTeamId = game?.[`${eventDraft.teamSide}Team`]?._id;
-  const eventPoints = eventDraft.points === "" ? undefined : Number(eventDraft.points);
-  const isEventDraftReady =
-    Boolean(eventTeamId) &&
-    Boolean(eventDraft.player) &&
-    (isPenaltyEventSelected
-      ? eventDraft.description.trim().length > 0
-      : eventPoints !== undefined && Number.isFinite(eventPoints) && eventPoints >= 0);
+const eventTeamId = game?.[`${eventDraft.teamSide}Team`]?._id;
+const eventPoints = eventDraft.points === "" ? undefined : Number(eventDraft.points);
+const requiresPoints =
+  !isPenaltyEventSelected && ["touchdown", "extra_point", "safety", "pick_six"].includes(eventDraft.type);
+const hasValidPoints =
+  !requiresPoints || (eventPoints !== undefined && Number.isFinite(eventPoints) && eventPoints >= 0);
+const isEventDraftReady =
+  Boolean(eventTeamId) &&
+  Boolean(eventDraft.player) &&
+  (isPenaltyEventSelected ? eventDraft.description.trim().length > 0 : hasValidPoints);
 
   const updatePlayerInRosters = (updatedPlayer: PlayerApiResponse) => {
     const updateRoster = (players: PlayerApiResponse[]) =>
