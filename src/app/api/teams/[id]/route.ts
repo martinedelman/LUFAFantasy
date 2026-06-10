@@ -6,6 +6,8 @@ import { safeTrack } from "@/lib/serverAnalytics";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toTeamResponseDto } from "@/app/DTOs";
 import type { UpdateTeamRequestDto } from "@/app/DTOs";
+import type { Team } from "@/entities/Team";
+import type { UserRole } from "@/entities/User";
 
 const teamService = new TeamService();
 const authService = new AuthService();
@@ -13,6 +15,21 @@ const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "ranking
 
 function normalizeEmail(email?: string | null) {
   return email?.trim().toLowerCase() || "";
+}
+
+function getTeamCoachEmails(team: Team) {
+  const coaches = team.coaches && team.coaches.length > 0 ? team.coaches : team.coach ? [team.coach] : [];
+  return coaches.map((coach) => normalizeEmail(coach?.email)).filter(Boolean);
+}
+
+function canUserEditTeam(user: { email: string; role: UserRole }, team: Team) {
+  const userEmail = normalizeEmail(user.email);
+
+  return (
+    user.role === "admin" ||
+    userEmail === normalizeEmail(team.contact?.email) ||
+    getTeamCoachEmails(team).includes(userEmail)
+  );
 }
 
 function normalizeOptionalText(value: string | null | undefined): string | undefined {
@@ -59,6 +76,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const apiResponse = toTeamResponseDto(team);
+    const token = getSessionTokenFromRequest(request);
+
+    if (token) {
+      try {
+        const user = await authService.verifyToken(token);
+        apiResponse.canEdit = canUserEditTeam(user, team);
+      } catch {
+        apiResponse.canEdit = false;
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -107,12 +134,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const userEmail = normalizeEmail(user.email);
-    const teamCoachEmails = (team.coaches || (team.coach ? [team.coach] : []))
-      .map((coach) => normalizeEmail(coach?.email))
-      .filter(Boolean);
-    const canEdit =
-      user.role === "admin" || userEmail === normalizeEmail(team.contact?.email) || teamCoachEmails.includes(userEmail);
+    const canEdit = canUserEditTeam(user, team);
 
     if (!canEdit) {
       return NextResponse.json(

@@ -76,6 +76,7 @@ interface Team {
   };
   registrationDate: string;
   status: "active" | "inactive" | "suspended";
+  canEdit?: boolean;
 }
 
 interface TeamStats {
@@ -355,14 +356,20 @@ export default function TeamViewerPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"info" | "roster" | "games" | "stats">("info");
   const userEmail = user?.email.trim().toLowerCase();
+  const editableTeamCoaches = team
+    ? team.coaches && team.coaches.length > 0
+      ? team.coaches
+      : team.coach
+        ? [team.coach]
+        : []
+    : [];
   const canEditTeam =
     !!userEmail &&
     !!team &&
-    (isAdmin ||
+    (team.canEdit === true ||
+      isAdmin ||
       userEmail === (team.contact?.email || "").trim().toLowerCase() ||
-      (team.coaches || (team.coach ? [team.coach] : [])).some(
-        (coach) => userEmail === (coach.email || "").trim().toLowerCase(),
-      ));
+      editableTeamCoaches.some((coach) => userEmail === (coach.email || "").trim().toLowerCase()));
 
   const fetchPlayers = useCallback(async () => {
     try {
