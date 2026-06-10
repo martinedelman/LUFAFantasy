@@ -33,6 +33,26 @@ export default function PlayerProfilePage() {
     return typeof reference === "string" ? reference : reference._id || "";
   }, []);
 
+  const getEventQbId = useCallback((details: unknown) => {
+    if (!details || typeof details !== "object") return "";
+
+    const qb = (details as { qb?: unknown }).qb;
+    if (typeof qb === "string") return qb;
+    if (qb && typeof qb === "object" && "_id" in qb) {
+      const qbId = (qb as { _id?: unknown })._id;
+      return typeof qbId === "string" ? qbId : qbId?.toString() || "";
+    }
+
+    return "";
+  }, []);
+
+  const getEventQbStatValue = useCallback((details: unknown) => {
+    if (!details || typeof details !== "object") return 0;
+
+    const value = (details as { qbStatValue?: unknown }).qbStatValue;
+    return typeof value === "number" && Number.isFinite(value) ? value : 0;
+  }, []);
+
   const emptyPlayerStats = useCallback(
     (): PlayerStatsResponseDto => ({
       gamesPlayed: 0,
@@ -119,6 +139,15 @@ export default function PlayerProfilePage() {
           }
 
           (game.events || []).forEach((event) => {
+            const eventQbId = getEventQbId(event.details);
+            if (eventQbId === playerId) {
+              gamesWithParticipation.add(gameId);
+              stats.totalPoints += getEventQbStatValue(event.details);
+
+              if (event.type === "touchdown") stats.passing.touchdowns += 1;
+              if (event.type === "interception" || event.type === "pick_six") stats.passing.interceptions += 1;
+            }
+
             if (getReferenceId(event.player) !== playerId) return;
 
             // Fallback for older games without presentPlayers populated.
@@ -127,7 +156,11 @@ export default function PlayerProfilePage() {
 
             if (event.type === "touchdown") {
               stats.touchdowns += 1;
-              stats.receiving.touchdowns += 1;
+              if ((event.details as { playType?: unknown } | null)?.playType === "run") {
+                stats.rushing.touchdowns += 1;
+              } else {
+                stats.receiving.touchdowns += 1;
+              }
             }
             if (event.type === "extra_point") stats.extraPoints += 1;
             if (event.type === "field_goal") stats.fieldGoals += 1;
@@ -151,7 +184,7 @@ export default function PlayerProfilePage() {
       stats.gamesPlayed = gamesWithParticipation.size;
       return stats;
     },
-    [emptyPlayerStats, getReferenceId, playerId],
+    [emptyPlayerStats, getEventQbId, getEventQbStatValue, getReferenceId, playerId],
   );
 
   useEffect(() => {
