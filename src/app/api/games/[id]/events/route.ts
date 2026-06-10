@@ -13,7 +13,7 @@ interface CreateGameEventRequest {
   quarter: number;
   type: GameEventType;
   team: string;
-  player: string;
+  player?: string;
   points?: number;
   details?: unknown;
 }
