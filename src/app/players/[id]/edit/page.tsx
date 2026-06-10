@@ -50,8 +50,9 @@ export default function EditPlayerPage() {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [playerEmail, setPlayerEmail] = useState("");
+  const isAdmin = user?.role === "admin";
   const canEdit =
-    !!user && (user.role === "admin" || user.email.trim().toLowerCase() === playerEmail.trim().toLowerCase());
+    !!user && (isAdmin || user.email.trim().toLowerCase() === playerEmail.trim().toLowerCase());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -213,10 +214,18 @@ export default function EditPlayerPage() {
     setLoading(true);
     setError("");
     try {
+      const payload = {
+        ...form,
+        ...(isAdmin ? { status: form.status } : {}),
+      };
+      if (!isAdmin) {
+        delete (payload as Partial<typeof form>).status;
+      }
+
       const res = await fetch(`/api/players/${playerId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
@@ -570,18 +579,20 @@ export default function EditPlayerPage() {
               </select>
               {renderFieldError("team")}
             </div>
-            <select
-              name="status"
-              value={form.status}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-            >
-              {" "}
-              <option value="active">Activo</option>
-              <option value="inactive">Inactivo</option>
-              <option value="injured">Lesionado</option>
-              <option value="suspended">Suspendido</option>
-            </select>
+            {isAdmin && (
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="w-full border px-3 py-2 rounded"
+              >
+                <option value="active">Activo</option>
+                <option value="pre_approved">PRE-APROBADO</option>
+                <option value="inactive">Inactivo</option>
+                <option value="injured">Lesionado</option>
+                <option value="suspended">Suspendido</option>
+              </select>
+            )}
             <div className="col-span-2">
               <button
                 type="submit"

@@ -12,7 +12,11 @@ export class PlayerApiClient extends BaseApiClient {
   /**
    * Obtiene todos los jugadores con filtros opcionales
    */
-  async getPlayers(filters?: { team?: string; position?: string; status?: "active" | "inactive" }): Promise<Player[]> {
+  async getPlayers(filters?: {
+    team?: string;
+    position?: string;
+    status?: "active" | "inactive" | "injured" | "suspended" | "pre_approved";
+  }): Promise<Player[]> {
     const params: Record<string, string> = {};
 
     if (filters?.team) params.team = filters.team;
@@ -53,7 +57,7 @@ export class PlayerApiClient extends BaseApiClient {
       jerseyNumber?: number | null;
       position: string;
       dateOfBirth: Date;
-      status: "active" | "inactive";
+      status: "active" | "inactive" | "injured" | "suspended" | "pre_approved";
     }>,
   ): Promise<Player> {
     return this.put<Player>(`/players/${id}`, data);

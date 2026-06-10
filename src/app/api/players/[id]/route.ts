@@ -124,6 +124,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
+    if (body.status !== undefined && user.role !== "admin") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo un administrador puede cambiar el estado del jugador",
+        },
+        { status: 403 },
+      );
+    }
+
     const dateOfBirth = parseOptionalDate(body.dateOfBirth, "dateOfBirth");
 
     const updatedPlayer = await playerService.updatePlayer(id, {

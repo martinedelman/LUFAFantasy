@@ -129,7 +129,7 @@ export interface Player {
   emergencyContact?: EmergencyContact;
   medicalInfo?: MedicalInfo;
   registrationDate: Date;
-  status: "active" | "inactive" | "injured" | "suspended";
+  status: "active" | "inactive" | "injured" | "suspended" | "pre_approved";
   createdAt: Date;
   updatedAt: Date;
 }

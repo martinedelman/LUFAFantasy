@@ -7,6 +7,7 @@ import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
 import Card from "@/components/Card";
 import Skeleton from "@/components/Skeleton";
+import Tag from "@/components/Tag";
 import { useAuth } from "@/hooks/useAuth";
 import { useCachedState } from "@/hooks/useCachedState";
 import type { ApiResponseDto, PaginationDto, PlayerResponseDto } from "@/app/DTOs";
@@ -110,6 +111,7 @@ export default function PlayersPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [approvingPlayerId, setApprovingPlayerId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<PaginationDto>(initialPagination);
   const [filters, setFilters, resetCachedFilters, filtersHydrated] = useCachedState("filters:players", {
@@ -257,6 +259,48 @@ export default function PlayersPage() {
     return jerseyNumber != null ? `#${jerseyNumber}` : NO_JERSEY_NUMBER_LABEL;
   };
 
+  const getPlayerStatusTag = (status: PlayerListItem["status"]) => {
+    const statusMap: Record<PlayerListItem["status"], { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      active: { label: "Activo", type: "success" },
+      inactive: { label: "Inactivo", type: "warning" },
+      injured: { label: "Lesionado", type: "warning" },
+      suspended: { label: "Suspendido", type: "error" },
+      pre_approved: { label: "PRE-APROBADO", type: "info" },
+    };
+
+    const { label, type } = statusMap[status];
+    return <Tag label={label} type={type} />;
+  };
+
+  const handleApprovePlayer = async (player: PlayerListItem) => {
+    setApprovingPlayerId(player._id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/players/${player._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.message || "No se pudo aprobar el jugador.");
+        return;
+      }
+
+      setPlayers((previousPlayers) =>
+        previousPlayers.map((currentPlayer) =>
+          currentPlayer._id === player._id ? { ...currentPlayer, status: "active" } : currentPlayer,
+        ),
+      );
+    } catch {
+      setError("Error de conexión al aprobar el jugador.");
+    } finally {
+      setApprovingPlayerId(null);
+    }
+  };
+
   return (
     <>
       <PageHero {...playersHero}>
@@ -335,6 +379,7 @@ export default function PlayersPage() {
                 <option value="inactive">Inactivos</option>
                 <option value="injured">Lesionados</option>
                 <option value="suspended">Suspendidos</option>
+                <option value="pre_approved">PRE-APROBADOS</option>
               </select>
             </div>
             <div className="flex items-end">
@@ -416,6 +461,7 @@ export default function PlayersPage() {
                     title={`${player.firstName} ${player.lastName}`}
                     subtitle={`${formatPlayerPositions(player)} - ${formatJerseyNumber(player.jerseyNumber)}`}
                     onCardClick={() => router.push(`/players/${player._id}`)}
+                    badge={getPlayerStatusTag(player.status)}
                     icon={{
                       type: player.profilePicture ? "image" : "jersey",
                       value: player.profilePicture || player.jerseyNumber?.toString() || player.firstName,
@@ -450,6 +496,20 @@ export default function PlayersPage() {
                         text: formatAge(player.dateOfBirth),
                       },
                     ]}
+                    actions={
+                      user?.role === "admin" && player.status === "pre_approved"
+                        ? [
+                            {
+                              label: approvingPlayerId === player._id ? "Aprobando..." : "Aprobar",
+                              onClick: () => handleApprovePlayer(player),
+                              className:
+                                approvingPlayerId === player._id
+                                  ? "text-gray-400 text-sm font-medium"
+                                  : "text-emerald-700 hover:text-emerald-900 text-sm font-medium",
+                            },
+                          ]
+                        : undefined
+                    }
                   />
                 ))}
               </div>
