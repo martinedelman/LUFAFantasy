@@ -65,7 +65,7 @@ const initialPagination: PaginationDto = {
 
 function PlayerCardSkeleton() {
   return (
-    <div className="rounded-lg border border-gray-100 bg-white p-5 shadow-sm" aria-label="Cargando jugador">
+    <div className="rounded-lg border border-gray-100 bg-slate-50 p-5 shadow-sm" aria-label="Cargando jugador">
       <div className="flex items-start gap-4">
         <Skeleton className="h-14 w-14 rounded-full" />
         <div className="min-w-0 flex-1 space-y-2">
@@ -74,7 +74,7 @@ function PlayerCardSkeleton() {
         </div>
       </div>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 mb-6 space-y-3">
         <div className="flex items-center gap-3">
           <Skeleton className="h-4 w-4 rounded" />
           <Skeleton className="h-4 w-32 rounded" />
@@ -84,18 +84,16 @@ function PlayerCardSkeleton() {
           <Skeleton className="h-4 w-24 rounded" />
         </div>
       </div>
-
-      <div className="mt-6 flex gap-2">
-        <Skeleton className="h-7 w-20 rounded-full" />
-        <Skeleton className="h-7 w-16 rounded-full" />
-      </div>
     </div>
   );
 }
 
 function PlayersSkeletonGrid({ count = PAGE_SIZE }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Cargando jugadores">
+    <div
+      className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      aria-label="Cargando jugadores"
+    >
       {Array.from({ length: count }).map((_, index) => (
         <PlayerCardSkeleton key={index} />
       ))}
@@ -379,9 +377,7 @@ export default function PlayersPage() {
 
         {/* Players Grid */}
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          {loading && players.length === 0 && (
-            <PlayersSkeletonGrid />
-          )}
+          {loading && players.length === 0 && <PlayersSkeletonGrid />}
           {players.length === 0 && !loading && (
             <div className="text-center py-12">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
