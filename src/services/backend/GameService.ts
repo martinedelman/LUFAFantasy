@@ -172,7 +172,8 @@ export class GameService {
       throw new Error("El equipo es requerido");
     }
 
-    const requiresPlayer = eventData.type !== "quarter_end" && eventData.type !== "game_end";
+    const allowsMissingPlayer = eventData.type === "safety" && this.hasEventQuarterback(eventData.details);
+    const requiresPlayer = eventData.type !== "quarter_end" && eventData.type !== "game_end" && !allowsMissingPlayer;
     if (requiresPlayer && !eventData.player) {
       throw new Error("El jugador es requerido");
     }
@@ -262,7 +263,8 @@ export class GameService {
       throw new Error("El equipo es requerido");
     }
 
-    const requiresPlayer = eventData.type !== "quarter_end" && eventData.type !== "game_end";
+    const allowsMissingPlayer = eventData.type === "safety" && this.hasEventQuarterback(eventData.details);
+    const requiresPlayer = eventData.type !== "quarter_end" && eventData.type !== "game_end" && !allowsMissingPlayer;
     if (requiresPlayer && !eventData.player) {
       throw new Error("El jugador es requerido");
     }
@@ -432,6 +434,13 @@ export class GameService {
     }
 
     return reference.toString();
+  }
+
+  private hasEventQuarterback(details: unknown): boolean {
+    if (!details || typeof details !== "object") return false;
+
+    const qb = (details as { qb?: unknown }).qb;
+    return typeof qb === "string" ? qb.trim().length > 0 : Boolean(qb);
   }
 
   private addEventPointsToScore(game: Game, teamId: string, quarter: number, points: number): GameScore {

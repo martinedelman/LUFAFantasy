@@ -440,9 +440,11 @@ export default function LiveMatchPage() {
   const showsPointsInput = !isPenaltyEventSelected && requiresPoints;
   const hasValidPoints =
     !requiresPoints || (eventPoints !== undefined && Number.isFinite(eventPoints) && eventPoints >= 0);
+  const canSubmitSafetyWithoutScorer = eventDraft.type === "safety" && Boolean(eventDraft.qb);
+  const hasRequiredEventPlayer = Boolean(eventDraft.player) || canSubmitSafetyWithoutScorer;
   const isEventDraftReady =
     Boolean(eventTeamId) &&
-    Boolean(eventDraft.player) &&
+    hasRequiredEventPlayer &&
     (!eventRequiresQbAndPlayer || Boolean(eventDraft.qb)) &&
     (isPenaltyEventSelected ? eventDraft.description.trim().length > 0 : hasValidPoints);
 
@@ -573,7 +575,7 @@ export default function LiveMatchPage() {
     setToast(null);
   };
 
-  const handleAddGameEvent = async () => {
+  const submitGameEvent = async ({ allowSafetyWithoutScorer = false }: { allowSafetyWithoutScorer?: boolean } = {}) => {
     if (!game) return;
 
     const team = game[`${eventDraft.teamSide}Team`]?._id;
@@ -582,7 +584,27 @@ export default function LiveMatchPage() {
       return;
     }
 
-    if (eventDraft.type !== "quarter_end" && eventDraft.type !== "game_end" && !eventDraft.player) {
+    const isSafetyWithoutScorer = eventDraft.type === "safety" && Boolean(eventDraft.qb) && !eventDraft.player;
+    if (isSafetyWithoutScorer && !allowSafetyWithoutScorer) {
+      setPendingConfirmation({
+        title: "¿Seguro que quiere registrar un safety sin defensa?",
+        message: "El safety se va a registrar con QB, pero sin jugador defensivo asociado.",
+        confirmLabel: "Aceptar",
+        variant: "warning",
+        onConfirm: async () => {
+          setPendingConfirmation(null);
+          await submitGameEvent({ allowSafetyWithoutScorer: true });
+        },
+      });
+      return;
+    }
+
+    if (
+      eventDraft.type !== "quarter_end" &&
+      eventDraft.type !== "game_end" &&
+      !eventDraft.player &&
+      !isSafetyWithoutScorer
+    ) {
       showLiveToast("error", "Seleccioná el anotador del evento.");
       return;
     }
@@ -621,7 +643,7 @@ export default function LiveMatchPage() {
             quarter: currentQuarterNumber,
             type: eventDraft.type,
             team,
-            player: eventDraft.player,
+            player: eventDraft.player || undefined,
             points,
             details: isPenaltyEvent
               ? { description: penaltyDescription }
@@ -668,6 +690,10 @@ export default function LiveMatchPage() {
     } finally {
       setSavingEvent(false);
     }
+  };
+
+  const handleAddGameEvent = () => {
+    submitGameEvent();
   };
 
   const handleEditGameEvent = (event: GameApiResponse["events"][number]) => {
