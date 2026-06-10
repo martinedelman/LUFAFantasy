@@ -418,7 +418,11 @@ export default function TeamViewerPage() {
           if (gamesData.success) {
             const loadedGames = (gamesData.data || []) as TeamGame[];
             setTeamGames(loadedGames);
-            setTeamStats(deriveTeamStatsFromGames(loadedTeam, loadedGames));
+            if (statsData.success && statsData.data.length > 0) {
+              setTeamStats(statsData.data[0]);
+            } else {
+              setTeamStats(deriveTeamStatsFromGames(loadedTeam, loadedGames));
+            }
           } else if (statsData.success && statsData.data.length > 0) {
             setTeamGames([]);
             setTeamStats(statsData.data[0]);

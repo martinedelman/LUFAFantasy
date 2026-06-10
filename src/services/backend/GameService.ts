@@ -136,6 +136,14 @@ export class GameService {
       throw new Error(scoreValidation.errors.join(", "));
     }
 
+    const gameWithEvents = game as Game & { events?: StoredGameEvent[] };
+    if ((gameWithEvents.events || []).length > 0) {
+      const eventScore = this.recalculateScoreFromEvents(game, gameWithEvents.events || []);
+      if (!eventScore.equals(newScore)) {
+        throw new Error("El marcador debe coincidir con los eventos registrados del partido");
+      }
+    }
+
     // Actualizar score
     const updatedGame = await this.gameRepo.updateScore(id, newScore);
 
@@ -196,13 +204,9 @@ export class GameService {
       details: eventData.details,
     };
 
-    const nextScore =
-      safePoints && safePoints > 0
-        ? this.addEventPointsToScore(game, eventData.team, eventData.quarter, safePoints)
-        : undefined;
-    const updatedGame = await this.gameRepo.addEvent(id, event, nextScore);
+    const updatedGame = await this.gameRepo.addEvent(id, event);
 
-    if (nextScore) {
+    if (safePoints && safePoints > 0) {
       await this.recalculateStandingsForGame(updatedGame);
     }
 
@@ -222,15 +226,7 @@ export class GameService {
       throw new Error("Solo se pueden eliminar eventos de partidos en progreso o finalizados");
     }
 
-    const gameWithEvents = game as Game & { events?: StoredGameEvent[] };
-    const remainingEvents = (gameWithEvents.events || []).filter((event) => this.getReferenceId(event._id) !== eventId);
-
-    if (remainingEvents.length === (gameWithEvents.events || []).length) {
-      throw new Error("Evento no encontrado");
-    }
-
-    const recalculatedScore = this.recalculateScoreFromEvents(game, remainingEvents);
-    const updatedGame = await this.gameRepo.removeEvent(id, eventId, recalculatedScore);
+    const updatedGame = await this.gameRepo.removeEvent(id, eventId);
 
     await this.recalculateStandingsForGame(updatedGame);
 
@@ -287,31 +283,7 @@ export class GameService {
       details: eventData.details,
     };
 
-    const gameWithEvents = game as Game & { events?: StoredGameEvent[] };
-    let foundEvent = false;
-    const updatedEvents = (gameWithEvents.events || []).map((storedEvent) => {
-      if (this.getReferenceId(storedEvent._id) !== eventId) {
-        return storedEvent;
-      }
-
-      foundEvent = true;
-      return {
-        ...storedEvent,
-        quarter: event.quarter,
-        type: event.type,
-        team: event.team,
-        player: event.player,
-        points: event.points,
-        details: event.details,
-      };
-    });
-
-    if (!foundEvent) {
-      throw new Error("Evento no encontrado");
-    }
-
-    const recalculatedScore = this.recalculateScoreFromEvents(game, updatedEvents);
-    const updatedGame = await this.gameRepo.updateEvent(id, eventId, event, recalculatedScore);
+    const updatedGame = await this.gameRepo.updateEvent(id, eventId, event);
 
     await this.recalculateStandingsForGame(updatedGame);
 
@@ -441,40 +413,6 @@ export class GameService {
 
     const qb = (details as { qb?: unknown }).qb;
     return typeof qb === "string" ? qb.trim().length > 0 : Boolean(qb);
-  }
-
-  private addEventPointsToScore(game: Game, teamId: string, quarter: number, points: number): GameScore {
-    const homeTeamId = this.getReferenceId(game.homeTeam);
-    const isHome = teamId === homeTeamId;
-    const target = isHome ? game.score.home : game.score.away;
-    const quarterKey = quarter === 5 ? "overtime" : (`q${quarter}` as "q1" | "q2" | "q3" | "q4");
-    const nextTarget = {
-      q1: target.q1,
-      q2: target.q2,
-      q3: target.q3,
-      q4: target.q4,
-      overtime: target.overtime || 0,
-      [quarterKey]: (target[quarterKey] || 0) + points,
-    };
-
-    const other = isHome ? game.score.away : game.score.home;
-
-    return new GameScore(
-      new QuarterScore(
-        isHome ? nextTarget.q1 : other.q1,
-        isHome ? nextTarget.q2 : other.q2,
-        isHome ? nextTarget.q3 : other.q3,
-        isHome ? nextTarget.q4 : other.q4,
-        isHome ? nextTarget.overtime : other.overtime || 0,
-      ),
-      new QuarterScore(
-        isHome ? other.q1 : nextTarget.q1,
-        isHome ? other.q2 : nextTarget.q2,
-        isHome ? other.q3 : nextTarget.q3,
-        isHome ? other.q4 : nextTarget.q4,
-        isHome ? other.overtime || 0 : nextTarget.overtime,
-      ),
-    );
   }
 
   private recalculateScoreFromEvents(game: Game, events: StoredGameEvent[]): GameScore {

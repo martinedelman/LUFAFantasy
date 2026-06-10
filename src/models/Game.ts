@@ -75,37 +75,6 @@ const PresentPlayersSchema = new Schema(
   { _id: false },
 );
 
-const GameEventSchema = new Schema({
-  quarter: { type: Number, required: true, min: 1, max: 5 },
-  time: { type: String }, // MM:SS format
-  type: {
-    type: String,
-    enum: [
-      "touchdown",
-      "extra_point",
-      "field_goal",
-      "safety",
-      "interception",
-      "pick_six",
-      "penalty",
-      "unsportsmanlike",
-      "quarter_end",
-      "game_end",
-      "substitution",
-      "injury",
-      "first_down",
-      "sack",
-    ],
-    required: true,
-  },
-  team: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-  player: { type: Schema.Types.ObjectId, ref: "Player" },
-  description: { type: String, trim: true },
-  yards: { type: Number },
-  points: { type: Number },
-  details: { type: Schema.Types.Mixed },
-});
-
 const GameSchema = new Schema(
   {
     tournament: { type: Schema.Types.ObjectId, ref: "Tournament", required: true },
@@ -128,7 +97,6 @@ const GameSchema = new Schema(
     score: { type: GameScoreSchema, required: true },
     statistics: { type: GameStatisticsSchema, required: true },
     presentPlayers: { type: PresentPlayersSchema, default: () => ({ home: [], away: [] }) },
-    events: [{ type: GameEventSchema }],
     notes: { type: String, trim: true },
   },
   {

@@ -5,6 +5,7 @@ export { DivisionModel } from "./Division";
 export { TeamModel } from "./Team";
 export { PlayerModel } from "./Player";
 export { GameModel } from "./Game";
+export { GameEventModel } from "./GameEvent";
 export { PlayerStatisticsModel } from "./PlayerStatistics";
 export { TeamStatisticsModel } from "./TeamStatistics";
 export { StandingModel } from "./Standing";
