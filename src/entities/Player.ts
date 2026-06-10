@@ -11,7 +11,7 @@ export type PlayerPosition =
   | "FS" // Free Safety
   | "SS"; // Strong Safety
 
-export type PlayerStatus = "active" | "inactive" | "injured" | "suspended";
+export type PlayerStatus = "active" | "inactive" | "injured" | "suspended" | "pre_approved";
 
 export interface EmergencyContact {
   name?: string;
@@ -158,7 +158,7 @@ export class Player extends AggregateRoot {
       errors.push("Posición secundaria inválida");
     }
 
-    if (!["active", "inactive", "injured", "suspended"].includes(this.status)) {
+    if (!["active", "inactive", "injured", "suspended", "pre_approved"].includes(this.status)) {
       errors.push("Estado del jugador inválido");
     }
 

@@ -144,6 +144,7 @@ export default function PlayerProfilePage() {
       inactive: { label: "Inactivo", type: "warning" },
       suspended: { label: "Suspendido", type: "error" },
       injured: { label: "Lesionado", type: "warning" },
+      pre_approved: { label: "PRE-APROBADO", type: "info" },
     };
 
     const { label, type } = statusMap[status] || { label: status, type: "info" as const };
