@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
+import Avatar from "@/components/Avatar";
 import InlineFeedback from "@/components/InlineFeedback";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import Skeleton from "@/components/Skeleton";
@@ -50,6 +51,7 @@ interface DashboardStats {
     name: string;
     position: string;
     secondaryPosition?: string;
+    profilePicture?: string;
     team: string;
     stat: number;
     statLabel: string;
@@ -354,42 +356,42 @@ export default function Home() {
                   return (
                     <RevealOnScroll key={game.id} delayMs={index * 70}>
                       <Link
-                      key={game.id}
-                      href={gameHref}
-                      aria-label={`Ver detalle de ${game.homeTeam} vs ${game.awayTeam}`}
-                      onClick={() => trackHomeAction("open_upcoming_game", gameHref)}
-                      className="group flex min-h-[116px] w-full items-center rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-                    >
-                      <div className="flex flex-col-reverse md:flex-row md:justify-between items-center gap-4 w-full">
-                        <div className="min-w-0 flex-1 text-center md:text-left">
-                          <p className="font-semibold text-slate-950 group-hover:text-brand-700">
-                            {game.homeTeam} <span className="text-slate-500">vs</span> {game.awayTeam}
-                          </p>
-                          <p className="text-sm text-slate-600 mt-3">
-                            {game.division} • {game.venue}
-                          </p>
+                        key={game.id}
+                        href={gameHref}
+                        aria-label={`Ver detalle de ${game.homeTeam} vs ${game.awayTeam}`}
+                        onClick={() => trackHomeAction("open_upcoming_game", gameHref)}
+                        className="group flex min-h-[116px] w-full items-center rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                      >
+                        <div className="flex flex-col-reverse md:flex-row md:justify-between items-center gap-4 w-full">
+                          <div className="min-w-0 flex-1 text-center md:text-left">
+                            <p className="font-semibold text-slate-950 group-hover:text-brand-700">
+                              {game.homeTeam} <span className="text-slate-500">vs</span> {game.awayTeam}
+                            </p>
+                            <p className="text-sm text-slate-600 mt-3">
+                              {game.division} • {game.venue}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-center md:items-end gap-2 shrink-0 text-center md:text-right w-full md:w-auto">
+                            {!isLive ? (
+                              <span
+                                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusCopy.className}`}
+                              >
+                                {statusCopy.label}
+                              </span>
+                            ) : null}
+                            {isLive ? (
+                              <div className="min-w-[112px] rounded-lg bg-slate-950 px-3 py-2 text-white">
+                                <p className="text-[11px] font-semibold uppercase tracking-wide text-red-200">
+                                  {statusCopy.detail}
+                                </p>
+                                <p className="text-2xl font-black leading-none">
+                                  {game.score?.home ?? 0} - {game.score?.away ?? 0}
+                                </p>
+                              </div>
+                            ) : null}
+                            <p className="text-xs mt-1 text-slate-700">{formatDate(game.scheduledDate)}</p>
+                          </div>
                         </div>
-                        <div className="flex flex-col items-center md:items-end gap-2 shrink-0 text-center md:text-right w-full md:w-auto">
-                          {!isLive ? (
-                            <span
-                              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusCopy.className}`}
-                            >
-                              {statusCopy.label}
-                            </span>
-                          ) : null}
-                          {isLive ? (
-                            <div className="min-w-[112px] rounded-lg bg-slate-950 px-3 py-2 text-white">
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-red-200">
-                                {statusCopy.detail}
-                              </p>
-                              <p className="text-2xl font-black leading-none">
-                                {game.score?.home ?? 0} - {game.score?.away ?? 0}
-                              </p>
-                            </div>
-                          ) : null}
-                          <p className="text-xs mt-1 text-slate-700">{formatDate(game.scheduledDate)}</p>
-                        </div>
-                      </div>
                       </Link>
                     </RevealOnScroll>
                   );
@@ -420,37 +422,42 @@ export default function Home() {
                   return (
                     <RevealOnScroll key={player.id} delayMs={idx * 70}>
                       <Link
-                      key={player.id}
-                      href={playerHref}
-                      aria-label={`Ver perfil de ${player.name}`}
-                      onClick={() => trackHomeAction("open_top_player", playerHref)}
-                      className="group flex min-h-[116px] w-full items-center justify-between rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-                    >
-                      <div className="flex items-center justify-between gap-3 w-full">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="relative shrink-0">
-                            <div className="w-11 h-11 rounded-full border border-slate-300 bg-[rgb(255,255,255)] text-xs font-semibold text-slate-700 flex items-center justify-center">
-                              {getInitials(player.name)}
+                        key={player.id}
+                        href={playerHref}
+                        aria-label={`Ver perfil de ${player.name}`}
+                        onClick={() => trackHomeAction("open_top_player", playerHref)}
+                        className="group flex min-h-[116px] w-full items-center justify-between rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                      >
+                        <div className="flex items-center justify-between gap-3 w-full">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="relative shrink-0">
+                              <Avatar
+                                imageUrl={player.profilePicture}
+                                alt={player.name}
+                                fallback={getInitials(player.name)}
+                                backgroundColor="rgb(255,255,255)"
+                                className="h-11 w-11 border border-slate-300 text-xs"
+                                fallbackClassName="text-xs font-semibold text-black"
+                              />
+                              {idx === 0 && <span className="absolute -top-2 -right-2 text-base">🥇</span>}
+                              {idx === 1 && <span className="absolute -top-2 -right-2 text-base">🥈</span>}
+                              {idx === 2 && <span className="absolute -top-2 -right-2 text-base">🥉</span>}
                             </div>
-                            {idx === 0 && <span className="absolute -top-2 -right-2 text-base">🥇</span>}
-                            {idx === 1 && <span className="absolute -top-2 -right-2 text-base">🥈</span>}
-                            {idx === 2 && <span className="absolute -top-2 -right-2 text-base">🥉</span>}
+                            <div className="min-w-0">
+                              <p className="font-semibold text-slate-950 truncate group-hover:text-brand-700">
+                                {player.name}
+                              </p>
+                              <p className="text-sm text-slate-600 truncate">
+                                {[player.position, player.secondaryPosition].filter(Boolean).join(" / ")}
+                              </p>
+                              <p className="text-xs text-slate-500 truncate">{player.team}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-slate-950 truncate group-hover:text-brand-700">
-                              {player.name}
-                            </p>
-                            <p className="text-sm text-slate-600 truncate">
-                              {[player.position, player.secondaryPosition].filter(Boolean).join(" / ")}
-                            </p>
-                            <p className="text-xs text-slate-500 truncate">{player.team}</p>
+                          <div className="text-right shrink-0">
+                            <p className="text-2xl font-semibold text-brand-700">{player.stat}</p>
+                            <p className="text-xs text-slate-600 font-medium">{player.statLabel}</p>
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-2xl font-semibold text-brand-700">{player.stat}</p>
-                          <p className="text-xs text-slate-600 font-medium">{player.statLabel}</p>
-                        </div>
-                      </div>
                       </Link>
                     </RevealOnScroll>
                   );

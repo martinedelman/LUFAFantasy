@@ -3,6 +3,7 @@ export interface TopPlayerResponseDto {
   name: string;
   position: string;
   secondaryPosition?: string;
+  profilePicture?: string;
   team: string;
   stat: number;
   statLabel: string;

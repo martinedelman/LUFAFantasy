@@ -8,6 +8,7 @@ interface PlayerAggregateData {
   lastName: string;
   position: string;
   secondaryPosition?: string;
+  profilePicture?: string;
   teamName?: string;
   totalPoints: number;
 }
@@ -83,6 +84,7 @@ export class DashboardService {
               lastName: "$playerInfo.lastName",
               position: "$playerInfo.position",
               secondaryPosition: "$playerInfo.secondaryPosition",
+              profilePicture: "$playerInfo.profilePicture",
               teamName: "$teamInfo.name",
               totalPoints: { $ifNull: ["$totalPoints", 0] },
             },
@@ -127,6 +129,7 @@ export class DashboardService {
         name: `${player.firstName} ${player.lastName}`,
         position: player.position,
         secondaryPosition: player.secondaryPosition,
+        profilePicture: player.profilePicture,
         team: player.teamName || "N/A",
         stat: player.totalPoints,
         statLabel: "PTS",
