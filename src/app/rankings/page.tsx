@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
+import RevealOnScroll from "@/components/RevealOnScroll";
 import Skeleton from "@/components/Skeleton";
 import Link from "next/link";
 import { useCachedState } from "@/hooks/useCachedState";
@@ -249,14 +250,12 @@ export default function RankingsPage() {
           <RankingsSkeletonGrid />
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {METRICS.map((metric) => {
+            {METRICS.map((metric, metricIndex) => {
               const rows = rankingsByMetric[metric.key] || [];
 
               return (
-                <section
-                  key={metric.key}
-                  className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
-                >
+                <RevealOnScroll key={metric.key} delayMs={(metricIndex % 2) * 80}>
+                  <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
                   <div className="border-b border-gray-200 bg-gray-50 px-4 py-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -328,7 +327,8 @@ export default function RankingsPage() {
                       </table>
                     </div>
                   )}
-                </section>
+                  </section>
+                </RevealOnScroll>
               );
             })}
           </div>

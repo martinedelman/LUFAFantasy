@@ -6,6 +6,7 @@ import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
 import Pagination from "@/components/Pagination";
 import Avatar from "@/components/Avatar";
+import RevealOnScroll from "@/components/RevealOnScroll";
 import Skeleton from "@/components/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useCachedState } from "@/hooks/useCachedState";
@@ -1317,13 +1318,13 @@ export default function GamesPage() {
           <GamesSkeletonList />
         ) : (
           <div className="space-y-4">
-            {games.map((game) => (
-              <Link
-                key={game._id}
-                href={`/games/${game._id}`}
-                className="relative block overflow-hidden rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6"
-                aria-label={`Ver match ${game.homeTeam?.name || "TBD"} vs ${game.awayTeam?.name || "TBD"}`}
-              >
+            {games.map((game, index) => (
+              <RevealOnScroll key={game._id} delayMs={(index % 4) * 60}>
+                <Link
+                  href={`/games/${game._id}`}
+                  className="relative block overflow-hidden rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6"
+                  aria-label={`Ver match ${game.homeTeam?.name || "TBD"} vs ${game.awayTeam?.name || "TBD"}`}
+                >
                 <div className="absolute left-1/2 top-0 z-10 hidden -translate-x-1/2 sm:block">
                   {getStatusBadge(game.status, "top")}
                 </div>
@@ -1436,7 +1437,8 @@ export default function GamesPage() {
                     </div>
                   </div>
                 </div>
-              </Link>
+                </Link>
+              </RevealOnScroll>
             ))}
           </div>
         )}

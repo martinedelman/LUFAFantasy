@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
 import InlineFeedback from "@/components/InlineFeedback";
+import RevealOnScroll from "@/components/RevealOnScroll";
 import Skeleton from "@/components/Skeleton";
 
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://flag.lufa.com.uy").replace(/\/$/, "");
@@ -345,13 +346,14 @@ export default function Home() {
                   <UpcomingGameSkeleton />
                 </>
               ) : stats?.nextGames && stats.nextGames.length > 0 ? (
-                stats.nextGames.map((game) => {
+                stats.nextGames.map((game, index) => {
                   const statusCopy = getGameStatusCopy(game.status);
                   const gameHref = `/games/${game.id}`;
                   const isLive = game.status === "in_progress";
 
                   return (
-                    <Link
+                    <RevealOnScroll key={game.id} delayMs={index * 70}>
+                      <Link
                       key={game.id}
                       href={gameHref}
                       aria-label={`Ver detalle de ${game.homeTeam} vs ${game.awayTeam}`}
@@ -388,7 +390,8 @@ export default function Home() {
                           <p className="text-xs mt-1 text-slate-700">{formatDate(game.scheduledDate)}</p>
                         </div>
                       </div>
-                    </Link>
+                      </Link>
+                    </RevealOnScroll>
                   );
                 })
               ) : (
@@ -415,7 +418,8 @@ export default function Home() {
                   const playerHref = `/players/${player.id}`;
 
                   return (
-                    <Link
+                    <RevealOnScroll key={player.id} delayMs={idx * 70}>
+                      <Link
                       key={player.id}
                       href={playerHref}
                       aria-label={`Ver perfil de ${player.name}`}
@@ -447,7 +451,8 @@ export default function Home() {
                           <p className="text-xs text-slate-600 font-medium">{player.statLabel}</p>
                         </div>
                       </div>
-                    </Link>
+                      </Link>
+                    </RevealOnScroll>
                   );
                 })
               ) : (
@@ -648,19 +653,18 @@ export default function Home() {
                 description:
                   "No requiere equipamiento pesado como cascos o hombreras, lo que facilita su práctica y organización.",
               },
-            ].map((benefit) => (
-              <div
-                key={benefit.title}
-                className="rounded-xl border border-slate-200 bg-[rgb(255,255,255)] p-6 transition hover:border-brand-600 hover:shadow-md"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-2xl leading-none">{benefit.icon}</div>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-slate-950 mb-2 text-lg">{benefit.title}</h4>
-                    <p className="text-sm text-slate-700 leading-relaxed">{benefit.description}</p>
+            ].map((benefit, index) => (
+              <RevealOnScroll key={benefit.title} delayMs={index * 60}>
+                <div className="rounded-xl border border-slate-200 bg-[rgb(255,255,255)] p-6 transition hover:border-brand-600 hover:shadow-md">
+                  <div className="flex items-start gap-4">
+                    <div className="text-2xl leading-none">{benefit.icon}</div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-950 mb-2 text-lg">{benefit.title}</h4>
+                      <p className="text-sm text-slate-700 leading-relaxed">{benefit.description}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </RevealOnScroll>
             ))}
           </div>
         </div>
@@ -688,16 +692,18 @@ export default function Home() {
                 title: "La intensidad de un deporte profesional",
                 desc: "Competencias serias con resultados reales",
               },
-            ].map((item) => (
-              <div key={item.title} className="rounded-lg border border-slate-200 bg-[rgb(248,250,252)] p-5">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">{item.icon}</span>
-                  <div>
-                    <h4 className="font-bold text-slate-950 mb-1">{item.title}</h4>
-                    <p className="text-slate-600 text-sm">{item.desc}</p>
+            ].map((item, index) => (
+              <RevealOnScroll key={item.title} delayMs={index * 60}>
+                <div className="rounded-lg border border-slate-200 bg-[rgb(248,250,252)] p-5">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">{item.icon}</span>
+                    <div>
+                      <h4 className="font-bold text-slate-950 mb-1">{item.title}</h4>
+                      <p className="text-slate-600 text-sm">{item.desc}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </RevealOnScroll>
             ))}
           </div>
           <div className="mt-8 text-center pt-8 border-t border-slate-200">

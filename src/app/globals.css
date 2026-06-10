@@ -81,6 +81,21 @@ button {
   animation: skeleton-card-rise 1.8s ease-in-out infinite;
 }
 
+.card-reveal {
+  opacity: 0;
+  transform: translate3d(0, -18px, 0) scale(0.985);
+  transform-origin: center top;
+  transition:
+    opacity 420ms ease,
+    transform 620ms cubic-bezier(0.18, 0.92, 0.25, 1.12);
+  will-change: opacity, transform;
+}
+
+.card-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
 /* Overrides globales para clases usadas en pantallas existentes */
 .bg-gray-50,
 .bg-slate-50 {
@@ -341,7 +356,11 @@ button {
   .coming-soon-tile,
   .skeleton-shimmer,
   .skeleton-shimmer::after,
-  .skeleton-card {
+  .skeleton-card,
+  .card-reveal {
     animation: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

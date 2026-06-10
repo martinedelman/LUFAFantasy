@@ -4,6 +4,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import RevealOnScroll from "@/components/RevealOnScroll";
 import Skeleton from "@/components/Skeleton";
 
 interface CardAction {
@@ -114,21 +115,25 @@ export default function Card({
   };
 
   return (
-    <div
-      className={`relative overflow-hidden rounded-lg shadow-xs hover:shadow-md hover:scale-103 transition-all cursor-pointer ${
-        hasBackground ? "bg-gray-900" : "bg-slate-50"
-      } ${aspectClass}`}
-      onClick={onCardClick}
-    >
-      {isBackgroundLoading && <Skeleton className="absolute inset-0 rounded-lg" />}
-      {hasBackground && (
-        <>
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }} />
-          <div className="absolute inset-0 bg-black/55" />
-        </>
-      )}
+    <RevealOnScroll>
+      <div
+        className={`relative overflow-hidden rounded-lg shadow-xs hover:shadow-md hover:scale-103 transition-all cursor-pointer ${
+          hasBackground ? "bg-gray-900" : "bg-slate-50"
+        } ${aspectClass}`}
+        onClick={onCardClick}
+      >
+        {isBackgroundLoading && <Skeleton className="absolute inset-0 rounded-lg" />}
+        {hasBackground && (
+          <>
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${backgroundImage})` }}
+            />
+            <div className="absolute inset-0 bg-black/55" />
+          </>
+        )}
 
-      <div className={`relative z-10 flex h-full flex-col p-6 ${hasBackground ? "text-white" : ""}`}>
+        <div className={`relative z-10 flex h-full flex-col p-6 ${hasBackground ? "text-white" : ""}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
@@ -217,7 +222,8 @@ export default function Card({
             )}
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </RevealOnScroll>
   );
 }

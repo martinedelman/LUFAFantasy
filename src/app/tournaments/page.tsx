@@ -7,6 +7,7 @@ import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
 import Pagination from "@/components/Pagination";
+import RevealOnScroll from "@/components/RevealOnScroll";
 import Skeleton from "@/components/Skeleton";
 import Tag from "@/components/Tag";
 import { useCachedState } from "@/hooks/useCachedState";
@@ -305,12 +306,12 @@ export default function TournamentsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {tournaments.map((tournament) => (
-              <Link
-                key={tournament._id}
-                href={`/tournaments/${tournament._id}`}
-                className="group flex min-h-[260px] flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:border-blue-500 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-              >
+            {tournaments.map((tournament, index) => (
+              <RevealOnScroll key={tournament._id} delayMs={(index % 3) * 70}>
+                <Link
+                  href={`/tournaments/${tournament._id}`}
+                  className="group flex min-h-[260px] flex-col rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:border-blue-500 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-500">
@@ -348,7 +349,8 @@ export default function TournamentsPage() {
                     </div>
                   </div>
                 </div>
-              </Link>
+                </Link>
+              </RevealOnScroll>
             ))}
           </div>
         )}
