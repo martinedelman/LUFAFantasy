@@ -470,13 +470,13 @@ export default function GamesPage() {
       return "Este campo es obligatorio.";
     }
 
-    if ((key === "homeTeam" || key === "awayTeam") && value && form.homeTeam && form.awayTeam) {
-      const nextHomeTeam = key === "homeTeam" ? value : form.homeTeam;
-      const nextAwayTeam = key === "awayTeam" ? value : form.awayTeam;
-      if (nextHomeTeam && nextAwayTeam && nextHomeTeam === nextAwayTeam) {
-        return "El equipo local y visitante no pueden ser el mismo.";
-      }
-    }
+if (key === "homeTeam" || key === "awayTeam") {
+  const nextHomeTeam = key === "homeTeam" ? value : form.homeTeam;
+  const nextAwayTeam = key === "awayTeam" ? value : form.awayTeam;
+  if (nextHomeTeam && nextAwayTeam && nextHomeTeam === nextAwayTeam) {
+    return "El equipo local y visitante no pueden ser el mismo.";
+  }
+}
 
     return "";
   };
