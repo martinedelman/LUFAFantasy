@@ -203,7 +203,7 @@ export default function SumatePage() {
                   }`}
                   aria-pressed={isSelected}
                 >
-                  <GoogleIcon name={option.icon} className="text-brand-900" />
+                  <GoogleIcon name={option.icon} className="text-[32px] text-brand-900" />
                   <span className="min-w-0 text-sm font-bold leading-snug">{option.label}</span>
                 </button>
               );
