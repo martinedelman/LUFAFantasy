@@ -41,24 +41,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-.material-symbols-rounded {
-  direction: ltr;
-  font-family: "Material Symbols Rounded";
-  font-feature-settings: "liga";
-  font-style: normal;
-  font-weight: normal;
-  letter-spacing: normal;
-  text-transform: none;
-  white-space: nowrap;
-  word-wrap: normal;
-  font-variation-settings:
-    "FILL" 0,
-    "wght" 500,
-    "GRAD" 0,
-    "opsz" 24;
-  -webkit-font-smoothing: antialiased;
-}
-
 /* Controles de formulario */
 input,
 select,
