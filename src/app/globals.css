@@ -41,6 +41,24 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.material-symbols-rounded {
+  direction: ltr;
+  font-family: "Material Symbols Rounded";
+  font-feature-settings: "liga";
+  font-style: normal;
+  font-weight: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 24;
+  -webkit-font-smoothing: antialiased;
+}
+
 /* Controles de formulario */
 input,
 select,
@@ -135,6 +153,95 @@ button {
   background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.28) 48%, transparent 78%);
   animation: live-event-submit-sheen 1.05s ease-in-out infinite;
   pointer-events: none;
+}
+
+/* From Uiverse.io by mishary_5473 */
+.animated-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 36px;
+  border: 4px solid;
+  border-color: transparent;
+  font-size: 16px;
+  background-color: inherit;
+  border-radius: 100px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 0 0 2px var(--brand-700);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button svg {
+  position: absolute;
+  width: 24px;
+  fill: white;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .arr-1 {
+  right: 16px;
+}
+
+.animated-button .arr-2 {
+  left: -25%;
+}
+
+.animated-button .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: var(--brand-700);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-12px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button:hover {
+  box-shadow: 0 0 0 12px transparent;
+  color: white;
+  border-radius: 12px;
+}
+
+.animated-button:hover .arr-1 {
+  right: -25%;
+}
+
+.animated-button:hover .arr-2 {
+  left: 16px;
+}
+
+.animated-button:hover .text {
+  transform: translateX(12px);
+}
+
+.animated-button:hover svg {
+  fill: white;
+}
+
+.animated-button:active {
+  scale: 0.95;
+  box-shadow: 0 0 0 4px 622BFF;
+}
+
+.animated-button:hover .circle {
+  width: 220px;
+  height: 220px;
+  opacity: 1;
 }
 
 /* Overrides globales para clases usadas en pantallas existentes */
@@ -451,10 +558,22 @@ button {
   .toast-motion.is-entering,
   .toast-motion.is-leaving,
   .live-event-submit.is-saving,
-  .live-event-submit.is-saving::after {
+  .live-event-submit.is-saving::after,
+  .animated-button,
+  .animated-button svg,
+  .animated-button .circle,
+  .animated-button .text {
     animation: none;
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  .animated-button .arr-2 {
+    display: none;
+  }
+
+  .animated-button .circle {
+    opacity: 0;
   }
 }
