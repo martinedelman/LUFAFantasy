@@ -22,6 +22,23 @@ const SCORING_EVENT_LABELS: Partial<Record<GameEventType, string>> = {
   pick_six: "Pick six",
 };
 
+const EVENT_TYPE_LABELS: Record<GameEventType, string> = {
+  touchdown: "Touchdown",
+  extra_point: "Punto extra",
+  field_goal: "Field goal",
+  safety: "Safety",
+  interception: "Intercepción",
+  pick_six: "Pick six",
+  penalty: "Castigo",
+  unsportsmanlike: "Actitud antideportiva",
+  quarter_end: "Fin de mitad",
+  game_end: "Fin del partido",
+  substitution: "Sustitución",
+  injury: "Lesión",
+  first_down: "Primero y diez",
+  sack: "Sack",
+};
+
 const STATUS_COPY: Record<
   GameApiResponse["status"],
   { label: string; type: "info" | "warning" | "success" | "error" }
@@ -119,6 +136,13 @@ function getScoringLabel(type: GameEventType, points?: number) {
   return points ? `${label} +${points}` : label;
 }
 
+function getEventLabel(type: GameEventType, points?: number, description?: string) {
+  if (description) return description;
+
+  const label = EVENT_TYPE_LABELS[type] || "Evento";
+  return points && points > 0 ? `${label} (+${points})` : label;
+}
+
 function getScoringBadgeClass(type: GameEventType) {
   const classes: Partial<Record<GameEventType, string>> = {
     touchdown: "bg-blue-100 text-blue-800 ring-blue-200",
@@ -129,6 +153,31 @@ function getScoringBadgeClass(type: GameEventType) {
   };
 
   return classes[type] || "bg-gray-100 text-gray-700 ring-gray-200";
+}
+
+function getEventBadgeClass(type: GameEventType) {
+  const classes: Partial<Record<GameEventType, string>> = {
+    touchdown: "bg-blue-100 text-blue-800 ring-blue-200",
+    pick_six: "bg-purple-100 text-purple-800 ring-purple-200",
+    extra_point: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+    safety: "bg-amber-100 text-amber-900 ring-amber-200",
+    field_goal: "bg-sky-100 text-sky-800 ring-sky-200",
+    interception: "bg-indigo-100 text-indigo-800 ring-indigo-200",
+    sack: "bg-rose-100 text-rose-800 ring-rose-200",
+    penalty: "bg-orange-100 text-orange-900 ring-orange-200",
+    unsportsmanlike: "bg-red-100 text-red-800 ring-red-200",
+    quarter_end: "bg-gray-900 text-white ring-gray-900",
+    game_end: "bg-gray-900 text-white ring-gray-900",
+  };
+
+  return classes[type] || "bg-gray-100 text-gray-700 ring-gray-200";
+}
+
+function getEventDetailText(details: unknown) {
+  if (!details || typeof details !== "object") return "";
+
+  const description = (details as { description?: unknown }).description;
+  return typeof description === "string" ? description.trim() : "";
 }
 
 function getOfficialRoleLabel(role: GameApiResponse["officials"][number]["role"]) {
@@ -348,6 +397,14 @@ export default function MatchPage() {
     });
 
     return [...grouped.values()].sort((left, right) => right.points - left.points);
+  }, [game?.events]);
+
+  const eventSequence = useMemo(() => {
+    return (game?.events || []).map((event, index) => ({
+      ...event,
+      sequenceNumber: index + 1,
+      detailText: getEventDetailText(event.details),
+    }));
   }, [game?.events]);
 
   if (loading) {
@@ -600,6 +657,55 @@ export default function MatchPage() {
             </div>
           </section>
         </main>
+
+        <section className="mt-6 rounded-lg bg-white shadow-sm ring-1 ring-gray-200">
+          <div className="flex flex-col gap-1 border-b border-gray-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-base font-bold text-gray-900">Secuencia de eventos</h2>
+              <p className="text-sm text-gray-500">
+                {eventSequence.length > 0
+                  ? `${eventSequence.length} eventos en orden de registro`
+                  : isPending
+                    ? "El partido todavía no comenzó."
+                    : "Todavía no hay eventos registrados."}
+              </p>
+            </div>
+          </div>
+
+          <div className="divide-y divide-gray-100">
+            {eventSequence.length > 0 ? (
+              eventSequence.map((event) => (
+                <article key={event._id || `event-${event.sequenceNumber}`} className="grid gap-3 p-4 sm:grid-cols-[72px_1fr]">
+                  <div className="flex items-center gap-2 sm:block">
+                    <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-full bg-gray-900 px-2 text-sm font-black text-white">
+                      #{event.sequenceNumber}
+                    </span>
+                    <span className="text-sm font-bold text-gray-500 sm:mt-2 sm:block">
+                      {event.quarter === 5 ? "ET" : `${event.quarter}T`}
+                    </span>
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getEventBadgeClass(event.type)}`}>
+                        {getEventLabel(event.type, event.points, event.description)}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">{getTeamName(event.team, "Equipo")}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {event.player ? getPlayerName(event.player) : "Sin jugador asignado"}
+                    </p>
+                    {event.detailText && <p className="mt-2 text-sm text-gray-700">{event.detailText}</p>}
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="px-4 py-10 text-center text-sm text-gray-500">
+                {isPending ? "El partido todavía está pendiente." : "Todavía no hay eventos registrados."}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );
