@@ -187,7 +187,7 @@ export default function SumatePage() {
       return (
         <fieldset>
           <legend className="text-xl font-bold text-slate-950">¿Cómo querés participar?</legend>
-          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-2 lg:gap-4">
             {flagInterestOptions.map((option) => {
               const isSelected = flagInterestForm.interestType === option.value;
 
@@ -196,15 +196,15 @@ export default function SumatePage() {
                   key={option.value}
                   type="button"
                   onClick={() => updateFlagInterestForm("interestType", option.value)}
-                  className={`flex min-h-[84px] items-center gap-4 rounded-lg border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${
+                  className={`flex min-h-[84px] items-center gap-4 rounded-lg border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 lg:min-h-[92px] lg:px-5 xl:min-h-[104px] ${
                     isSelected
                       ? "border-brand-700 bg-brand-100 text-brand-900 shadow-md"
                       : "border-slate-200 bg-white text-slate-800 hover:border-brand-500 hover:bg-slate-50"
                   }`}
                   aria-pressed={isSelected}
                 >
-                  <GoogleIcon name={option.icon} className="text-[32px] text-brand-900" />
-                  <span className="min-w-0 text-sm font-bold leading-snug">{option.label}</span>
+                  <GoogleIcon name={option.icon} className="text-[32px] text-brand-900 lg:text-[34px]" />
+                  <span className="min-w-0 text-sm font-bold leading-snug lg:text-base">{option.label}</span>
                 </button>
               );
             })}
