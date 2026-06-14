@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "node --env-file=.env --import tsx scripts/seed.ts",
+    "db:migrate-game-events": "node --env-file=.env --import tsx scripts/migrate-game-events.ts",
     "db:sync-test-from-prod": "node --env-file=.env --import tsx scripts/sync-test-db-from-prod.ts",
     "vercel:pull:testing": "vercel pull --yes --environment=preview",
     "vercel:pull:prod": "vercel pull --yes --environment=production",

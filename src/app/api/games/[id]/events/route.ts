@@ -13,7 +13,7 @@ interface CreateGameEventRequest {
   quarter: number;
   type: GameEventType;
   team: string;
-  player: string;
+  player?: string;
   points?: number;
   details?: unknown;
 }
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       points: body.points === undefined || body.points === null ? undefined : Number(body.points),
       details: body.details,
     });
-    invalidateCacheByPrefix(["standings", "rankings"]);
+    invalidateCacheByPrefix(["standings", "rankings", "dashboard"]);
 
     return NextResponse.json({
       success: true,

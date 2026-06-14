@@ -12,6 +12,7 @@ import type { ApiResponse, GameApiResponse, GameEventType, PlayerApiResponse } f
 
 type QuarterKey = "q1" | "q2" | "q3" | "q4" | "overtime";
 type TeamSide = "home" | "away";
+type PlayType = "pass" | "run";
 
 const QUARTERS: { key: QuarterKey; label: string }[] = [
   { key: "q1", label: "1T" },
@@ -43,6 +44,8 @@ const highContrastControlStyle = {
 type EventDraft = {
   teamSide: TeamSide;
   type: GameEventType;
+  playType: PlayType;
+  qb: string;
   player: string;
   points: string;
   description: string;
@@ -105,11 +108,65 @@ const getReferenceId = (reference?: string | { _id?: string } | null) => {
 
 const requiresPenaltyDescription = (type: GameEventType) => type === "penalty" || type === "unsportsmanlike";
 
+const PASS_OR_RUN_EVENTS = ["touchdown", "extra_point"] as const;
+const QB_AND_PLAYER_EVENTS = ["touchdown", "extra_point", "safety", "interception", "pick_six", "sack"] as const;
+const NEGATIVE_QB_SCORING_EVENTS = ["safety", "interception", "pick_six", "sack"] as const;
+
+const canChoosePlayType = (type: GameEventType) =>
+  PASS_OR_RUN_EVENTS.includes(type as (typeof PASS_OR_RUN_EVENTS)[number]);
+
+const requiresQbAndPlayer = (type: GameEventType, playType: PlayType) =>
+  QB_AND_PLAYER_EVENTS.includes(type as (typeof QB_AND_PLAYER_EVENTS)[number]) &&
+  (!canChoosePlayType(type) || playType === "pass");
+
+const usesScorerLabel = (type: GameEventType) =>
+  type !== "sack" && QB_AND_PLAYER_EVENTS.includes(type as (typeof QB_AND_PLAYER_EVENTS)[number]);
+
+const usesOpponentQuarterback = (type: GameEventType) =>
+  NEGATIVE_QB_SCORING_EVENTS.includes(type as (typeof NEGATIVE_QB_SCORING_EVENTS)[number]);
+
+const getOppositeSide = (side: TeamSide): TeamSide => (side === "home" ? "away" : "home");
+
+const getQbStatValue = (type: GameEventType, points?: number) => {
+  if (!usesOpponentQuarterback(type)) {
+    return points;
+  }
+
+  if (type === "interception") {
+    return -1;
+  }
+
+  if (type === "sack") {
+    return -1;
+  }
+
+  return -Math.abs(points || 0);
+};
+
 const getPenaltyDescription = (details: unknown) => {
   if (!details || typeof details !== "object") return "";
 
   const description = (details as { description?: unknown }).description;
   return typeof description === "string" ? description : "";
+};
+
+const getEventQbId = (details: unknown) => {
+  if (!details || typeof details !== "object") return "";
+
+  const qb = (details as { qb?: unknown }).qb;
+  if (typeof qb === "string") return qb;
+  if (qb && typeof qb === "object" && "_id" in qb) {
+    const qbId = (qb as { _id?: unknown })._id;
+    return typeof qbId === "string" ? qbId : qbId?.toString() || "";
+  }
+
+  return "";
+};
+
+const getEventPlayType = (details: unknown): PlayType => {
+  if (!details || typeof details !== "object") return "pass";
+
+  return (details as { playType?: unknown }).playType === "run" ? "run" : "pass";
 };
 
 export default function LiveMatchPage() {
@@ -130,6 +187,8 @@ export default function LiveMatchPage() {
   const [eventDraft, setEventDraft] = useState<EventDraft>({
     teamSide: "home",
     type: "touchdown",
+    playType: "pass",
+    qb: "",
     player: "",
     points: "6",
     description: "",
@@ -364,17 +423,30 @@ export default function LiveMatchPage() {
   }, [awayPlayers, game?.presentPlayers, game?.status, homePlayers, playersById]);
 
   const eventPlayers = presentPlayersBySide[eventDraft.teamSide];
+  const eventCanChoosePlayType = canChoosePlayType(eventDraft.type);
+  const eventRequiresQbAndPlayer = requiresQbAndPlayer(eventDraft.type, eventDraft.playType);
+  const eventUsesScorerLabel = usesScorerLabel(eventDraft.type);
+  const qbTeamSide = eventRequiresQbAndPlayer
+    ? usesOpponentQuarterback(eventDraft.type)
+      ? getOppositeSide(eventDraft.teamSide)
+      : eventDraft.teamSide
+    : eventDraft.teamSide;
+  const qbPlayers = presentPlayersBySide[qbTeamSide];
   const isPenaltyEventSelected = requiresPenaltyDescription(eventDraft.type);
-const eventTeamId = game?.[`${eventDraft.teamSide}Team`]?._id;
-const eventPoints = eventDraft.points === "" ? undefined : Number(eventDraft.points);
-const requiresPoints =
-  !isPenaltyEventSelected && ["touchdown", "extra_point", "safety", "pick_six"].includes(eventDraft.type);
-const hasValidPoints =
-  !requiresPoints || (eventPoints !== undefined && Number.isFinite(eventPoints) && eventPoints >= 0);
-const isEventDraftReady =
-  Boolean(eventTeamId) &&
-  Boolean(eventDraft.player) &&
-  (isPenaltyEventSelected ? eventDraft.description.trim().length > 0 : hasValidPoints);
+  const eventTeamId = game?.[`${eventDraft.teamSide}Team`]?._id;
+  const eventPoints = eventDraft.points === "" ? undefined : Number(eventDraft.points);
+  const requiresPoints =
+    !isPenaltyEventSelected && ["touchdown", "extra_point", "safety", "pick_six"].includes(eventDraft.type);
+  const showsPointsInput = !isPenaltyEventSelected && requiresPoints;
+  const hasValidPoints =
+    !requiresPoints || (eventPoints !== undefined && Number.isFinite(eventPoints) && eventPoints >= 0);
+  const canSubmitSafetyWithoutScorer = eventDraft.type === "safety" && Boolean(eventDraft.qb);
+  const hasRequiredEventPlayer = Boolean(eventDraft.player) || canSubmitSafetyWithoutScorer;
+  const isEventDraftReady =
+    Boolean(eventTeamId) &&
+    hasRequiredEventPlayer &&
+    (!eventRequiresQbAndPlayer || Boolean(eventDraft.qb)) &&
+    (isPenaltyEventSelected ? eventDraft.description.trim().length > 0 : hasValidPoints);
 
   const updatePlayerInRosters = (updatedPlayer: PlayerApiResponse) => {
     const updateRoster = (players: PlayerApiResponse[]) =>
@@ -470,6 +542,7 @@ const isEventDraftReady =
     setEventDraft((prev) => ({
       ...prev,
       teamSide,
+      qb: "",
       player: "",
     }));
     setToast(null);
@@ -479,6 +552,8 @@ const isEventDraftReady =
     setEventDraft((prev) => ({
       ...prev,
       type,
+      playType: canChoosePlayType(type) ? prev.playType : "pass",
+      qb: requiresQbAndPlayer(type, canChoosePlayType(type) ? prev.playType : "pass") ? "" : prev.qb,
       points: requiresPenaltyDescription(type) ? "" : points === undefined ? "" : String(points),
       description: requiresPenaltyDescription(type) ? prev.description : "",
     }));
@@ -490,6 +565,8 @@ const isEventDraftReady =
     setEventDraft({
       teamSide: "home",
       type: "touchdown",
+      playType: "pass",
+      qb: "",
       player: "",
       points: "6",
       description: "",
@@ -498,7 +575,7 @@ const isEventDraftReady =
     setToast(null);
   };
 
-  const handleAddGameEvent = async () => {
+  const submitGameEvent = async ({ allowSafetyWithoutScorer = false }: { allowSafetyWithoutScorer?: boolean } = {}) => {
     if (!game) return;
 
     const team = game[`${eventDraft.teamSide}Team`]?._id;
@@ -507,8 +584,34 @@ const isEventDraftReady =
       return;
     }
 
-    if (eventDraft.type !== "quarter_end" && eventDraft.type !== "game_end" && !eventDraft.player) {
-      showLiveToast("error", "Seleccioná el jugador del evento.");
+    const isSafetyWithoutScorer = eventDraft.type === "safety" && Boolean(eventDraft.qb) && !eventDraft.player;
+    if (isSafetyWithoutScorer && !allowSafetyWithoutScorer) {
+      setPendingConfirmation({
+        title: "¿Seguro que quiere registrar un safety sin defensa?",
+        message: "El safety se va a registrar con QB, pero sin jugador defensivo asociado.",
+        confirmLabel: "Aceptar",
+        variant: "warning",
+        onConfirm: async () => {
+          setPendingConfirmation(null);
+          await submitGameEvent({ allowSafetyWithoutScorer: true });
+        },
+      });
+      return;
+    }
+
+    if (
+      eventDraft.type !== "quarter_end" &&
+      eventDraft.type !== "game_end" &&
+      !eventDraft.player &&
+      !isSafetyWithoutScorer
+    ) {
+      showLiveToast("error", "Seleccioná el anotador del evento.");
+      return;
+    }
+
+    const eventNeedsQb = requiresQbAndPlayer(eventDraft.type, eventDraft.playType);
+    if (eventNeedsQb && !eventDraft.qb) {
+      showLiveToast("error", "Seleccioná el QB del evento.");
       return;
     }
 
@@ -540,9 +643,21 @@ const isEventDraftReady =
             quarter: currentQuarterNumber,
             type: eventDraft.type,
             team,
-            player: eventDraft.player,
+            player: eventDraft.player || undefined,
             points,
-            details: isPenaltyEvent ? { description: penaltyDescription } : null,
+            details: isPenaltyEvent
+              ? { description: penaltyDescription }
+              : eventNeedsQb || eventCanChoosePlayType
+                ? {
+                    ...(eventCanChoosePlayType ? { playType: eventDraft.playType } : {}),
+                    ...(eventNeedsQb
+                      ? {
+                          qb: eventDraft.qb,
+                          qbStatValue: getQbStatValue(eventDraft.type, points),
+                        }
+                      : {}),
+                  }
+                : null,
           }),
         },
       );
@@ -561,16 +676,24 @@ const isEventDraftReady =
       } else {
         setEventDraft((prev) => ({
           ...prev,
+          qb: eventNeedsQb ? "" : prev.qb,
           player: "",
           description: isPenaltyEvent ? "" : prev.description,
         }));
-        showLiveToast("info", points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.");
+        showLiveToast(
+          "info",
+          points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.",
+        );
       }
     } catch {
       showLiveToast("error", "Error de conexión al registrar el evento.");
     } finally {
       setSavingEvent(false);
     }
+  };
+
+  const handleAddGameEvent = () => {
+    submitGameEvent();
   };
 
   const handleEditGameEvent = (event: GameApiResponse["events"][number]) => {
@@ -583,6 +706,8 @@ const isEventDraftReady =
     setEventDraft({
       teamSide,
       type: event.type,
+      playType: canChoosePlayType(event.type) ? getEventPlayType(event.details) : "pass",
+      qb: requiresQbAndPlayer(event.type, getEventPlayType(event.details)) ? getEventQbId(event.details) : "",
       player: getEventReferenceId(event.player),
       points:
         requiresPenaltyDescription(event.type) || event.points === undefined || event.points === null
@@ -626,7 +751,8 @@ const isEventDraftReady =
 
     setPendingConfirmation({
       title: "Eliminar evento",
-      message: "Esta acción quita el evento del historial y recalcula el partido. Podés registrar el evento nuevamente si fue un error.",
+      message:
+        "Esta acción quita el evento del historial y recalcula el partido. Podés registrar el evento nuevamente si fue un error.",
       confirmLabel: "Eliminar evento",
       variant: "error",
       onConfirm: async () => {
@@ -710,7 +836,8 @@ const isEventDraftReady =
   const handleEndGame = () => {
     setPendingConfirmation({
       title: "Finalizar partido",
-      message: "El partido quedará cerrado con el marcador actual. Después solo se podrá corregir desde el modo Corrección Live.",
+      message:
+        "El partido quedará cerrado con el marcador actual. Después solo se podrá corregir desde el modo Corrección Live.",
       confirmLabel: "Finalizar partido",
       variant: "warning",
       onConfirm: async () => {
@@ -740,6 +867,23 @@ const isEventDraftReady =
     return typeof player === "string"
       ? "Jugador"
       : `${player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} ${player.firstName} ${player.lastName}`;
+  };
+
+  const getEventQbName = (details: unknown) => {
+    const qbId = getEventQbId(details);
+    if (!qbId) return "";
+
+    const qb = playersById.get(qbId);
+    if (!qb) return "QB";
+
+    return `${qb.jerseyNumber != null ? `#${qb.jerseyNumber}` : "S/N"} ${qb.firstName} ${qb.lastName}`;
+  };
+
+  const getEventQbStatValue = (details: unknown) => {
+    if (!details || typeof details !== "object") return undefined;
+
+    const value = (details as { qbStatValue?: unknown }).qbStatValue;
+    return typeof value === "number" && Number.isFinite(value) ? value : undefined;
   };
 
   const getEventReferenceId = (
@@ -796,7 +940,13 @@ const isEventDraftReady =
           />
         )}
         {!jerseyErrors[player._id] && jerseyMessages[player._id] && (
-          <InlineFeedback compact className="mt-2" variant="info" title="Camiseta" message={jerseyMessages[player._id]} />
+          <InlineFeedback
+            compact
+            className="mt-2"
+            variant="info"
+            title="Camiseta"
+            message={jerseyMessages[player._id]}
+          />
         )}
       </div>
     );
@@ -1200,19 +1350,36 @@ const isEventDraftReady =
                   </div>
                 </div>
 
-                <div className="border-b border-gray-100 px-4 pb-4">
-                  <div className="grid grid-cols-2 rounded-md bg-gray-100 p-1">
-                    {(["home", "away"] as TeamSide[]).map((side) => (
-                      <button
-                        key={`event-${side}`}
-                        onClick={() => setEventTeamSide(side)}
-                        className={`min-w-0 truncate rounded px-3 py-2 text-sm font-semibold transition-colors ${
-                          eventDraft.teamSide === side ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
-                        }`}
-                      >
-                        {teamNames[side]}
-                      </button>
-                    ))}
+                <div className="border-b border-gray-100 p-4">
+                  <div className="grid grid-cols-2">
+                    {(["home", "away"] as TeamSide[]).map((side, index, arr) => {
+                      const isSelected = eventDraft.teamSide === side;
+                      const isFirst = index === 0;
+                      const isLast = index === arr.length - 1;
+
+                      return (
+                        <button
+                          key={`event-${side}`}
+                          type="button"
+                          onClick={() => setEventTeamSide(side)}
+                          className={`min-w-0 truncate px-3 py-2 text-sm font-bold transition-all duration-300 ease-out shadow-2xl ${isFirst ? "rounded-l-xl" : ""} ${isLast ? "rounded-r-xl" : ""} ${
+                            isSelected
+                              ? "scale-[1.01] shadow-md "
+                              : "bg-white text-gray-600 shadow-sm hover:-translate-y-0.5 hover:bg-gray-50 hover:text-gray-900"
+                          }`}
+                          style={
+                            isSelected
+                              ? {
+                                  backgroundColor: teamColors[side].background,
+                                  color: teamColors[side].text,
+                                }
+                              : undefined
+                          }
+                        >
+                          {teamNames[side]}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1241,11 +1408,79 @@ const isEventDraftReady =
                     </div>
                   </div>
 
-                  <div
-                    className={`grid gap-3 ${isPenaltyEventSelected ? "sm:grid-cols-[1fr_1fr]" : "sm:grid-cols-[1fr_120px]"}`}
-                  >
+                  {eventCanChoosePlayType && (
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700">Jugador</label>
+                      <label className="mb-2 block text-sm font-semibold text-gray-700">Jugada</label>
+                      <div className="grid grid-cols-2 p-1">
+                        {(
+                          [
+                            { value: "pass", label: "Pase" },
+                            { value: "run", label: "Corrida" },
+                          ] satisfies { value: PlayType; label: string }[]
+                        ).map((playTypeOption, index, arr) => (
+                          <button
+                            key={playTypeOption.value}
+                            type="button"
+                            onClick={() =>
+                              setEventDraft((prev) => ({
+                                ...prev,
+                                playType: playTypeOption.value,
+                                qb: playTypeOption.value === "run" ? "" : prev.qb,
+                              }))
+                            }
+                            className={`min-w-0 px-3 py-2 text-sm font-bold transition-all duration-300 ease-out ${index === 0 ? "rounded-l-xl" : ""} ${index === arr.length - 1 ? "rounded-r-xl" : ""} ${
+                              eventDraft.playType === playTypeOption.value
+                                ? "scale-[1.01] bg-blue-600 text-white shadow-md ring-1 ring-blue-700/20"
+                                : "bg-white text-gray-600 shadow-sm hover:-translate-y-0.5 hover:bg-blue-100 hover:text-blue-900"
+                            }`}
+                          >
+                            {playTypeOption.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div
+                    className={`grid gap-3 ${
+                      isPenaltyEventSelected
+                        ? "sm:grid-cols-[1fr_1fr]"
+                        : eventRequiresQbAndPlayer && showsPointsInput
+                          ? "sm:grid-cols-[1fr_1fr_120px]"
+                          : eventRequiresQbAndPlayer
+                            ? "sm:grid-cols-2"
+                            : showsPointsInput
+                              ? "sm:grid-cols-[1fr_120px]"
+                              : "sm:grid-cols-1"
+                    }`}
+                  >
+                    {eventRequiresQbAndPlayer && (
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-gray-700">QB</label>
+                        <select
+                          value={eventDraft.qb}
+                          onChange={(event) =>
+                            setEventDraft((prev) => ({
+                              ...prev,
+                              qb: event.target.value,
+                            }))
+                          }
+                          className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        >
+                          <option value="">Seleccionar QB</option>
+                          {qbPlayers.map((player) => (
+                            <option key={player._id} value={player._id}>
+                              {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} {player.firstName}{" "}
+                              {player.lastName} · {formatPlayerPositions(player)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-700">
+                        {eventUsesScorerLabel ? "Anotador" : "Jugador"}
+                      </label>
                       <select
                         value={eventDraft.player}
                         onChange={(event) =>
@@ -1256,7 +1491,9 @@ const isEventDraftReady =
                         }
                         className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       >
-                        <option value="">Seleccionar jugador</option>
+                        <option value="">
+                          {eventUsesScorerLabel ? "Seleccionar anotador" : "Seleccionar jugador"}
+                        </option>
                         {eventPlayers.map((player) => (
                           <option key={player._id} value={player._id}>
                             {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} {player.firstName}{" "}
@@ -1281,7 +1518,7 @@ const isEventDraftReady =
                           placeholder="Ej. Holding, offside, protestas"
                         />
                       </div>
-                    ) : (
+                    ) : showsPointsInput ? (
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-gray-700">Puntos</label>
                         <input
@@ -1298,7 +1535,7 @@ const isEventDraftReady =
                           placeholder="0"
                         />
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
                   <button
@@ -1364,8 +1601,26 @@ const isEventDraftReady =
                             </p>
                             <p className="text-sm text-gray-500">
                               {event.quarter === 5 ? "ET" : `${event.quarter}T`} · {getEventTeamName(event.team)}
-                              {event.player ? ` · ${getEventPlayerName(event.player)}` : ""}
+                              {event.player
+                                ? ` · ${usesScorerLabel(event.type) ? "Anotador" : "Jugador"}: ${getEventPlayerName(
+                                    event.player,
+                                  )}`
+                                : ""}
                             </p>
+                            {canChoosePlayType(event.type) && (
+                              <p className="mt-1 text-sm text-gray-600">
+                                Jugada: {getEventPlayType(event.details) === "pass" ? "Pase" : "Corrida"}
+                              </p>
+                            )}
+                            {requiresQbAndPlayer(event.type, getEventPlayType(event.details)) &&
+                              getEventQbName(event.details) && (
+                                <p className="mt-1 text-sm text-gray-600">
+                                  QB: {getEventQbName(event.details)}
+                                  {getEventQbStatValue(event.details) !== undefined
+                                    ? ` (${getEventQbStatValue(event.details)! > 0 ? "+" : ""}${getEventQbStatValue(event.details)})`
+                                    : ""}
+                                </p>
+                              )}
                             {requiresPenaltyDescription(event.type) && getPenaltyDescription(event.details) && (
                               <p className="mt-1 text-sm text-gray-700">{getPenaltyDescription(event.details)}</p>
                             )}

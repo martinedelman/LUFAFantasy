@@ -5,6 +5,7 @@ import { PlayerImportMigrationModel } from "@/models";
 import connectToDatabase from "@/lib/mongodb";
 import { PlayerService } from "./PlayerService";
 import { TeamService } from "./TeamService";
+import { getConfiguredAppUrl, PreApprovedPlayerNotificationService } from "./PreApprovedPlayerNotificationService";
 
 const FORM_HEADERS = [
   "Marca temporal",
@@ -77,6 +78,7 @@ interface PlayerImportPayload {
   weight?: number;
   experience?: string;
   emergencyContact?: EmergencyContact;
+  notificationTeam: Team;
 }
 
 const POSITION_MAP: Record<string, PlayerPosition> = {
@@ -289,6 +291,7 @@ function getPlayerFullName(player: Player) {
 export class PlayerImportService {
   private playerService = new PlayerService();
   private teamService = new TeamService();
+  private notificationService = new PreApprovedPlayerNotificationService();
 
   async importFromGoogleSheet(input: PlayerImportInput = {}): Promise<PlayerImportResult> {
     const rows = await this.fetchRowsFromGoogleSheet();
@@ -358,7 +361,12 @@ export class PlayerImportService {
           result.updated += 1;
           playerId = existingPlayer.id;
         } else {
-          const createdPlayer = await this.playerService.createPlayer({ ...payload, status: "active" });
+          const createdPlayer = await this.playerService.createPlayer({ ...payload, status: "pre_approved" });
+          await this.notificationService.sendRosterAdditionNotification({
+            player: createdPlayer,
+            team: payload.notificationTeam,
+            playerUrl: `${getConfiguredAppUrl()}/players/${createdPlayer.id}`,
+          });
           result.created += 1;
           result.createdPlayers.push(this.toCreatedPlayerResult(payload, rowNumber, createdPlayer.id));
           playerId = createdPlayer.id;
@@ -489,6 +497,7 @@ export class PlayerImportService {
       weight: parseOptionalWeight(row.Peso),
       experience: row.Experiencia.trim() || undefined,
       emergencyContact: buildEmergencyContact(row),
+      notificationTeam: team,
     };
   }
 

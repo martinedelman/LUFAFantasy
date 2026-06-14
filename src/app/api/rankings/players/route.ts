@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
-import { GameModel } from "@/models";
+import { GameEventModel } from "@/models";
 import { apiErrorResponse } from "@/lib/apiError";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
 import mongoose from "mongoose";
@@ -43,10 +43,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const gameMatch: Record<string, unknown> = {
-      status: { $in: ["in_progress", "completed"] },
-    };
-
+    const eventBaseMatch: Record<string, unknown> = {};
     if (division) {
       if (!mongoose.Types.ObjectId.isValid(division)) {
         return NextResponse.json(
@@ -58,12 +55,20 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      gameMatch.division = new mongoose.Types.ObjectId(division);
+      eventBaseMatch.division = new mongoose.Types.ObjectId(division);
     }
 
-    const eventMatch: Record<string, unknown> = {
-      "events.player": { $exists: true, $ne: null },
-    };
+    const eventMatch: Record<string, unknown> =
+      mode === "points"
+        ? {
+            $or: [
+              { points: { $gt: 0 } },
+              { qbStatValue: { $type: "number" } },
+            ],
+          }
+        : {
+            player: { $exists: true, $ne: null },
+          };
 
     if (mode === "count") {
       const eventTypeFilter: AllowedEventType[] = [eventType as AllowedEventType];
@@ -71,68 +76,178 @@ export async function GET(request: NextRequest) {
         eventTypeFilter.push("pick_six");
       }
 
-      eventMatch["events.type"] = { $in: eventTypeFilter };
+      eventMatch.type = { $in: eventTypeFilter };
     }
 
     if (pointsFilter !== null) {
-      eventMatch["events.points"] = pointsFilter;
-    } else if (mode === "points") {
-      eventMatch["events.points"] = { $gt: 0 };
+      eventMatch.points = pointsFilter;
     }
+
+    const activeGameStages: mongoose.PipelineStage[] = [
+      {
+        $lookup: {
+          from: "games",
+          localField: "game",
+          foreignField: "_id",
+          as: "gameInfo",
+        },
+      },
+      { $unwind: "$gameInfo" },
+      {
+        $match: {
+          "gameInfo.status": { $in: ["in_progress", "completed"] },
+        },
+      },
+    ];
+
+    const rankingsPipeline: mongoose.PipelineStage[] =
+      mode === "points"
+        ? [
+            { $match: eventBaseMatch },
+            { $match: eventMatch },
+            ...activeGameStages,
+            {
+              $project: {
+                contributions: {
+                  $concatArrays: [
+                    {
+                      $cond: [
+                        {
+                          $and: [
+                            { $ne: ["$player", null] },
+                            { $gt: ["$points", 0] },
+                          ],
+                        },
+                        [{ player: "$player", value: "$points" }],
+                        [],
+                      ],
+                    },
+                    {
+                      $cond: [
+                        {
+                          $and: [
+                            { $ne: ["$qb", null] },
+                            {
+                              $in: [
+                                { $type: "$qbStatValue" },
+                                ["double", "int", "long", "decimal"],
+                              ],
+                            },
+                          ],
+                        },
+                        [
+                          {
+                            player: "$qb",
+                            value: "$qbStatValue",
+                          },
+                        ],
+                        [],
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            { $unwind: "$contributions" },
+            { $match: { "contributions.player": { $exists: true, $ne: null } } },
+            {
+              $group: {
+                _id: "$contributions.player",
+                value: { $sum: "$contributions.value" },
+              },
+            },
+            { $sort: { value: -1, _id: 1 } },
+            { $limit: limit },
+            {
+              $lookup: {
+                from: "players",
+                localField: "_id",
+                foreignField: "_id",
+                as: "player",
+              },
+            },
+            { $unwind: "$player" },
+            {
+              $lookup: {
+                from: "teams",
+                localField: "player.team",
+                foreignField: "_id",
+                as: "team",
+              },
+            },
+            { $unwind: { path: "$team", preserveNullAndEmptyArrays: true } },
+            {
+              $project: {
+                _id: 0,
+                player: {
+                  _id: "$player._id",
+                  firstName: "$player.firstName",
+                  lastName: "$player.lastName",
+                  jerseyNumber: "$player.jerseyNumber",
+                  team: {
+                    _id: "$team._id",
+                    name: "$team.name",
+                    shortName: "$team.shortName",
+                  },
+                },
+                value: 1,
+              },
+            },
+          ]
+        : [
+            { $match: eventBaseMatch },
+            { $match: eventMatch },
+            ...activeGameStages,
+            {
+              $group: {
+                _id: "$player",
+                value: { $sum: 1 },
+              },
+            },
+            { $sort: { value: -1, _id: 1 } },
+            { $limit: limit },
+            {
+              $lookup: {
+                from: "players",
+                localField: "_id",
+                foreignField: "_id",
+                as: "player",
+              },
+            },
+            { $unwind: "$player" },
+            {
+              $lookup: {
+                from: "teams",
+                localField: "player.team",
+                foreignField: "_id",
+                as: "team",
+              },
+            },
+            { $unwind: { path: "$team", preserveNullAndEmptyArrays: true } },
+            {
+              $project: {
+                _id: 0,
+                player: {
+                  _id: "$player._id",
+                  firstName: "$player.firstName",
+                  lastName: "$player.lastName",
+                  jerseyNumber: "$player.jerseyNumber",
+                  team: {
+                    _id: "$team._id",
+                    name: "$team.name",
+                    shortName: "$team.shortName",
+                  },
+                },
+                value: 1,
+              },
+            },
+          ];
 
     const cacheKey = buildRequestCacheKey("rankings:players", searchParams);
     const rankings = await getCachedValue(
       cacheKey,
       RANKINGS_CACHE_TTL_SECONDS * 1000,
-      () =>
-        GameModel.aggregate([
-          { $match: gameMatch },
-          { $unwind: "$events" },
-          { $match: eventMatch },
-          {
-            $group: {
-              _id: "$events.player",
-              value: mode === "points" ? { $sum: "$events.points" } : { $sum: 1 },
-            },
-          },
-          { $sort: { value: -1, _id: 1 } },
-          { $limit: limit },
-          {
-            $lookup: {
-              from: "players",
-              localField: "_id",
-              foreignField: "_id",
-              as: "player",
-            },
-          },
-          { $unwind: "$player" },
-          {
-            $lookup: {
-              from: "teams",
-              localField: "player.team",
-              foreignField: "_id",
-              as: "team",
-            },
-          },
-          { $unwind: { path: "$team", preserveNullAndEmptyArrays: true } },
-          {
-            $project: {
-              _id: 0,
-              player: {
-                _id: "$player._id",
-                firstName: "$player.firstName",
-                lastName: "$player.lastName",
-                jerseyNumber: "$player.jerseyNumber",
-                team: {
-                  _id: "$team._id",
-                  name: "$team.name",
-                  shortName: "$team.shortName",
-                },
-              },
-              value: 1,
-            },
-          },
-        ]),
+      () => GameEventModel.aggregate(rankingsPipeline),
       { tags: ["rankings"] },
     );
 

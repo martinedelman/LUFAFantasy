@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import Modal from "@/components/Modal";
 import Tag from "@/components/Tag";
 import Avatar from "@/components/Avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,7 +23,7 @@ interface Player {
   height?: number;
   weight?: number;
   experience?: string;
-  status: "active" | "inactive" | "injured";
+  status: "active" | "inactive" | "injured" | "suspended" | "pre_approved";
 }
 
 interface Division {
@@ -355,6 +356,17 @@ export default function TeamViewerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"info" | "roster" | "games" | "stats">("info");
+  const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
+  const [rosterForm, setRosterForm] = useState({
+    firstName: "",
+    lastName: "",
+    jerseyNumber: "",
+    dateOfBirth: "",
+    position: "QB",
+  });
+  const [rosterFormError, setRosterFormError] = useState("");
+  const [isSubmittingRosterPlayer, setIsSubmittingRosterPlayer] = useState(false);
+  const [approvingPlayerId, setApprovingPlayerId] = useState<string | null>(null);
   const userEmail = user?.email.trim().toLowerCase();
   const editableTeamCoaches = team
     ? team.coaches && team.coaches.length > 0
@@ -418,7 +430,11 @@ export default function TeamViewerPage() {
           if (gamesData.success) {
             const loadedGames = (gamesData.data || []) as TeamGame[];
             setTeamGames(loadedGames);
-            setTeamStats(deriveTeamStatsFromGames(loadedTeam, loadedGames));
+            if (statsData.success && statsData.data.length > 0) {
+              setTeamStats(statsData.data[0]);
+            } else {
+              setTeamStats(deriveTeamStatsFromGames(loadedTeam, loadedGames));
+            }
           } else if (statsData.success && statsData.data.length > 0) {
             setTeamGames([]);
             setTeamStats(statsData.data[0]);
@@ -450,10 +466,122 @@ export default function TeamViewerPage() {
       inactive: { label: "Inactivo", type: "warning" },
       suspended: { label: "Suspendido", type: "error" },
       injured: { label: "Lesionado", type: "warning" },
+      pre_approved: { label: "PRE-APROBADO", type: "info" },
     };
 
     const { label, type } = statusMap[status] || { label: status, type: "info" as const };
     return <Tag label={label} type={type} />;
+  };
+
+  const resetRosterForm = () => {
+    setRosterForm({
+      firstName: "",
+      lastName: "",
+      jerseyNumber: "",
+      dateOfBirth: "",
+      position: "QB",
+    });
+    setRosterFormError("");
+  };
+
+  const closeAddPlayerModal = () => {
+    if (isSubmittingRosterPlayer) return;
+    setIsAddPlayerModalOpen(false);
+    resetRosterForm();
+  };
+
+  const validateRosterForm = () => {
+    const firstName = rosterForm.firstName.trim();
+    const lastName = rosterForm.lastName.trim();
+    const jerseyNumber = Number(rosterForm.jerseyNumber);
+    const dateOfBirth = new Date(rosterForm.dateOfBirth);
+
+    if (!firstName || !lastName || !rosterForm.jerseyNumber.trim() || !rosterForm.dateOfBirth || !rosterForm.position) {
+      return "Completá nombre, apellido, número, fecha de nacimiento y posición.";
+    }
+
+    if (!Number.isInteger(jerseyNumber) || jerseyNumber < 0 || jerseyNumber > 99) {
+      return "El número de camiseta debe estar entre 0 y 99.";
+    }
+
+    if (Number.isNaN(dateOfBirth.getTime()) || dateOfBirth.getTime() > Date.now()) {
+      return "La fecha de nacimiento no es válida.";
+    }
+
+    return "";
+  };
+
+  const handleRosterFormChange = (field: keyof typeof rosterForm, value: string) => {
+    setRosterForm((previousForm) => ({ ...previousForm, [field]: value }));
+    if (rosterFormError) setRosterFormError("");
+  };
+
+  const handleAddRosterPlayer = async () => {
+    const validationMessage = validateRosterForm();
+    if (validationMessage) {
+      setRosterFormError(validationMessage);
+      return;
+    }
+
+    setIsSubmittingRosterPlayer(true);
+    setRosterFormError("");
+
+    try {
+      const response = await fetch(`/api/teams/${teamId}/players`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: rosterForm.firstName.trim(),
+          lastName: rosterForm.lastName.trim(),
+          jerseyNumber: Number(rosterForm.jerseyNumber),
+          dateOfBirth: rosterForm.dateOfBirth,
+          position: rosterForm.position,
+        }),
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setRosterFormError(data.message || "No se pudo agregar el jugador.");
+        return;
+      }
+
+      setIsAddPlayerModalOpen(false);
+      resetRosterForm();
+      await fetchPlayers();
+    } catch {
+      setRosterFormError("Error de conexión al agregar el jugador.");
+    } finally {
+      setIsSubmittingRosterPlayer(false);
+    }
+  };
+
+  const handleApprovePlayer = async (player: Player) => {
+    setApprovingPlayerId(player._id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/players/${player._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.message || "No se pudo aprobar el jugador.");
+        return;
+      }
+
+      setPlayers((previousPlayers) =>
+        previousPlayers.map((currentPlayer) =>
+          currentPlayer._id === player._id ? { ...currentPlayer, status: "active" } : currentPlayer,
+        ),
+      );
+    } catch {
+      setError("Error de conexión al aprobar el jugador.");
+    } finally {
+      setApprovingPlayerId(null);
+    }
   };
 
   const getGameStatusTag = (status: TeamGame["status"]) => {
@@ -1008,14 +1136,15 @@ export default function TeamViewerPage() {
                     <h3 className="text-lg font-medium text-gray-900">Roster del Equipo</h3>
                     <p className="mt-1 text-sm text-gray-700">Lista completa de jugadores registrados en el equipo.</p>
                   </div>
-                  {user?.role === "admin" && (
+                  {canEditTeam && (
                     <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-                      <Link
-                        href={`/players/create?team=${team._id}`}
+                      <button
+                        type="button"
+                        onClick={() => setIsAddPlayerModalOpen(true)}
                         className="inline-flex items-center justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                       >
                         Agregar Jugador
-                      </Link>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1123,6 +1252,16 @@ export default function TeamViewerPage() {
                                 >
                                   Editar
                                 </Link>
+                                {player.status === "pre_approved" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApprovePlayer(player)}
+                                    disabled={approvingPlayerId === player._id}
+                                    className="ml-3 text-emerald-700 hover:text-emerald-900 disabled:cursor-not-allowed disabled:text-gray-400"
+                                  >
+                                    {approvingPlayerId === player._id ? "Aprobando..." : "Aprobar"}
+                                  </button>
+                                )}
                               </td>
                             ) : (
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -1344,6 +1483,109 @@ export default function TeamViewerPage() {
           </div>
         </div>
       </div>
+      <Modal
+        open={isAddPlayerModalOpen}
+        title="Agregar jugador al roster"
+        onClose={closeAddPlayerModal}
+        variant="info"
+        closeOnBackdrop={!isSubmittingRosterPlayer}
+        primaryAction={{
+          label: isSubmittingRosterPlayer ? "Agregando..." : "Agregar jugador",
+          onClick: handleAddRosterPlayer,
+          disabled: isSubmittingRosterPlayer,
+        }}
+        secondaryAction={{
+          label: "Cancelar",
+          onClick: closeAddPlayerModal,
+          disabled: isSubmittingRosterPlayer,
+        }}
+      >
+        <div className="space-y-4">
+          {rosterFormError && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+              {rosterFormError}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="roster-first-name" className="block text-sm font-medium text-gray-700">
+                Nombre
+              </label>
+              <input
+                id="roster-first-name"
+                type="text"
+                value={rosterForm.firstName}
+                onChange={(event) => handleRosterFormChange("firstName", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              />
+            </div>
+            <div>
+              <label htmlFor="roster-last-name" className="block text-sm font-medium text-gray-700">
+                Apellido
+              </label>
+              <input
+                id="roster-last-name"
+                type="text"
+                value={rosterForm.lastName}
+                onChange={(event) => handleRosterFormChange("lastName", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              />
+            </div>
+            <div>
+              <label htmlFor="roster-jersey-number" className="block text-sm font-medium text-gray-700">
+                Nro de camiseta
+              </label>
+              <input
+                id="roster-jersey-number"
+                type="number"
+                min="0"
+                max="99"
+                value={rosterForm.jerseyNumber}
+                onChange={(event) => handleRosterFormChange("jerseyNumber", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              />
+            </div>
+            <div>
+              <label htmlFor="roster-date-of-birth" className="block text-sm font-medium text-gray-700">
+                Fecha de nacimiento
+              </label>
+              <input
+                id="roster-date-of-birth"
+                type="date"
+                value={rosterForm.dateOfBirth}
+                onChange={(event) => handleRosterFormChange("dateOfBirth", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="roster-position" className="block text-sm font-medium text-gray-700">
+                Posición
+              </label>
+              <select
+                id="roster-position"
+                value={rosterForm.position}
+                onChange={(event) => handleRosterFormChange("position", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              >
+                <option value="QB">Quarterback (QB)</option>
+                <option value="WR">Wide Receiver (WR)</option>
+                <option value="RB">Running Back (RB)</option>
+                <option value="C">Center (C)</option>
+                <option value="RS">Rusher (RS)</option>
+                <option value="LB">Linebacker (LB)</option>
+                <option value="CB">Cornerback (CB)</option>
+                <option value="FS">Free Safety (FS)</option>
+                <option value="SS">Strong Safety (SS)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

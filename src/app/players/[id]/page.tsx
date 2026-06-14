@@ -8,7 +8,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Tag from "@/components/Tag";
 import Avatar from "@/components/Avatar";
-import type { ApiResponseDto, GameResponseDto, PlayerProfileResponseDto, PlayerStatsResponseDto } from "@/app/DTOs";
+import type { ApiResponseDto, PlayerProfileResponseDto, PlayerStatsResponseDto } from "@/app/DTOs";
 
 const UNKNOWN_BIRTHDATE = "1900-01-01";
 const NO_JERSEY_NUMBER_LABEL = "Sin número de jugador";
@@ -27,11 +27,6 @@ export default function PlayerProfilePage() {
     !!user &&
     !!player &&
     (user.role === "admin" || user.email.trim().toLowerCase() === (player.email || "").trim().toLowerCase());
-
-  const getReferenceId = useCallback((reference: string | { _id?: string } | null | undefined) => {
-    if (!reference) return "";
-    return typeof reference === "string" ? reference : reference._id || "";
-  }, []);
 
   const emptyPlayerStats = useCallback(
     (): PlayerStatsResponseDto => ({
@@ -97,63 +92,6 @@ export default function PlayerProfilePage() {
     [emptyPlayerStats],
   );
 
-  const derivePlayerStatsFromGames = useCallback(
-    (games: GameResponseDto[]): PlayerStatsResponseDto => {
-      const stats = emptyPlayerStats();
-      const gamesWithParticipation = new Set<string>();
-
-      games
-        .filter((game) => game.status === "in_progress" || game.status === "completed")
-        .forEach((game) => {
-          const gameId = game._id;
-          if (!gameId) {
-            return;
-          }
-
-          const wasPresentInGame = [...(game.presentPlayers?.home || []), ...(game.presentPlayers?.away || [])].some(
-            (presentPlayer) => getReferenceId(presentPlayer) === playerId,
-          );
-
-          if (wasPresentInGame) {
-            gamesWithParticipation.add(gameId);
-          }
-
-          (game.events || []).forEach((event) => {
-            if (getReferenceId(event.player) !== playerId) return;
-
-            // Fallback for older games without presentPlayers populated.
-            gamesWithParticipation.add(gameId);
-            stats.totalPoints += event.points || 0;
-
-            if (event.type === "touchdown") {
-              stats.touchdowns += 1;
-              stats.receiving.touchdowns += 1;
-            }
-            if (event.type === "extra_point") stats.extraPoints += 1;
-            if (event.type === "field_goal") stats.fieldGoals += 1;
-            if (event.type === "safety") {
-              stats.safeties += 1;
-              stats.defensive.safeties += 1;
-            }
-            if (event.type === "first_down") stats.firstDowns += 1;
-            if (event.type === "penalty") stats.penalties += 1;
-            if (event.type === "unsportsmanlike") stats.unsportsmanlike += 1;
-            if (event.type === "interception") stats.defensive.interceptions += 1;
-            if (event.type === "pick_six") stats.pickSixes += 1;
-            if (event.type === "sack") stats.defensive.sacks += 1;
-
-            if (event.yards) {
-              stats.receiving.yards += event.yards;
-            }
-          });
-        });
-
-      stats.gamesPlayed = gamesWithParticipation.size;
-      return stats;
-    },
-    [emptyPlayerStats, getReferenceId, playerId],
-  );
-
   useEffect(() => {
     const fetchPlayerData = async () => {
       try {
@@ -175,25 +113,11 @@ export default function PlayerProfilePage() {
         // Fetch player statistics. Prefer the live-derived stats from GameEvents
         // so this page updates as soon as Live Match records events.
         try {
-          const [statsResponse, gamesResponse] = await Promise.all([
-            fetch(`/api/statistics/players?player=${playerId}`),
-            fetch(`/api/games?team=${loadedPlayer.team._id}`),
-          ]);
+          const statsResponse = await fetch(`/api/statistics/players?player=${playerId}`);
           const statsData = (await statsResponse.json()) as ApiResponseDto<PlayerStatsResponseDto[]>;
-          const gamesData = (await gamesResponse.json()) as ApiResponseDto<GameResponseDto[]>;
           const storedStats = statsData.success ? (statsData.data ?? []) : [];
 
-          if (gamesData.success) {
-            const derivedStats = derivePlayerStatsFromGames(gamesData.data || []);
-            const hasLiveStats = derivedStats.gamesPlayed > 0 || derivedStats.totalPoints > 0;
-            setPlayerStats(
-              hasLiveStats
-                ? derivedStats
-                : storedStats.length > 0
-                  ? normalizeStoredStats(storedStats[0])
-                  : emptyPlayerStats(),
-            );
-          } else if (storedStats.length > 0) {
+          if (storedStats.length > 0) {
             setPlayerStats(normalizeStoredStats(storedStats[0]));
           } else {
             setPlayerStats(emptyPlayerStats());
@@ -212,7 +136,7 @@ export default function PlayerProfilePage() {
     if (playerId) {
       fetchPlayerData();
     }
-  }, [derivePlayerStatsFromGames, emptyPlayerStats, normalizeStoredStats, playerId]);
+  }, [emptyPlayerStats, normalizeStoredStats, playerId]);
 
   const getStatusTag = (status: string) => {
     const statusMap: Record<string, { label: string; type: "info" | "warning" | "success" | "error" }> = {
@@ -220,6 +144,7 @@ export default function PlayerProfilePage() {
       inactive: { label: "Inactivo", type: "warning" },
       suspended: { label: "Suspendido", type: "error" },
       injured: { label: "Lesionado", type: "warning" },
+      pre_approved: { label: "PRE-APROBADO", type: "info" },
     };
 
     const { label, type } = statusMap[status] || { label: status, type: "info" as const };

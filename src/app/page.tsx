@@ -166,6 +166,10 @@ export default function Home() {
   const [teams, setTeams] = useState<TeamCarouselItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const capturedTranslateX = useRef(0);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -244,11 +248,6 @@ export default function Home() {
 
   const carouselTeams = teams.length > 0 ? [...teams, ...teams] : [];
 
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
-  const dragStartX = useRef(0);
-  const capturedTranslateX = useRef(0);
-
   const pauseAndCapture = (clientX: number) => {
     const el = sliderRef.current;
     if (!el) return;
@@ -326,11 +325,25 @@ export default function Home() {
             <span className="italic">LUFA</span> Flag
           </h1>
           <p className="mt-6 text-lg sm:text-xl lg:text-2xl font-medium tracking-[0.12em] uppercase">
-            Flag football en Uruguay
+            El deporte olímpico que más crece en Uruguay te está esperando
           </p>
-          <p className="mt-6 text-lg sm:text-xl lg:text-2xl font-medium tracking-[0.12em] uppercase">
-            ¡Únete a la revolución deportiva!
-          </p>
+          <div className="mt-9 flex flex-col items-center gap-3">
+            <Link
+              href="/sumate"
+              onClick={() => trackHomeAction("open_flag_interest_page", "/sumate")}
+              className="animated-button"
+              aria-label="Quiero sumarme al Flag Football Uruguayo"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="arr-2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
+              </svg>
+              <span className="text">Quiero sumarme</span>
+              <span className="circle" aria-hidden="true" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="arr-1" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </FixedHeroSection>
 

@@ -42,7 +42,7 @@ const PlayerSchema = new Schema(
     registrationDate: { type: Date, default: Date.now },
     status: {
       type: String,
-      enum: ["active", "inactive", "injured", "suspended"],
+      enum: ["active", "inactive", "injured", "suspended", "pre_approved"],
       default: "active",
     },
   },

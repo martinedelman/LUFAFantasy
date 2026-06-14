@@ -9,6 +9,7 @@ export interface EmailAttachment {
 
 export interface EmailMessage {
   to: string | string[];
+  cc?: string | string[];
   subject: string;
   html: string;
   text?: string;

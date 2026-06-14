@@ -1,5 +1,5 @@
 import connectToDatabase from "@/lib/mongodb";
-import { TournamentModel, TeamModel, PlayerModel, GameModel } from "@/models";
+import { TournamentModel, TeamModel, PlayerModel, GameModel, GameEventModel } from "@/models";
 import type { DashboardStatsResponseDto, NextGameResponseDto } from "@/app/DTOs";
 
 interface PlayerAggregateData {
@@ -43,18 +43,27 @@ export class DashboardService {
           .limit(nextGamesLimit)
           .select("homeTeam awayTeam division venue scheduledDate status score")
           .lean(),
-        GameModel.aggregate([
-          { $unwind: "$events" },
+        GameEventModel.aggregate([
           {
             $match: {
-              "events.player": { $exists: true, $ne: null },
-              "events.points": { $gt: 0 },
+              player: { $exists: true, $ne: null },
+              points: { $gt: 0 },
             },
           },
           {
+            $lookup: {
+              from: "games",
+              localField: "game",
+              foreignField: "_id",
+              as: "gameInfo",
+            },
+          },
+          { $unwind: "$gameInfo" },
+          { $match: { "gameInfo.status": { $in: ["in_progress", "completed"] } } },
+          {
             $group: {
-              _id: "$events.player",
-              totalPoints: { $sum: "$events.points" },
+              _id: "$player",
+              totalPoints: { $sum: "$points" },
             },
           },
           { $sort: { totalPoints: -1 } },
