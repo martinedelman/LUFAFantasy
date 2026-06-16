@@ -168,41 +168,8 @@ export class GameService {
       throw new Error("Solo se pueden agregar eventos a partidos en progreso o finalizados");
     }
 
-    if (!Number.isInteger(eventData.quarter) || eventData.quarter < 1 || eventData.quarter > 5) {
-      throw new Error("El cuarto debe estar entre 1 y 5");
-    }
-
-    if (!eventData.type) {
-      throw new Error("El tipo de evento es requerido");
-    }
-
-    if (!eventData.team) {
-      throw new Error("El equipo es requerido");
-    }
-
-    const allowsMissingPlayer = eventData.type === "safety" && this.hasEventQuarterback(eventData.details);
-    const requiresPlayer = eventData.type !== "quarter_end" && eventData.type !== "game_end" && !allowsMissingPlayer;
-    if (requiresPlayer && !eventData.player) {
-      throw new Error("El jugador es requerido");
-    }
-
-    const homeTeamId = this.getReferenceId(game.homeTeam);
-    const awayTeamId = this.getReferenceId(game.awayTeam);
-
-    if (eventData.team !== homeTeamId && eventData.team !== awayTeamId) {
-      throw new Error("El equipo del evento no participa en este partido");
-    }
-
-    const safePoints = eventData.points === undefined ? undefined : Math.max(0, eventData.points);
-    const event: GameEvent = {
-      quarter: eventData.quarter,
-      type: eventData.type,
-      team: eventData.team,
-      player: eventData.player || undefined,
-      points: safePoints,
-      description: this.getEventDescription(eventData.type, safePoints),
-      details: eventData.details,
-    };
+    const event = this.buildValidatedGameEvent(game, eventData);
+    const safePoints = event.points;
 
     const updatedGame = await this.gameRepo.addEvent(id, event);
 
@@ -247,6 +214,16 @@ export class GameService {
       throw new Error("Solo se pueden editar eventos de partidos en progreso o finalizados");
     }
 
+    const event = this.buildValidatedGameEvent(game, eventData);
+
+    const updatedGame = await this.gameRepo.updateEvent(id, eventId, event);
+
+    await this.recalculateStandingsForGame(updatedGame);
+
+    return updatedGame;
+  }
+
+  buildValidatedGameEvent(game: Game, eventData: CreateGameEventInput): GameEvent {
     if (!Number.isInteger(eventData.quarter) || eventData.quarter < 1 || eventData.quarter > 5) {
       throw new Error("El cuarto debe estar entre 1 y 5");
     }
@@ -273,7 +250,8 @@ export class GameService {
     }
 
     const safePoints = eventData.points === undefined ? undefined : Math.max(0, eventData.points);
-    const event: GameEvent = {
+
+    return {
       quarter: eventData.quarter,
       type: eventData.type,
       team: eventData.team,
@@ -282,12 +260,6 @@ export class GameService {
       description: this.getEventDescription(eventData.type, safePoints),
       details: eventData.details,
     };
-
-    const updatedGame = await this.gameRepo.updateEvent(id, eventId, event);
-
-    await this.recalculateStandingsForGame(updatedGame);
-
-    return updatedGame;
   }
 
   /**

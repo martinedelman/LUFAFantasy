@@ -6,6 +6,31 @@ import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import type { AdminSystemStatsResponseDto, ApiResponseDto, CreateJudgeRequestDto, JudgeResponseDto } from "@/app/DTOs";
 
+type GameEventCorrectionResponse = {
+  _id: string;
+  game: {
+    _id: string;
+    label: string;
+    tournament?: string;
+    division?: string;
+  };
+  operation: "create" | "update" | "delete";
+  proposedEvent?: CorrectionEventSummary;
+  originalEvent?: CorrectionEventSummary;
+  requestedByName?: string;
+  requestedByEmail?: string;
+  createdAt?: string;
+};
+
+type CorrectionEventSummary = {
+  quarter?: number;
+  type?: string;
+  teamName?: string;
+  playerName?: string;
+  points?: number;
+  details?: unknown;
+};
+
 const emptyStats: AdminSystemStatsResponseDto = {
   totalUsers: 0,
   totalAdmins: 0,
@@ -22,22 +47,28 @@ const emptyStats: AdminSystemStatsResponseDto = {
 export default function AdminPage() {
   const [stats, setStats] = useState<AdminSystemStatsResponseDto>(emptyStats);
   const [judges, setJudges] = useState<JudgeResponseDto[]>([]);
+  const [corrections, setCorrections] = useState<GameEventCorrectionResponse[]>([]);
   const [form, setForm] = useState<CreateJudgeRequestDto>({ firstName: "", lastName: "" });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [reviewingCorrectionId, setReviewingCorrectionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [correctionError, setCorrectionError] = useState<string | null>(null);
+  const [correctionSuccess, setCorrectionSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const fetchData = async () => {
-    const [statsResponse, judgesResponse] = await Promise.all([
+    const [statsResponse, judgesResponse, correctionsResponse] = await Promise.all([
       fetch("/api/admin/stats", { cache: "no-store" }),
       fetch("/api/judges", { cache: "no-store" }),
+      fetch("/api/admin/game-event-corrections", { cache: "no-store" }),
     ]);
 
     const statsPayload = (await statsResponse.json()) as ApiResponseDto<AdminSystemStatsResponseDto>;
     const judgesPayload = (await judgesResponse.json()) as ApiResponseDto<JudgeResponseDto[]>;
+    const correctionsPayload = (await correctionsResponse.json()) as ApiResponseDto<GameEventCorrectionResponse[]>;
 
     if (!statsResponse.ok || !statsPayload.success || !statsPayload.data) {
       throw new Error(statsPayload.message || "No se pudieron cargar las estadísticas del sistema");
@@ -47,8 +78,13 @@ export default function AdminPage() {
       throw new Error(judgesPayload.message || "No se pudo cargar la lista de jueces");
     }
 
+    if (!correctionsResponse.ok || !correctionsPayload.success || !Array.isArray(correctionsPayload.data)) {
+      throw new Error(correctionsPayload.message || "No se pudieron cargar las correcciones pendientes");
+    }
+
     setStats(statsPayload.data);
     setJudges(judgesPayload.data);
+    setCorrections(correctionsPayload.data);
   };
 
   useEffect(() => {
@@ -135,6 +171,34 @@ export default function AdminPage() {
     ],
     [stats],
   );
+  const handleCorrectionReview = async (correctionId: string, action: "approve" | "reject") => {
+    try {
+      setReviewingCorrectionId(correctionId);
+      setCorrectionError(null);
+      setCorrectionSuccess(null);
+
+      const response = await fetch(`/api/admin/game-event-corrections/${correctionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+
+      const payload = (await response.json()) as ApiResponseDto<never>;
+
+      if (!response.ok || !payload.success) {
+        setCorrectionError(payload.message || "No se pudo procesar la corrección");
+        return;
+      }
+
+      setCorrections((current) => current.filter((correction) => correction._id !== correctionId));
+      setCorrectionSuccess(action === "approve" ? "Corrección aprobada y aplicada." : "Corrección rechazada.");
+    } catch {
+      setCorrectionError("Error de conexión al procesar la corrección");
+    } finally {
+      setReviewingCorrectionId(null);
+    }
+  };
+
   const isJudgeFormReady = form.firstName.trim().length > 0 && form.lastName.trim().length > 0;
   const inputClassName = (fieldName: string) =>
     `w-full rounded-md border px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 ${
@@ -146,6 +210,23 @@ export default function AdminPage() {
       <span className="ml-1 text-xs font-normal text-gray-500">Obligatorio</span>
     </>
   );
+  const operationLabel = (operation: GameEventCorrectionResponse["operation"]) => {
+    if (operation === "create") return "Agregar evento";
+    if (operation === "update") return "Editar evento";
+    return "Eliminar evento";
+  };
+
+  const eventSummary = (event?: CorrectionEventSummary) => {
+    if (!event) return "Sin datos";
+    const parts = [
+      event.type,
+      event.quarter ? `${event.quarter === 5 ? "ET" : `${event.quarter}T`}` : undefined,
+      event.teamName,
+      event.playerName,
+      event.points !== undefined ? `${event.points} pts` : undefined,
+    ].filter(Boolean);
+    return parts.join(" · ") || "Sin datos";
+  };
 
   return (
     <AdminProtection fallbackMessage="Solo los administradores pueden acceder al panel de administración.">
@@ -173,6 +254,101 @@ export default function AdminPage() {
                     <p className="mt-2 text-2xl font-bold text-gray-900">{card.value}</p>
                   </article>
                 ))}
+              </section>
+
+              <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">Correcciones Live pendientes</h2>
+                    <p className="text-sm text-gray-600">
+                      {corrections.length} solicitudes esperando revisión de administrador
+                    </p>
+                  </div>
+                </div>
+
+                {correctionError && (
+                  <div className="mt-4">
+                    <InlineFeedback compact variant="error" title="No pudimos procesar la corrección" message={correctionError} />
+                  </div>
+                )}
+                {correctionSuccess && (
+                  <div className="mt-4">
+                    <InlineFeedback compact variant="success" title="Solicitud actualizada" message={correctionSuccess} />
+                  </div>
+                )}
+
+                <div className="mt-5 overflow-hidden rounded-md border border-gray-200">
+                  {corrections.length === 0 ? (
+                    <p className="p-4 text-sm text-gray-500">No hay correcciones pendientes.</p>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {corrections.map((correction) => {
+                        const isReviewing = reviewingCorrectionId === correction._id;
+
+                        return (
+                          <div key={correction._id} className="p-4">
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                              <div className="min-w-0 space-y-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold uppercase text-amber-800">
+                                    Pendiente de aprobación
+                                  </span>
+                                  <span className="text-sm font-semibold text-gray-900">
+                                    {operationLabel(correction.operation)}
+                                  </span>
+                                </div>
+                                <p className="text-sm font-semibold text-gray-900">{correction.game.label}</p>
+                                <p className="text-sm text-gray-600">
+                                  {[correction.game.tournament, correction.game.division].filter(Boolean).join(" · ")}
+                                </p>
+                                <p className="text-sm text-gray-700">
+                                  <span className="font-semibold">Solicitado por:</span>{" "}
+                                  {correction.requestedByName || correction.requestedByEmail || "Juez"}
+                                </p>
+                                {correction.operation !== "create" && (
+                                  <p className="text-sm text-gray-700">
+                                    <span className="font-semibold">Actual:</span> {eventSummary(correction.originalEvent)}
+                                  </p>
+                                )}
+                                {correction.operation !== "delete" && (
+                                  <p className="text-sm text-gray-700">
+                                    <span className="font-semibold">Propuesto:</span> {eventSummary(correction.proposedEvent)}
+                                  </p>
+                                )}
+                                <p className="text-xs text-gray-500">
+                                  {correction.createdAt
+                                    ? new Date(correction.createdAt).toLocaleString("es-UY", {
+                                        dateStyle: "short",
+                                        timeStyle: "short",
+                                      })
+                                    : ""}
+                                </p>
+                              </div>
+                              <div className="flex shrink-0 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCorrectionReview(correction._id, "reject")}
+                                  disabled={Boolean(reviewingCorrectionId)}
+                                  className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  Rechazar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCorrectionReview(correction._id, "approve")}
+                                  disabled={Boolean(reviewingCorrectionId)}
+                                  className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {isReviewing ? "Procesando..." : "Aprobar"}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </section>
 
               <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">

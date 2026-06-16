@@ -11,6 +11,11 @@ const teamService = new TeamService();
 const authService = new AuthService();
 const TEAMS_CACHE_TTL_SECONDS = 1800; // 30 minutos
 const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
+const PUBLIC_GET_CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
 
 function normalizeOptionalText(value: string | null | undefined): string | undefined {
   if (value === null || value === undefined) return undefined;
@@ -89,7 +94,10 @@ export async function GET(request: NextRequest) {
         ...payload,
       },
       {
-        headers: createCacheHeaders(TEAMS_CACHE_TTL_SECONDS),
+        headers: {
+          ...createCacheHeaders(TEAMS_CACHE_TTL_SECONDS),
+          ...PUBLIC_GET_CORS_HEADERS,
+        },
       },
     );
   } catch (error) {
@@ -102,6 +110,13 @@ export async function GET(request: NextRequest) {
       route: "/api/teams",
     });
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: PUBLIC_GET_CORS_HEADERS,
+  });
 }
 
 /**
