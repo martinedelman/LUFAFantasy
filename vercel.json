@@ -7,10 +7,6 @@
     {
       "path": "/api/cron/import-players",
       "schedule": "0 * * * 0"
-    },
-    {
-      "path": "/api/cron/weekly-digest",
-      "schedule": "0 13 * * 5"
     }
   ]
 }
