@@ -48,13 +48,14 @@ function getMailFrom() {
 
 function getSmtpConfig() {
   const provider = process.env.MAIL_PROVIDER?.toLowerCase();
+  const isSecureByDefault = provider === "zoho" || provider === "zeptomail";
 
   return {
     host: process.env.SMTP_HOST,
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
-    port: Number(process.env.SMTP_PORT || (provider === "zoho" ? 465 : 587)),
-    secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : provider === "zoho",
+    port: Number(process.env.SMTP_PORT || (isSecureByDefault ? 465 : 587)),
+    secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : isSecureByDefault,
   };
 }
 
