@@ -229,7 +229,11 @@ export default function EditPlayerPage() {
       });
       const data = await res.json();
       if (data.success) {
-        router.push("/players");
+        if (window.history.length > 1) {
+          router.back();
+        } else {
+          router.replace("/players");
+        }
       } else {
         setError(data.message || "Error al editar jugador");
       }
