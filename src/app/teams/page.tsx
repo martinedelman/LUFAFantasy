@@ -40,6 +40,7 @@ interface Team {
     phone: string;
   };
   players?: { _id: string; firstName: string; lastName: string }[];
+  activePlayerCount: number;
   status: "active" | "inactive" | "suspended";
   registrationDate: string;
 }
@@ -384,7 +385,7 @@ function TeamsPageContent() {
                             />
                           </svg>
                         ),
-                        text: `${team.players?.length || 0} jugadores`,
+                        text: `${team.activePlayerCount} jugadores`,
                       },
                     ]}
                   />

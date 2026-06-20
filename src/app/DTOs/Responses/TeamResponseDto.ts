@@ -14,6 +14,7 @@ export interface TeamResponseDto {
   division: string;
   tournament?: string;
   players: string[];
+  activePlayerCount?: number;
   coach?: Coach;
   coaches?: Coach[];
   contact: {
