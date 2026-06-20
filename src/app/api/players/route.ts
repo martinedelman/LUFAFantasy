@@ -4,8 +4,10 @@ import { apiErrorResponse } from "@/lib/apiError";
 import { PlayerPosition, PlayerStatus } from "@/entities/Player";
 import { toPlayerResponseDto } from "@/app/DTOs";
 import type { CreatePlayerRequestDto } from "@/app/DTOs";
+import { invalidateCacheByPrefix } from "@/lib/serverCache";
 
 const playerService = new PlayerService();
+const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
 
 function parseRequiredDate(value: unknown, fieldLabel: string): Date {
   if (typeof value !== "string" || value.trim().length === 0) {
@@ -143,6 +145,8 @@ export async function POST(request: NextRequest) {
       emergencyContact: body.emergencyContact,
       status: body.status,
     });
+
+    invalidateCacheByPrefix(TEAM_RELATED_CACHE_PREFIXES);
 
     return NextResponse.json(
       {

@@ -6,9 +6,11 @@ import { safeTrack } from "@/lib/serverAnalytics";
 import { toPlayerResponseDto } from "@/app/DTOs";
 import { PlayerPosition } from "@/entities/Player";
 import type { UpdatePlayerRequestDto } from "@/app/DTOs";
+import { invalidateCacheByPrefix } from "@/lib/serverCache";
 
 const playerService = new PlayerService();
 const authService = new AuthService();
+const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
 
 function normalizeEmail(email?: string | null) {
   return email?.trim().toLowerCase() || "";
@@ -154,6 +156,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       status: body.status,
     });
 
+    invalidateCacheByPrefix(TEAM_RELATED_CACHE_PREFIXES);
+
     if (user.role === "user") {
       await safeTrack("Player updated", {
         playerId: updatedPlayer.id || id,
@@ -190,6 +194,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const { id } = await params;
 
     await playerService.deletePlayer(id);
+
+    invalidateCacheByPrefix(TEAM_RELATED_CACHE_PREFIXES);
 
     return NextResponse.json({
       success: true,
