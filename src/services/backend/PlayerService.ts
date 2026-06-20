@@ -257,6 +257,13 @@ export class PlayerService {
     const currentTeamId = this.getReferenceId(player.team);
     const teamId = data.team || currentTeamId;
 
+    if (teamId !== currentTeamId) {
+      const team = await this.teamRepo.findById(teamId);
+      if (!team) {
+        throw new Error("Equipo no encontrado");
+      }
+    }
+
     // Si cambia el número o equipo, verificar que no esté en uso
     if (
       jerseyNumber !== undefined &&

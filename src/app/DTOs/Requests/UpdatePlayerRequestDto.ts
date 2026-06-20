@@ -6,6 +6,7 @@ export interface UpdatePlayerRequestDto {
   profilePicture?: string;
   dateOfBirth?: string;
   registrationDate?: string;
+  team?: string;
   email?: string;
   phone?: string;
   jerseyNumber?: number | null;
