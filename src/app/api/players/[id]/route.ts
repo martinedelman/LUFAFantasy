@@ -136,6 +136,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
+    if (body.team !== undefined && user.role !== "admin") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No autorizado. Solo un administrador puede cambiar el equipo del jugador",
+        },
+        { status: 403 },
+      );
+    }
+
     const dateOfBirth = parseOptionalDate(body.dateOfBirth, "dateOfBirth");
 
     const updatedPlayer = await playerService.updatePlayer(id, {
@@ -144,6 +154,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       profilePicture: body.profilePicture,
       dateOfBirth,
       registrationDate: body.registrationDate ? new Date(body.registrationDate) : undefined,
+      team: body.team,
       email: body.email,
       phone: body.phone,
       jerseyNumber: body.jerseyNumber,

@@ -51,8 +51,7 @@ export default function EditPlayerPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [playerEmail, setPlayerEmail] = useState("");
   const isAdmin = user?.role === "admin";
-  const canEdit =
-    !!user && (isAdmin || user.email.trim().toLowerCase() === playerEmail.trim().toLowerCase());
+  const canEdit = !!user && (isAdmin || user.email.trim().toLowerCase() === playerEmail.trim().toLowerCase());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -134,7 +133,11 @@ export default function EditPlayerPage() {
 
     if ((name === "firstName" || name === "lastName") && !trimmed) return "Este campo es obligatorio.";
     if ((name === "firstName" || name === "lastName") && trimmed.length < 2) return "Debe tener al menos 2 caracteres.";
-    if ((name === "email" || name === "emergencyContact.email") && trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    if (
+      (name === "email" || name === "emergencyContact.email") &&
+      trimmed &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
+    ) {
       return "Ingresá un email válido.";
     }
     if ((name === "dateOfBirth" || name === "team" || name === "position" || name === "registrationDate") && !trimmed) {
@@ -220,6 +223,7 @@ export default function EditPlayerPage() {
       };
       if (!isAdmin) {
         delete (payload as Partial<typeof form>).status;
+        delete (payload as Partial<typeof form>).team;
       }
 
       const res = await fetch(`/api/players/${playerId}`, {
@@ -572,6 +576,7 @@ export default function EditPlayerPage() {
                 aria-invalid={Boolean(fieldErrors.team)}
                 aria-describedby={fieldErrors.team ? "team-error" : undefined}
                 className={inputClassName("team")}
+                disabled={!isAdmin}
                 required
               >
                 <option value="">Selecciona un equipo</option>
