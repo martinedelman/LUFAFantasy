@@ -219,6 +219,7 @@ export default function StandingsPage() {
 
   const selectedTournamentData = tournaments.find((t) => t._id === selectedTournament);
   const availableDivisions = selectedTournamentData?.divisions || [];
+  const shouldShowTiesColumn = standings.some((standing) => standing.ties > 0);
 
   const formatPercentage = (percentage: number) => {
     return (percentage * 100).toFixed(1);
@@ -277,12 +278,16 @@ export default function StandingsPage() {
       align: "center",
       render: (value) => <div>{value as number}</div>,
     },
-    {
-      key: "ties",
-      label: "E",
-      align: "center",
-      render: (value) => <div>{value as number}</div>,
-    },
+    ...(shouldShowTiesColumn
+      ? [
+          {
+            key: "ties" as const,
+            label: "E",
+            align: "center" as const,
+            render: (value: unknown) => <div>{value as number}</div>,
+          },
+        ]
+      : []),
     {
       key: "percentage",
       label: "%",

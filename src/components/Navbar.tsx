@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { track } from "@vercel/analytics";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,6 +21,7 @@ export default function Navbar() {
   const isPrintTemplateRoute = pathname?.includes("/print-template");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [pendingCorrectionCount, setPendingCorrectionCount] = useState(0);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
@@ -52,6 +53,32 @@ export default function Navbar() {
 
   const linkBaseClass =
     "px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200 border border-transparent";
+
+  const refreshPendingCorrections = useCallback(
+    async (signal?: AbortSignal) => {
+      if (user?.role !== "admin") {
+        setPendingCorrectionCount(0);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/admin/game-event-corrections", {
+          cache: "no-store",
+          signal,
+        });
+        const payload = (await response.json()) as { success?: boolean; data?: unknown[] };
+
+        if (response.ok && payload.success && Array.isArray(payload.data)) {
+          setPendingCorrectionCount(payload.data.length);
+        }
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          setPendingCorrectionCount(0);
+        }
+      }
+    },
+    [user?.role],
+  );
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -90,6 +117,51 @@ export default function Navbar() {
       document.removeEventListener("pointerdown", handlePointerDown);
     };
   }, [isUserMenuOpen]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    refreshPendingCorrections(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [refreshPendingCorrections]);
+
+  useEffect(() => {
+    const handleCorrectionsUpdated = () => {
+      refreshPendingCorrections();
+    };
+
+    window.addEventListener("lufa:live-corrections-updated", handleCorrectionsUpdated);
+    return () => {
+      window.removeEventListener("lufa:live-corrections-updated", handleCorrectionsUpdated);
+    };
+  }, [refreshPendingCorrections]);
+
+  const pendingCorrectionBadgeLabel =
+    pendingCorrectionCount === 1
+      ? "1 corrección Live pendiente"
+      : `${pendingCorrectionCount} correcciones Live pendientes`;
+  const pendingCorrectionBadge =
+    pendingCorrectionCount > 0 ? (
+      <span
+        className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-blue-900 bg-amber-500 px-1 text-[11px] font-bold leading-none text-white shadow-sm"
+        aria-label={pendingCorrectionBadgeLabel}
+        title={pendingCorrectionBadgeLabel}
+      >
+        {pendingCorrectionCount}
+      </span>
+    ) : null;
+  const pendingCorrectionInlineBadge =
+    pendingCorrectionCount > 0 ? (
+      <span
+        className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 py-0.5 text-xs font-bold text-white"
+        aria-label={pendingCorrectionBadgeLabel}
+        title={pendingCorrectionBadgeLabel}
+      >
+        {pendingCorrectionCount}
+      </span>
+    ) : null;
 
   if (isPrintTemplateRoute) {
     return null;
@@ -142,8 +214,9 @@ export default function Navbar() {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium text-green-50/90 border border-transparent hover:bg-white/10 hover:text-white hover:border-white/10 transition-colors duration-200"
                 >
-                  <div className="w-8 h-8 bg-white/14 rounded-full flex items-center justify-center border border-white/15">
+                  <div className="relative w-8 h-8 bg-white/14 rounded-full flex items-center justify-center border border-white/15">
                     {user.name?.charAt(0).toUpperCase()}
+                    {pendingCorrectionBadge}
                   </div>
                   <span>{user.name}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +273,7 @@ export default function Navbar() {
                           Crear Torneo
                         </Link>
                         <Link
-                          href="/admin"
+                          href="/admin#live-corrections"
                           onClick={() => trackNavigation("Panel Admin", "/admin", "desktop")}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
                         >
@@ -372,14 +445,15 @@ export default function Navbar() {
                     </Link>
                     {user.role === "admin" && (
                       <Link
-                        href="/admin"
-                        className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
+                        href="/admin#live-corrections"
+                        className="flex items-center justify-between px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                         onClick={() => {
                           trackNavigation("Panel Admin", "/admin", "mobile");
                           setIsMenuOpen(false);
                         }}
                       >
-                        Panel Admin
+                        <span>Panel Admin</span>
+                        {pendingCorrectionInlineBadge}
                       </Link>
                     )}
                     <button

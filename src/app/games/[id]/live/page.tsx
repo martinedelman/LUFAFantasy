@@ -60,6 +60,9 @@ type LiveToastState = {
   title?: string;
   message: string;
 };
+type LiveMatchEventMutationResponse = ApiResponse<GameApiResponse> & {
+  pendingApproval?: boolean;
+};
 type PendingConfirmation = {
   title: string;
   message: string;
@@ -662,7 +665,7 @@ export default function LiveMatchPage() {
         },
       );
 
-      const data: ApiResponse<GameApiResponse> = await response.json();
+      const data = (await response.json()) as LiveMatchEventMutationResponse;
 
       if (!response.ok || !data.success || !data.data) {
         showLiveToast("error", data.message || "No se pudo registrar el evento.");
@@ -672,7 +675,12 @@ export default function LiveMatchPage() {
       setGame(data.data);
       if (editingEventId) {
         setEditingEventId(null);
-        showLiveToast("info", "Evento actualizado y marcador recalculado.");
+        showLiveToast(
+          "info",
+          data.pendingApproval
+            ? data.message || "Corrección enviada. Queda pendiente de aprobación por un administrador."
+            : "Evento actualizado y marcador recalculado.",
+        );
       } else {
         setEventDraft((prev) => ({
           ...prev,
@@ -682,7 +690,11 @@ export default function LiveMatchPage() {
         }));
         showLiveToast(
           "info",
-          points && points > 0 ? "Evento registrado y marcador actualizado." : "Evento registrado.",
+          data.pendingApproval
+            ? data.message || "Corrección enviada. Queda pendiente de aprobación por un administrador."
+            : points && points > 0
+              ? "Evento registrado y marcador actualizado."
+              : "Evento registrado.",
         );
       }
     } catch {
@@ -730,7 +742,7 @@ export default function LiveMatchPage() {
         method: "DELETE",
       });
 
-      const data: ApiResponse<GameApiResponse> = await response.json();
+      const data = (await response.json()) as LiveMatchEventMutationResponse;
 
       if (!response.ok || !data.success) {
         showLiveToast("error", data.message || "No se pudo eliminar el evento.");
@@ -738,7 +750,12 @@ export default function LiveMatchPage() {
       }
 
       await fetchGameData();
-      showLiveToast("info", "Evento eliminado correctamente.");
+      showLiveToast(
+        "info",
+        data.pendingApproval
+          ? data.message || "Eliminación enviada. Queda pendiente de aprobación por un administrador."
+          : "Evento eliminado correctamente.",
+      );
     } catch {
       showLiveToast("error", "Error de conexión al eliminar el evento.");
     } finally {
@@ -787,7 +804,7 @@ export default function LiveMatchPage() {
         }),
       });
 
-      const data: ApiResponse<GameApiResponse> = await response.json();
+      const data = (await response.json()) as LiveMatchEventMutationResponse;
 
       if (!response.ok || !data.success || !data.data) {
         showLiveToast("error", data.message || "No se pudo registrar el fin de mitad.");
@@ -798,7 +815,12 @@ export default function LiveMatchPage() {
       if (currentQuarter === "q1") {
         setCurrentQuarter("q2");
       }
-      showLiveToast("info", "Mitad registrada correctamente.");
+      showLiveToast(
+        "info",
+        data.pendingApproval
+          ? data.message || "Corrección enviada. Queda pendiente de aprobación por un administrador."
+          : "Mitad registrada correctamente.",
+      );
     } catch {
       showLiveToast("error", "Error de conexión al registrar el fin de mitad.");
     } finally {

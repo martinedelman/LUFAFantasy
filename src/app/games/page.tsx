@@ -8,6 +8,7 @@ import Pagination from "@/components/Pagination";
 import Avatar from "@/components/Avatar";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import Skeleton from "@/components/Skeleton";
+import GameDayImageDownload from "@/components/GameDayImageDownload";
 import { useAuth } from "@/hooks/useAuth";
 import { useCachedState } from "@/hooks/useCachedState";
 import Link from "next/link";
@@ -921,6 +922,11 @@ if (key === "homeTeam" || key === "awayTeam") {
                     Cancelar
                   </button>
                 )}
+              </div>
+            )}
+            {canManageGames && (
+              <div className="flex items-end">
+                <GameDayImageDownload games={games} />
               </div>
             )}
           </div>

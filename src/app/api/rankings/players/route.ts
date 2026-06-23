@@ -61,10 +61,8 @@ export async function GET(request: NextRequest) {
     const eventMatch: Record<string, unknown> =
       mode === "points"
         ? {
-            $or: [
-              { points: { $gt: 0 } },
-              { qbStatValue: { $type: "number" } },
-            ],
+            player: { $exists: true, $ne: null },
+            points: { $gt: 0 },
           }
         : {
             player: { $exists: true, $ne: null },
@@ -107,53 +105,9 @@ export async function GET(request: NextRequest) {
             { $match: eventMatch },
             ...activeGameStages,
             {
-              $project: {
-                contributions: {
-                  $concatArrays: [
-                    {
-                      $cond: [
-                        {
-                          $and: [
-                            { $ne: ["$player", null] },
-                            { $gt: ["$points", 0] },
-                          ],
-                        },
-                        [{ player: "$player", value: "$points" }],
-                        [],
-                      ],
-                    },
-                    {
-                      $cond: [
-                        {
-                          $and: [
-                            { $ne: ["$qb", null] },
-                            {
-                              $in: [
-                                { $type: "$qbStatValue" },
-                                ["double", "int", "long", "decimal"],
-                              ],
-                            },
-                          ],
-                        },
-                        [
-                          {
-                            player: "$qb",
-                            value: "$qbStatValue",
-                          },
-                        ],
-                        [],
-                      ],
-                    },
-                  ],
-                },
-              },
-            },
-            { $unwind: "$contributions" },
-            { $match: { "contributions.player": { $exists: true, $ne: null } } },
-            {
               $group: {
-                _id: "$contributions.player",
-                value: { $sum: "$contributions.value" },
+                _id: "$player",
+                value: { $sum: "$points" },
               },
             },
             { $sort: { value: -1, _id: 1 } },
@@ -243,7 +197,7 @@ export async function GET(request: NextRequest) {
             },
           ];
 
-    const cacheKey = buildRequestCacheKey("rankings:players", searchParams);
+    const cacheKey = buildRequestCacheKey("rankings:players:v2", searchParams);
     const rankings = await getCachedValue(
       cacheKey,
       RANKINGS_CACHE_TTL_SECONDS * 1000,
