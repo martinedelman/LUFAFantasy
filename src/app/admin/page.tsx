@@ -191,6 +191,7 @@ export default function AdminPage() {
       }
 
       setCorrections((current) => current.filter((correction) => correction._id !== correctionId));
+      window.dispatchEvent(new Event("lufa:live-corrections-updated"));
       setCorrectionSuccess(action === "approve" ? "Corrección aprobada y aplicada." : "Corrección rechazada.");
     } catch {
       setCorrectionError("Error de conexión al procesar la corrección");
@@ -247,6 +248,28 @@ export default function AdminPage() {
             </div>
           ) : (
             <>
+              {corrections.length > 0 && (
+                <section className="rounded-lg border border-amber-200 bg-amber-50 p-5 shadow-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-bold uppercase tracking-wide text-amber-800">
+                        Correcciones Live pendientes
+                      </p>
+                      <p className="mt-1 text-sm text-amber-900">
+                        Hay {corrections.length} {corrections.length === 1 ? "solicitud" : "solicitudes"} de jueces
+                        esperando aprobación.
+                      </p>
+                    </div>
+                    <a
+                      href="#live-corrections"
+                      className="inline-flex items-center justify-center rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
+                    >
+                      Revisar ahora
+                    </a>
+                  </div>
+                </section>
+              )}
+
               <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 {statCards.map((card) => (
                   <article key={card.label} className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200">
@@ -256,7 +279,7 @@ export default function AdminPage() {
                 ))}
               </section>
 
-              <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
+              <section id="live-corrections" className="scroll-mt-24 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900">Correcciones Live pendientes</h2>
