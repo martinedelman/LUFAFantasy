@@ -12,6 +12,21 @@ interface HeadToHeadStats {
   gamesPlayed: number;
 }
 
+type TieBreakerCriterion =
+  | "headToHeadPercentage"
+  | "headToHeadPointDifferential"
+  | "headToHeadPointsFor"
+  | "totalPointDifferential"
+  | "totalPointsFor";
+
+const TOURNAMENT_TIE_BREAKERS: TieBreakerCriterion[] = [
+  "headToHeadPercentage",
+  "headToHeadPointDifferential",
+  "headToHeadPointsFor",
+  "totalPointDifferential",
+  "totalPointsFor",
+];
+
 /**
  * Servicio de gestión de Standings (tablas de posiciones)
  */
@@ -21,7 +36,7 @@ export class StandingService {
 
   /**
    * Recalcula el standing de un equipo basado en partidos en curso y completados.
-   * Esto mantiene la tabla viva mientras se actualiza el marcador.
+   * La tabla de posiciones funciona como live standings.
    */
   async recalculateForTeam(teamId: string, tournamentId: string, divisionId: string): Promise<Standing> {
     const games = (await this.gameRepo.findByTournament(tournamentId))
@@ -102,8 +117,6 @@ export class StandingService {
    * Obtiene los standings de una división ordenados
    */
   async getStandingsByDivision(divisionId: string): Promise<Standing[]> {
-    await this.recalculateDivisionStandings(divisionId);
-
     const standings = await this.standingRepo.findByDivision(divisionId);
     const standingsGames = (await this.gameRepo.findByDivision(divisionId)).filter(
       (game) => game.status === "in_progress" || game.status === "completed",
@@ -155,7 +168,7 @@ export class StandingService {
 
   /**
    * Ordena standings usando el sistema IFAF:
-   * porcentaje, head-to-head si todos jugaron entre sí, diferencial total y puntos totales.
+   * porcentaje total y desempates AR 3-1-4 aplicados por subgrupos.
    */
   private sortStandingsByIfafRules(standings: Standing[], standingsGames: Game[]): Standing[] {
     const standingsByPercentage = [...standings].sort((a, b) => this.getWinPercentage(b) - this.getWinPercentage(a));
@@ -171,40 +184,85 @@ export class StandingService {
         i++;
       }
 
-      sorted.push(...this.sortTiedPercentageGroup(group, standingsGames));
+      sorted.push(...this.resolveTournamentTieBreakers(group, standingsGames));
     }
 
     return sorted;
   }
 
-  private sortTiedPercentageGroup(group: Standing[], standingsGames: Game[]): Standing[] {
+  private resolveTournamentTieBreakers(
+    group: Standing[],
+    standingsGames: Game[],
+    criterionIndex: number = 0,
+  ): Standing[] {
     if (group.length === 1) return group;
+    if (criterionIndex >= TOURNAMENT_TIE_BREAKERS.length) return group;
 
-    const allPlayedEachOther = this.haveAllTeamsPlayedEachOther(group, standingsGames);
-    const headToHeadStats = allPlayedEachOther ? this.calculateHeadToHeadStats(group, standingsGames) : new Map<string, HeadToHeadStats>();
+    const criterion = TOURNAMENT_TIE_BREAKERS[criterionIndex];
+    const scoresByTeam = this.getTieBreakerScores(group, standingsGames, criterion);
 
-    return [...group].sort((a, b) => {
-      if (allPlayedEachOther) {
-        const aHeadToHead = headToHeadStats.get(this.getReferenceId(a.team));
-        const bHeadToHead = headToHeadStats.get(this.getReferenceId(b.team));
+    if (!scoresByTeam) {
+      return this.resolveTournamentTieBreakers(group, standingsGames, criterionIndex + 1);
+    }
 
-        const headToHeadPercentageDiff = this.getHeadToHeadPercentage(bHeadToHead) - this.getHeadToHeadPercentage(aHeadToHead);
-        if (headToHeadPercentageDiff !== 0) return headToHeadPercentageDiff;
+    const buckets = this.groupByTieBreakerScore(group, scoresByTeam);
+    if (buckets.length === 1) {
+      return this.resolveTournamentTieBreakers(group, standingsGames, criterionIndex + 1);
+    }
 
-        const headToHeadPointDiff =
-          this.getHeadToHeadPointDifferential(bHeadToHead) - this.getHeadToHeadPointDifferential(aHeadToHead);
-        if (headToHeadPointDiff !== 0) return headToHeadPointDiff;
+    return buckets.flatMap((bucket) => this.resolveTournamentTieBreakers(bucket, standingsGames, criterionIndex + 1));
+  }
 
-        const headToHeadPointsScored = (bHeadToHead?.pointsFor ?? 0) - (aHeadToHead?.pointsFor ?? 0);
-        if (headToHeadPointsScored !== 0) return headToHeadPointsScored;
-      }
+  private getTieBreakerScores(
+    group: Standing[],
+    standingsGames: Game[],
+    criterion: TieBreakerCriterion,
+  ): Map<string, number> | null {
+    if (criterion.startsWith("headToHead")) {
+      if (!this.haveAllTeamsPlayedEachOther(group, standingsGames)) return null;
 
-      if (a.pointsDifferential !== b.pointsDifferential) {
-        return b.pointsDifferential - a.pointsDifferential;
-      }
+      const headToHeadStats = this.calculateHeadToHeadStats(group, standingsGames);
+      return new Map(
+        group.map((standing) => {
+          const teamId = this.getReferenceId(standing.team);
+          const stats = headToHeadStats.get(teamId);
 
-      return b.pointsFor - a.pointsFor;
-    });
+          if (criterion === "headToHeadPercentage") {
+            return [teamId, this.getHeadToHeadPercentage(stats)];
+          }
+
+          if (criterion === "headToHeadPointDifferential") {
+            return [teamId, this.getHeadToHeadPointDifferential(stats)];
+          }
+
+          return [teamId, stats?.pointsFor ?? 0];
+        }),
+      );
+    }
+
+    return new Map(
+      group.map((standing) => {
+        const teamId = this.getReferenceId(standing.team);
+        const score = criterion === "totalPointDifferential" ? standing.pointsDifferential : standing.pointsFor;
+        return [teamId, score];
+      }),
+    );
+  }
+
+  private groupByTieBreakerScore(group: Standing[], scoresByTeam: Map<string, number>): Standing[][] {
+    const scoreBuckets = new Map<number, Standing[]>();
+
+    for (const standing of group) {
+      const teamId = this.getReferenceId(standing.team);
+      const score = scoresByTeam.get(teamId) ?? 0;
+      const bucket = scoreBuckets.get(score) ?? [];
+      bucket.push(standing);
+      scoreBuckets.set(score, bucket);
+    }
+
+    return Array.from(scoreBuckets.entries())
+      .sort(([scoreA], [scoreB]) => scoreB - scoreA)
+      .map(([, bucket]) => bucket);
   }
 
   private haveAllTeamsPlayedEachOther(group: Standing[], standingsGames: Game[]): boolean {
