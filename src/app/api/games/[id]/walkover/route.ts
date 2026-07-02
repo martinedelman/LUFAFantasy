@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService } from "@/services/backend";
-import { apiErrorResponse } from "@/lib/apiError";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toGameResponseDto } from "@/app/DTOs";
 
@@ -37,8 +37,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       data: toGameResponseDto(game),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al registrar Walk Over";
-    const status = message.includes("no encontrado") ? 404 : 400;
+    const message = extractErrorMessage(error, "Error al registrar Walk Over");
+    const status = resolveErrorStatus(message, [{ match: "no encontrado", status: 404 }]);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/games/[id]/walkover" });
   }

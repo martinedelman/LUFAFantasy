@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DivisionService } from "@/services/backend";
-import { apiErrorResponse } from "@/lib/apiError";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { parsePaginationParams, paginate } from "@/lib/pagination";
 import { DivisionCategory } from "@/entities/Division";
 import { toDivisionResponseDto } from "@/app/DTOs";
 import type { CreateDivisionRequestDto } from "@/app/DTOs";
@@ -15,8 +16,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const tournament = searchParams.get("tournament");
     const category = searchParams.get("category") as DivisionCategory | null;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const paginationParams = parsePaginationParams(searchParams);
 
     // Construir filtros
     const filters: { tournament?: string; category?: DivisionCategory } = {};
@@ -27,10 +27,7 @@ export async function GET(request: NextRequest) {
     const allDivisions = await divisionService.listDivisions(filters);
 
     // Aplicar paginación
-    const total = allDivisions.length;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedDivisions = allDivisions.slice(startIndex, endIndex);
+    const { data: paginatedDivisions, pagination } = paginate(allDivisions, paginationParams);
 
     // Convertir a respuesta API
     const responseData = paginatedDivisions.map((division) => toDivisionResponseDto(division));
@@ -38,16 +35,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: responseData,
-      pagination: {
-        current: page,
-        total: Math.ceil(total / limit),
-        pages: Math.ceil(total / limit),
-        hasNext: endIndex < total,
-        hasPrev: page > 1,
-      },
+      pagination,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al obtener divisiones";
+    const message = extractErrorMessage(error, "Error al obtener divisiones");
     return apiErrorResponse({ request, error, message, status: 500, route: "/api/divisions" });
   }
 }
@@ -88,8 +79,8 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al crear división";
-    const status = message.includes("existe") ? 409 : 400;
+    const message = extractErrorMessage(error, "Error al crear división");
+    const status = resolveErrorStatus(message, [{ match: "existe", status: 409 }]);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/divisions" });
   }

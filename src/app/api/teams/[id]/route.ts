@@ -1,60 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { TeamService, AuthService } from "@/services/backend";
-import { getSessionTokenFromRequest } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/apiError";
+import { TeamService } from "@/services/backend";
+
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { requireAuthenticatedUser, isAuthFailure } from "@/lib/apiGuards";
+import { canUserEditTeam, sanitizeContact } from "@/lib/teamAuth";
+import { TEAM_RELATED_CACHE_PREFIXES } from "@/lib/cacheKeys";
 import { safeTrack } from "@/lib/serverAnalytics";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toTeamResponseDto } from "@/app/DTOs";
 import type { UpdateTeamRequestDto } from "@/app/DTOs";
-import type { Team } from "@/entities/Team";
-import type { UserRole } from "@/entities/User";
 
 const teamService = new TeamService();
-const authService = new AuthService();
-const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
-
-function normalizeEmail(email?: string | null) {
-  return email?.trim().toLowerCase() || "";
-}
-
-function getTeamCoachEmails(team: Team) {
-  const coaches = team.coaches && team.coaches.length > 0 ? team.coaches : team.coach ? [team.coach] : [];
-  return coaches.map((coach) => normalizeEmail(coach?.email)).filter(Boolean);
-}
-
-function canUserEditTeam(user: { email: string; role: UserRole }, team: Team) {
-  const userEmail = normalizeEmail(user.email);
-
-  return (
-    user.role === "admin" ||
-    userEmail === normalizeEmail(team.contact?.email) ||
-    getTeamCoachEmails(team).includes(userEmail)
-  );
-}
-
-function normalizeOptionalText(value: string | null | undefined): string | undefined {
-  if (value === null || value === undefined) return undefined;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-}
-
-function sanitizeContactForService(contact?: UpdateTeamRequestDto["contact"]) {
-  if (!contact) return undefined;
-
-  return {
-    email: normalizeOptionalText(contact.email),
-    phone: normalizeOptionalText(contact.phone),
-    address: normalizeOptionalText(contact.address),
-    socialMedia: contact.socialMedia
-      ? {
-          facebook: normalizeOptionalText(contact.socialMedia.facebook),
-          instagram: normalizeOptionalText(contact.socialMedia.instagram),
-          x: normalizeOptionalText(contact.socialMedia.x ?? contact.socialMedia.twitter),
-          twitter: normalizeOptionalText(contact.socialMedia.twitter),
-        }
-      : undefined,
-  };
-}
 
 /**
  * GET /api/teams/:id - Obtiene un equipo por ID
@@ -76,15 +32,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const apiResponse = toTeamResponseDto(team);
-    const token = getSessionTokenFromRequest(request);
+    const result = await requireAuthenticatedUser(request);
 
-    if (token) {
-      try {
-        const user = await authService.verifyToken(token);
-        apiResponse.canEdit = canUserEditTeam(user, team);
-      } catch {
-        apiResponse.canEdit = false;
-      }
+    if (!isAuthFailure(result)) {
+      apiResponse.canEdit = canUserEditTeam(result, team);
+    } else {
+      apiResponse.canEdit = false;
     }
 
     return NextResponse.json({
@@ -92,14 +45,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: apiResponse,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al obtener equipo";
-    return apiErrorResponse({
-      request,
-      error,
-      message,
-      status: 500,
-      route: "/api/teams/[id]",
-    });
+    const message = extractErrorMessage(error, "Error al obtener equipo");
+    return apiErrorResponse({ request, error, message, status: 500, route: "/api/teams/[id]" });
   }
 }
 
@@ -109,19 +56,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autenticado",
-        },
-        { status: 401 },
-      );
-    }
-
-    const user = await authService.verifyToken(token);
+    const result = await requireAuthenticatedUser(request);
+    if (isAuthFailure(result)) return result;
+    const user = result;
     const team = await teamService.getTeamById(id);
 
     if (!team) {
@@ -168,7 +105,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       shortName: body.shortName,
       logo: body.logo,
       backgroundImage: body.backgroundImage,
-      contact: sanitizeContactForService(body.contact),
+      contact: sanitizeContact(body.contact),
       coach: body.coach,
       coaches: body.coaches,
       status: body.status,
@@ -193,20 +130,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       data: toTeamResponseDto(updatedTeam),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al actualizar equipo";
-    const status = message.includes("no encontrado")
-      ? 404
-      : message.includes("Token") || message.includes("Usuario")
-        ? 401
-        : 400;
+    const message = extractErrorMessage(error, "Error al actualizar equipo");
+    const status = resolveErrorStatus(message, [
+      { match: "no encontrado", status: 404 },
+      { match: "Token", status: 401 },
+      { match: "Usuario", status: 401 },
+    ]);
 
-    return apiErrorResponse({
-      request,
-      error,
-      message,
-      status,
-      route: "/api/teams/[id]",
-    });
+    return apiErrorResponse({ request, error, message, status, route: "/api/teams/[id]" });
   }
 }
 

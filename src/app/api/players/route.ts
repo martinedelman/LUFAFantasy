@@ -1,38 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PlayerService } from "@/services/backend";
-import { apiErrorResponse } from "@/lib/apiError";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { parsePaginationParams, paginate } from "@/lib/pagination";
+import { parseRequiredDate, normalizeSecondaryPosition } from "@/lib/normalize";
+import { TEAM_RELATED_CACHE_PREFIXES } from "@/lib/cacheKeys";
 import { PlayerPosition, PlayerStatus } from "@/entities/Player";
 import { toPlayerResponseDto } from "@/app/DTOs";
 import type { CreatePlayerRequestDto } from "@/app/DTOs";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 
 const playerService = new PlayerService();
-const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
-
-function parseRequiredDate(value: unknown, fieldLabel: string): Date {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    throw new Error(`${fieldLabel} es requerida`);
-  }
-
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    throw new Error(`${fieldLabel} inválida`);
-  }
-
-  return parsedDate;
-}
-
-function normalizeSecondaryPosition(value: unknown): PlayerPosition | undefined {
-  if (value === undefined || value === null) {
-    return undefined;
-  }
-
-  if (typeof value === "string" && value.trim().length === 0) {
-    return undefined;
-  }
-
-  return value as PlayerPosition;
-}
 
 /**
  * GET /api/players - Obtiene todos los jugadores con filtros y paginación
@@ -45,8 +22,7 @@ export async function GET(request: NextRequest) {
     const position = searchParams.get("position") as PlayerPosition | null;
     const status = searchParams.get("status") as PlayerStatus | null;
     const search = searchParams.get("search");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const paginationParams = parsePaginationParams(searchParams, 20);
 
     if (email) {
       const player = await playerService.getPlayerByEmail(email);
@@ -83,10 +59,7 @@ export async function GET(request: NextRequest) {
     const allPlayers = await playerService.listPlayers(filters);
 
     // Aplicar paginación
-    const total = allPlayers.length;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedPlayers = allPlayers.slice(startIndex, endIndex);
+    const { data: paginatedPlayers, pagination } = paginate(allPlayers, paginationParams);
 
     // Convertir a respuesta API
     const responseData = paginatedPlayers.map((player) => toPlayerResponseDto(player));
@@ -94,16 +67,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: responseData,
-      pagination: {
-        current: page,
-        total: Math.ceil(total / limit),
-        pages: Math.ceil(total / limit),
-        hasNext: endIndex < total,
-        hasPrev: page > 1,
-      },
+      pagination,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al obtener jugadores";
+    const message = extractErrorMessage(error, "Error al obtener jugadores");
     return apiErrorResponse({ request, error, message, status: 500, route: "/api/players" });
   }
 }
@@ -157,8 +124,8 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al crear jugador";
-    const status = message.includes("existe") ? 409 : 400;
+    const message = extractErrorMessage(error, "Error al crear jugador");
+    const status = resolveErrorStatus(message, [{ match: "existe", status: 409 }]);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/players" });
   }

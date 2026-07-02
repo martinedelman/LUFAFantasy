@@ -1,23 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService, GameEventCorrectionService } from "@/services/backend";
-import { getSessionTokenFromRequest } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/apiError";
+import { GameEventCorrectionService } from "@/services/backend";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { requireAuthenticatedUser, isAuthFailure } from "@/lib/apiGuards";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 
-const authService = new AuthService();
 const correctionService = new GameEventCorrectionService();
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const token = getSessionTokenFromRequest(request);
+    const result = await requireAuthenticatedUser(request);
+    if (isAuthFailure(result)) return result;
+    const user = result;
 
-    if (!token) {
-      return NextResponse.json({ success: false, message: "No autenticado" }, { status: 401 });
-    }
-
-    const user = await authService.verifyToken(token).catch(() => null);
-    if (!user?.isAdmin()) {
+    if (!user.isAdmin()) {
       return NextResponse.json({ success: false, message: "No autorizado" }, { status: 403 });
     }
 
@@ -38,8 +34,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json({ success: false, message: "Acción inválida" }, { status: 400 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al procesar la corrección";
-    const status = message.includes("no encontrada") ? 404 : 400;
+    const message = extractErrorMessage(error, "Error al procesar la corrección");
+    const status = resolveErrorStatus(message, [{ match: "no encontrada", status: 404 }]);
     return apiErrorResponse({ request, error, message, status, route: "/api/admin/game-event-corrections/[id]" });
   }
 }

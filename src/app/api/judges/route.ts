@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService, JudgeService } from "@/services/backend";
-import { getSessionTokenFromRequest } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/apiError";
+import { JudgeService } from "@/services/backend";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { requireAdmin } from "@/lib/apiGuards";
 import { toJudgeResponseDto } from "@/app/DTOs";
 import type { CreateJudgeRequestDto } from "@/app/DTOs";
 
-const authService = new AuthService();
 const judgeService = new JudgeService();
 
 export async function GET(request: NextRequest) {
   try {
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json({ success: false, message: "No autenticado" }, { status: 401 });
-    }
-
-    const isAdmin = await authService.verifyAdmin(token);
-    if (!isAdmin) {
-      return NextResponse.json({ success: false, message: "No autorizado" }, { status: 403 });
-    }
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
 
     const judges = await judgeService.listJudges();
 
@@ -28,23 +19,15 @@ export async function GET(request: NextRequest) {
       data: judges.map((judge) => toJudgeResponseDto(judge)),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al obtener jueces";
+    const message = extractErrorMessage(error, "Error al obtener jueces");
     return apiErrorResponse({ request, error, message, status: 500, route: "/api/judges" });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json({ success: false, message: "No autenticado" }, { status: 401 });
-    }
-
-    const isAdmin = await authService.verifyAdmin(token);
-    if (!isAdmin) {
-      return NextResponse.json({ success: false, message: "No autorizado" }, { status: 403 });
-    }
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
 
     const body = (await request.json()) as CreateJudgeRequestDto;
 
@@ -72,8 +55,8 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al crear juez";
-    const status = message.includes("ya existe") ? 409 : 400;
+    const message = extractErrorMessage(error, "Error al crear juez");
+    const status = resolveErrorStatus(message, [{ match: "ya existe", status: 409 }]);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/judges" });
   }

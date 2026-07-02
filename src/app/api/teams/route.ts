@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
-import { TeamService, AuthService } from "@/services/backend";
-import { getSessionTokenFromRequest } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/apiError";
+import { TeamService } from "@/services/backend";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { requireAdmin } from "@/lib/apiGuards";
+import { parsePaginationParams, paginate } from "@/lib/pagination";
+import { sanitizeContact } from "@/lib/teamAuth";
+import { TEAM_RELATED_CACHE_PREFIXES } from "@/lib/cacheKeys";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue, invalidateCacheByPrefix } from "@/lib/serverCache";
 import { TeamStatus } from "@/entities/Team";
 import { PlayerModel } from "@/models";
@@ -10,36 +13,12 @@ import { toTeamResponseDto } from "@/app/DTOs";
 import type { CreateTeamRequestDto } from "@/app/DTOs";
 
 const teamService = new TeamService();
-const authService = new AuthService();
 const TEAMS_CACHE_TTL_SECONDS = 1800; // 30 minutos
-const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
 const PUBLIC_GET_CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
-
-function normalizeOptionalText(value: string | null | undefined): string | undefined {
-  if (value === null || value === undefined) return undefined;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-}
-
-function sanitizeContactForService(contact: CreateTeamRequestDto["contact"]) {
-  return {
-    email: normalizeOptionalText(contact.email),
-    phone: normalizeOptionalText(contact.phone),
-    address: normalizeOptionalText(contact.address),
-    socialMedia: contact.socialMedia
-      ? {
-          facebook: normalizeOptionalText(contact.socialMedia.facebook),
-          instagram: normalizeOptionalText(contact.socialMedia.instagram),
-          x: normalizeOptionalText(contact.socialMedia.x ?? contact.socialMedia.twitter),
-          twitter: normalizeOptionalText(contact.socialMedia.twitter),
-        }
-      : undefined,
-  };
-}
 
 /**
  * GET /api/teams - Obtiene todos los equipos con filtros y paginación
@@ -55,8 +34,7 @@ export async function GET(request: NextRequest) {
         const division = searchParams.get("division");
         const tournament = searchParams.get("tournament");
         const status = searchParams.get("status") as TeamStatus | null;
-        const page = parseInt(searchParams.get("page") || "1");
-        const limit = parseInt(searchParams.get("limit") || "10");
+        const paginationParams = parsePaginationParams(searchParams);
 
         // Construir filtros
         const filters: { tournament?: string; division?: string; status?: TeamStatus } = {};
@@ -68,10 +46,7 @@ export async function GET(request: NextRequest) {
         const allTeams = await teamService.listTeams(filters);
 
         // Aplicar paginación
-        const total = allTeams.length;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        const paginatedTeams = allTeams.slice(startIndex, endIndex);
+        const { data: paginatedTeams, pagination } = paginate(allTeams, paginationParams);
 
         // Convertir a respuesta API
         const responseData = paginatedTeams.map((team) => toTeamResponseDto(team));
@@ -94,13 +69,7 @@ export async function GET(request: NextRequest) {
             ...team,
             activePlayerCount: team._id ? (activePlayerCountByTeam.get(team._id) ?? 0) : 0,
           })),
-          pagination: {
-            current: page,
-            total: Math.ceil(total / limit),
-            pages: Math.ceil(total / limit),
-            hasNext: endIndex < total,
-            hasPrev: page > 1,
-          },
+          pagination,
         };
       },
       { tags: ["teams"] },
@@ -119,14 +88,8 @@ export async function GET(request: NextRequest) {
       },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al obtener equipos";
-    return apiErrorResponse({
-      request,
-      error,
-      message,
-      status: 500,
-      route: "/api/teams",
-    });
+    const message = extractErrorMessage(error, "Error al obtener equipos");
+    return apiErrorResponse({ request, error, message, status: 500, route: "/api/teams" });
   }
 }
 
@@ -142,28 +105,8 @@ export async function OPTIONS() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autenticado",
-        },
-        { status: 401 },
-      );
-    }
-
-    const isAdmin = await authService.verifyAdmin(token);
-    if (!isAdmin) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autorizado. Solo administradores pueden crear equipos",
-        },
-        { status: 403 },
-      );
-    }
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
 
     const body = (await request.json()) as CreateTeamRequestDto;
 
@@ -182,7 +125,7 @@ export async function POST(request: NextRequest) {
       name: body.name,
       colors: body.colors,
       division: body.division,
-      contact: sanitizeContactForService(body.contact),
+      contact: sanitizeContact(body.contact),
       coach: body.coach,
       coaches: body.coaches,
       shortName: body.shortName,
@@ -204,15 +147,9 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al crear equipo";
-    const status = message.includes("existe") ? 409 : 400;
+    const message = extractErrorMessage(error, "Error al crear equipo");
+    const status = resolveErrorStatus(message, [{ match: "existe", status: 409 }]);
 
-    return apiErrorResponse({
-      request,
-      error,
-      message,
-      status,
-      route: "/api/teams",
-    });
+    return apiErrorResponse({ request, error, message, status, route: "/api/teams" });
   }
 }

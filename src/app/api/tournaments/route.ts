@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { TournamentService, AuthService } from "@/services/backend";
-import { apiErrorResponse } from "@/lib/apiError";
+import { TournamentService } from "@/services/backend";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { requireAdmin } from "@/lib/apiGuards";
+import { parsePaginationParams, paginate } from "@/lib/pagination";
 import { TournamentStatus } from "@/entities/Tournament";
-import { getSessionTokenFromRequest } from "@/lib/auth";
 import { toTournamentResponseDto } from "@/app/DTOs";
 import type { CreateTournamentRequestDto } from "@/app/DTOs";
 
 const tournamentService = new TournamentService();
-const authService = new AuthService();
 
 /**
  * GET /api/tournaments - Obtiene todos los torneos con filtros y paginación
@@ -17,8 +17,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") as TournamentStatus | null;
     const year = searchParams.get("year");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const paginationParams = parsePaginationParams(searchParams);
 
     // Construir filtros
     const filters: { status?: TournamentStatus; year?: number } = {};
@@ -29,10 +28,7 @@ export async function GET(request: NextRequest) {
     const allTournaments = await tournamentService.listTournaments(filters);
 
     // Aplicar paginación
-    const total = allTournaments.length;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedTournaments = allTournaments.slice(startIndex, endIndex);
+    const { data: paginatedTournaments, pagination } = paginate(allTournaments, paginationParams);
 
     // Convertir a respuesta API
     const responseData = paginatedTournaments.map((tournament) => toTournamentResponseDto(tournament));
@@ -40,16 +36,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: responseData,
-      pagination: {
-        current: page,
-        total,
-        pages: Math.ceil(total / limit),
-        hasNext: endIndex < total,
-        hasPrev: page > 1,
-      },
+      pagination,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al obtener torneos";
+    const message = extractErrorMessage(error, "Error al obtener torneos");
     return apiErrorResponse({ request, error, message, status: 500, route: "/api/tournaments" });
   }
 }
@@ -59,28 +49,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autenticado",
-        },
-        { status: 401 },
-      );
-    }
-
-    const isAdmin = await authService.verifyAdmin(token);
-    if (!isAdmin) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autorizado. Solo administradores pueden crear torneos",
-        },
-        { status: 403 },
-      );
-    }
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
 
     const body = (await request.json()) as CreateTournamentRequestDto;
 
@@ -120,8 +90,8 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al crear torneo";
-    const status = message.includes("existe") ? 409 : 400;
+    const message = extractErrorMessage(error, "Error al crear torneo");
+    const status = resolveErrorStatus(message, [{ match: "existe", status: 409 }]);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/tournaments" });
   }

@@ -62,6 +62,21 @@ export function logApiError(options: ApiErrorResponseOptions) {
   }
 }
 
+export function extractErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+export function resolveErrorStatus(
+  message: string,
+  rules: Array<{ match: string; status: number }>,
+  fallback = 400,
+): number {
+  for (const rule of rules) {
+    if (message.includes(rule.match)) return rule.status;
+  }
+  return fallback;
+}
+
 export function apiErrorResponse(options: ApiErrorResponseOptions) {
   logApiError(options);
 

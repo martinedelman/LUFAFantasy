@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { TournamentService, AuthService, DivisionService, TeamService } from "@/services/backend";
-import { getSessionTokenFromRequest } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/apiError";
+import { TournamentService, DivisionService, TeamService } from "@/services/backend";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { requireAdmin } from "@/lib/apiGuards";
 import { toDivisionResponseDto, toTeamResponseDto, toTournamentResponseDto } from "@/app/DTOs";
 import type { TournamentResponseDto, UpdateTournamentRequestDto } from "@/app/DTOs";
 
 const tournamentService = new TournamentService();
-const authService = new AuthService();
 const divisionService = new DivisionService();
 const teamService = new TeamService();
 
@@ -85,7 +84,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: tournamentData,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al obtener torneo";
+    const message = extractErrorMessage(error, "Error al obtener torneo");
     return apiErrorResponse({ request, error, message, status: 500, route: "/api/tournaments/[id]" });
   }
 }
@@ -95,28 +94,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autenticado",
-        },
-        { status: 401 },
-      );
-    }
-
-    const isAdmin = await authService.verifyAdmin(token);
-    if (!isAdmin) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autorizado. Solo administradores pueden editar torneos",
-        },
-        { status: 403 },
-      );
-    }
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
 
     const { id } = await params;
     const body = (await request.json()) as UpdateTournamentRequestDto;
@@ -154,8 +133,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       data: toTournamentResponseDto(updatedTournament),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al actualizar torneo";
-    const status = message.includes("no encontrado") ? 404 : 400;
+    const message = extractErrorMessage(error, "Error al actualizar torneo");
+    const status = resolveErrorStatus(message, [{ match: "no encontrado", status: 404 }]);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/tournaments/[id]" });
   }
@@ -166,28 +145,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
  */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autenticado",
-        },
-        { status: 401 },
-      );
-    }
-
-    const isAdmin = await authService.verifyAdmin(token);
-    if (!isAdmin) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autorizado. Solo administradores pueden eliminar torneos",
-        },
-        { status: 403 },
-      );
-    }
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
 
     const { id } = await params;
 
@@ -198,8 +157,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       message: "Torneo eliminado exitosamente",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al eliminar torneo";
-    const status = message.includes("no encontrado") ? 404 : 500;
+    const message = extractErrorMessage(error, "Error al eliminar torneo");
+    const status = resolveErrorStatus(message, [{ match: "no encontrado", status: 404 }], 500);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/tournaments/[id]" });
   }
