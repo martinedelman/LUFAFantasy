@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import { GameEventModel, GameModel, PlayerStatisticsModel } from "@/models";
 import { apiErrorResponse } from "@/lib/apiError";
+import { parsePaginationParams } from "@/lib/pagination";
 import mongoose from "mongoose";
 
 // GET /api/statistics/players - Obtener estadísticas de jugadores
@@ -15,8 +16,7 @@ export async function GET(request: NextRequest) {
     const player = searchParams.get("player");
     const sortBy = searchParams.get("sortBy") || "passing.touchdowns";
     const order = searchParams.get("order") === "asc" ? 1 : -1;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const { page, limit } = parsePaginationParams(searchParams, 20);
 
     if (player) {
       if (!mongoose.Types.ObjectId.isValid(player)) {

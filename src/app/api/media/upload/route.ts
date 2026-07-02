@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService, BlobStorageService, PlayerService } from "@/services/backend";
-import { getSessionTokenFromRequest } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/apiError";
+import { BlobStorageService, PlayerService } from "@/services/backend";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { requireAuthenticatedUser, isAuthFailure } from "@/lib/apiGuards";
+import { normalizeEmail } from "@/lib/normalize";
 import { safeTrack } from "@/lib/serverAnalytics";
 import type { BlobAssetType } from "@/services/backend/BlobStorageService";
 
-const authService = new AuthService();
 const blobStorageService = new BlobStorageService();
 const playerService = new PlayerService();
 
 const VALID_ASSET_TYPES: BlobAssetType[] = ["team_logo", "team_background", "player_profile_picture"];
-
-function normalizeEmail(email?: string | null) {
-  return email?.trim().toLowerCase() || "";
-}
 
 /**
  * POST /api/media/upload
@@ -21,19 +17,9 @@ function normalizeEmail(email?: string | null) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autenticado",
-        },
-        { status: 401 },
-      );
-    }
-
-    const user = await authService.verifyToken(token);
+    const result = await requireAuthenticatedUser(request);
+    if (isAuthFailure(result)) return result;
+    const user = result;
 
     const formData = await request.formData();
     const file = formData.get("file");
@@ -140,9 +126,12 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al subir archivo";
-    const status =
-      message.includes("Token") || message.includes("Usuario") ? 401 : message.includes("imagen") ? 400 : 500;
+    const message = extractErrorMessage(error, "Error al subir archivo");
+    const status = resolveErrorStatus(message, [
+      { match: "Token", status: 401 },
+      { match: "Usuario", status: 401 },
+      { match: "imagen", status: 400 },
+    ], 500);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/media/upload" });
   }

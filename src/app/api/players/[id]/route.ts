@@ -1,49 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService, PlayerService } from "@/services/backend";
-import { getSessionTokenFromRequest } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/apiError";
+import { PlayerService } from "@/services/backend";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { requireAuthenticatedUser, isAuthFailure } from "@/lib/apiGuards";
+import { normalizeEmail, parseOptionalDate, normalizeSecondaryPosition } from "@/lib/normalize";
+import { TEAM_RELATED_CACHE_PREFIXES } from "@/lib/cacheKeys";
 import { safeTrack } from "@/lib/serverAnalytics";
 import { toPlayerResponseDto } from "@/app/DTOs";
-import { PlayerPosition } from "@/entities/Player";
 import type { UpdatePlayerRequestDto } from "@/app/DTOs";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 
 const playerService = new PlayerService();
-const authService = new AuthService();
-const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
-
-function normalizeEmail(email?: string | null) {
-  return email?.trim().toLowerCase() || "";
-}
-
-function parseOptionalDate(value: unknown, fieldLabel: string): Date | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  if (typeof value !== "string" || value.trim().length === 0) {
-    throw new Error(`${fieldLabel} no puede ser nula`);
-  }
-
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    throw new Error(`${fieldLabel} inválida`);
-  }
-
-  return parsedDate;
-}
-
-function normalizeSecondaryPosition(value: unknown): PlayerPosition | undefined {
-  if (value === undefined || value === null) {
-    return undefined;
-  }
-
-  if (typeof value === "string" && value.trim().length === 0) {
-    return undefined;
-  }
-
-  return value as PlayerPosition;
-}
 
 function isJerseyOnlyUpdate(body: UpdatePlayerRequestDto) {
   const allowedFields = new Set(["jerseyNumber"]);
@@ -75,7 +41,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: toPlayerResponseDto(player),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al obtener jugador";
+    const message = extractErrorMessage(error, "Error al obtener jugador");
     return apiErrorResponse({ request, error, message, status: 500, route: "/api/players/[id]" });
   }
 }
@@ -86,19 +52,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autenticado",
-        },
-        { status: 401 },
-      );
-    }
-
-    const user = await authService.verifyToken(token);
+    const result = await requireAuthenticatedUser(request);
+    if (isAuthFailure(result)) return result;
+    const user = result;
     const player = await playerService.getPlayerById(id);
 
     if (!player) {
@@ -186,12 +142,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       data: toPlayerResponseDto(updatedPlayer),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al actualizar jugador";
-    const status = message.includes("no encontrado")
-      ? 404
-      : message.includes("Token") || message.includes("Usuario")
-        ? 401
-        : 400;
+    const message = extractErrorMessage(error, "Error al actualizar jugador");
+    const status = resolveErrorStatus(message, [
+      { match: "no encontrado", status: 404 },
+      { match: "Token", status: 401 },
+      { match: "Usuario", status: 401 },
+    ]);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/players/[id]" });
   }
@@ -213,8 +169,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       message: "Jugador eliminado exitosamente",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al eliminar jugador";
-    const status = message.includes("no encontrado") ? 404 : 500;
+    const message = extractErrorMessage(error, "Error al eliminar jugador");
+    const status = resolveErrorStatus(message, [{ match: "no encontrado", status: 404 }], 500);
 
     return apiErrorResponse({ request, error, message, status, route: "/api/players/[id]" });
   }

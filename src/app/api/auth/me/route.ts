@@ -1,30 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService } from "@/services/backend";
-import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
+import { requireAuthenticatedUser, isAuthFailure } from "@/lib/apiGuards";
 import { toUserResponseDto } from "@/app/DTOs";
-
-const authService = new AuthService();
 
 export async function GET(request: NextRequest) {
   try {
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autenticado",
-        },
-        { status: 401 },
-      );
-    }
-
-    const user = await authService.verifyToken(token);
+    const result = await requireAuthenticatedUser(request);
+    if (isAuthFailure(result)) return result;
 
     return NextResponse.json({
       success: true,
-      data: toUserResponseDto(user),
+      data: toUserResponseDto(result),
     });
   } catch (error) {
     return apiErrorResponse({

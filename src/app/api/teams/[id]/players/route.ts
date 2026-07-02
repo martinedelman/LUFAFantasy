@@ -1,51 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService, PlayerService, PreApprovedPlayerNotificationService, TeamService } from "@/services/backend";
-import { getSessionTokenFromRequest } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/apiError";
+import { PlayerService, PreApprovedPlayerNotificationService, TeamService } from "@/services/backend";
+import { apiErrorResponse, extractErrorMessage, resolveErrorStatus } from "@/lib/apiError";
+import { requireAuthenticatedUser, isAuthFailure } from "@/lib/apiGuards";
+import { canUserEditTeam } from "@/lib/teamAuth";
+import { parseRequiredDate } from "@/lib/normalize";
+import { TEAM_RELATED_CACHE_PREFIXES } from "@/lib/cacheKeys";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toPlayerResponseDto } from "@/app/DTOs";
 import type { PlayerPosition } from "@/entities/Player";
-import type { Team } from "@/entities/Team";
-import type { UserRole } from "@/entities/User";
 
-const authService = new AuthService();
 const playerService = new PlayerService();
 const teamService = new TeamService();
 const notificationService = new PreApprovedPlayerNotificationService();
-const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
 const ALLOWED_FIELDS = new Set(["firstName", "lastName", "jerseyNumber", "dateOfBirth", "position"]);
-
-function normalizeEmail(email?: string | null) {
-  return email?.trim().toLowerCase() || "";
-}
-
-function getTeamCoachEmails(team: Team) {
-  const coaches = team.coaches && team.coaches.length > 0 ? team.coaches : team.coach ? [team.coach] : [];
-  return coaches.map((coach) => normalizeEmail(coach.email)).filter(Boolean);
-}
-
-function canUserEditTeam(user: { email: string; role: UserRole }, team: Team) {
-  const userEmail = normalizeEmail(user.email);
-
-  return (
-    user.role === "admin" ||
-    userEmail === normalizeEmail(team.contact?.email) ||
-    getTeamCoachEmails(team).includes(userEmail)
-  );
-}
-
-function parseRequiredDate(value: unknown, fieldLabel: string): Date {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    throw new Error(`${fieldLabel} es requerida`);
-  }
-
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    throw new Error(`${fieldLabel} inválida`);
-  }
-
-  return parsedDate;
-}
 
 function parseRequiredJerseyNumber(value: unknown) {
   const parsedValue = typeof value === "number" ? value : Number(value);
@@ -59,19 +26,9 @@ function parseRequiredJerseyNumber(value: unknown) {
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const token = getSessionTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No autenticado",
-        },
-        { status: 401 },
-      );
-    }
-
-    const user = await authService.verifyToken(token);
+    const result = await requireAuthenticatedUser(request);
+    if (isAuthFailure(result)) return result;
+    const user = result;
     const team = await teamService.getTeamById(id);
 
     if (!team) {
@@ -143,21 +100,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al agregar jugador al roster";
-    const status = message.includes("camiseta ya está en uso")
-      ? 409
-      : message.includes("no encontrado")
-        ? 404
-        : message.includes("Token") || message.includes("Usuario")
-          ? 401
-          : 400;
+    const message = extractErrorMessage(error, "Error al agregar jugador al roster");
+    const status = resolveErrorStatus(message, [
+      { match: "camiseta ya está en uso", status: 409 },
+      { match: "no encontrado", status: 404 },
+      { match: "Token", status: 401 },
+      { match: "Usuario", status: 401 },
+    ]);
 
-    return apiErrorResponse({
-      request,
-      error,
-      message,
-      status,
-      route: "/api/teams/[id]/players",
-    });
+    return apiErrorResponse({ request, error, message, status, route: "/api/teams/[id]/players" });
   }
 }
