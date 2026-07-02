@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import InlineFeedback from "@/components/InlineFeedback";
 import Tag from "@/components/Tag";
 import Avatar from "@/components/Avatar";
 import type { ApiResponseDto, PlayerProfileResponseDto, PlayerStatsResponseDto } from "@/app/DTOs";
@@ -23,6 +24,7 @@ export default function PlayerProfilePage() {
   const [playerStats, setPlayerStats] = useState<PlayerStatsResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [statsWarning, setStatsWarning] = useState<string | null>(null);
   const canEditPlayer =
     !!user &&
     !!player &&
@@ -123,8 +125,9 @@ export default function PlayerProfilePage() {
             setPlayerStats(emptyPlayerStats());
           }
         } catch (statsError) {
-          console.log("Stats not available:", statsError);
+          console.warn("Stats not available:", statsError);
           setPlayerStats(emptyPlayerStats());
+          setStatsWarning("No se pudieron cargar las estadísticas del jugador.");
         }
       } catch {
         setError("Error de conexión. Por favor, intenta de nuevo.");
@@ -404,6 +407,12 @@ export default function PlayerProfilePage() {
                 </div>
               </div>
             </div>
+
+            {statsWarning && (
+              <div className="mt-6">
+                <InlineFeedback variant="warning" message={statsWarning} compact />
+              </div>
+            )}
 
             {playerStats && (
               <div className="mt-6 bg-white shadow rounded-lg">

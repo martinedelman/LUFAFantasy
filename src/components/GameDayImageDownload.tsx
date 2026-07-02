@@ -175,8 +175,8 @@ export default function GameDayImageDownload({ games }: { games: GameDayGame[] }
           .map((game) => localDateKey(game.scheduledDate))[0];
         setDateKey(firstDate || "");
       }
-    } catch {
-      // La lista visible sigue disponible como respaldo si falla la recarga.
+    } catch (error) {
+      console.warn("[GameDayImageDownload] No se pudo recargar la lista de partidos:", error);
     }
   };
 

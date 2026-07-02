@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
+import InlineFeedback from "@/components/InlineFeedback";
 import PageHero from "@/components/PageHero";
 import Pagination from "@/components/Pagination";
 import Avatar from "@/components/Avatar";
@@ -258,6 +259,7 @@ export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [catalogWarning, setCatalogWarning] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [walkOverLoadingGameId, setWalkOverLoadingGameId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -343,7 +345,7 @@ export default function GamesPage() {
         setDivisions(divisionsData.data);
       }
     } catch {
-      // No bloquear la vista por catálogos
+      setCatalogWarning("No se pudieron cargar los filtros. Algunos selectores podrían estar vacíos.");
     }
   }, []);
 
@@ -601,8 +603,8 @@ if (key === "homeTeam" || key === "awayTeam") {
           setHandledEditGameId(editGameId);
           await openEditForm(data.data);
         }
-      } catch {
-        // No bloquear la página si el deep link de edición no carga.
+      } catch (error) {
+        console.warn("No se pudo cargar el partido para edición:", error);
       }
     };
 
@@ -1311,6 +1313,12 @@ if (key === "homeTeam" || key === "awayTeam") {
                 </div>
               </form>
             </div>
+          </div>
+        )}
+
+        {catalogWarning && (
+          <div className="mb-4">
+            <InlineFeedback variant="warning" message={catalogWarning} compact />
           </div>
         )}
 
