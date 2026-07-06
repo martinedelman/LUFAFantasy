@@ -1,4 +1,4 @@
-import type { GameStatus, GameStatistics } from "@/entities/Game";
+import type { GamePhase, GameStatus, GameStatistics } from "@/entities/Game";
 import type { GameScore } from "@/entities/valueObjects/Score";
 import type { GameEventResponseDto } from "./GameLiveResponseDto";
 import type { PlayerSummaryResponseDto } from "./PlayerSummaryResponseDto";
@@ -30,6 +30,7 @@ export interface GameResponseDto {
   actualStartTime?: string;
   actualEndTime?: string;
   status: GameStatus;
+  phase: GamePhase;
   week?: number;
   round?: string;
   officials: Array<{

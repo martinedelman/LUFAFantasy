@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const eventType = searchParams.get("eventType") as AllowedEventType | null;
     const division = searchParams.get("division");
     const pointsParam = searchParams.get("points");
+    const scope = searchParams.get("scope") === "all" ? "all" : "regular";
     const includePickSix = searchParams.get("includePickSix") === "true";
     const limit = Math.max(1, Math.min(parseInt(searchParams.get("limit") || "10", 10), 50));
 
@@ -94,6 +95,11 @@ export async function GET(request: NextRequest) {
       {
         $match: {
           "gameInfo.status": { $in: ["in_progress", "completed"] },
+          ...(scope === "regular"
+            ? {
+                $or: [{ "gameInfo.phase": "regular" }, { "gameInfo.phase": { $exists: false } }],
+              }
+            : {}),
         },
       },
     ];
@@ -197,7 +203,7 @@ export async function GET(request: NextRequest) {
             },
           ];
 
-    const cacheKey = buildRequestCacheKey("rankings:players:v2", searchParams);
+    const cacheKey = buildRequestCacheKey("rankings:players:v3", searchParams);
     const rankings = await getCachedValue(
       cacheKey,
       RANKINGS_CACHE_TTL_SECONDS * 1000,

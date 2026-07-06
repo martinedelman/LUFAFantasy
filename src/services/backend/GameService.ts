@@ -1,4 +1,4 @@
-import { Game, GameEvent, GameEventType, GameOfficial, GameStatus } from "../../entities/Game";
+import { Game, GameEvent, GameEventType, GameOfficial, GamePhase, GameStatus } from "../../entities/Game";
 import { GameScore, QuarterScore } from "../../entities/valueObjects/Score";
 import { Venue } from "../../entities/valueObjects/Venue";
 import RepositoryContainer from "../../repositories";
@@ -49,6 +49,7 @@ export class GameService {
     officials?: GameOfficial[];
     venue: { name: string; address: string };
     scheduledDate: Date;
+    phase?: GamePhase;
     week?: number;
     round?: string;
     status?: GameStatus;
@@ -82,6 +83,7 @@ export class GameService {
       venue,
       data.scheduledDate,
       data.status || "scheduled",
+      data.phase || "regular",
       data.homeTeam,
       data.awayTeam,
       data.officials || [],
@@ -147,8 +149,8 @@ export class GameService {
     // Actualizar score
     const updatedGame = await this.gameRepo.updateScore(id, newScore);
 
-    // Mantener standings vivos para partidos en curso y finales.
-    if (updatedGame.status === "in_progress" || updatedGame.status === "completed") {
+    // Mantener standings vivos solo para temporada regular.
+    if (this.hasStandingsImpact(updatedGame)) {
       await this.recalculateStandingsForGame(updatedGame);
     }
 
@@ -173,7 +175,7 @@ export class GameService {
 
     const updatedGame = await this.gameRepo.addEvent(id, event);
 
-    if (safePoints && safePoints > 0) {
+    if (safePoints && safePoints > 0 && this.hasStandingsImpact(updatedGame)) {
       await this.recalculateStandingsForGame(updatedGame);
     }
 
@@ -195,7 +197,9 @@ export class GameService {
 
     const updatedGame = await this.gameRepo.removeEvent(id, eventId);
 
-    await this.recalculateStandingsForGame(updatedGame);
+    if (this.hasStandingsImpact(updatedGame)) {
+      await this.recalculateStandingsForGame(updatedGame);
+    }
 
     return updatedGame;
   }
@@ -218,7 +222,9 @@ export class GameService {
 
     const updatedGame = await this.gameRepo.updateEvent(id, eventId, event);
 
-    await this.recalculateStandingsForGame(updatedGame);
+    if (this.hasStandingsImpact(updatedGame)) {
+      await this.recalculateStandingsForGame(updatedGame);
+    }
 
     return updatedGame;
   }
@@ -277,7 +283,9 @@ export class GameService {
 
     // Actualizar en DB con validación atómica del estado
     const updatedGame = await this.gameRepo.startGame(id, presentPlayers);
-    await this.recalculateStandingsForGame(updatedGame);
+    if (this.hasStandingsImpact(updatedGame)) {
+      await this.recalculateStandingsForGame(updatedGame);
+    }
 
     return updatedGame;
   }
@@ -292,7 +300,9 @@ export class GameService {
     }
 
     const updatedGame = await this.gameRepo.updatePresentPlayers(id, presentPlayers);
-    await this.recalculateStandingsForGame(updatedGame);
+    if (this.hasStandingsImpact(updatedGame)) {
+      await this.recalculateStandingsForGame(updatedGame);
+    }
 
     return updatedGame;
   }
@@ -314,7 +324,9 @@ export class GameService {
     const updatedGame = await this.gameRepo.updateStatus(id, "completed");
 
     // Recalcular standings
-    await this.recalculateStandingsForGame(updatedGame);
+    if (this.hasStandingsImpact(updatedGame)) {
+      await this.recalculateStandingsForGame(updatedGame);
+    }
 
     return updatedGame;
   }
@@ -344,7 +356,9 @@ export class GameService {
 
     await this.updateGameScore(id, walkOverScore);
     const completedGame = await this.gameRepo.updateStatus(id, "completed");
-    await this.recalculateStandingsForGame(completedGame);
+    if (this.hasStandingsImpact(completedGame)) {
+      await this.recalculateStandingsForGame(completedGame);
+    }
 
     return completedGame;
   }
@@ -366,6 +380,41 @@ export class GameService {
       this.standingService.recalculateForTeam(homeTeamId, tournamentId, divisionId),
       this.standingService.recalculateForTeam(awayTeamId, tournamentId, divisionId),
     ]);
+  }
+
+  private async recalculateStandingsForGames(games: Game[]): Promise<void> {
+    const recalcKeys = new Map<string, { teamId: string; tournamentId: string; divisionId: string }>();
+
+    for (const game of games) {
+      if (!game.homeTeam || !game.awayTeam) {
+        continue;
+      }
+
+      const tournamentId = this.getReferenceId(game.tournament);
+      const divisionId = this.getReferenceId(game.division);
+
+      for (const teamId of [this.getReferenceId(game.homeTeam), this.getReferenceId(game.awayTeam)]) {
+        if (!teamId || !tournamentId || !divisionId) {
+          continue;
+        }
+
+        recalcKeys.set(`${teamId}:${tournamentId}:${divisionId}`, { teamId, tournamentId, divisionId });
+      }
+    }
+
+    await Promise.all(
+      Array.from(recalcKeys.values()).map(({ teamId, tournamentId, divisionId }) =>
+        this.standingService.recalculateForTeam(teamId, tournamentId, divisionId),
+      ),
+    );
+  }
+
+  private hasStandingsImpact(game: Game): boolean {
+    return (game.status === "in_progress" || game.status === "completed") && this.isRegularSeasonGame(game);
+  }
+
+  private isRegularSeasonGame(game: Game): boolean {
+    return !game.phase || game.phase === "regular";
   }
 
   private getReferenceId(reference: unknown): string {
@@ -451,6 +500,7 @@ export class GameService {
     team?: string;
     division?: string;
     status?: GameStatus;
+    phase?: GamePhase;
   }): Promise<Game[]> {
     if (filters.team) {
       const gamesByTeam = await this.gameRepo.findByTeam(filters.team);
@@ -467,6 +517,10 @@ export class GameService {
           return false;
         }
 
+        if (filters.phase && (game.phase || "regular") !== filters.phase) {
+          return false;
+        }
+
         return true;
       });
     }
@@ -475,11 +529,18 @@ export class GameService {
       tournament?: string;
       division?: string;
       status?: GameStatus;
+      phase?: GamePhase;
+      $or?: Array<Record<string, unknown>>;
     } = {};
 
     if (filters.tournament) queryFilters.tournament = filters.tournament;
     if (filters.division) queryFilters.division = filters.division;
     if (filters.status) queryFilters.status = filters.status;
+    if (filters.phase === "regular") {
+      queryFilters.$or = [{ phase: "regular" }, { phase: { $exists: false } }];
+    } else if (filters.phase) {
+      queryFilters.phase = filters.phase;
+    }
 
     return await this.gameRepo.findAll(queryFilters);
   }
@@ -494,6 +555,7 @@ export class GameService {
       awayTeam: string;
       scheduledDate: Date;
       status: GameStatus;
+      phase: GamePhase;
       week: number;
       round: string;
       officials: GameOfficial[];
@@ -529,6 +591,7 @@ export class GameService {
       normalizedVenue,
       data.scheduledDate || game.scheduledDate,
       data.status || game.status,
+      data.phase || game.phase || "regular",
       data.homeTeam || this.getReferenceId(game.homeTeam),
       data.awayTeam || this.getReferenceId(game.awayTeam),
       data.officials || game.officials || [],
@@ -553,8 +616,8 @@ export class GameService {
 
     const savedGame = await this.gameRepo.update(id, updatedGame);
 
-    if (savedGame.status === "in_progress" || savedGame.status === "completed") {
-      await this.recalculateStandingsForGame(savedGame);
+    if (this.hasStandingsImpact(game) || this.hasStandingsImpact(savedGame)) {
+      await this.recalculateStandingsForGames([game, savedGame]);
     }
 
     return savedGame;

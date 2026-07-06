@@ -21,6 +21,7 @@ const gamesHero = {
 };
 
 type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
+type GamePhase = "regular" | "playoff" | "final";
 
 type TournamentOption = {
   _id: string;
@@ -59,6 +60,7 @@ type Game = {
   week?: number;
   round?: string;
   status: GameStatus;
+  phase?: GamePhase;
   tournament: TournamentOption;
   division: DivisionOption;
   homeTeam: TeamOption | null;
@@ -114,6 +116,7 @@ type GameFormState = {
   awayTeam: string;
   scheduledDate: string;
   status: GameStatus;
+  phase: GamePhase;
   week: string;
   round: string;
   venueName: string;
@@ -127,6 +130,7 @@ type GameFormState = {
 
 type GameFilters = {
   status: string;
+  phase: string;
   tournament: string;
   division: string;
   upcoming: boolean;
@@ -139,6 +143,7 @@ const INITIAL_FORM: GameFormState = {
   awayTeam: "",
   scheduledDate: "",
   status: "scheduled",
+  phase: "regular",
   week: "",
   round: "",
   venueName: "",
@@ -152,6 +157,7 @@ const INITIAL_FORM: GameFormState = {
 
 const INITIAL_FILTERS: GameFilters = {
   status: "",
+  phase: "",
   tournament: "",
   division: "",
   upcoming: true,
@@ -295,6 +301,7 @@ export default function GamesPage() {
           page: page.toString(),
           limit: "10",
           ...(filters.status && { status: filters.status }),
+          ...(filters.phase && { phase: filters.phase }),
           ...(filters.tournament && { tournament: filters.tournament }),
           ...(filters.division && { division: filters.division }),
           ...(filters.upcoming && { upcoming: "true" }),
@@ -552,6 +559,7 @@ if (key === "homeTeam" || key === "awayTeam") {
         awayTeam: awayTeamId,
         scheduledDate: toDateTimeLocal(game.scheduledDate),
         status: game.status,
+        phase: game.phase || "regular",
         week: game.week ? String(game.week) : "",
         round: game.round || "",
         venueName: game.venue?.name || "",
@@ -640,6 +648,7 @@ if (key === "homeTeam" || key === "awayTeam") {
       awayTeam: form.awayTeam || null,
       scheduledDate: new Date(form.scheduledDate).toISOString(),
       status: form.status,
+      phase: form.phase,
       round: form.round.trim(),
       officials,
       venue: {
@@ -766,6 +775,21 @@ if (key === "homeTeam" || key === "awayTeam") {
     );
   };
 
+  const getPhaseBadge = (phase: GamePhase | undefined) => {
+    const phaseMap: Record<GamePhase, { label: string; className: string }> = {
+      regular: { label: "Temporada regular", className: "border-emerald-200 bg-emerald-50 text-emerald-800" },
+      playoff: { label: "Playoffs", className: "border-indigo-200 bg-indigo-50 text-indigo-800" },
+      final: { label: "Final", className: "border-amber-200 bg-amber-50 text-amber-800" },
+    };
+    const { label, className } = phaseMap[phase || "regular"];
+
+    return (
+      <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${className}`}>
+        {label}
+      </span>
+    );
+  };
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("es-ES", {
       weekday: "long",
@@ -821,7 +845,7 @@ if (key === "homeTeam" || key === "awayTeam") {
           buttonClassName="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-900 sm:px-5"
           contentClassName="px-4 pb-4 sm:px-5 sm:pb-5"
         >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
             <div>
               <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700">
                 Estado
@@ -838,6 +862,23 @@ if (key === "homeTeam" || key === "awayTeam") {
                 <option value="completed">Completados</option>
                 <option value="postponed">Pospuestos</option>
                 <option value="cancelled">Cancelados</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="phase-filter" className="block text-sm font-medium text-gray-700">
+                Fase
+              </label>
+              <select
+                id="phase-filter"
+                value={filters.phase}
+                onChange={(e) => handleFilterChange("phase", e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm"
+              >
+                <option value="">Todas las fases</option>
+                <option value="regular">Temporada regular</option>
+                <option value="playoff">Playoffs</option>
+                <option value="final">Final</option>
               </select>
             </div>
 
@@ -1095,6 +1136,22 @@ if (key === "homeTeam" || key === "awayTeam") {
                       <option value="completed">Completado</option>
                       <option value="postponed">Pospuesto</option>
                       <option value="cancelled">Cancelado</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="phase" className="block text-sm font-medium text-gray-700 mb-1">
+                      Fase
+                    </label>
+                    <select
+                      id="phase"
+                      value={form.phase}
+                      onChange={(e) => handleFormChange("phase", e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="regular">Temporada regular</option>
+                      <option value="playoff">Playoffs</option>
+                      <option value="final">Final</option>
                     </select>
                   </div>
 
@@ -1381,6 +1438,7 @@ if (key === "homeTeam" || key === "awayTeam") {
                     {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
                     {game.round ? ` · ${game.round}` : ""}
                   </div>
+                  <div className="mt-3 flex justify-center">{getPhaseBadge(game.phase)}</div>
                 </div>
 
                 <div className="hidden sm:block">
@@ -1440,6 +1498,7 @@ if (key === "homeTeam" || key === "awayTeam") {
                         {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
                         {game.round ? ` · ${game.round}` : ""}
                       </div>
+                      <div className="mt-3 flex justify-center">{getPhaseBadge(game.phase)}</div>
                     </div>
                   </div>
                 </div>

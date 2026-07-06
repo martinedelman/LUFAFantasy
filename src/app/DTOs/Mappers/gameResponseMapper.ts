@@ -73,6 +73,7 @@ export function toGameResponseDto(game: Game): GameResponseDto {
     actualStartTime: game.actualStartTime?.toISOString(),
     actualEndTime: game.actualEndTime?.toISOString(),
     status: game.status,
+    phase: game.phase || "regular",
     week: game.week,
     round: game.round,
     officials: (gameWithEvents.officials || []).map(toOfficialRef).filter(isDefinedOfficialRef),

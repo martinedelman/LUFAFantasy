@@ -13,6 +13,7 @@ export interface User {
 
 // Tipos de estado de juego
 export type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
+export type GamePhase = "regular" | "playoff" | "final";
 
 export interface Tournament {
   _id?: string;
@@ -173,6 +174,7 @@ export interface Game {
   actualStartTime?: Date;
   actualEndTime?: Date;
   status: GameStatus;
+  phase?: GamePhase;
   week?: number;
   round?: string;
   officials: Official[];
