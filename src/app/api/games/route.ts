@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GameService, JudgeService } from "@/services/backend";
 import { apiErrorResponse } from "@/lib/apiError";
-import { GameStatus } from "@/entities/Game";
+import type { GamePhase, GameStatus } from "@/entities/Game";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { CreateGameRequestDto, UpdateGameRequestDto } from "@/app/DTOs";
 
 const gameService = new GameService();
 const judgeService = new JudgeService();
 const OFFICIAL_ROLES = ["referee", "down_judge", "side_judge", "table_judge"] as const;
+const GAME_PHASES: GamePhase[] = ["regular", "playoff", "final"];
 
 type OfficialRole = (typeof OFFICIAL_ROLES)[number];
 type OfficialAssignment = {
@@ -81,6 +82,8 @@ export async function GET(request: NextRequest) {
     const tournament = searchParams.get("tournament") || undefined;
     const division = searchParams.get("division") || undefined;
     const status = searchParams.get("status") as GameStatus | undefined;
+    const phaseParam = searchParams.get("phase");
+    const phase = GAME_PHASES.includes(phaseParam as GamePhase) ? (phaseParam as GamePhase) : undefined;
     const team = searchParams.get("team") || undefined;
     const upcoming = searchParams.get("upcoming") === "true";
 
@@ -89,6 +92,7 @@ export async function GET(request: NextRequest) {
       team,
       division,
       status,
+      phase,
     });
 
     if (upcoming) {
@@ -140,6 +144,7 @@ export async function POST(request: NextRequest) {
       officials: await resolveOfficials(body.officials),
       venue: body.venue,
       scheduledDate: new Date(body.scheduledDate),
+      phase: GAME_PHASES.includes(body.phase as GamePhase) ? body.phase : "regular",
       week: body.week,
       round: body.round,
       status: body.status,
@@ -180,6 +185,7 @@ export async function PUT(request: NextRequest) {
       awayTeam: body.awayTeam ?? undefined,
       scheduledDate: body.scheduledDate ? new Date(body.scheduledDate) : undefined,
       status: body.status,
+      phase: GAME_PHASES.includes(body.phase as GamePhase) ? body.phase : undefined,
       week: body.week,
       round: body.round,
       officials: body.officials ? await resolveOfficials(body.officials) : undefined,

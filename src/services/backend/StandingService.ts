@@ -41,13 +41,12 @@ export class StandingService {
   async recalculateForTeam(teamId: string, tournamentId: string, divisionId: string): Promise<Standing> {
     const games = (await this.gameRepo.findByTournament(tournamentId))
       .filter((game) => {
-        const isRelevantStatus = game.status === "in_progress" || game.status === "completed";
         const isSameDivision = this.getReferenceId(game.division) === divisionId;
         const hasTeam =
           this.getReferenceId(game.homeTeam) === teamId ||
           this.getReferenceId(game.awayTeam) === teamId;
 
-        return isRelevantStatus && isSameDivision && hasTeam;
+        return this.isCountableStandingGame(game) && isSameDivision && hasTeam;
       })
       .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
 
@@ -118,8 +117,8 @@ export class StandingService {
    */
   async getStandingsByDivision(divisionId: string): Promise<Standing[]> {
     const standings = await this.standingRepo.findByDivision(divisionId);
-    const standingsGames = (await this.gameRepo.findByDivision(divisionId)).filter(
-      (game) => game.status === "in_progress" || game.status === "completed",
+    const standingsGames = (await this.gameRepo.findByDivision(divisionId)).filter((game) =>
+      this.isCountableStandingGame(game),
     );
     const sortedStandings = this.sortStandingsByIfafRules(standings, standingsGames);
 
@@ -366,6 +365,12 @@ export class StandingService {
     }
 
     return reference.toString();
+  }
+
+  private isCountableStandingGame(game: Game): boolean {
+    const isRelevantStatus = game.status === "in_progress" || game.status === "completed";
+    const isRegularSeason = !game.phase || game.phase === "regular";
+    return isRelevantStatus && isRegularSeason;
   }
 
   /**

@@ -1,4 +1,4 @@
-import type { Game, GameStatus } from "@/types";
+import type { Game, GamePhase, GameStatus } from "@/types";
 import { gameApiClient } from "../api";
 
 /**
@@ -145,6 +145,7 @@ export class GameUIService {
     tournament?: string;
     team?: string;
     status?: GameStatus;
+    phase?: GamePhase;
     date?: string;
   }): Promise<{ games: Game[]; error: string | null }> {
     try {

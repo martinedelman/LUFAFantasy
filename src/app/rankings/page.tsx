@@ -52,6 +52,18 @@ type RankingMetric = {
   includePickSix?: boolean;
 };
 
+type RankingsScope = "regular" | "all";
+
+type RankingsFilters = {
+  division: string;
+  scope: RankingsScope;
+};
+
+const INITIAL_RANKINGS_FILTERS: RankingsFilters = {
+  division: "",
+  scope: "regular",
+};
+
 const METRICS: RankingMetric[] = [
   { key: "globalPoints", label: "Top 10 Puntos Globales", mode: "points" },
   {
@@ -151,7 +163,7 @@ function getValueLabel(metric: RankingMetric) {
 
 export default function RankingsPage() {
   const [divisions, setDivisions] = useState<DivisionOption[]>([]);
-  const [selectedDivision, setSelectedDivision, , filtersHydrated] = useCachedState("filters:rankings", "");
+  const [filters, setFilters, , filtersHydrated] = useCachedState("filters:rankings:v2", INITIAL_RANKINGS_FILTERS);
   const [rankingsByMetric, setRankingsByMetric] = useState<Record<string, PlayerStatsRow[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -167,16 +179,17 @@ export default function RankingsPage() {
     setDivisions(data.data || []);
   }, []);
 
-  const fetchRankings = useCallback(async (divisionId?: string) => {
+  const fetchRankings = useCallback(async (rankingFilters: RankingsFilters) => {
     const rankings = await Promise.all(
       METRICS.map(async (metric) => {
         const params = new URLSearchParams({
           limit: "10",
           mode: metric.mode,
+          scope: rankingFilters.scope,
           ...(metric.eventType ? { eventType: metric.eventType } : {}),
           ...(metric.points !== undefined ? { points: String(metric.points) } : {}),
           ...(metric.includePickSix ? { includePickSix: "true" } : {}),
-          ...(divisionId ? { division: divisionId } : {}),
+          ...(rankingFilters.division ? { division: rankingFilters.division } : {}),
         });
 
         const response = await fetch(`/api/rankings/players?${params.toString()}`);
@@ -202,7 +215,7 @@ export default function RankingsPage() {
         setError(null);
 
         await fetchDivisions();
-        await fetchRankings(selectedDivision || undefined);
+        await fetchRankings(filters);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : "Error al cargar rankings");
       } finally {
@@ -211,10 +224,10 @@ export default function RankingsPage() {
     };
 
     loadData();
-  }, [fetchDivisions, fetchRankings, filtersHydrated, selectedDivision]);
+  }, [fetchDivisions, fetchRankings, filters, filtersHydrated]);
 
   const selectedDivisionName =
-    divisions.find((division) => division._id === selectedDivision)?.name || "Todas las divisiones";
+    divisions.find((division) => division._id === filters.division)?.name || "Todas las divisiones";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -231,8 +244,8 @@ export default function RankingsPage() {
               </label>
               <select
                 id="rankings-division"
-                value={selectedDivision}
-                onChange={(event) => setSelectedDivision(event.target.value)}
+                value={filters.division}
+                onChange={(event) => setFilters((prev) => ({ ...prev, division: event.target.value }))}
                 className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 <option value="">Todas las divisiones</option>
@@ -243,6 +256,22 @@ export default function RankingsPage() {
                 ))}
               </select>
               <p className="mt-2 text-xs text-gray-500">Mostrando: {selectedDivisionName}</p>
+            </div>
+            <div>
+              <label htmlFor="rankings-scope" className="block text-sm font-medium text-gray-700">
+                Alcance
+              </label>
+              <select
+                id="rankings-scope"
+                value={filters.scope}
+                onChange={(event) =>
+                  setFilters((prev) => ({ ...prev, scope: event.target.value === "all" ? "all" : "regular" }))
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="regular">Temporada regular</option>
+                <option value="all">Todo</option>
+              </select>
             </div>
           </div>
         </FilterAccordion>

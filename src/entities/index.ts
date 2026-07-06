@@ -23,7 +23,7 @@ export { Player } from "./Player";
 export type { PlayerPosition, PlayerStatus } from "./Player";
 
 export { Game } from "./Game";
-export type { GameStatus, GameStatistics } from "./Game";
+export type { GamePhase, GameStatus, GameStatistics } from "./Game";
 
 export { Standing } from "./Standing";
 

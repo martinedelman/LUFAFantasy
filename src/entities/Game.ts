@@ -4,6 +4,7 @@ import { GameScore, QuarterScore } from "./valueObjects/Score";
 import { TeamStatistics } from "./valueObjects/TeamStatistics";
 
 export type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
+export type GamePhase = "regular" | "playoff" | "final";
 
 export type GameEventType =
   | "touchdown"
@@ -72,6 +73,7 @@ export class Game extends AggregateRoot {
   public readonly actualStartTime?: Date;
   public readonly actualEndTime?: Date;
   public readonly status: GameStatus;
+  public readonly phase: GamePhase;
   public readonly week?: number;
   public readonly round?: string;
   public readonly officials: GameOfficial[];
@@ -86,6 +88,7 @@ export class Game extends AggregateRoot {
     venue: Venue,
     scheduledDate: Date,
     status: GameStatus = "scheduled",
+    phase: GamePhase = "regular",
     homeTeam: string | null = null,
     awayTeam: string | null = null,
     officials: GameOfficial[] = [],
@@ -111,6 +114,7 @@ export class Game extends AggregateRoot {
     this.actualStartTime = actualStartTime;
     this.actualEndTime = actualEndTime;
     this.status = status;
+    this.phase = phase || "regular";
     this.week = week;
     this.round = round;
     this.officials = officials;
@@ -172,6 +176,7 @@ export class Game extends AggregateRoot {
       this.venue,
       this.scheduledDate,
       "in_progress",
+      this.phase,
       this.homeTeam,
       this.awayTeam,
       this.officials,
@@ -203,6 +208,7 @@ export class Game extends AggregateRoot {
       this.venue,
       this.scheduledDate,
       "completed",
+      this.phase,
       this.homeTeam,
       this.awayTeam,
       this.officials,
@@ -317,6 +323,10 @@ export class Game extends AggregateRoot {
 
     if (!["scheduled", "in_progress", "completed", "postponed", "cancelled"].includes(this.status)) {
       errors.push("Estado del partido inválido");
+    }
+
+    if (!["regular", "playoff", "final"].includes(this.phase)) {
+      errors.push("Fase del partido inválida");
     }
 
     // Validar que si el partido está completado, debe tener equipos

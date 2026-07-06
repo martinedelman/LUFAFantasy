@@ -1,5 +1,5 @@
 import { BaseApiClient } from "./BaseApiClient";
-import type { Game, GameStatus } from "@/types";
+import type { Game, GamePhase, GameStatus } from "@/types";
 
 /**
  * Cliente API para operaciones con partidos
@@ -16,6 +16,7 @@ export class GameApiClient extends BaseApiClient {
     tournament?: string;
     team?: string;
     status?: GameStatus;
+    phase?: GamePhase;
     date?: string;
   }): Promise<Game[]> {
     const params: Record<string, string> = {};
@@ -23,6 +24,7 @@ export class GameApiClient extends BaseApiClient {
     if (filters?.tournament) params.tournament = filters.tournament;
     if (filters?.team) params.team = filters.team;
     if (filters?.status) params.status = filters.status;
+    if (filters?.phase) params.phase = filters.phase;
     if (filters?.date) params.date = filters.date;
 
     return this.get<Game[]>("/games", Object.keys(params).length > 0 ? params : undefined);

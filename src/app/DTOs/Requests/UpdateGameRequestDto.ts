@@ -1,4 +1,4 @@
-import type { GameStatus } from "@/entities/Game";
+import type { GamePhase, GameStatus } from "@/entities/Game";
 import type { GameOfficialAssignmentRequestDto } from "./CreateGameRequestDto";
 
 export interface UpdateGameRequestDto {
@@ -7,6 +7,7 @@ export interface UpdateGameRequestDto {
   awayTeam?: string | null;
   scheduledDate?: string;
   status?: GameStatus;
+  phase?: GamePhase;
   week?: number;
   round?: string;
   officials?: GameOfficialAssignmentRequestDto[];

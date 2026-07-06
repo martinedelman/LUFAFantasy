@@ -90,6 +90,11 @@ const GameSchema = new Schema(
       enum: ["scheduled", "in_progress", "completed", "postponed", "cancelled"],
       default: "scheduled",
     },
+    phase: {
+      type: String,
+      enum: ["regular", "playoff", "final"],
+      default: "regular",
+    },
     week: { type: Number },
     round: { type: String, trim: true },
     officials: [{ type: OfficialSchema }],
@@ -119,6 +124,7 @@ GameSchema.index(
 );
 GameSchema.index({ scheduledDate: 1 });
 GameSchema.index({ status: 1 });
+GameSchema.index({ phase: 1 });
 GameSchema.index({ week: 1 });
 
 export const GameModel = mongoose.models.Game || mongoose.model<Game>("Game", GameSchema);
