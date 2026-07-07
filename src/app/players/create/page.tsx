@@ -125,6 +125,7 @@ export default function CreatePlayerPage() {
         }
       } catch (error) {
         console.error("Error loading teams:", error);
+        setError("No se pudieron cargar los equipos. Por favor, recarga la página.");
       } finally {
         setLoadingTeams(false);
       }

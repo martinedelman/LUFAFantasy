@@ -171,6 +171,7 @@ export default function StandingsPage() {
       }
     } catch (err) {
       console.error("Error fetching tournaments:", err);
+      setError("No se pudieron cargar los torneos. Por favor, intenta de nuevo.");
       setLoading(false);
     }
   }, [selectedTournament, selectedDivision, setFilters]);

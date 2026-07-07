@@ -54,8 +54,8 @@ export class VercelBlobFileStorageRepository implements IFileStorageRepository {
   async update(currentUrl: string, input: FileUploadInput): Promise<StoredFileMetadata> {
     try {
       await this.delete(currentUrl);
-    } catch {
-      // Si la URL previa no existe o no pertenece al provider actual, se continúa con la nueva carga.
+    } catch (error) {
+      console.warn("[BlobStorage] No se pudo eliminar el archivo previo, se continúa con la nueva carga:", currentUrl, error);
     }
 
     return this.create(input);
