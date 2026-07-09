@@ -76,6 +76,7 @@ export class Game extends AggregateRoot {
   public readonly phase: GamePhase;
   public readonly week?: number;
   public readonly round?: string;
+  public readonly playoffSlot?: string;
   public readonly officials: GameOfficial[];
   public readonly score: GameScore;
   public readonly statistics: GameStatistics;
@@ -97,6 +98,7 @@ export class Game extends AggregateRoot {
     presentPlayers?: GamePresentPlayers,
     week?: number,
     round?: string,
+    playoffSlot?: string,
     actualStartTime?: Date,
     actualEndTime?: Date,
     notes?: string,
@@ -117,6 +119,7 @@ export class Game extends AggregateRoot {
     this.phase = phase || "regular";
     this.week = week;
     this.round = round;
+    this.playoffSlot = playoffSlot;
     this.officials = officials;
     this.score = score || GameScore.zero();
     this.statistics = statistics || {
@@ -185,6 +188,7 @@ export class Game extends AggregateRoot {
       this.presentPlayers,
       this.week,
       this.round,
+      this.playoffSlot,
       new Date(),
       this.actualEndTime,
       this.notes,
@@ -217,6 +221,7 @@ export class Game extends AggregateRoot {
       this.presentPlayers,
       this.week,
       this.round,
+      this.playoffSlot,
       this.actualStartTime,
       new Date(),
       this.notes,
@@ -327,6 +332,10 @@ export class Game extends AggregateRoot {
 
     if (!["regular", "playoff", "final"].includes(this.phase)) {
       errors.push("Fase del partido inválida");
+    }
+
+    if (this.phase === "regular" && this.playoffSlot) {
+      errors.push("Un partido de temporada regular no puede tener casillero de playoffs");
     }
 
     // Validar que si el partido está completado, debe tener equipos

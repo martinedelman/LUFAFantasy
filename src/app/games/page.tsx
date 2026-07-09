@@ -11,6 +11,11 @@ import Skeleton from "@/components/Skeleton";
 import GameDayImageDownload from "@/components/GameDayImageDownload";
 import { useAuth } from "@/hooks/useAuth";
 import { useCachedState } from "@/hooks/useCachedState";
+import {
+  getPlayoffSlotDefinitions,
+  type PlayoffCriteria,
+  type PlayoffSlotDefinition,
+} from "@/lib/playoffSlots";
 import Link from "next/link";
 
 const gamesHero = {
@@ -27,6 +32,7 @@ type TournamentOption = {
   _id: string;
   name: string;
   year: number;
+  playoffCriteria?: PlayoffCriteria;
 };
 
 type DivisionOption = {
@@ -61,6 +67,7 @@ type Game = {
   round?: string;
   status: GameStatus;
   phase?: GamePhase;
+  playoffSlot?: string;
   tournament: TournamentOption;
   division: DivisionOption;
   homeTeam: TeamOption | null;
@@ -117,6 +124,7 @@ type GameFormState = {
   scheduledDate: string;
   status: GameStatus;
   phase: GamePhase;
+  playoffSlot: string;
   week: string;
   round: string;
   venueName: string;
@@ -144,6 +152,7 @@ const INITIAL_FORM: GameFormState = {
   scheduledDate: "",
   status: "scheduled",
   phase: "regular",
+  playoffSlot: "",
   week: "",
   round: "",
   venueName: "",
@@ -285,11 +294,14 @@ export default function GamesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [handledEditGameId, setHandledEditGameId] = useState<string | null>(null);
+  const [handledCreateRequest, setHandledCreateRequest] = useState<string | null>(null);
 
   const [tournaments, setTournaments] = useState<TournamentOption[]>([]);
   const [divisions, setDivisions] = useState<DivisionOption[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [judges, setJudges] = useState<JudgeOption[]>([]);
+  const [slotGames, setSlotGames] = useState<Game[]>([]);
+  const [loadingSlotGames, setLoadingSlotGames] = useState(false);
 
   const fetchGames = useCallback(
     async (page = 1) => {
@@ -393,6 +405,34 @@ export default function GamesPage() {
     }
   }, []);
 
+  const fetchSlotGames = useCallback(async (tournamentId: string, divisionId: string) => {
+    if (!tournamentId || !divisionId) {
+      setSlotGames([]);
+      return;
+    }
+
+    try {
+      setLoadingSlotGames(true);
+      const params = new URLSearchParams({ tournament: tournamentId, division: divisionId });
+      const response = await fetch(`/api/games?${params.toString()}`);
+      const data: ApiResponse<Game[]> = await response.json();
+
+      if (response.ok && data.success) {
+        setSlotGames(
+          data.data.filter(
+            (game) => game.playoffSlot && game.status !== "cancelled" && (game.phase === "playoff" || game.phase === "final"),
+          ),
+        );
+      } else {
+        setSlotGames([]);
+      }
+    } catch {
+      setSlotGames([]);
+    } finally {
+      setLoadingSlotGames(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCatalogs();
   }, [fetchCatalogs]);
@@ -410,6 +450,15 @@ export default function GamesPage() {
   useEffect(() => {
     fetchTeamsForDivision(form.division);
   }, [form.division, fetchTeamsForDivision]);
+
+  useEffect(() => {
+    if (form.phase === "regular") {
+      setSlotGames([]);
+      return;
+    }
+
+    fetchSlotGames(form.tournament, form.division);
+  }, [fetchSlotGames, form.division, form.phase, form.tournament]);
 
   const filteredDivisionsForForm = useMemo(() => {
     if (!form.tournament) return divisions;
@@ -429,6 +478,20 @@ export default function GamesPage() {
     // mostrar todas para evitar que el selector quede vacío en edición.
     return filtered.length > 0 ? filtered : divisions;
   }, [divisions, form.tournament]);
+
+  const selectedTournamentForForm = tournaments.find((tournament) => tournament._id === form.tournament);
+  const playoffSlotOptions = useMemo<PlayoffSlotDefinition[]>(() => {
+    if (form.phase === "regular") return [];
+
+    const slotPhase = form.phase === "final" ? "final" : "playoff";
+    return getPlayoffSlotDefinitions(selectedTournamentForForm?.playoffCriteria).filter((slot) => slot.phase === slotPhase);
+  }, [form.phase, selectedTournamentForForm?.playoffCriteria]);
+
+  const occupiedSlotGames = useMemo(() => {
+    return slotGames.filter((game) => game._id !== form.id && game.playoffSlot);
+  }, [form.id, slotGames]);
+
+  const getGameForPlayoffSlot = (slotId: string) => occupiedSlotGames.find((game) => game.playoffSlot === slotId);
 
   const filteredDivisionsForFilter = useMemo(() => {
     if (!filters.tournament) return divisions;
@@ -460,11 +523,15 @@ export default function GamesPage() {
   const handleFormChange = (key: keyof GameFormState, value: string) => {
     setForm((prev) => {
       if (key === "tournament") {
-        return { ...prev, tournament: value, division: "", homeTeam: "", awayTeam: "" };
+        return { ...prev, tournament: value, division: "", homeTeam: "", awayTeam: "", playoffSlot: "" };
       }
 
       if (key === "division") {
-        return { ...prev, division: value, homeTeam: "", awayTeam: "" };
+        return { ...prev, division: value, homeTeam: "", awayTeam: "", playoffSlot: "" };
+      }
+
+      if (key === "phase") {
+        return { ...prev, phase: value as GamePhase, playoffSlot: value === "regular" ? "" : prev.playoffSlot };
       }
 
       return { ...prev, [key]: value };
@@ -536,6 +603,18 @@ if (key === "homeTeam" || key === "awayTeam") {
     setShowForm(true);
   };
 
+  const openCreateFormWithPrefill = useCallback(
+    (prefill: Partial<GameFormState>) => {
+      if (!canManageGames) return;
+      setForm({ ...INITIAL_FORM, ...prefill });
+      setEditingGame(null);
+      setFormError(null);
+      setFieldErrors({});
+      setShowForm(true);
+    },
+    [canManageGames],
+  );
+
   const openEditForm = useCallback(
     async (game: Game) => {
       if (!canManageGames) return;
@@ -560,6 +639,7 @@ if (key === "homeTeam" || key === "awayTeam") {
         scheduledDate: toDateTimeLocal(game.scheduledDate),
         status: game.status,
         phase: game.phase || "regular",
+        playoffSlot: game.playoffSlot || "",
         week: game.week ? String(game.week) : "",
         round: game.round || "",
         venueName: game.venue?.name || "",
@@ -617,6 +697,27 @@ if (key === "homeTeam" || key === "awayTeam") {
     void openRequestedGame();
   }, [canManageGames, games, handledEditGameId, openEditForm]);
 
+  useEffect(() => {
+    if (!canManageGames) return;
+
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("create") !== "1") return;
+
+    const requestKey = searchParams.toString();
+    if (handledCreateRequest === requestKey) return;
+
+    const queryPhase = searchParams.get("phase") as GamePhase | null;
+    const phase = queryPhase === "playoff" || queryPhase === "final" ? queryPhase : "playoff";
+
+    setHandledCreateRequest(requestKey);
+    openCreateFormWithPrefill({
+      tournament: searchParams.get("tournament") || "",
+      division: searchParams.get("division") || "",
+      phase,
+      playoffSlot: searchParams.get("playoffSlot") || "",
+    });
+  }, [canManageGames, handledCreateRequest, openCreateFormWithPrefill]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
@@ -649,6 +750,7 @@ if (key === "homeTeam" || key === "awayTeam") {
       scheduledDate: new Date(form.scheduledDate).toISOString(),
       status: form.status,
       phase: form.phase,
+      playoffSlot: form.phase === "regular" ? null : form.playoffSlot || null,
       round: form.round.trim(),
       officials,
       venue: {
@@ -775,11 +877,20 @@ if (key === "homeTeam" || key === "awayTeam") {
     );
   };
 
+  const postseasonGoldText = "text-[#f2d36e]";
+  const isPostseasonPhase = (phase: GamePhase | undefined) => phase === "playoff" || phase === "final";
+
   const getPhaseBadge = (phase: GamePhase | undefined) => {
     const phaseMap: Record<GamePhase, { label: string; className: string }> = {
       regular: { label: "Temporada regular", className: "border-emerald-200 bg-emerald-50 text-emerald-800" },
-      playoff: { label: "Playoffs", className: "border-indigo-200 bg-indigo-50 text-indigo-800" },
-      final: { label: "Final", className: "border-amber-200 bg-amber-50 text-amber-800" },
+      playoff: {
+        label: "Playoffs",
+        className: "border-[#f2d36e] bg-black text-[#f2d36e]",
+      },
+      final: {
+        label: "Final",
+        className: "border-[#f2d36e] bg-black text-[#f2d36e]",
+      },
     };
     const { label, className } = phaseMap[phase || "regular"];
 
@@ -1155,6 +1266,41 @@ if (key === "homeTeam" || key === "awayTeam") {
                     </select>
                   </div>
 
+                  {form.phase !== "regular" && (
+                    <div>
+                      <label htmlFor="playoffSlot" className="block text-sm font-medium text-gray-700 mb-1">
+                        Casillero del bracket
+                      </label>
+                      <select
+                        id="playoffSlot"
+                        value={form.playoffSlot}
+                        onChange={(e) => handleFormChange("playoffSlot", e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={!form.tournament || !form.division || playoffSlotOptions.length === 0}
+                      >
+                        <option value="">
+                          {!form.tournament || !form.division
+                            ? "Seleccionar torneo y división"
+                            : loadingSlotGames
+                              ? "Cargando casilleros..."
+                              : "Sin vincular a bracket"}
+                        </option>
+                        {playoffSlotOptions.map((slot) => {
+                          const occupiedGame = getGameForPlayoffSlot(slot.id);
+                          return (
+                            <option key={slot.id} value={slot.id} disabled={Boolean(occupiedGame)}>
+                              {slot.label}
+                              {occupiedGame ? " (ocupado)" : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Usá este campo para que el partido aparezca en la gráfica de playoffs del torneo.
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <label htmlFor="week" className="block text-sm font-medium text-gray-700 mb-1">
                       Semana
@@ -1310,6 +1456,34 @@ if (key === "homeTeam" || key === "awayTeam") {
                   </div>
                 </div>
 
+                {form.phase !== "regular" && occupiedSlotGames.length > 0 && (
+                  <div className="rounded-md border border-indigo-100 bg-indigo-50 p-3">
+                    <p className="text-sm font-semibold text-indigo-950">Casilleros ocupados</p>
+                    <div className="mt-2 space-y-2">
+                      {occupiedSlotGames.map((game) => {
+                        const slot = playoffSlotOptions.find((option) => option.id === game.playoffSlot);
+                        return (
+                          <div
+                            key={game._id}
+                            className="flex flex-col gap-2 rounded-md bg-white px-3 py-2 text-sm text-indigo-950 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <span>
+                              {slot?.label || game.playoffSlot}: {getTeamDisplayName(game.homeTeam)} vs{" "}
+                              {getTeamDisplayName(game.awayTeam)}
+                            </span>
+                            <Link
+                              href={`/games?edit=${game._id}`}
+                              className="text-sm font-semibold text-indigo-700 hover:text-indigo-900"
+                            >
+                              Editar partido
+                            </Link>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
                     Notas
@@ -1381,24 +1555,37 @@ if (key === "homeTeam" || key === "awayTeam") {
           <GamesSkeletonList />
         ) : (
           <div className="space-y-4">
-            {games.map((game, index) => (
+            {games.map((game, index) => {
+              const isPostseason = isPostseasonPhase(game.phase);
+              const cardClassName = isPostseason
+                ? "relative block overflow-hidden rounded-lg bg-[radial-gradient(circle_at_50%_0%,rgba(242,211,110,0.2)_0%,rgba(242,211,110,0.08)_28%,rgba(10,10,10,0)_58%),linear-gradient(135deg,#030303_0%,#0b0b0b_42%,#211b09_72%,#080808_100%)] p-4 text-white shadow-md outline outline-2 outline-[#f2d36e] focus:outline-none focus:ring-2 focus:ring-[#f2d36e] focus:ring-offset-2 focus:ring-offset-neutral-950 sm:p-6"
+                : "relative block overflow-hidden rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6";
+              const primaryTextClassName = isPostseason ? "text-white" : "text-gray-900";
+              const secondaryTextClassName = isPostseason ? "text-neutral-200" : "text-gray-700";
+              const mutedTextClassName = isPostseason ? "text-neutral-300" : "text-gray-500";
+              const subtleTextClassName = isPostseason ? "text-neutral-400" : "text-gray-400";
+              const scoreClassName = isPostseason ? postseasonGoldText : "text-gray-900";
+              const mobileScoreClassName = isPostseason ? postseasonGoldText : "text-blue-900";
+              const vsClassName = isPostseason ? postseasonGoldText : "text-gray-500";
+
+              return (
               <RevealOnScroll key={game._id} delayMs={(index % 4) * 60}>
                 <Link
                   href={`/games/${game._id}`}
-                  className="relative block overflow-hidden rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:p-6"
+                  className={cardClassName}
                   aria-label={`Ver match ${game.homeTeam?.name || "TBD"} vs ${game.awayTeam?.name || "TBD"}`}
                 >
                 <div className="absolute left-1/2 top-0 z-10 hidden -translate-x-1/2 sm:block">
                   {getStatusBadge(game.status, "top")}
                 </div>
-                <div className="sm:hidden">
+                <div className="relative sm:hidden">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-sm text-gray-700 font-medium break-words">{game.venue.name}</div>
-                      <div className="mt-1 text-xs text-gray-500 break-words">{game.venue.address}</div>
+                      <div className={`text-sm font-medium break-words ${secondaryTextClassName}`}>{game.venue.name}</div>
+                      <div className={`mt-1 text-xs break-words ${mutedTextClassName}`}>{game.venue.address}</div>
                     </div>
                     <div className="-mr-4 flex shrink-0 flex-col items-end gap-1">
-                      <div className="pr-4 text-xs text-gray-500 whitespace-nowrap">
+                      <div className={`pr-4 text-xs whitespace-nowrap ${mutedTextClassName}`}>
                         {formatDateTimeCompact(game.scheduledDate)}
                       </div>
                       {getStatusBadge(game.status, "right")}
@@ -1408,49 +1595,49 @@ if (key === "homeTeam" || key === "awayTeam") {
                   <div className="mt-3 flex items-center justify-between gap-2">
                     <div className="w-[36%] flex flex-col items-center text-center">
                       {renderTeamAvatar(game.homeTeam, "sm")}
-                      <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
+                      <div className={`mt-2 text-xs font-semibold leading-tight break-words w-full ${primaryTextClassName}`}>
                         {game.homeTeam?.name || "TBD"}
                       </div>
                     </div>
 
                     <div className="w-[28%] text-center">
                       {game.status === "completed" || game.status === "in_progress" ? (
-                        <div className="text-4xl font-bold text-blue-900 leading-none">
+                        <div className={`text-4xl font-bold leading-none ${mobileScoreClassName}`}>
                           {game.score.home.total}:{game.score.away.total}
                         </div>
                       ) : (
                         <div>
-                          <div className="text-base font-semibold text-gray-500">vs</div>
-                          <div className="text-xs text-gray-400">{formatTime(game.scheduledDate)}</div>
+                          <div className={`text-base font-semibold ${vsClassName}`}>vs</div>
+                          <div className={`text-xs ${subtleTextClassName}`}>{formatTime(game.scheduledDate)}</div>
                         </div>
                       )}
                     </div>
 
                     <div className="w-[36%] flex flex-col items-center text-center">
                       {renderTeamAvatar(game.awayTeam, "sm")}
-                      <div className="mt-2 text-xs font-semibold text-gray-900 leading-tight break-words w-full">
+                      <div className={`mt-2 text-xs font-semibold leading-tight break-words w-full ${primaryTextClassName}`}>
                         {game.awayTeam?.name || "TBD"}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 text-xs text-gray-500 text-center">
+                  <div className={`mt-3 text-xs text-center ${mutedTextClassName}`}>
                     {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
                     {game.round ? ` · ${game.round}` : ""}
                   </div>
-                  <div className="mt-3 flex justify-center">{getPhaseBadge(game.phase)}</div>
+                  {isPostseason && <div className="mt-3 flex justify-center">{getPhaseBadge(game.phase)}</div>}
                 </div>
 
-                <div className="hidden sm:block">
+                <div className="relative hidden sm:block">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex-1">
                       <div className="mb-4 flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <div className="text-sm font-medium text-gray-700">{game.venue.name}</div>
-                          <div className="mt-1 text-sm text-gray-500">{game.venue.address}</div>
+                          <div className={`text-sm font-medium ${secondaryTextClassName}`}>{game.venue.name}</div>
+                          <div className={`mt-1 text-sm ${mutedTextClassName}`}>{game.venue.address}</div>
                         </div>
                         <div className="-mr-6 flex shrink-0 flex-col items-end gap-1">
-                          <div className="pr-6 text-right text-sm text-gray-500">
+                          <div className={`pr-6 text-right text-sm ${mutedTextClassName}`}>
                             <div>{formatDate(game.scheduledDate)}</div>
                             <div>{formatTime(game.scheduledDate)}</div>
                           </div>
@@ -1460,9 +1647,9 @@ if (key === "homeTeam" || key === "awayTeam") {
                       <div className="flex items-center justify-center space-x-8 mb-4">
                         <div className="flex items-center space-x-3 flex-1 justify-end">
                           <div className="text-right">
-                            <div className="font-semibold text-gray-900">{game.homeTeam?.name || "TBD"}</div>
+                            <div className={`font-semibold ${primaryTextClassName}`}>{game.homeTeam?.name || "TBD"}</div>
                             {game.homeTeam && !game.homeTeam.logo && game.homeTeam.shortName && (
-                              <div className="text-sm text-gray-500">{game.homeTeam.shortName}</div>
+                              <div className={`text-sm ${mutedTextClassName}`}>{game.homeTeam.shortName}</div>
                             )}
                           </div>
                           {renderTeamAvatar(game.homeTeam, "md")}
@@ -1471,14 +1658,14 @@ if (key === "homeTeam" || key === "awayTeam") {
                         <div className="flex min-w-24 flex-col items-center">
                           {game.status === "completed" || game.status === "in_progress" ? (
                             <div className="text-center">
-                              <div className="text-2xl font-bold text-gray-900">
+                              <div className={`text-2xl font-bold ${scoreClassName}`}>
                                 {game.score.home.total} - {game.score.away.total}
                               </div>
                             </div>
                           ) : (
                             <div className="text-center">
-                              <div className="text-lg font-medium text-gray-500">vs</div>
-                              <div className="text-sm text-gray-400">{formatTime(game.scheduledDate)}</div>
+                              <div className={`text-lg font-medium ${vsClassName}`}>vs</div>
+                              <div className={`text-sm ${subtleTextClassName}`}>{formatTime(game.scheduledDate)}</div>
                             </div>
                           )}
                         </div>
@@ -1486,25 +1673,26 @@ if (key === "homeTeam" || key === "awayTeam") {
                         <div className="flex items-center space-x-3 flex-1">
                           {renderTeamAvatar(game.awayTeam, "md")}
                           <div>
-                            <div className="font-semibold text-gray-900">{game.awayTeam?.name || "TBD"}</div>
+                            <div className={`font-semibold ${primaryTextClassName}`}>{game.awayTeam?.name || "TBD"}</div>
                             {game.awayTeam && !game.awayTeam.logo && game.awayTeam.shortName && (
-                              <div className="text-sm text-gray-500">{game.awayTeam.shortName}</div>
+                              <div className={`text-sm ${mutedTextClassName}`}>{game.awayTeam.shortName}</div>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="text-center text-sm text-gray-500">
+                      <div className={`text-center text-sm ${mutedTextClassName}`}>
                         {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionDisplayName(game.division)}
                         {game.round ? ` · ${game.round}` : ""}
                       </div>
-                      <div className="mt-3 flex justify-center">{getPhaseBadge(game.phase)}</div>
+                      {isPostseason && <div className="mt-3 flex justify-center">{getPhaseBadge(game.phase)}</div>}
                     </div>
                   </div>
                 </div>
                 </Link>
               </RevealOnScroll>
-            ))}
+              );
+            })}
           </div>
         )}
 

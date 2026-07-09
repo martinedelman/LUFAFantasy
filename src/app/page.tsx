@@ -7,6 +7,7 @@ import Avatar from "@/components/Avatar";
 import InlineFeedback from "@/components/InlineFeedback";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import Skeleton from "@/components/Skeleton";
+import SponsorsSection from "@/components/SponsorsSection";
 
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://flag.lufa.com.uy").replace(/\/$/, "");
 
@@ -635,6 +636,10 @@ export default function Home() {
 
       <FixedHeroSection className="h-[66vh] min-h-[320px]" ariaLabel="LUFA Flag" image="/Hero4.JPG" />
 
+      <SponsorsSection />
+
+      <FixedHeroSection className="h-[66vh] min-h-[320px]" ariaLabel="LUFA Flag" image="/Hero5.JPG" />
+
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-12 cursor-default">
           <h3 className="text-2xl font-bold text-slate-950 mb-8 flex items-center gap-2">
@@ -763,8 +768,9 @@ export default function Home() {
             </button>
           </div>
         </div>
-
-        <div className="text-center py-12">
+      </section>
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center">
           <h3 className="text-2xl font-bold text-slate-950 mb-4">¿Listo para unirte a la revolución?</h3>
           <p className="text-slate-600 text-lg mb-6 max-w-2xl mx-auto">
             Sé parte de LUFA Fantasy y participa en torneos de Flag Football en Uruguay. Crea tu equipo, sigue a tus
@@ -781,23 +787,6 @@ export default function Home() {
           </button>
         </div>
       </section>
-
-      <footer className="border-t border-white/10 bg-blue-900 text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-center px-4 py-6 text-center sm:px-6 lg:px-8">
-          <p className="text-sm font-medium text-green-50/90">
-            Desarrollado por{" "}
-            <a
-              href="https://www.linkedin.com/in/medelman01/"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackHomeAction("linkedin_footer", "https://www.linkedin.com/in/medelman01/")}
-              className="font-semibold text-white underline decoration-white/35 underline-offset-4 transition hover:decoration-white"
-            >
-              Martín Edelman
-            </a>
-          </p>
-        </div>
-      </footer>
 
       <style jsx>{`
         .team-slider-mask {

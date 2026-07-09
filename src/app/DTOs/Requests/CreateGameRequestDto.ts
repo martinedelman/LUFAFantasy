@@ -18,6 +18,7 @@ export interface CreateGameRequestDto {
   };
   scheduledDate: string;
   phase?: GamePhase;
+  playoffSlot?: string;
   week?: number;
   round?: string;
   status?: GameStatus;

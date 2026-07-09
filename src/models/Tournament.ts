@@ -45,6 +45,10 @@ const TournamentSchema = new Schema<Tournament>(
       enum: ["league", "playoff", "tournament"],
       default: "league",
     },
+    playoffCriteria: {
+      type: String,
+      enum: ["NFL", "DIRECT_FINAL", "SEMIFINAL"],
+    },
     divisions: [{ type: Schema.Types.ObjectId, ref: "Division" }],
     participatingTeams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
     rules: { type: TournamentRulesSchema },
@@ -59,6 +63,7 @@ const TournamentSchema = new Schema<Tournament>(
 // Índices
 TournamentSchema.index({ name: 1, year: 1 }, { unique: true });
 TournamentSchema.index({ status: 1 });
+TournamentSchema.index({ playoffCriteria: 1 });
 TournamentSchema.index({ startDate: 1 });
 
 export const TournamentModel = mongoose.models.Tournament || mongoose.model<Tournament>("Tournament", TournamentSchema);

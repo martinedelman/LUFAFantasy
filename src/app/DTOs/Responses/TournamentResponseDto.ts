@@ -1,4 +1,10 @@
-import type { TournamentFormat, TournamentPrize, TournamentRules, TournamentStatus } from "@/entities/Tournament";
+import type {
+  PlayoffCriteria,
+  TournamentFormat,
+  TournamentPrize,
+  TournamentRules,
+  TournamentStatus,
+} from "@/entities/Tournament";
 
 export interface TournamentResponseDto {
   _id?: string;
@@ -11,6 +17,7 @@ export interface TournamentResponseDto {
   registrationDeadline?: string;
   status: TournamentStatus;
   format: TournamentFormat;
+  playoffCriteria?: PlayoffCriteria;
   divisions: unknown[];
   participatingTeams?: unknown[];
   rules?: TournamentRules;

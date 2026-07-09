@@ -7,6 +7,9 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import Tag from "@/components/Tag";
 import Avatar from "@/components/Avatar";
+import { StandingsSkeleton, StandingsTable, type Standing } from "@/components/StandingsTable";
+
+type PlayoffCriteria = "NFL" | "DIRECT_FINAL" | "SEMIFINAL";
 
 interface Tournament {
   _id: string;
@@ -19,6 +22,7 @@ interface Tournament {
   registrationDeadline: string;
   status: "upcoming" | "active" | "completed" | "cancelled";
   format: "league" | "playoff" | "tournament";
+  playoffCriteria?: PlayoffCriteria;
   rules: {
     gameDuration: number;
     quarters: number;
@@ -65,6 +69,69 @@ interface ApiResponse {
   message?: string;
 }
 
+interface StandingsApiResponse {
+  success: boolean;
+  data: Standing[];
+  message?: string;
+}
+
+type TournamentTeam = {
+  _id: string;
+  name: string;
+  shortName?: string;
+  logo?: string;
+  colors?: {
+    primary: string;
+    secondary?: string;
+  };
+};
+
+type TournamentGame = {
+  _id: string;
+  scheduledDate: string;
+  status: "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
+  phase?: "regular" | "playoff" | "final";
+  playoffSlot?: string;
+  homeTeam: TournamentTeam | string | null;
+  awayTeam: TournamentTeam | string | null;
+  score: {
+    home: { total: number };
+    away: { total: number };
+  };
+};
+
+interface GamesApiResponse {
+  success: boolean;
+  data: TournamentGame[];
+  message?: string;
+}
+
+const playoffCriteriaLabels: Record<PlayoffCriteria, string> = {
+  NFL: "NFL",
+  DIRECT_FINAL: "Final directa",
+  SEMIFINAL: "Con semifinal",
+};
+
+function formatPlayoffCriteria(criteria?: PlayoffCriteria) {
+  return criteria ? playoffCriteriaLabels[criteria] : "";
+}
+
+function isTournamentTeam(team: TournamentGame["homeTeam"]): team is TournamentTeam {
+  return Boolean(team && typeof team === "object" && "_id" in team);
+}
+
+function getCompletedGameWinner(game: TournamentGame): TournamentTeam | undefined {
+  if (game.status !== "completed") return undefined;
+
+  const homeScore = game.score.home.total;
+  const awayScore = game.score.away.total;
+
+  if (homeScore > awayScore && isTournamentTeam(game.homeTeam)) return game.homeTeam;
+  if (awayScore > homeScore && isTournamentTeam(game.awayTeam)) return game.awayTeam;
+
+  return undefined;
+}
+
 export default function TournamentDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -72,6 +139,13 @@ export default function TournamentDetailPage() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedStandingsDivision, setSelectedStandingsDivision] = useState("");
+  const [standings, setStandings] = useState<Standing[]>([]);
+  const [standingsLoading, setStandingsLoading] = useState(false);
+  const [standingsError, setStandingsError] = useState<string | null>(null);
+  const [finalGames, setFinalGames] = useState<TournamentGame[]>([]);
+  const [championLoading, setChampionLoading] = useState(false);
+  const [championError, setChampionError] = useState<string | null>(null);
 
   const tournamentId = params?.id as string;
 
@@ -82,7 +156,12 @@ export default function TournamentDetailPage() {
       const result: ApiResponse = await response.json();
 
       if (result.success) {
-        setTournament(result.data);
+        const nextTournament = result.data;
+        setTournament(nextTournament);
+        setSelectedStandingsDivision((currentDivision) => {
+          const currentDivisionExists = nextTournament.divisions?.some((division) => division._id === currentDivision);
+          return currentDivisionExists ? currentDivision : nextTournament.divisions?.[0]?._id || "";
+        });
         setError(null);
       } else {
         setError(result.message || "Error al cargar el torneo");
@@ -94,11 +173,84 @@ export default function TournamentDetailPage() {
     }
   }, [tournamentId]);
 
+  const fetchStandings = useCallback(async (divisionId: string) => {
+    if (!divisionId) {
+      setStandings([]);
+      return;
+    }
+
+    try {
+      setStandingsLoading(true);
+      setStandingsError(null);
+      const params = new URLSearchParams({ division: divisionId });
+      const response = await fetch(`/api/standings?${params.toString()}`);
+      const result: StandingsApiResponse = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "No se pudo cargar la tabla de posiciones");
+      }
+
+      setStandings(result.data || []);
+    } catch (loadError) {
+      setStandingsError(loadError instanceof Error ? loadError.message : "Error al cargar posiciones");
+      setStandings([]);
+    } finally {
+      setStandingsLoading(false);
+    }
+  }, []);
+
+  const fetchFinalGames = useCallback(
+    async (divisionId: string, tournamentStatus?: Tournament["status"]) => {
+      if (!tournamentId || !divisionId || tournamentStatus !== "completed") {
+        setFinalGames([]);
+        setChampionError(null);
+        return;
+      }
+
+      try {
+        setChampionLoading(true);
+        setChampionError(null);
+        const params = new URLSearchParams({
+          tournament: tournamentId,
+          division: divisionId,
+          phase: "final",
+          status: "completed",
+        });
+        const response = await fetch(`/api/games?${params.toString()}`);
+        const result: GamesApiResponse = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "No se pudo cargar el campeón");
+        }
+
+        setFinalGames(
+          (result.data || [])
+            .filter((game) => game.status === "completed" && (game.phase === "final" || game.playoffSlot === "final"))
+            .sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()),
+        );
+      } catch (loadError) {
+        setChampionError(loadError instanceof Error ? loadError.message : "Error al cargar campeón");
+        setFinalGames([]);
+      } finally {
+        setChampionLoading(false);
+      }
+    },
+    [tournamentId],
+  );
+
   useEffect(() => {
     if (tournamentId) {
       fetchTournament();
     }
   }, [tournamentId, fetchTournament]);
+
+  useEffect(() => {
+    fetchStandings(selectedStandingsDivision);
+  }, [fetchStandings, selectedStandingsDivision]);
+
+  useEffect(() => {
+    fetchFinalGames(selectedStandingsDivision, tournament?.status);
+  }, [fetchFinalGames, selectedStandingsDivision, tournament?.status]);
 
   const getStatusTag = (status: string) => {
     const statusMap: Record<string, { label: string; type: "info" | "warning" | "success" | "error" }> = {
@@ -133,6 +285,15 @@ export default function TournamentDetailPage() {
   };
 
   const totalPrizeAmount = tournament?.prizes.reduce((total, prize) => total + (prize.amount ?? 0), 0) ?? 0;
+  const selectedDivisionData = tournament?.divisions?.find((division) => division._id === selectedStandingsDivision);
+  const completedFinalGame = finalGames.find((game) => getCompletedGameWinner(game));
+  const finalChampionTeam = completedFinalGame ? getCompletedGameWinner(completedFinalGame) : undefined;
+  const standingsChampionTeam = !tournament?.playoffCriteria && tournament?.status === "completed" ? standings[0]?.team : undefined;
+  const championTeam = finalChampionTeam || standingsChampionTeam;
+  const championScore =
+    completedFinalGame && finalChampionTeam
+      ? `${completedFinalGame.score.home.total} - ${completedFinalGame.score.away.total}`
+      : undefined;
 
   const getDivisionCapacity = (division: NonNullable<Tournament["divisions"]>[number]) => {
     const registeredTeams = division.teams?.length || 0;
@@ -191,6 +352,14 @@ export default function TournamentDetailPage() {
                     {tournament.season} {tournament.year}
                   </span>
                   {getStatusTag(tournament.status)}
+                  {tournament.playoffCriteria && (
+                    <Link
+                      href={`/tournaments/${tournament._id}/playoffs`}
+                      className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+                    >
+                      Ver Playoffs
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -238,6 +407,49 @@ export default function TournamentDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {tournament.status === "completed" && (championTeam || championLoading || championError) && (
+              <section className="overflow-hidden rounded-lg border-2 border-[#f2d36e] bg-[radial-gradient(circle_at_82%_18%,rgba(242,211,110,0.28),transparent_26%),linear-gradient(135deg,#030303_0%,#0d0d0d_48%,#2a2109_100%)] p-6 text-white shadow-md">
+                {championLoading ? (
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 animate-pulse rounded-full bg-white/10" />
+                    <div className="min-w-0 flex-1">
+                      <div className="h-4 w-28 animate-pulse rounded bg-[#f2d36e]/30" />
+                      <div className="mt-3 h-7 w-56 max-w-full animate-pulse rounded bg-white/10" />
+                    </div>
+                  </div>
+                ) : championTeam ? (
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-4">
+                      <Avatar
+                        imageUrl={championTeam.logo}
+                        alt={championTeam.name}
+                        fallback={(championTeam.shortName || championTeam.name).substring(0, 2).toUpperCase()}
+                        backgroundColor={championTeam.colors?.primary || "#d8ad3b"}
+                        size="xl"
+                        fallbackClassName="text-lg"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f2d36e]">Campeón</p>
+                        <h2 className="mt-1 truncate text-3xl font-black uppercase text-white">{championTeam.name}</h2>
+                        <p className="mt-2 text-sm font-semibold text-neutral-300">
+                          {selectedDivisionData?.name || "Campeonato"} · {tournament.year}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-md border border-[#f2d36e]/60 bg-black/55 px-4 py-3 text-left sm:text-right">
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f2d36e]">
+                        {completedFinalGame ? "Resultado final" : "Tabla general"}
+                      </p>
+                      <p className="mt-1 text-2xl font-black text-white">{championScore || "1° puesto"}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm font-semibold text-[#f2d36e]">{championError}</p>
+                )}
+              </section>
+            )}
+
             {/* Información General */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Información General</h2>
@@ -250,6 +462,12 @@ export default function TournamentDetailPage() {
                   <h3 className="text-sm font-medium text-gray-500">Formato</h3>
                   <p className="mt-1 text-sm text-gray-900 capitalize">{tournament.format}</p>
                 </div>
+                {tournament.playoffCriteria && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Criterio Playoffs</h3>
+                    <p className="mt-1 text-sm text-gray-900">{formatPlayoffCriteria(tournament.playoffCriteria)}</p>
+                  </div>
+                )}
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Duración del Juego</h3>
                   <p className="mt-1 text-sm text-gray-900">{tournament.rules.gameDuration} minutos</p>
@@ -265,72 +483,45 @@ export default function TournamentDetailPage() {
               </div>
             </div>
 
-            {/* Fechas */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Fechas Importantes</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Fecha Límite de Registro</h3>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(tournament.registrationDeadline)}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Fecha de Inicio</h3>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(tournament.startDate)}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Fecha de Finalización</h3>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(tournament.endDate)}</p>
-                </div>
-              </div>
-            </div>
+            {tournament.divisions && tournament.divisions.length > 0 && (
+              <section className="space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">Posiciones</h2>
+                    <p className="mt-1 text-sm text-gray-500">Tabla de temporada regular para este torneo.</p>
+                  </div>
 
-            {/* Reglas de Puntuación */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sistema de Puntuación</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Touchdown</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
-                    {tournament.rules.scoringRules.touchdown} pts
-                  </p>
+                  {tournament.divisions.length > 1 && (
+                    <label className="block sm:min-w-56">
+                      <span className="text-sm font-medium text-gray-700">División</span>
+                      <select
+                        value={selectedStandingsDivision}
+                        onChange={(event) => setSelectedStandingsDivision(event.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+                      >
+                        {tournament.divisions.map((division) => (
+                          <option key={division._id} value={division._id}>
+                            {division.name || formatDivisionCategory(division.category)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                 </div>
-                {/* <div>
-                  <h3 className="text-sm font-medium text-gray-500">Extra Point (2 yd)</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
-                    {tournament.rules.scoringRules.extraPoint1Yard} pts
-                  </p>
-                </div> */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Puntra extra (5 yd)</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
-                    {tournament.rules.scoringRules.extraPoint5Yard} pts
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Punto extra (10 yd)</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
-                    {tournament.rules.scoringRules.extraPoint10Yard} pts
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Safety</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">{tournament.rules.scoringRules.safety} pts</p>
-                </div>
-                {/* <div>
-                  <h3 className="text-sm font-medium text-gray-500">Gol de Campo</h3>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
-                    {tournament.rules.scoringRules.fieldGoal} pts
-                  </p>
-                </div> */}
-              </div>
 
-              {tournament.rules.overtimeRules && (
-                <div className="mt-6">
-                  <h3 className="text-sm font-medium text-gray-500">Reglas de Tiempo Extra</h3>
-                  <p className="mt-1 text-sm text-gray-900">{tournament.rules.overtimeRules}</p>
-                </div>
-              )}
-            </div>
+                {standingsError && <ErrorMessage message={standingsError} onRetry={() => fetchStandings(selectedStandingsDivision)} />}
+
+                {standingsLoading ? (
+                  <StandingsSkeleton />
+                ) : (
+                  <StandingsTable
+                    standings={standings}
+                    emptyMessage="No hay equipos con posiciones en esta división"
+                    onRowClick={(standing) => router.push(`/teams/${standing.team._id}`)}
+                  />
+                )}
+              </section>
+            )}
 
             {/* Divisiones */}
             {tournament.divisions && tournament.divisions.length > 0 && (
@@ -442,6 +633,73 @@ export default function TournamentDetailPage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Fechas */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Fechas Importantes</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Fecha Límite de Registro</h3>
+                  <p className="mt-1 text-sm text-gray-900">{formatDate(tournament.registrationDeadline)}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Fecha de Inicio</h3>
+                  <p className="mt-1 text-sm text-gray-900">{formatDate(tournament.startDate)}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Fecha de Finalización</h3>
+                  <p className="mt-1 text-sm text-gray-900">{formatDate(tournament.endDate)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Reglas de Puntuación */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sistema de Puntuación</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Touchdown</h3>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {tournament.rules.scoringRules.touchdown} pts
+                  </p>
+                </div>
+                {/* <div>
+                  <h3 className="text-sm font-medium text-gray-500">Extra Point (2 yd)</h3>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {tournament.rules.scoringRules.extraPoint1Yard} pts
+                  </p>
+                </div> */}
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Puntra extra (5 yd)</h3>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {tournament.rules.scoringRules.extraPoint5Yard} pts
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Punto extra (10 yd)</h3>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {tournament.rules.scoringRules.extraPoint10Yard} pts
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Safety</h3>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">{tournament.rules.scoringRules.safety} pts</p>
+                </div>
+                {/* <div>
+                  <h3 className="text-sm font-medium text-gray-500">Gol de Campo</h3>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {tournament.rules.scoringRules.fieldGoal} pts
+                  </p>
+                </div> */}
+              </div>
+
+              {tournament.rules.overtimeRules && (
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium text-gray-500">Reglas de Tiempo Extra</h3>
+                  <p className="mt-1 text-sm text-gray-900">{tournament.rules.overtimeRules}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

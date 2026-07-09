@@ -13,6 +13,7 @@ export function toTournamentResponseDto(tournament: Tournament): TournamentRespo
     registrationDeadline: tournament.registrationDeadline?.toISOString(),
     status: tournament.status,
     format: tournament.format,
+    playoffCriteria: tournament.playoffCriteria,
     divisions: tournament.divisions,
     participatingTeams: tournament.participatingTeams,
     rules: tournament.rules,

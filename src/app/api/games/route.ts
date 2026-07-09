@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status") as GameStatus | undefined;
     const phaseParam = searchParams.get("phase");
     const phase = GAME_PHASES.includes(phaseParam as GamePhase) ? (phaseParam as GamePhase) : undefined;
+    const playoffSlot = searchParams.get("playoffSlot") || undefined;
     const team = searchParams.get("team") || undefined;
     const upcoming = searchParams.get("upcoming") === "true";
 
@@ -93,6 +94,7 @@ export async function GET(request: NextRequest) {
       division,
       status,
       phase,
+      playoffSlot,
     });
 
     if (upcoming) {
@@ -145,6 +147,7 @@ export async function POST(request: NextRequest) {
       venue: body.venue,
       scheduledDate: new Date(body.scheduledDate),
       phase: GAME_PHASES.includes(body.phase as GamePhase) ? body.phase : "regular",
+      playoffSlot: body.playoffSlot,
       week: body.week,
       round: body.round,
       status: body.status,
@@ -181,11 +184,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const game = await gameService.updateGame(gameId, {
-      homeTeam: body.homeTeam ?? undefined,
-      awayTeam: body.awayTeam ?? undefined,
+      homeTeam: body.homeTeam,
+      awayTeam: body.awayTeam,
       scheduledDate: body.scheduledDate ? new Date(body.scheduledDate) : undefined,
       status: body.status,
       phase: GAME_PHASES.includes(body.phase as GamePhase) ? body.phase : undefined,
+      playoffSlot: body.playoffSlot,
       week: body.week,
       round: body.round,
       officials: body.officials ? await resolveOfficials(body.officials) : undefined,

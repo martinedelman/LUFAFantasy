@@ -14,6 +14,7 @@ export interface User {
 // Tipos de estado de juego
 export type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
 export type GamePhase = "regular" | "playoff" | "final";
+export type PlayoffCriteria = "NFL" | "DIRECT_FINAL" | "SEMIFINAL";
 
 export interface Tournament {
   _id?: string;
@@ -26,6 +27,7 @@ export interface Tournament {
   registrationDeadline?: Date;
   status: "upcoming" | "active" | "completed" | "cancelled";
   format: "league" | "playoff" | "tournament";
+  playoffCriteria?: PlayoffCriteria;
   divisions: string[]; // Referencias a Division
   participatingTeams?: string[]; // Referencias a Team
   rules?: TournamentRules;
@@ -175,6 +177,7 @@ export interface Game {
   actualEndTime?: Date;
   status: GameStatus;
   phase?: GamePhase;
+  playoffSlot?: string;
   week?: number;
   round?: string;
   officials: Official[];

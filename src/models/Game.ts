@@ -95,6 +95,7 @@ const GameSchema = new Schema(
       enum: ["regular", "playoff", "final"],
       default: "regular",
     },
+    playoffSlot: { type: String, trim: true },
     week: { type: Number },
     round: { type: String, trim: true },
     officials: [{ type: OfficialSchema }],
@@ -125,6 +126,7 @@ GameSchema.index(
 GameSchema.index({ scheduledDate: 1 });
 GameSchema.index({ status: 1 });
 GameSchema.index({ phase: 1 });
+GameSchema.index({ tournament: 1, division: 1, playoffSlot: 1 });
 GameSchema.index({ week: 1 });
 
 export const GameModel = mongoose.models.Game || mongoose.model<Game>("Game", GameSchema);

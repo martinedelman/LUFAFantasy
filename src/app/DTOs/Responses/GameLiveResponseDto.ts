@@ -39,6 +39,7 @@ export interface GameLiveResponseDto {
   actualEndTime?: string;
   week?: number;
   round?: string;
+  playoffSlot?: string;
   officials: Array<{
     judgeId?: string;
     name: string;
