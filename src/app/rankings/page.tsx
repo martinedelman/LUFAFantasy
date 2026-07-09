@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ErrorMessage from "@/components/ErrorMessage";
 import FilterAccordion from "@/components/FilterAccordion";
 import PageHero from "@/components/PageHero";
@@ -20,6 +20,14 @@ type DivisionOption = {
   _id: string;
   name: string;
   category: string;
+  tournament?: string | { _id?: string; id?: string };
+};
+
+type TournamentOption = {
+  _id: string;
+  name: string;
+  season: string;
+  year: number;
 };
 
 type PlayerStatsRow = {
@@ -52,17 +60,29 @@ type RankingMetric = {
   includePickSix?: boolean;
 };
 
-type RankingsScope = "regular" | "all";
+type RankingsStage = "all" | "regular" | "playoff" | "final" | "postseason";
 
 type RankingsFilters = {
+  tournament: string;
+  year: string;
   division: string;
-  scope: RankingsScope;
+  stage: RankingsStage;
 };
 
 const INITIAL_RANKINGS_FILTERS: RankingsFilters = {
+  tournament: "",
+  year: "",
   division: "",
-  scope: "regular",
+  stage: "all",
 };
+
+const STAGE_OPTIONS: Array<{ value: RankingsStage; label: string }> = [
+  { value: "all", label: "Todas" },
+  { value: "regular", label: "Temporada regular" },
+  { value: "playoff", label: "Playoffs" },
+  { value: "final", label: "Finales" },
+  { value: "postseason", label: "Post temporada" },
+];
 
 const METRICS: RankingMetric[] = [
   { key: "globalPoints", label: "Top 10 Puntos Globales", mode: "points" },
@@ -161,22 +181,40 @@ function getValueLabel(metric: RankingMetric) {
   return "total";
 }
 
+function getTournamentId(tournament?: DivisionOption["tournament"]) {
+  if (!tournament) return "";
+  if (typeof tournament === "string") return tournament;
+  return tournament._id || tournament.id || "";
+}
+
 export default function RankingsPage() {
+  const [tournaments, setTournaments] = useState<TournamentOption[]>([]);
   const [divisions, setDivisions] = useState<DivisionOption[]>([]);
-  const [filters, setFilters, , filtersHydrated] = useCachedState("filters:rankings:v2", INITIAL_RANKINGS_FILTERS);
+  const [filters, setFilters, , filtersHydrated] = useCachedState("filters:rankings:v3", INITIAL_RANKINGS_FILTERS);
   const [rankingsByMetric, setRankingsByMetric] = useState<Record<string, PlayerStatsRow[]>>({});
   const [loading, setLoading] = useState(true);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDivisions = useCallback(async () => {
-    const response = await fetch("/api/divisions?limit=100");
-    const data: ApiResponse<DivisionOption[]> = await response.json();
+  const fetchCatalog = useCallback(async () => {
+    const [tournamentsResponse, divisionsResponse] = await Promise.all([
+      fetch("/api/tournaments?limit=100"),
+      fetch("/api/divisions?limit=100"),
+    ]);
+    const tournamentsData: ApiResponse<TournamentOption[]> = await tournamentsResponse.json();
+    const divisionsData: ApiResponse<DivisionOption[]> = await divisionsResponse.json();
 
-    if (!response.ok || !data.success) {
-      throw new Error(data.message || "No se pudieron cargar las divisiones");
+    if (!tournamentsResponse.ok || !tournamentsData.success) {
+      throw new Error(tournamentsData.message || "No se pudieron cargar los campeonatos");
     }
 
-    setDivisions(data.data || []);
+    if (!divisionsResponse.ok || !divisionsData.success) {
+      throw new Error(divisionsData.message || "No se pudieron cargar las divisiones");
+    }
+
+    setTournaments(tournamentsData.data || []);
+    setDivisions(divisionsData.data || []);
+    setCatalogLoaded(true);
   }, []);
 
   const fetchRankings = useCallback(async (rankingFilters: RankingsFilters) => {
@@ -185,10 +223,12 @@ export default function RankingsPage() {
         const params = new URLSearchParams({
           limit: "10",
           mode: metric.mode,
-          scope: rankingFilters.scope,
+          scope: rankingFilters.stage,
           ...(metric.eventType ? { eventType: metric.eventType } : {}),
           ...(metric.points !== undefined ? { points: String(metric.points) } : {}),
           ...(metric.includePickSix ? { includePickSix: "true" } : {}),
+          ...(rankingFilters.tournament ? { tournament: rankingFilters.tournament } : {}),
+          ...(rankingFilters.year ? { year: rankingFilters.year } : {}),
           ...(rankingFilters.division ? { division: rankingFilters.division } : {}),
         });
 
@@ -214,7 +254,7 @@ export default function RankingsPage() {
         setLoading(true);
         setError(null);
 
-        await fetchDivisions();
+        await fetchCatalog();
         await fetchRankings(filters);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : "Error al cargar rankings");
@@ -224,10 +264,68 @@ export default function RankingsPage() {
     };
 
     loadData();
-  }, [fetchDivisions, fetchRankings, filters, filtersHydrated]);
+  }, [fetchCatalog, fetchRankings, filters, filtersHydrated]);
 
+  const tournamentById = useMemo(
+    () => new Map(tournaments.map((tournament) => [tournament._id, tournament])),
+    [tournaments],
+  );
+  const yearOptions = useMemo(
+    () =>
+      Array.from(new Set(tournaments.map((tournament) => tournament.year)))
+        .filter(Boolean)
+        .sort((a, b) => b - a),
+    [tournaments],
+  );
+  const filteredTournaments = useMemo(
+    () =>
+      filters.year
+        ? tournaments.filter((tournament) => String(tournament.year) === filters.year)
+        : tournaments,
+    [filters.year, tournaments],
+  );
+  const filteredDivisions = useMemo(
+    () =>
+      divisions.filter((division) => {
+        const divisionTournamentId = getTournamentId(division.tournament);
+        const divisionTournament = divisionTournamentId ? tournamentById.get(divisionTournamentId) : undefined;
+
+        if (filters.tournament && divisionTournamentId !== filters.tournament) {
+          return false;
+        }
+
+        if (filters.year && String(divisionTournament?.year || "") !== filters.year) {
+          return false;
+        }
+
+        return true;
+      }),
+    [divisions, filters.tournament, filters.year, tournamentById],
+  );
+  const selectedTournamentName =
+    tournaments.find((tournament) => tournament._id === filters.tournament)?.name || "Todos los campeonatos";
   const selectedDivisionName =
-    divisions.find((division) => division._id === filters.division)?.name || "Todas las divisiones";
+    filteredDivisions.find((division) => division._id === filters.division)?.name || "Todas las divisiones";
+
+  useEffect(() => {
+    if (!filtersHydrated || !catalogLoaded) return;
+
+    setFilters((prev) => {
+      const nextTournamentExists =
+        !prev.tournament || filteredTournaments.some((tournament) => tournament._id === prev.tournament);
+      const nextDivisionExists = !prev.division || filteredDivisions.some((division) => division._id === prev.division);
+
+      if (nextTournamentExists && nextDivisionExists) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        tournament: nextTournamentExists ? prev.tournament : "",
+        division: nextDivisionExists ? prev.division : "",
+      };
+    });
+  }, [catalogLoaded, filteredDivisions, filteredTournaments, filtersHydrated, setFilters]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -239,6 +337,56 @@ export default function RankingsPage() {
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
+              <label htmlFor="rankings-year" className="block text-sm font-medium text-gray-700">
+                Año
+              </label>
+              <select
+                id="rankings-year"
+                value={filters.year}
+                onChange={(event) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    year: event.target.value,
+                    tournament: "",
+                    division: "",
+                  }))
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="">Todos los años</option>
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="rankings-tournament" className="block text-sm font-medium text-gray-700">
+                Campeonato
+              </label>
+              <select
+                id="rankings-tournament"
+                value={filters.tournament}
+                onChange={(event) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    tournament: event.target.value,
+                    division: "",
+                  }))
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="">Todos los campeonatos</option>
+                {filteredTournaments.map((tournament) => (
+                  <option key={tournament._id} value={tournament._id}>
+                    {tournament.name} {tournament.year}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-gray-500">Mostrando: {selectedTournamentName}</p>
+            </div>
+            <div>
               <label htmlFor="rankings-division" className="block text-sm font-medium text-gray-700">
                 División
               </label>
@@ -249,7 +397,7 @@ export default function RankingsPage() {
                 className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 <option value="">Todas las divisiones</option>
-                {divisions.map((division) => (
+                {filteredDivisions.map((division) => (
                   <option key={division._id} value={division._id}>
                     {division.name}
                   </option>
@@ -258,19 +406,22 @@ export default function RankingsPage() {
               <p className="mt-2 text-xs text-gray-500">Mostrando: {selectedDivisionName}</p>
             </div>
             <div>
-              <label htmlFor="rankings-scope" className="block text-sm font-medium text-gray-700">
-                Alcance
+              <label htmlFor="rankings-stage" className="block text-sm font-medium text-gray-700">
+                Etapa
               </label>
               <select
-                id="rankings-scope"
-                value={filters.scope}
+                id="rankings-stage"
+                value={filters.stage}
                 onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, scope: event.target.value === "all" ? "all" : "regular" }))
+                  setFilters((prev) => ({ ...prev, stage: event.target.value as RankingsStage }))
                 }
                 className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                <option value="regular">Temporada regular</option>
-                <option value="all">Todo</option>
+                {STAGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
