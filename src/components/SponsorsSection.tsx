@@ -16,11 +16,11 @@ export default function SponsorsSection({ variant = "home" }: SponsorsSectionPro
           {sponsors.map((sponsor) => (
             <div
               key={sponsor.name}
-              className="flex h-12 min-w-24 items-center justify-center rounded-md bg-white px-2"
+              className="flex h-12 min-w-24 items-center justify-center rounded-md bg-white "
               title={sponsor.description || sponsor.name}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={sponsor.image} alt={sponsor.name} className="max-h-10 max-w-28 object-contain" />
+              <img src={sponsor.image} alt={sponsor.name} className="max-h-20 max-w-28 object-contain" />
             </div>
           ))}
         </div>
@@ -49,7 +49,7 @@ export default function SponsorsSection({ variant = "home" }: SponsorsSectionPro
             {sponsors.map((sponsor) => (
               <article
                 key={sponsor.name}
-                className="group flex min-h-36 flex-col gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-500 hover:shadow-md sm:flex-row sm:items-center"
+                className="group flex min-h-36 flex-col gap-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-500 hover:shadow-md sm:flex-row sm:items-center"
               >
                 <div className="flex min-h-28 shrink-0 items-center justify-center sm:w-44">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
