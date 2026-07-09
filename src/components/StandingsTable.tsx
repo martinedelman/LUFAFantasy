@@ -120,6 +120,8 @@ function createStandingsColumns(standings: Standing[]): TableColumn<Standing>[] 
       key: "position",
       label: "Pos",
       align: "center",
+      headerClassName: "sticky left-0 z-30 w-14 min-w-[3.5rem] bg-gray-50 !px-0",
+      cellClassName: "sticky left-0 z-20 w-14 min-w-[3.5rem] bg-white !px-0 group-hover:bg-slate-50",
       render: (value) => {
         const pos = value as number;
         const icons: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
@@ -130,10 +132,14 @@ function createStandingsColumns(standings: Standing[]): TableColumn<Standing>[] 
       key: "team",
       label: "Equipo",
       align: "left",
+      headerClassName:
+        "sticky left-14 z-30 w-48 min-w-[10rem] border-r border-gray-200 bg-gray-50 !px-0 shadow-[8px_0_14px_-14px_rgba(15,23,42,0.6)]",
+      cellClassName:
+        "sticky left-14 z-20 w-48 min-w-[10rem] border-r border-gray-100 bg-white !px-0  group-hover:bg-slate-50",
       render: (value) => {
         const team = value as Standing["team"];
         return (
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="flex-shrink-0 h-8 w-8">
               <Avatar
                 imageUrl={team.logo}
@@ -144,7 +150,7 @@ function createStandingsColumns(standings: Standing[]): TableColumn<Standing>[] 
                 fallbackClassName="text-xs"
               />
             </div>
-            <span className="text-sm font-medium text-gray-900">{team.name}</span>
+            <span className="truncate text-sm font-medium text-gray-900">{team.name}</span>
           </div>
         );
       },

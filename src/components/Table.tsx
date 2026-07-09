@@ -7,6 +7,8 @@ export interface TableColumn<T extends object> {
   render?: (value: unknown, item: T) => React.ReactNode;
   sortable?: boolean;
   align?: "left" | "center" | "right";
+  headerClassName?: string;
+  cellClassName?: string;
 }
 
 export interface TableAction {
@@ -70,7 +72,7 @@ export default function Table<T extends object>({
                 return (
                   <th
                     key={column.key}
-                    className={`px-6 py-3 ${alignClass} text-xs font-medium text-gray-500 uppercase tracking-wider`}
+                    className={`px-6 py-3 ${alignClass} text-xs font-medium text-gray-500 uppercase tracking-wider ${column.headerClassName || ""}`}
                   >
                     {column.label}
                   </th>
@@ -87,7 +89,7 @@ export default function Table<T extends object>({
             {data.map((item) => (
               <tr
                 key={String(item[idKey])}
-                className="hover:bg-slate-50 cursor-pointer"
+                className="group cursor-pointer hover:bg-slate-50"
                 onClick={() => onRowClick?.(item)}
               >
                 {columns.map((column) => {
@@ -96,7 +98,7 @@ export default function Table<T extends object>({
                   return (
                     <td
                       key={`${String(item[idKey])}-${column.key}`}
-                      className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${alignClass}`}
+                      className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${alignClass} ${column.cellClassName || ""}`}
                     >
                       {column.render
                         ? column.render((item as unknown as Record<string, unknown>)[column.key], item)

@@ -132,6 +132,17 @@ function getCompletedGameWinner(game: TournamentGame): TournamentTeam | undefine
   return undefined;
 }
 
+function getChampionNameFontSize(teamName: string) {
+  const normalizedLength = teamName.replace(/\s+/g, "").length;
+
+  if (normalizedLength <= 10) return "1.875rem";
+  if (normalizedLength <= 14) return "1.55rem";
+  if (normalizedLength <= 18) return "1.3rem";
+  if (normalizedLength <= 24) return "1.12rem";
+
+  return "1rem";
+}
+
 export default function TournamentDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -290,10 +301,7 @@ export default function TournamentDetailPage() {
   const finalChampionTeam = completedFinalGame ? getCompletedGameWinner(completedFinalGame) : undefined;
   const standingsChampionTeam = !tournament?.playoffCriteria && tournament?.status === "completed" ? standings[0]?.team : undefined;
   const championTeam = finalChampionTeam || standingsChampionTeam;
-  const championScore =
-    completedFinalGame && finalChampionTeam
-      ? `${completedFinalGame.score.home.total} - ${completedFinalGame.score.away.total}`
-      : undefined;
+  const championNameFontSize = championTeam ? getChampionNameFontSize(championTeam.name) : undefined;
 
   const getDivisionCapacity = (division: NonNullable<Tournament["divisions"]>[number]) => {
     const registeredTeams = division.teams?.length || 0;
@@ -430,19 +438,18 @@ export default function TournamentDetailPage() {
                       />
                       <div className="min-w-0">
                         <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f2d36e]">Campeón</p>
-                        <h2 className="mt-1 truncate text-3xl font-black uppercase text-white">{championTeam.name}</h2>
+                        <h2
+                          className="mt-1 max-w-full font-black uppercase leading-tight text-white [overflow-wrap:anywhere]"
+                          style={{ fontSize: championNameFontSize }}
+                        >
+                          {championTeam.name}
+                        </h2>
                         <p className="mt-2 text-sm font-semibold text-neutral-300">
                           {selectedDivisionData?.name || "Campeonato"} · {tournament.year}
                         </p>
                       </div>
                     </div>
 
-                    <div className="rounded-md border border-[#f2d36e]/60 bg-black/55 px-4 py-3 text-left sm:text-right">
-                      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f2d36e]">
-                        {completedFinalGame ? "Resultado final" : "Tabla general"}
-                      </p>
-                      <p className="mt-1 text-2xl font-black text-white">{championScore || "1° puesto"}</p>
-                    </div>
                   </div>
                 ) : (
                   <p className="text-sm font-semibold text-[#f2d36e]">{championError}</p>
