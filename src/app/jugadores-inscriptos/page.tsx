@@ -20,8 +20,6 @@ interface PlayerRegistration {
 const defaultMessage =
   "Hola {nombre}, te escribimos de LUFA Flag por tu inscripción para jugar. Queremos contarte los próximos pasos para sumarte a juveniles.";
 
-const messageStorageKey = "lufa-player-registration-whatsapp-message";
-
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("es-UY", {
     dateStyle: "medium",
@@ -60,18 +58,6 @@ function PlayerRegistrationsContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedMessage = window.localStorage.getItem(messageStorageKey);
-
-    if (savedMessage) {
-      setMessageTemplate(savedMessage);
-    }
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(messageStorageKey, messageTemplate);
-  }, [messageTemplate]);
-
-  useEffect(() => {
     const controller = new AbortController();
 
     const fetchRegistrations = async () => {
@@ -84,6 +70,9 @@ function PlayerRegistrationsContent() {
         const payload = (await response.json()) as {
           success?: boolean;
           data?: PlayerRegistration[];
+          settings?: {
+            whatsappMessageTemplate?: string;
+          };
           message?: string;
         };
 
@@ -92,6 +81,9 @@ function PlayerRegistrationsContent() {
         }
 
         setRegistrations(payload.data);
+        if (payload.settings?.whatsappMessageTemplate) {
+          setMessageTemplate(payload.settings.whatsappMessageTemplate);
+        }
         setStatus("ready");
       } catch (fetchError) {
         if ((fetchError as Error).name === "AbortError") return;

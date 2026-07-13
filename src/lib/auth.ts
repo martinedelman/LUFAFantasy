@@ -15,7 +15,7 @@ export interface SessionPayload {
 function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error("Falta configurar JWT_SECRET en variables de entorno");
+    throw new Error("Falta configurar la firma de sesiones");
   }
   return secret;
 }

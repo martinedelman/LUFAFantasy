@@ -3,9 +3,10 @@ import { apiErrorResponse } from "@/lib/apiError";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import connectToDatabase from "@/lib/mongodb";
 import { FlagInterestModel } from "@/models";
-import { AuthService } from "@/services/backend";
+import { AdminService, AuthService } from "@/services/backend";
 
 const authService = new AuthService();
+const adminService = new AdminService();
 const allowedRoles = new Set(["admin", "entrenador_juveniles"]);
 
 interface PlayerRegistrationDocument {
@@ -63,9 +64,14 @@ export async function GET(request: NextRequest) {
       .lean()
       .exec()) as unknown as PlayerRegistrationDocument[];
 
+    const settings = await adminService.getSiteSettings();
+
     return NextResponse.json({
       success: true,
       data: docs.map(toRegistrationResponse),
+      settings: {
+        whatsappMessageTemplate: settings.whatsappMessageTemplate,
+      },
     });
   } catch (error) {
     return apiErrorResponse({

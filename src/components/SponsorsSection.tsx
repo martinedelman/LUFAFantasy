@@ -1,11 +1,65 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { sponsors } from "@/lib/sponsors";
+import { sponsors as fallbackSponsors, type Sponsor } from "@/lib/sponsors";
+import type { ApiResponseDto, PublicSiteSettingsResponseDto } from "@/app/DTOs";
 
 interface SponsorsSectionProps {
   variant?: "home" | "footer";
 }
 
+interface SponsorViewModel extends Sponsor {
+  visible?: boolean;
+  order?: number;
+  url?: string;
+}
+
 export default function SponsorsSection({ variant = "home" }: SponsorsSectionProps) {
+  const [sponsors, setSponsors] = useState<SponsorViewModel[]>(fallbackSponsors);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/site-settings", { cache: "no-store" });
+        const payload = (await response.json()) as ApiResponseDto<PublicSiteSettingsResponseDto>;
+
+        if (!isMounted || !response.ok || !payload.success || !payload.data) return;
+
+        if (!payload.data.featureVisibility.sponsorsVisible) {
+          setSponsors([]);
+          return;
+        }
+
+        setSponsors(
+          payload.data.sponsors
+            .filter((sponsor) => sponsor.visible)
+            .sort((left, right) => left.order - right.order)
+            .map((sponsor) => ({
+              name: sponsor.name,
+              image: sponsor.image,
+              description: sponsor.description,
+              url: sponsor.url,
+              visible: sponsor.visible,
+              order: sponsor.order,
+            })),
+        );
+      } catch {
+        if (isMounted) {
+          setSponsors(fallbackSponsors);
+        }
+      }
+    };
+
+    loadSettings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   if (variant === "footer") {
     if (sponsors.length === 0) return null;
 

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService, GameEventCorrectionService } from "@/services/backend";
+import { AdminService, AuthService, GameEventCorrectionService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 
 const authService = new AuthService();
 const correctionService = new GameEventCorrectionService();
+const adminService = new AdminService();
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,12 +27,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.action === "approve") {
       await correctionService.approveCorrection(id, user);
       invalidateCacheByPrefix(["standings", "rankings", "dashboard"]);
+      await adminService.recordAudit(user, {
+        action: "live_correction.approved",
+        entityType: "game_event_correction",
+        entityId: id,
+        summary: "Aprobó corrección Live",
+      });
 
       return NextResponse.json({ success: true, message: "Corrección aprobada y aplicada" });
     }
 
     if (body.action === "reject") {
       await correctionService.rejectCorrection(id, user, body.note);
+      await adminService.recordAudit(user, {
+        action: "live_correction.rejected",
+        entityType: "game_event_correction",
+        entityId: id,
+        summary: "Rechazó corrección Live",
+        metadata: body.note ? { note: body.note } : undefined,
+      });
 
       return NextResponse.json({ success: true, message: "Corrección rechazada" });
     }

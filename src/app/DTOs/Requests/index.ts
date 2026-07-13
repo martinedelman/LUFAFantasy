@@ -8,6 +8,8 @@ export type { LoginRequestDto } from "./LoginRequestDto";
 export type { UpdateGameRequestDto } from "./UpdateGameRequestDto";
 export type { UpdateGameScoreRequestDto } from "./UpdateGameScoreRequestDto";
 export type { UpdatePlayerRequestDto } from "./UpdatePlayerRequestDto";
+export type { UpdateAdminUserRequestDto } from "./UpdateAdminUserRequestDto";
+export type { UpdateSiteSettingsRequestDto } from "./UpdateSiteSettingsRequestDto";
 export type { UpdateTeamRequestDto } from "./UpdateTeamRequestDto";
 export type { UpdateTournamentRequestDto } from "./UpdateTournamentRequestDto";
 export type { UserRegistrationRequestDto } from "./UserRegistrationRequestDto";

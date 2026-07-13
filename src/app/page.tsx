@@ -8,6 +8,7 @@ import InlineFeedback from "@/components/InlineFeedback";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import Skeleton from "@/components/Skeleton";
 import SponsorsSection from "@/components/SponsorsSection";
+import type { PublicSiteSettingsResponseDto } from "@/app/DTOs";
 
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://flag.lufa.com.uy").replace(/\/$/, "");
 
@@ -165,6 +166,8 @@ function TeamCarouselSkeleton() {
 export default function Home() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [teams, setTeams] = useState<TeamCarouselItem[]>([]);
+  const [siteSettings, setSiteSettings] = useState<PublicSiteSettingsResponseDto | null>(null);
+  const [dismissedAnnouncementKey, setDismissedAnnouncementKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -175,9 +178,10 @@ export default function Home() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [statsResponse, teamsResponse] = await Promise.all([
+        const [statsResponse, teamsResponse, settingsResponse] = await Promise.all([
           fetch("/api/dashboard"),
           fetch("/api/teams?status=active&limit=100"),
+          fetch("/api/site-settings", { cache: "no-store" }),
         ]);
 
         if (!statsResponse.ok) throw new Error("Failed to fetch dashboard data");
@@ -193,6 +197,13 @@ export default function Home() {
                 a.name.localeCompare(b.name, "es", { sensitivity: "base" }),
               );
             setTeams(sortedTeams);
+          }
+        }
+
+        if (settingsResponse.ok) {
+          const settingsPayload = await settingsResponse.json();
+          if (settingsPayload?.success && settingsPayload.data) {
+            setSiteSettings(settingsPayload.data);
           }
         }
       } catch (err) {
@@ -248,6 +259,37 @@ export default function Home() {
   };
 
   const carouselTeams = teams.length > 0 ? [...teams, ...teams] : [];
+  const isSumateEnabled = siteSettings?.featureVisibility.sumateEnabled ?? true;
+  const homepageAnnouncement = siteSettings?.homepageAnnouncement;
+  const homepageAnnouncementKey = homepageAnnouncement
+    ? [
+        homepageAnnouncement.title,
+        homepageAnnouncement.body,
+        homepageAnnouncement.imageUrl,
+        homepageAnnouncement.ctaLabel,
+        homepageAnnouncement.ctaUrl,
+      ].join("|")
+    : "";
+  const showHomepageAnnouncement = Boolean(
+    homepageAnnouncement?.enabled &&
+      (homepageAnnouncement.title.trim() || homepageAnnouncement.body.trim()) &&
+      dismissedAnnouncementKey !== homepageAnnouncementKey,
+  );
+
+  useEffect(() => {
+    if (!homepageAnnouncementKey) return;
+    const storageKey = `lufa-homepage-announcement:${homepageAnnouncementKey}`;
+    if (window.localStorage.getItem(storageKey) === "dismissed") {
+      setDismissedAnnouncementKey(homepageAnnouncementKey);
+    }
+  }, [homepageAnnouncementKey]);
+
+  const closeHomepageAnnouncement = () => {
+    if (homepageAnnouncementKey) {
+      window.localStorage.setItem(`lufa-homepage-announcement:${homepageAnnouncementKey}`, "dismissed");
+    }
+    setDismissedAnnouncementKey(homepageAnnouncementKey);
+  };
 
   const pauseAndCapture = (clientX: number) => {
     const el = sliderRef.current;
@@ -328,25 +370,91 @@ export default function Home() {
           <p className="mt-6 text-lg sm:text-xl lg:text-2xl font-medium tracking-[0.12em] uppercase">
             El deporte olímpico que más crece en Uruguay te está esperando
           </p>
-          <div className="mt-9 flex flex-col items-center gap-3">
-            <Link
-              href="/sumate"
-              onClick={() => trackHomeAction("open_flag_interest_page", "/sumate")}
-              className="animated-button"
-              aria-label="Quiero sumarme al Flag Football Uruguayo"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="arr-2" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
-              </svg>
-              <span className="text">Quiero sumarme</span>
-              <span className="circle" aria-hidden="true" />
-              <svg xmlns="http://www.w3.org/2000/svg" className="arr-1" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
-              </svg>
-            </Link>
-          </div>
+          {isSumateEnabled ? (
+            <div className="mt-9 flex flex-col items-center gap-3">
+              <Link
+                href="/sumate"
+                onClick={() => trackHomeAction("open_flag_interest_page", "/sumate")}
+                className="animated-button"
+                aria-label="Quiero sumarme al Flag Football Uruguayo"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="arr-2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
+                </svg>
+                <span className="text">Quiero sumarme</span>
+                <span className="circle" aria-hidden="true" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="arr-1" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
+                </svg>
+              </Link>
+            </div>
+          ) : null}
         </div>
       </FixedHeroSection>
+
+      {showHomepageAnnouncement && homepageAnnouncement ? (
+        <div className="homepage-announcement-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 py-6 backdrop-blur-[2px]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="homepage-announcement-title"
+            className="homepage-announcement-modal relative flex max-h-[calc(100dvh-48px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-900/10"
+          >
+            <button
+              type="button"
+              onClick={closeHomepageAnnouncement}
+              aria-label="Cerrar aviso público"
+              className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-xl font-semibold leading-none text-slate-700 shadow-sm transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            >
+              ×
+            </button>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {homepageAnnouncement.imageUrl.trim() ? (
+                <div className="w-full bg-slate-100">
+                  <img
+                    src={homepageAnnouncement.imageUrl}
+                    alt=""
+                    className="h-auto w-full"
+                    loading="eager"
+                  />
+                </div>
+              ) : null}
+              <div className="p-6 pb-5 sm:p-7 sm:pb-5">
+                {homepageAnnouncement.title.trim() ? (
+                  <h2 id="homepage-announcement-title" className="pr-8 text-2xl font-bold text-slate-950">
+                    {homepageAnnouncement.title}
+                  </h2>
+                ) : (
+                  <h2 id="homepage-announcement-title" className="sr-only">
+                    Aviso público
+                  </h2>
+                )}
+                {homepageAnnouncement.body.trim() ? (
+                  <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{homepageAnnouncement.body}</p>
+                ) : null}
+              </div>
+            </div>
+            <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-slate-200 bg-white px-6 py-4 sm:flex-row sm:justify-end sm:px-7">
+              <button
+                type="button"
+                onClick={closeHomepageAnnouncement}
+                className="min-h-11 rounded-md border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                Cerrar
+              </button>
+              {homepageAnnouncement.ctaLabel.trim() && homepageAnnouncement.ctaUrl.trim() ? (
+                <Link
+                  href={homepageAnnouncement.ctaUrl}
+                  onClick={closeHomepageAnnouncement}
+                  className="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-950 px-5 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  {homepageAnnouncement.ctaLabel}
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
