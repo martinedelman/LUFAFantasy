@@ -1,4 +1,5 @@
 import {
+  PlayoffCriteria,
   Tournament,
   TournamentStatus,
   TournamentFormat,
@@ -70,6 +71,7 @@ export class TournamentService {
     endDate: Date;
     status?: TournamentStatus;
     format?: TournamentFormat;
+    playoffCriteria?: PlayoffCriteria;
     description?: string;
     registrationDeadline?: Date;
     divisions?: string[];
@@ -90,6 +92,7 @@ export class TournamentService {
       data.endDate,
       data.status || "upcoming",
       data.format || "league",
+      data.playoffCriteria,
       divisionIds,
       participatingTeams,
       data.description,
@@ -145,6 +148,7 @@ export class TournamentService {
       endDate: Date;
       status: TournamentStatus;
       format: TournamentFormat;
+      playoffCriteria: PlayoffCriteria;
       description: string;
       registrationDeadline: Date;
       divisions: string[];
@@ -178,6 +182,7 @@ export class TournamentService {
       data.endDate || tournament.endDate,
       data.status || tournament.status,
       data.format || tournament.format,
+      data.playoffCriteria !== undefined ? data.playoffCriteria : tournament.playoffCriteria,
       nextDivisionIds,
       nextParticipatingTeams,
       data.description !== undefined ? data.description : tournament.description,

@@ -8,6 +8,7 @@ export interface UpdateGameRequestDto {
   scheduledDate?: string;
   status?: GameStatus;
   phase?: GamePhase;
+  playoffSlot?: string | null;
   week?: number;
   round?: string;
   officials?: GameOfficialAssignmentRequestDto[];

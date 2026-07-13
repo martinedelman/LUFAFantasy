@@ -44,10 +44,21 @@ export class MongoGameRepository implements IGameRepository {
   async update(id: string, data: Partial<Game>): Promise<Game> {
     await connectToDatabase();
     const persistenceData = data as Game;
-    const doc = await GameModel.findByIdAndUpdate(id, persistenceData, {
-      new: true,
-      runValidators: true,
-    })
+    const updateData: Record<string, unknown> = { ...persistenceData };
+    const shouldUnsetPlayoffSlot = !persistenceData.playoffSlot;
+
+    if (shouldUnsetPlayoffSlot) {
+      delete updateData.playoffSlot;
+    }
+
+    const doc = await GameModel.findByIdAndUpdate(
+      id,
+      shouldUnsetPlayoffSlot ? { $set: updateData, $unset: { playoffSlot: "" } } : updateData,
+      {
+        new: true,
+        runValidators: true,
+      },
+    )
       .populate("homeTeam")
       .populate("awayTeam")
       .exec();

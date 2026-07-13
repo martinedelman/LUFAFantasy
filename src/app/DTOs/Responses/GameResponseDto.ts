@@ -31,6 +31,7 @@ export interface GameResponseDto {
   actualEndTime?: string;
   status: GameStatus;
   phase: GamePhase;
+  playoffSlot?: string;
   week?: number;
   round?: string;
   officials: Array<{

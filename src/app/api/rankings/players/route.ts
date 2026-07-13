@@ -6,9 +6,33 @@ import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/
 import mongoose from "mongoose";
 
 type AllowedEventType = "touchdown" | "extra_point" | "safety" | "interception" | "pick_six";
+type RankingsStage = "all" | "regular" | "playoff" | "final" | "postseason";
 
 const ALLOWED_EVENT_TYPES: AllowedEventType[] = ["touchdown", "extra_point", "safety", "interception", "pick_six"];
+const ALLOWED_RANKINGS_STAGES: RankingsStage[] = ["all", "regular", "playoff", "final", "postseason"];
 const RANKINGS_CACHE_TTL_SECONDS = 1800; // 30 minutos
+
+function getPhaseMatch(stage: RankingsStage): Record<string, unknown> {
+  if (stage === "regular") {
+    return {
+      $or: [{ "gameInfo.phase": "regular" }, { "gameInfo.phase": { $exists: false } }],
+    };
+  }
+
+  if (stage === "playoff") {
+    return { "gameInfo.phase": "playoff" };
+  }
+
+  if (stage === "final") {
+    return { "gameInfo.phase": "final" };
+  }
+
+  if (stage === "postseason") {
+    return { "gameInfo.phase": { $in: ["playoff", "final"] } };
+  }
+
+  return {};
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,9 +41,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const mode = searchParams.get("mode") === "points" ? "points" : "count";
     const eventType = searchParams.get("eventType") as AllowedEventType | null;
+    const tournament = searchParams.get("tournament");
     const division = searchParams.get("division");
+    const yearParam = searchParams.get("year");
     const pointsParam = searchParams.get("points");
-    const scope = searchParams.get("scope") === "all" ? "all" : "regular";
+    const stageParam = searchParams.get("stage") || searchParams.get("scope");
+    const stage = ALLOWED_RANKINGS_STAGES.includes(stageParam as RankingsStage)
+      ? (stageParam as RankingsStage)
+      : "regular";
     const includePickSix = searchParams.get("includePickSix") === "true";
     const limit = Math.max(1, Math.min(parseInt(searchParams.get("limit") || "10", 10), 50));
 
@@ -45,6 +74,20 @@ export async function GET(request: NextRequest) {
     }
 
     const eventBaseMatch: Record<string, unknown> = {};
+    if (tournament) {
+      if (!mongoose.Types.ObjectId.isValid(tournament)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "campeonato inválido",
+          },
+          { status: 400 },
+        );
+      }
+
+      eventBaseMatch.tournament = new mongoose.Types.ObjectId(tournament);
+    }
+
     if (division) {
       if (!mongoose.Types.ObjectId.isValid(division)) {
         return NextResponse.json(
@@ -57,6 +100,17 @@ export async function GET(request: NextRequest) {
       }
 
       eventBaseMatch.division = new mongoose.Types.ObjectId(division);
+    }
+
+    const yearFilter = yearParam !== null && yearParam !== "" ? Number(yearParam) : null;
+    if (yearFilter !== null && (!Number.isInteger(yearFilter) || yearFilter < 2000 || yearFilter > 2100)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "año inválido",
+        },
+        { status: 400 },
+      );
     }
 
     const eventMatch: Record<string, unknown> =
@@ -82,6 +136,22 @@ export async function GET(request: NextRequest) {
       eventMatch.points = pointsFilter;
     }
 
+    const tournamentYearStages: mongoose.PipelineStage[] =
+      yearFilter !== null
+        ? [
+            {
+              $lookup: {
+                from: "tournaments",
+                localField: "tournament",
+                foreignField: "_id",
+                as: "tournamentInfo",
+              },
+            },
+            { $unwind: "$tournamentInfo" },
+            { $match: { "tournamentInfo.year": yearFilter } },
+          ]
+        : [];
+
     const activeGameStages: mongoose.PipelineStage[] = [
       {
         $lookup: {
@@ -95,11 +165,7 @@ export async function GET(request: NextRequest) {
       {
         $match: {
           "gameInfo.status": { $in: ["in_progress", "completed"] },
-          ...(scope === "regular"
-            ? {
-                $or: [{ "gameInfo.phase": "regular" }, { "gameInfo.phase": { $exists: false } }],
-              }
-            : {}),
+          ...getPhaseMatch(stage),
         },
       },
     ];
@@ -109,6 +175,7 @@ export async function GET(request: NextRequest) {
         ? [
             { $match: eventBaseMatch },
             { $match: eventMatch },
+            ...tournamentYearStages,
             ...activeGameStages,
             {
               $group: {
@@ -157,6 +224,7 @@ export async function GET(request: NextRequest) {
         : [
             { $match: eventBaseMatch },
             { $match: eventMatch },
+            ...tournamentYearStages,
             ...activeGameStages,
             {
               $group: {
@@ -203,7 +271,7 @@ export async function GET(request: NextRequest) {
             },
           ];
 
-    const cacheKey = buildRequestCacheKey("rankings:players:v3", searchParams);
+    const cacheKey = buildRequestCacheKey("rankings:players:v4", searchParams);
     const rankings = await getCachedValue(
       cacheKey,
       RANKINGS_CACHE_TTL_SECONDS * 1000,

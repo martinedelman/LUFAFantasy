@@ -50,6 +50,7 @@ export class GameService {
     venue: { name: string; address: string };
     scheduledDate: Date;
     phase?: GamePhase;
+    playoffSlot?: string | null;
     week?: number;
     round?: string;
     status?: GameStatus;
@@ -69,6 +70,14 @@ export class GameService {
       }
     }
 
+    const phase = data.phase || "regular";
+    const playoffSlot = this.normalizePlayoffSlot(phase, data.playoffSlot);
+    await this.assertPlayoffSlotAvailable({
+      tournament: data.tournament,
+      division: data.division,
+      playoffSlot,
+    });
+
     // Crear venue
     const venue = new Venue(data.venue.name, data.venue.address);
     const venueValidation = venue.validate();
@@ -83,7 +92,7 @@ export class GameService {
       venue,
       data.scheduledDate,
       data.status || "scheduled",
-      data.phase || "regular",
+      phase,
       data.homeTeam,
       data.awayTeam,
       data.officials || [],
@@ -92,6 +101,7 @@ export class GameService {
       undefined,
       data.week,
       data.round,
+      playoffSlot,
     );
 
     // Validar
@@ -501,6 +511,7 @@ export class GameService {
     division?: string;
     status?: GameStatus;
     phase?: GamePhase;
+    playoffSlot?: string;
   }): Promise<Game[]> {
     if (filters.team) {
       const gamesByTeam = await this.gameRepo.findByTeam(filters.team);
@@ -521,6 +532,10 @@ export class GameService {
           return false;
         }
 
+        if (filters.playoffSlot && game.playoffSlot !== filters.playoffSlot) {
+          return false;
+        }
+
         return true;
       });
     }
@@ -530,12 +545,14 @@ export class GameService {
       division?: string;
       status?: GameStatus;
       phase?: GamePhase;
+      playoffSlot?: string;
       $or?: Array<Record<string, unknown>>;
     } = {};
 
     if (filters.tournament) queryFilters.tournament = filters.tournament;
     if (filters.division) queryFilters.division = filters.division;
     if (filters.status) queryFilters.status = filters.status;
+    if (filters.playoffSlot) queryFilters.playoffSlot = filters.playoffSlot;
     if (filters.phase === "regular") {
       queryFilters.$or = [{ phase: "regular" }, { phase: { $exists: false } }];
     } else if (filters.phase) {
@@ -551,11 +568,12 @@ export class GameService {
   async updateGame(
     id: string,
     data: Partial<{
-      homeTeam: string;
-      awayTeam: string;
+      homeTeam: string | null;
+      awayTeam: string | null;
       scheduledDate: Date;
       status: GameStatus;
       phase: GamePhase;
+      playoffSlot: string | null;
       week: number;
       round: string;
       officials: GameOfficial[];
@@ -584,22 +602,37 @@ export class GameService {
         game.score.away.overtime || 0,
       ),
     );
+    const nextPhase = data.phase || game.phase || "regular";
+    const nextPlayoffSlot =
+      data.playoffSlot !== undefined
+        ? this.normalizePlayoffSlot(nextPhase, data.playoffSlot)
+        : this.normalizePlayoffSlot(nextPhase, game.playoffSlot);
+    const nextTournamentId = this.getReferenceId(game.tournament);
+    const nextDivisionId = this.getReferenceId(game.division);
+
+    await this.assertPlayoffSlotAvailable({
+      tournament: nextTournamentId,
+      division: nextDivisionId,
+      playoffSlot: nextPlayoffSlot,
+      excludeGameId: id,
+    });
 
     const updatedGame = new Game(
-      this.getReferenceId(game.tournament),
-      this.getReferenceId(game.division),
+      nextTournamentId,
+      nextDivisionId,
       normalizedVenue,
       data.scheduledDate || game.scheduledDate,
       data.status || game.status,
-      data.phase || game.phase || "regular",
-      data.homeTeam || this.getReferenceId(game.homeTeam),
-      data.awayTeam || this.getReferenceId(game.awayTeam),
+      nextPhase,
+      data.homeTeam !== undefined ? data.homeTeam : this.getReferenceId(game.homeTeam),
+      data.awayTeam !== undefined ? data.awayTeam : this.getReferenceId(game.awayTeam),
       data.officials || game.officials || [],
       normalizedScore,
       game.statistics,
       game.presentPlayers,
       data.week !== undefined ? data.week : game.week,
       data.round || game.round,
+      nextPlayoffSlot,
       game.actualStartTime,
       game.actualEndTime,
       game.notes,
@@ -621,6 +654,40 @@ export class GameService {
     }
 
     return savedGame;
+  }
+
+  private normalizePlayoffSlot(phase: GamePhase, playoffSlot?: string | null): string | undefined {
+    if (phase === "regular") {
+      return undefined;
+    }
+
+    const normalizedSlot = playoffSlot?.trim();
+    return normalizedSlot || undefined;
+  }
+
+  private async assertPlayoffSlotAvailable({
+    tournament,
+    division,
+    playoffSlot,
+    excludeGameId,
+  }: {
+    tournament: string;
+    division: string;
+    playoffSlot?: string;
+    excludeGameId?: string;
+  }): Promise<void> {
+    if (!playoffSlot) return;
+
+    const games = await this.gameRepo.findAll({ tournament, division, playoffSlot });
+    const conflictingGame = games.find((game) => {
+      if (game.id === excludeGameId) return false;
+      if (game.status === "cancelled") return false;
+      return game.phase === "playoff" || game.phase === "final";
+    });
+
+    if (conflictingGame) {
+      throw new Error("Ya existe un partido activo asignado a ese casillero del bracket");
+    }
   }
 
   /**

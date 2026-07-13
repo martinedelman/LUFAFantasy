@@ -190,11 +190,11 @@
             <span>Fechas de torneo</span>
           </article>
           <article class="metric-card">
-            <strong>+8.000</strong>
+            <strong>+9.000</strong>
             <span>Cuentas alcanzadas en los últimos 30 días</span>
           </article>
           <article class="metric-card">
-            <strong>794</strong>
+            <strong>+800</strong>
             <span>Seguidores en Instagram</span>
           </article>
           <article class="metric-card">
@@ -214,32 +214,32 @@
         <div class="social-proof">
           <div class="social-proof__heading">
             <h3>Rendimiento de Instagram</h3>
-            <p>Datos tomados de Instagram Insights de LUFA Flag, con corte al 10 de junio de 2026.</p>
+            <p>Datos tomados de Instagram Insights de @lufaflag.uy, con corte al 30 de junio de 2026.</p>
           </div>
           <div class="social-proof__grid">
             <article>
               <span>Últimos 30 días</span>
-              <strong>124.438</strong>
-              <p>Visualizaciones entre mayo y junio.</p>
+              <strong>+125.000</strong>
+              <p>Visualizaciones en el mes de junio.</p>
             </article>
             <article>
               <span>Últimos 30 días</span>
-              <strong>7.899</strong>
-              <p>Cuentas alcanzadas entre mayo y junio.</p>
+              <strong>+9.000</strong>
+              <p>Cuentas alcanzadas en el mes de junio.</p>
             </article>
             <article>
               <span>Últimos 30 días</span>
-              <strong>{{INTERACCIONES_30_DIAS}}</strong>
-              <p>Interacciones entre mayo y junio.</p>
+              <strong>+3.500</strong>
+              <p>Interacciones en el mes de junio.</p>
             </article>
             <article>
               <span>Últimos 90 días</span>
-              <strong>889.142</strong>
+              <strong>+900.000</strong>
               <p>Visualizaciones entre marzo y junio.</p>
             </article>
             <article>
               <span>Últimos 90 días</span>
-              <strong>23.458</strong>
+              <strong>+26.000</strong>
               <p>Cuentas alcanzadas entre marzo y junio.</p>
             </article>
           </div>
@@ -479,7 +479,7 @@
         </div>
       </section>
 
-      <!-- 9. Sponsors potenciales por rubro -->
+      <!-- 9. Sponsors potenciales por rubro
       <section class="page-section page-section--light" id="rubros">
         <div class="section-heading">
           <p class="eyebrow">Sponsors potenciales por rubro</p>
@@ -529,7 +529,7 @@
         </div>
       </section>
 
-      <!-- 10. Beneficios fiscales / COMPRODE -->
+      10. Beneficios fiscales / COMPRODE
       <section class="page-section section-grid" id="comprode">
         <div>
           <p class="eyebrow">Beneficios fiscales</p>
@@ -555,7 +555,7 @@
         </div>
       </section>
 
-      <!-- 11. Próximos pasos -->
+      11. Próximos pasos
       <section class="page-section page-section--dark" id="proximos-pasos">
         <div class="section-heading">
           <p class="eyebrow">Próximos pasos</p>
@@ -580,7 +580,7 @@
         <div>
           <p class="eyebrow">Hablemos</p>
           <h2>LUFA Flag busca aliados estratégicos para construir el futuro del flag football en Uruguay</h2>
-          <a href="mailto:{{EMAIL_CONTACTO}}" class="button button--primary">Quiero ser sponsor de LUFA Flag</a>
+          <a href="mailto:lufaflag@gmail.com" class="button button--primary">Quiero ser sponsor de LUFA Flag</a>
         </div>
         <address class="contact-card">
           <div>
@@ -608,7 +608,7 @@
         </address>
       </section>
     </main>
-
+    <!-- 
     <footer class="source-footer">
       <p>
         Fuentes: LUFA Flag, LA28 y Secretaría Nacional del Deporte / COMPRODE. Este dossier es una base comercial
@@ -620,7 +620,7 @@
         <a href="https://la28.org/es/plan-de-juegos/deportes-olimpicos/flag-football.html">la28.org</a>,
         <a href="https://www.gub.uy/secretaria-nacional-deporte/node/442">gub.uy COMPRODE</a>.
       </p>
-    </footer>
+    </footer> -->
     <script>
       (() => {
         const grid = document.querySelector("[data-dashboard-teams]");
@@ -675,10 +675,7 @@
             .join("");
         };
 
-        const teamsEndpoint =
-          window.location.protocol === "http:" || window.location.protocol === "https:"
-            ? new URL("/api/teams?status=active&limit=15", window.location.origin).toString()
-            : "http://localhost:3000/api/teams?status=active&limit=15";
+        const teamsEndpoint = "http://localhost:3000/api/teams?status=active&limit=15";
 
         fetch(teamsEndpoint)
           .then((response) => (response.ok ? response.json() : Promise.reject(new Error("teams"))))

@@ -14,7 +14,7 @@ export { User } from "./User";
 export type { UserRole } from "./User";
 
 export { Tournament } from "./Tournament";
-export type { TournamentStatus, TournamentFormat } from "./Tournament";
+export type { PlayoffCriteria, TournamentStatus, TournamentFormat } from "./Tournament";
 
 export { Team } from "./Team";
 export type { TeamStatus } from "./Team";

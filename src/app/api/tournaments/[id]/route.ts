@@ -140,6 +140,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       endDate: new Date(body.endDate),
       status: body.status,
       format: body.format,
+      playoffCriteria: body.playoffCriteria,
       description: body.description,
       registrationDeadline: body.registrationDeadline ? new Date(body.registrationDeadline) : undefined,
       divisions: body.divisions,

@@ -2,6 +2,7 @@ import { AggregateRoot } from "./base/AggregateRoot";
 
 export type TournamentStatus = "upcoming" | "active" | "completed" | "cancelled";
 export type TournamentFormat = "league" | "playoff" | "tournament";
+export type PlayoffCriteria = "NFL" | "DIRECT_FINAL" | "SEMIFINAL";
 
 export interface TournamentRules {
   gameDuration: number;
@@ -40,6 +41,7 @@ export class Tournament extends AggregateRoot {
   public readonly registrationDeadline?: Date;
   public readonly status: TournamentStatus;
   public readonly format: TournamentFormat;
+  public readonly playoffCriteria?: PlayoffCriteria;
   public readonly divisions: string[]; // IDs de divisiones
   public readonly participatingTeams: string[]; // IDs de equipos participantes
   public readonly rules?: TournamentRules;
@@ -53,6 +55,7 @@ export class Tournament extends AggregateRoot {
     endDate: Date,
     status: TournamentStatus,
     format: TournamentFormat,
+    playoffCriteria?: PlayoffCriteria,
     divisions: string[] = [],
     participatingTeams: string[] = [],
     description?: string,
@@ -73,6 +76,7 @@ export class Tournament extends AggregateRoot {
     this.registrationDeadline = registrationDeadline;
     this.status = status;
     this.format = format;
+    this.playoffCriteria = playoffCriteria;
     this.divisions = divisions;
     this.participatingTeams = participatingTeams;
     this.rules = rules;
@@ -139,6 +143,10 @@ export class Tournament extends AggregateRoot {
 
     if (!["league", "playoff", "tournament"].includes(this.format)) {
       errors.push("Formato del torneo inválido");
+    }
+
+    if (this.playoffCriteria && !["NFL", "DIRECT_FINAL", "SEMIFINAL"].includes(this.playoffCriteria)) {
+      errors.push("Criterio de playoffs inválido");
     }
 
     return {

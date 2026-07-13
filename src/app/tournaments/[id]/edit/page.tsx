@@ -29,6 +29,7 @@ interface TournamentFormData {
   endDate: string;
   registrationDeadline: string;
   format: "league" | "playoff" | "tournament";
+  playoffCriteria: "NFL" | "DIRECT_FINAL" | "SEMIFINAL";
   status: "upcoming" | "active" | "completed" | "cancelled";
   rules: {
     gameDuration: number;
@@ -64,6 +65,7 @@ const defaultForm: TournamentFormData = {
   endDate: "",
   registrationDeadline: "",
   format: "league",
+  playoffCriteria: "NFL",
   status: "upcoming",
   rules: {
     gameDuration: 40,
@@ -131,6 +133,7 @@ export default function EditTournamentPage() {
           endDate: toDateInputValue(tournament.endDate),
           registrationDeadline: toDateInputValue(tournament.registrationDeadline),
           format: tournament.format,
+          playoffCriteria: tournament.playoffCriteria ?? "NFL",
           status: tournament.status,
           rules: {
             gameDuration: tournament.rules?.gameDuration ?? 40,
@@ -523,6 +526,22 @@ export default function EditTournamentPage() {
                   <option value="league">Liga Regular</option>
                   <option value="playoff">Playoff</option>
                   <option value="tournament">Torneo</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="playoffCriteria" className="block text-sm font-medium text-gray-700 mb-2">
+                  Criterio Playoffs
+                </label>
+                <select
+                  id="playoffCriteria"
+                  name="playoffCriteria"
+                  value={formData.playoffCriteria}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="NFL">NFL</option>
+                  <option value="DIRECT_FINAL">Final directa</option>
+                  <option value="SEMIFINAL">Con semifinal</option>
                 </select>
               </div>
               <div>

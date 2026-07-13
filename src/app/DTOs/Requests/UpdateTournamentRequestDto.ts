@@ -1,4 +1,10 @@
-import type { TournamentFormat, TournamentPrize, TournamentRules, TournamentStatus } from "@/entities/Tournament";
+import type {
+  PlayoffCriteria,
+  TournamentFormat,
+  TournamentPrize,
+  TournamentRules,
+  TournamentStatus,
+} from "@/entities/Tournament";
 
 export interface UpdateTournamentRequestDto {
   name: string;
@@ -8,6 +14,7 @@ export interface UpdateTournamentRequestDto {
   endDate: string;
   status: TournamentStatus;
   format: TournamentFormat;
+  playoffCriteria?: PlayoffCriteria;
   description?: string;
   registrationDeadline?: string;
   divisions?: string[];
