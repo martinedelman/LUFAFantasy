@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PlayerService } from "@/services/backend";
+import { PlayerService, AuthService } from "@/services/backend";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import { PlayerPosition, PlayerStatus } from "@/entities/Player";
 import { toPlayerResponseDto } from "@/app/DTOs";
@@ -7,6 +8,7 @@ import type { CreatePlayerRequestDto } from "@/app/DTOs";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 
 const playerService = new PlayerService();
+const authService = new AuthService();
 const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
 
 function parseRequiredDate(value: unknown, fieldLabel: string): Date {
@@ -109,10 +111,27 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/players - Crea un nuevo jugador
+ * POST /api/players - Crea un nuevo jugador (solo admin)
  */
 export async function POST(request: NextRequest) {
   try {
+    const token = getSessionTokenFromRequest(request);
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "No autenticado" },
+        { status: 401 },
+      );
+    }
+
+    const isAdmin = await authService.verifyAdmin(token);
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, message: "No autorizado. Solo administradores pueden crear jugadores" },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as CreatePlayerRequestDto;
 
     // Validación básica

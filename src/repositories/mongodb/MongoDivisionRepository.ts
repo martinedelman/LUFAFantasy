@@ -75,7 +75,8 @@ export class MongoDivisionRepository implements IDivisionRepository {
 
   async existsWithName(name: string, tournamentId?: string): Promise<boolean> {
     await connectToDatabase();
-    const query: Record<string, unknown> = { name: { $regex: new RegExp(`^${name}$`, "i") } };
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const query: Record<string, unknown> = { name: { $regex: new RegExp(`^${escaped}$`, "i") } };
     if (tournamentId) {
       query.tournament = tournamentId;
     }

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DivisionService } from "@/services/backend";
+import { DivisionService, AuthService } from "@/services/backend";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import { DivisionCategory } from "@/entities/Division";
 import { toDivisionResponseDto } from "@/app/DTOs";
 import type { CreateDivisionRequestDto } from "@/app/DTOs";
 
 const divisionService = new DivisionService();
+const authService = new AuthService();
 
 /**
  * GET /api/divisions - Obtiene todas las divisiones con filtros y paginación
@@ -53,10 +55,27 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/divisions - Crea una nueva división
+ * POST /api/divisions - Crea una nueva división (solo admin)
  */
 export async function POST(request: NextRequest) {
   try {
+    const token = getSessionTokenFromRequest(request);
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "No autenticado" },
+        { status: 401 },
+      );
+    }
+
+    const isAdmin = await authService.verifyAdmin(token);
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, message: "No autorizado. Solo administradores pueden crear divisiones" },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as CreateDivisionRequestDto;
 
     // Validación básica

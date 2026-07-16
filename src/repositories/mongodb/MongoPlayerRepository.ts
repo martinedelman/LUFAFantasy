@@ -106,7 +106,8 @@ export class MongoPlayerRepository implements IPlayerRepository {
 
   async searchByName(query: string): Promise<Player[]> {
     await connectToDatabase();
-    const regex = new RegExp(query, "i");
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(escaped, "i");
     const docs = await PlayerModel.find({
       $or: [{ firstName: regex }, { lastName: regex }],
     })

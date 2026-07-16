@@ -295,7 +295,7 @@ export async function GET(request: NextRequest) {
       message: "Error al obtener rankings de jugadores",
       status: 500,
       route: "/api/rankings/players",
-      exposeError: true,
+
     });
   }
 }

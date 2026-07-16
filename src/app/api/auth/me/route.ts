@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       message: "Error interno del servidor",
       status: 500,
       route: "/api/auth/me",
-      exposeError: true,
+
     });
   }
 }

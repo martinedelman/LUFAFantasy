@@ -20,9 +20,6 @@ export function middleware(request: NextRequest) {
   // Rutas que requieren autenticación de usuario
   const authRoutes = ["/profile"];
 
-  // Log para debugging
-  console.log(`🛡️ Middleware - Ruta: ${pathname}`);
-
   // Verificar si es una ruta de administrador
   const isAdminRoute =
     adminRoutes.some((route) => pathname.startsWith(route)) ||
@@ -31,14 +28,8 @@ export function middleware(request: NextRequest) {
   // Verificar si es una ruta que requiere autenticación
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
-  // Por ahora solo loggeamos, la validación real se hace en los componentes AdminProtection
-  if (isAdminRoute) {
-    console.log(`🔐 Ruta de administrador detectada: ${pathname}`);
-  }
-
-  if (isAuthRoute) {
-    console.log(`👤 Ruta de usuario autenticado detectada: ${pathname}`);
-  }
+  void isAdminRoute;
+  void isAuthRoute;
 
   return NextResponse.next();
 }
