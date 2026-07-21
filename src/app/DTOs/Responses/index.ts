@@ -17,6 +17,7 @@ export type { PlayerResponseDto } from "./PlayerResponseDto";
 export type { PlayerProfileResponseDto } from "./PlayerProfileResponseDto";
 export type { PlayerStatsResponseDto } from "./PlayerStatsResponseDto";
 export type { PlayerSummaryResponseDto } from "./PlayerSummaryResponseDto";
+export type { PublicHealthComponentDto, PublicHealthResponseDto } from "./PublicHealthResponseDto";
 export type { PublicSiteSettingsResponseDto } from "./PublicSiteSettingsResponseDto";
 export type { RegisteredUserResponseDto } from "./RegisteredUserResponseDto";
 export type { SiteSettingsResponseDto, SiteSponsorResponseDto } from "./SiteSettingsResponseDto";

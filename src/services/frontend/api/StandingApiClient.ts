@@ -12,8 +12,8 @@ export class StandingApiClient extends BaseApiClient {
   /**
    * Obtiene las posiciones de una división
    */
-  async getStandingsByDivision(divisionId: string): Promise<Standing[]> {
-    return this.get<Standing[]>("/standings", { division: divisionId });
+  async getStandingsByDivision(tournamentId: string, divisionId: string): Promise<Standing[]> {
+    return this.get<Standing[]>("/standings", { tournament: tournamentId, division: divisionId });
   }
 
   /**

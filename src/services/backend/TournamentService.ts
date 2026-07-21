@@ -7,6 +7,7 @@ import {
   TournamentPrize,
 } from "../../entities/Tournament";
 import RepositoryContainer from "../../repositories";
+import { StandingService } from "./StandingService";
 
 /**
  * Servicio de gestión de torneos
@@ -15,6 +16,7 @@ export class TournamentService {
   private tournamentRepo = RepositoryContainer.getTournamentRepository();
   private divisionRepo = RepositoryContainer.getDivisionRepository();
   private teamRepo = RepositoryContainer.getTeamRepository();
+  private standingService = new StandingService();
 
   private getReferenceId(reference: unknown): string {
     if (!reference) return "";
@@ -107,7 +109,14 @@ export class TournamentService {
       throw new Error(validation.errors.join(", "));
     }
 
-    return await this.tournamentRepo.create(tournament);
+    const createdTournament = await this.tournamentRepo.create(tournament);
+    const tournamentId = this.getReferenceId(createdTournament);
+
+    await Promise.all(
+      divisionIds.map((divisionId) => this.standingService.ensureStandingsForTournamentDivision(tournamentId, divisionId)),
+    );
+
+    return createdTournament;
   }
 
   /**

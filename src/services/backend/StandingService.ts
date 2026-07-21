@@ -33,6 +33,8 @@ const TOURNAMENT_TIE_BREAKERS: TieBreakerCriterion[] = [
 export class StandingService {
   private standingRepo = RepositoryContainer.getStandingRepository();
   private gameRepo = RepositoryContainer.getGameRepository();
+  private tournamentRepo = RepositoryContainer.getTournamentRepository();
+  private teamRepo = RepositoryContainer.getTeamRepository();
 
   /**
    * Recalcula el standing de un equipo basado en partidos en curso y completados.
@@ -115,10 +117,12 @@ export class StandingService {
   /**
    * Obtiene los standings de una división ordenados
    */
-  async getStandingsByDivision(divisionId: string): Promise<Standing[]> {
-    const standings = await this.standingRepo.findByDivision(divisionId);
-    const standingsGames = (await this.gameRepo.findByDivision(divisionId)).filter((game) =>
-      this.isCountableStandingGame(game),
+  async getStandingsByTournamentAndDivision(tournamentId: string, divisionId: string): Promise<Standing[]> {
+    await this.ensureStandingsForTournamentDivision(tournamentId, divisionId);
+
+    const standings = await this.standingRepo.findByTournamentAndDivision(tournamentId, divisionId);
+    const standingsGames = (await this.gameRepo.findByTournament(tournamentId)).filter(
+      (game) => this.getReferenceId(game.division) === divisionId && this.isCountableStandingGame(game),
     );
     const sortedStandings = this.sortStandingsByIfafRules(standings, standingsGames);
 
@@ -385,6 +389,28 @@ export class StandingService {
         await this.standingRepo.create(initialStanding);
       }
     }
+  }
+
+  /**
+   * Crea las filas en cero para torneos ya creados antes de que existiera esta
+   * inicialización. También mantiene la creación de nuevos torneos idempotente.
+   */
+  async ensureStandingsForTournamentDivision(tournamentId: string, divisionId: string): Promise<void> {
+    const tournament = await this.tournamentRepo.findById(tournamentId);
+    if (!tournament) {
+      throw new Error("Torneo no encontrado");
+    }
+
+    const participatingTeams = tournament.participatingTeams || [];
+    const teams = await Promise.all(
+      participatingTeams.map((teamReference) => this.teamRepo.findById(this.getReferenceId(teamReference))),
+    );
+    const teamIds = teams
+      .filter((team): team is NonNullable<typeof team> => Boolean(team))
+      .filter((team) => this.getReferenceId(team.division) === divisionId)
+      .map((team) => this.getReferenceId(team));
+
+    await this.ensureStandingsExist(teamIds, tournamentId, divisionId);
   }
 
   /**

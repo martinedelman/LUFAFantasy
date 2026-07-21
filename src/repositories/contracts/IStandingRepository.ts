@@ -11,6 +11,11 @@ export interface IStandingRepository extends IRepository<Standing> {
   findByDivision(divisionId: string): Promise<Standing[]>;
 
   /**
+   * Busca standings de una división dentro de un torneo.
+   */
+  findByTournamentAndDivision(tournamentId: string, divisionId: string): Promise<Standing[]>;
+
+  /**
    * Busca standings por torneo
    */
   findByTournament(tournamentId: string): Promise<Standing[]>;

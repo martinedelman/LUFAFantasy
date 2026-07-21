@@ -84,6 +84,8 @@ const interestOptions = [
   { value: "other", label: "Otro" },
 ];
 
+const PENDING_SEEN_STORAGE_PREFIX = "lufa-admin-pending-seen";
+
 const emptyStats: AdminSystemStatsResponseDto = {
   totalUsers: 0,
   activeUsers: 0,
@@ -263,6 +265,7 @@ function AdminPanelContent() {
   const [judges, setJudges] = useState<JudgeResponseDto[]>([]);
   const [corrections, setCorrections] = useState<GameEventCorrectionResponse[]>([]);
   const [flagInterests, setFlagInterests] = useState<FlagInterestResponseDto[]>([]);
+  const [allFlagInterestIds, setAllFlagInterestIds] = useState<string[]>([]);
   const [settings, setSettings] = useState<SiteSettingsResponseDto>(emptySettings);
   const [settingsDraft, setSettingsDraft] = useState<SiteSettingsResponseDto>(emptySettings);
   const [health, setHealth] = useState<AdminSystemHealthResponseDto | null>(null);
@@ -277,6 +280,7 @@ function AdminPanelContent() {
   const [auditFilters, setAuditFilters] = useState({ actorEmail: "", action: "", entityType: "" });
   const [judgeForm, setJudgeForm] = useState<CreateJudgeRequestDto>({ firstName: "", lastName: "" });
   const [importResult, setImportResult] = useState<AdminPlayerImportDryRunResponseDto | null>(null);
+  const [seenPendingSignature, setSeenPendingSignature] = useState("");
 
   const fetchUsers = async (filters = userFilters) => {
     const params = new URLSearchParams();
@@ -289,7 +293,11 @@ function AdminPanelContent() {
 
   const fetchInterests = async (interestType = interestTypeFilter) => {
     const query = interestType ? `?interestType=${encodeURIComponent(interestType)}` : "";
-    setFlagInterests(await apiFetch<FlagInterestResponseDto[]>(`/api/admin/flag-interests${query}`));
+    const nextInterests = await apiFetch<FlagInterestResponseDto[]>(`/api/admin/flag-interests${query}`);
+    setFlagInterests(nextInterests);
+    if (!interestType) {
+      setAllFlagInterestIds(nextInterests.map((interest) => interest.id));
+    }
   };
 
   const fetchAuditLogs = async (filters = auditFilters) => {
@@ -321,9 +329,21 @@ function AdminPanelContent() {
     setSettings(nextSettings);
     setSettingsDraft(nextSettings);
     setFlagInterests(nextInterests);
+    setAllFlagInterestIds(nextInterests.map((interest) => interest.id));
     setHealth(nextHealth);
     setAuditLogs(nextAuditLogs);
   };
+
+  const pendingSignature = useMemo(() => {
+    const correctionIds = corrections.map((correction) => `c:${correction._id}`).sort();
+    const interestIds = allFlagInterestIds.map((id) => `i:${id}`).sort();
+    return [...correctionIds, ...interestIds].join("|");
+  }, [allFlagInterestIds, corrections]);
+
+  const pendingUnreadCount =
+    activeTab !== "pending" && pendingSignature && pendingSignature !== seenPendingSignature
+      ? corrections.length + allFlagInterestIds.length
+      : 0;
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -346,6 +366,19 @@ function AdminPanelContent() {
 
     load();
   }, []);
+
+  useEffect(() => {
+    if (!user?.email) return;
+    const storageKey = `${PENDING_SEEN_STORAGE_PREFIX}:${user.email}`;
+    setSeenPendingSignature(window.localStorage.getItem(storageKey) || "");
+  }, [user?.email]);
+
+  useEffect(() => {
+    if (!pendingSignature || activeTab !== "pending" || !user?.email) return;
+    const storageKey = `${PENDING_SEEN_STORAGE_PREFIX}:${user.email}`;
+    window.localStorage.setItem(storageKey, pendingSignature);
+    setSeenPendingSignature(pendingSignature);
+  }, [activeTab, pendingSignature, user?.email]);
 
   const setTab = (tab: AdminTab) => {
     setActiveTab(tab);
@@ -657,9 +690,9 @@ function AdminPanelContent() {
                 }`}
               >
                 {tab.label}
-                {tab.id === "pending" && stats.pendingCorrections + stats.pendingFlagInterests > 0 ? (
+                {tab.id === "pending" && pendingUnreadCount > 0 ? (
                   <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs text-white">
-                    {stats.pendingCorrections + stats.pendingFlagInterests}
+                    {pendingUnreadCount}
                   </span>
                 ) : null}
               </button>

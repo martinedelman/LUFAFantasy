@@ -110,9 +110,12 @@ export class StandingUIService {
   /**
    * Carga posiciones por división con manejo de errores
    */
-  static async loadStandingsByDivision(divisionId: string): Promise<{ standings: Standing[]; error: string | null }> {
+  static async loadStandingsByDivision(
+    tournamentId: string,
+    divisionId: string,
+  ): Promise<{ standings: Standing[]; error: string | null }> {
     try {
-      const standings = await standingApiClient.getStandingsByDivision(divisionId);
+      const standings = await standingApiClient.getStandingsByDivision(tournamentId, divisionId);
       const sorted = this.sortStandings(standings);
       return { standings: sorted, error: null };
     } catch (error) {

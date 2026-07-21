@@ -112,7 +112,7 @@ export default function TournamentPlayoffsPage() {
 
     try {
       setStandingsLoading(true);
-      const params = new URLSearchParams({ division: divisionId });
+      const params = new URLSearchParams({ tournament: tournamentId, division: divisionId });
       const response = await fetch(`/api/standings?${params.toString()}`);
       const result: ApiResponse<Standing[]> = await response.json();
 
@@ -126,7 +126,7 @@ export default function TournamentPlayoffsPage() {
     } finally {
       setStandingsLoading(false);
     }
-  }, []);
+  }, [tournamentId]);
 
   const fetchPlayoffGames = useCallback(
     async (divisionId: string) => {

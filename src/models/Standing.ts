@@ -39,7 +39,9 @@ const StandingSchema = new Schema(
 );
 
 // Índices
-StandingSchema.index({ division: 1, team: 1 }, { unique: true });
+// Un mismo equipo puede participar en más de un torneo usando la misma división.
+// Por eso el torneo es parte de la identidad del standing.
+StandingSchema.index({ division: 1, tournament: 1, team: 1 }, { unique: true });
 StandingSchema.index({ tournament: 1 });
 StandingSchema.index({ division: 1, position: 1 });
 StandingSchema.index({ division: 1, percentage: -1 });
