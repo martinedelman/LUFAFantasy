@@ -193,7 +193,7 @@ export default function TournamentDetailPage() {
     try {
       setStandingsLoading(true);
       setStandingsError(null);
-      const params = new URLSearchParams({ division: divisionId });
+      const params = new URLSearchParams({ tournament: tournamentId, division: divisionId });
       const response = await fetch(`/api/standings?${params.toString()}`);
       const result: StandingsApiResponse = await response.json();
 
@@ -208,7 +208,7 @@ export default function TournamentDetailPage() {
     } finally {
       setStandingsLoading(false);
     }
-  }, []);
+  }, [tournamentId]);
 
   const fetchFinalGames = useCallback(
     async (divisionId: string, tournamentStatus?: Tournament["status"]) => {

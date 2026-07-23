@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
 import GoogleIcon, { type GoogleIconName } from "@/components/GoogleIcon";
+import type { ApiResponseDto, PublicSiteSettingsResponseDto } from "@/app/DTOs";
 
 const officialWhatsAppChannelUrl = "https://whatsapp.com/channel/0029VbCnCzqKLaHqPlaOvV3W";
 
@@ -82,9 +83,35 @@ export default function SumatePage() {
   const [flagInterestStep, setFlagInterestStep] = useState(0);
   const [flagInterestStatus, setFlagInterestStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [flagInterestError, setFlagInterestError] = useState<string | null>(null);
+  const [publicSettings, setPublicSettings] = useState<PublicSiteSettingsResponseDto | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/site-settings", { cache: "no-store" });
+        const payload = (await response.json()) as ApiResponseDto<PublicSiteSettingsResponseDto>;
+
+        if (isMounted && response.ok && payload.success && payload.data) {
+          setPublicSettings(payload.data);
+        }
+      } catch {
+        setPublicSettings(null);
+      }
+    };
+
+    loadSettings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const needsPlayerExperience = flagInterestForm.interestType === "play";
   const needsSponsorDetails = flagInterestForm.interestType === "sponsor";
+  const isSumateEnabled = publicSettings?.featureVisibility.sumateEnabled ?? true;
+  const officialChannelUrl = publicSettings?.whatsappChannelUrl || officialWhatsAppChannelUrl;
   const flagInterestSteps = [
     "Participación",
     "Nombre",
@@ -414,11 +441,29 @@ export default function SumatePage() {
             </p>
           </div>
 
-          <form
-            onSubmit={handleFlagInterestSubmit}
-            className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 shadow-sm sm:p-6"
-          >
-            {flagInterestStatus === "success" ? (
+          {!isSumateEnabled ? (
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-800">Inscripciones pausadas</p>
+              <h3 className="mt-3 text-3xl font-black text-slate-950">El formulario no está disponible ahora.</h3>
+              <p className="mt-4 text-base leading-relaxed text-slate-700">
+                Pronto volveremos a abrir este canal. Mientras tanto podés seguir las novedades por el canal oficial.
+              </p>
+              <a
+                href={officialChannelUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track("Flag interest whatsapp channel clicked")}
+                className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-lg bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              >
+                Unirme al canal oficial de WhatsApp
+              </a>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleFlagInterestSubmit}
+              className="rounded-xl border border-slate-200 bg-[rgb(248,250,252)] p-4 shadow-sm sm:p-6"
+            >
+              {flagInterestStatus === "success" ? (
               <div className="rounded-lg bg-white p-6 text-center">
                 <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-800">Formulario enviado</p>
                 <h3 className="mt-3 text-3xl font-black text-slate-950">¡Bienvenido al Flag Football Uruguayo!</h3>
@@ -427,7 +472,7 @@ export default function SumatePage() {
                   ayudarte a dar el siguiente paso.
                 </p>
                 <a
-                  href={officialWhatsAppChannelUrl}
+                  href={officialChannelUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => track("Flag interest whatsapp channel clicked")}
@@ -436,7 +481,7 @@ export default function SumatePage() {
                   Unirme al canal oficial de WhatsApp
                 </a>
               </div>
-            ) : (
+              ) : (
               <>
                 <div className="mb-6 flex flex-wrap items-center gap-2">
                   {flagInterestSteps.map((step, index) => (
@@ -492,8 +537,9 @@ export default function SumatePage() {
                   )}
                 </div>
               </>
-            )}
-          </form>
+              )}
+            </form>
+          )}
         </div>
       </section>
     </main>

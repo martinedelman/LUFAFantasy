@@ -75,7 +75,7 @@ export default function StandingsPage() {
   }, [selectedTournament, selectedDivision, setFilters]);
 
   const fetchStandings = useCallback(async () => {
-    if (!selectedDivision) {
+      if (!selectedTournament || !selectedDivision) {
       setStandings([]);
       return;
     }
@@ -85,6 +85,7 @@ export default function StandingsPage() {
       setError(null);
 
       const params = new URLSearchParams();
+      params.append("tournament", selectedTournament);
       params.append("division", selectedDivision);
 
       const response = await fetch(`/api/standings?${params}`);
@@ -100,7 +101,7 @@ export default function StandingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedDivision]);
+  }, [selectedTournament, selectedDivision]);
 
   useEffect(() => {
     if (!filtersHydrated) {
@@ -111,10 +112,10 @@ export default function StandingsPage() {
   }, [filtersHydrated, fetchTournaments]);
 
   useEffect(() => {
-    if (selectedDivision) {
+    if (selectedTournament && selectedDivision) {
       fetchStandings();
     }
-  }, [selectedDivision, fetchStandings]);
+  }, [selectedTournament, selectedDivision, fetchStandings]);
 
   const selectedTournamentData = tournaments.find((t) => t._id === selectedTournament);
   const availableDivisions = selectedTournamentData?.divisions || [];

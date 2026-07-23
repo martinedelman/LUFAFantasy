@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService, JudgeService } from "@/services/backend";
+import { AdminService, AuthService, JudgeService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import { toJudgeResponseDto } from "@/app/DTOs";
@@ -7,6 +7,7 @@ import type { CreateJudgeRequestDto } from "@/app/DTOs";
 
 const authService = new AuthService();
 const judgeService = new JudgeService();
+const adminService = new AdminService();
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,8 +17,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "No autenticado" }, { status: 401 });
     }
 
-    const isAdmin = await authService.verifyAdmin(token);
-    if (!isAdmin) {
+    const actor = await authService.verifyToken(token);
+    if (!actor.isAdmin()) {
       return NextResponse.json({ success: false, message: "No autorizado" }, { status: 403 });
     }
 
@@ -41,8 +42,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "No autenticado" }, { status: 401 });
     }
 
-    const isAdmin = await authService.verifyAdmin(token);
-    if (!isAdmin) {
+    const actor = await authService.verifyToken(token);
+    if (!actor.isAdmin()) {
       return NextResponse.json({ success: false, message: "No autorizado" }, { status: 403 });
     }
 
@@ -61,6 +62,19 @@ export async function POST(request: NextRequest) {
     const judge = await judgeService.createJudge({
       firstName: body.firstName,
       lastName: body.lastName,
+    });
+
+    await adminService.recordAudit(actor, {
+      action: "judge.created",
+      entityType: "judge",
+      entityId: judge._id,
+      entityLabel: `${judge.firstName} ${judge.lastName}`,
+      summary: `Creó juez ${judge.firstName} ${judge.lastName}`,
+      after: {
+        id: judge._id,
+        firstName: judge.firstName,
+        lastName: judge.lastName,
+      },
     });
 
     return NextResponse.json(

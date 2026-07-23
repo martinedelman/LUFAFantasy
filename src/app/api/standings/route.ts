@@ -6,24 +6,25 @@ import { toStandingResponseDto } from "@/app/DTOs";
 const standingService = new StandingService();
 
 /**
- * GET /api/standings - Obtiene la tabla de posiciones por división
+ * GET /api/standings - Obtiene la tabla de posiciones por torneo y división
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const division = searchParams.get("division");
+    const tournament = searchParams.get("tournament");
 
-    if (!division) {
+    if (!division || !tournament) {
       return NextResponse.json(
         {
           success: false,
-          message: "Parámetro division es requerido",
+          message: "Parámetros tournament y division son requeridos",
         },
         { status: 400 },
       );
     }
 
-    const standings = await standingService.getStandingsByDivision(division);
+    const standings = await standingService.getStandingsByTournamentAndDivision(tournament, division);
     const responseData = standings.map((standing) => toStandingResponseDto(standing));
 
     return NextResponse.json(

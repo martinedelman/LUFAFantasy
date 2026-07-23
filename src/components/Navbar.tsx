@@ -27,6 +27,7 @@ export default function Navbar() {
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const userMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const { user, signOut } = useAuth();
+  const canViewPlayerRegistrations = user?.role === "entrenador_juveniles" || user?.role === "admin";
 
   const trackNavigation = (label: string, href: string, location: "desktop" | "mobile") => {
     if (user?.role === "admin") return;
@@ -237,6 +238,11 @@ export default function Navbar() {
                           Administrador
                         </span>
                       )}
+                      {user.role === "entrenador_juveniles" && (
+                        <span className="mt-1 inline-flex items-center rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                          Entrenador juveniles
+                        </span>
+                      )}
                     </div>{" "}
                     <Link
                       href="/profile"
@@ -245,6 +251,15 @@ export default function Navbar() {
                     >
                       Mi Perfil
                     </Link>
+                    {canViewPlayerRegistrations && (
+                      <Link
+                        href="/jugadores-inscriptos"
+                        onClick={() => trackNavigation("Jugadores Inscriptos", "/jugadores-inscriptos", "desktop")}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
+                      >
+                        Jugadores Inscriptos
+                      </Link>
+                    )}
                     {user.role === "admin" && (
                       <>
                         <div className="border-t border-slate-200 my-1"></div>
@@ -454,6 +469,18 @@ export default function Navbar() {
                       >
                         <span>Panel Admin</span>
                         {pendingCorrectionInlineBadge}
+                      </Link>
+                    )}
+                    {canViewPlayerRegistrations && (
+                      <Link
+                        href="/jugadores-inscriptos"
+                        className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
+                        onClick={() => {
+                          trackNavigation("Jugadores Inscriptos", "/jugadores-inscriptos", "mobile");
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        Jugadores Inscriptos
                       </Link>
                     )}
                     <button

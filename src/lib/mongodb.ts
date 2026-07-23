@@ -4,7 +4,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB_NAME = process.env.environment === "production" ? "prod" : "test";
 
 if (!MONGODB_URI) {
-  throw new Error("Por favor define la variable de entorno MONGODB_URI en .env");
+  throw new Error("Falta configurar la conexión a base de datos");
 }
 
 /**

@@ -15,3 +15,6 @@ export { SeasonModel } from "./Season";
 export { UserModel } from "./User";
 export { PlayerImportMigrationModel } from "./PlayerImportMigration";
 export { JudgeModel } from "./Judge";
+export { FlagInterestModel } from "./FlagInterest";
+export { AdminAuditLogModel } from "./AdminAuditLog";
+export { SiteSettingsModel } from "./SiteSettings";

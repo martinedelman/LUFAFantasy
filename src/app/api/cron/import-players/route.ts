@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: "Falta configurar CRON_SECRET",
+        message: "Falta configurar la autenticación de procesos programados",
       },
       { status: 500 },
     );

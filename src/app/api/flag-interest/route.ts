@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import connectToDatabase from "@/lib/mongodb";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { safeTrack } from "@/lib/serverAnalytics";
+import { FlagInterestModel } from "@/models";
 import { EmailService } from "@/services/backend";
 
 const emailService = new EmailService();
@@ -40,6 +42,10 @@ interface FlagInterestRequestBody {
 
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
+}
+
+function normalizeDigits(value: string) {
+  return value.replace(/\D/g, "");
 }
 
 function escapeHtml(value: string) {
@@ -96,7 +102,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Seleccioná tu departamento o ciudad." }, { status: 400 });
     }
 
-    if (whatsapp.replace(/\D/g, "").length < 8) {
+    const whatsappDigits = normalizeDigits(whatsapp);
+
+    if (whatsappDigits.length < 8) {
       return NextResponse.json({ success: false, message: "Ingresá un WhatsApp válido." }, { status: 400 });
     }
 
@@ -128,6 +136,21 @@ export async function POST(request: NextRequest) {
         ? [renderLine("Empresa", company), renderLine("Tipo de colaboración", sponsorInterest)]
         : []),
     ];
+
+    await connectToDatabase();
+    await FlagInterestModel.create({
+      interestType,
+      interestLabel,
+      name,
+      ageRange,
+      location,
+      whatsapp,
+      whatsappDigits,
+      experience,
+      company,
+      sponsorInterest,
+      source: "sumate",
+    });
 
     await emailService.send({
       to: "lufaflag@gmail.com",
