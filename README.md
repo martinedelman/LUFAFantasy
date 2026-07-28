@@ -1,229 +1,188 @@
-# 🏈 LUFA Fantasy - Sistema de Gestión de Flag Football
+# LUFA Fantasy
 
-Un sistema completo de gestión para ligas de Flag Football desarrollado con **Next.js**, **TypeScript** y **MongoDB**.
+Sistema de gestion para ligas de Flag Football construido con **Next.js**, **TypeScript** y **MongoDB**. La app permite administrar torneos, divisiones, equipos, jugadores, partidos, tabla de posiciones, rankings, registros publicos, Live Match y herramientas operativas para administradores.
 
-## 📋 Descripción del Proyecto
+## Documentacion Principal
 
-Este proyecto está diseñado para replicar y mejorar funcionalidades de páginas como CópaFácil, proporcionando una plataforma integral para la gestión de torneos, equipos, jugadores y estadísticas de Flag Football.
+- [Arquitectura del backend](docs/backend-architecture.md): capas, componentes, flujos de interaccion, endpoints, servicios, persistencia y guia para agregar features con clean code.
+- [Propuesta LUFA Flag](docs/propuesta-lufa-flag.html): material comercial/institucional.
+- [Sponsors 2026](docs/sponsors-2026/index.html): pagina estatica de sponsors.
 
-## 🏗️ Arquitectura del Sistema
+## Stack
 
-### Entidades Principales
+| Area | Tecnologia |
+| --- | --- |
+| Aplicacion | Next.js 15 App Router |
+| UI | React 19, Tailwind CSS |
+| Backend | Next.js Route Handlers |
+| Lenguaje | TypeScript |
+| Base de datos | MongoDB + Mongoose |
+| Auth | JWT en cookie HTTP-only |
+| Email | Nodemailer via SMTP |
+| Storage | Vercel Blob |
+| Deploy | Vercel |
+| Integraciones | Google Sheets, Vercel Analytics, Vercel Flags |
 
-El sistema maneja las siguientes entidades principales:
+## Funcionalidades
 
-#### 1. **Torneos (Tournaments)**
+- Gestion de torneos, divisiones, equipos, jugadores y jueces.
+- Programacion de partidos regulares, playoffs y finales.
+- Live Match con eventos de partido, jugadores presentes, inicio, finalizacion y walkover.
+- Tabla de posiciones viva para temporada regular con desempates IFAF.
+- Rankings y estadisticas de jugadores/equipos.
+- Registro, login, verificacion por OTP y reset de password.
+- Panel admin para usuarios, settings, auditoria, intereses y health operativo.
+- Correcciones de eventos enviadas por jueces y aprobadas/rechazadas por admin.
+- Importacion idempotente de jugadores desde Google Sheets.
+- Upload de imagenes a Vercel Blob.
+- Crons para importacion y digest semanal.
 
-- Gestión de competiciones principales (ej: "APERTURA FLAG 2025")
-- Configuración de reglas de juego
-- Sistema de puntuación personalizable
-- Premios y reconocimientos
+## Arquitectura
 
-#### 2. **Divisiones (Divisions)**
+El backend sigue una separacion por capas liviana:
 
-- Categorías por género (masculino, femenino, mixto)
-- Grupos de edad
-- Límites de equipos por división
-
-#### 3. **Equipos (Teams)**
-
-- Información completa del equipo
-- Datos del entrenador
-- Colores y logo del equipo
-- Información de contacto
-
-#### 4. **Jugadores (Players)**
-
-- Datos personales y de contacto
-- Posiciones específicas de Flag Football (QB, WR, RB, etc.)
-- Información médica y de emergencia
-- Número de jersey único por equipo
-
-#### 5. **Partidos (Games)**
-
-- Programación de encuentros
-- Registro de puntuaciones por cuartos
-- Estadísticas detalladas del juego
-- Eventos del partido (touchdowns, intercepciones, etc.)
-- Información de oficiales y condiciones climáticas
-
-#### 6. **Estadísticas de Jugadores (PlayerStatistics)**
-
-- **Ofensivas**: Pases, carrera, recepciones
-- **Defensivas**: Tacleadas, intercepciones, sacks
-- **Especiales**: Pateo, punting, retornos
-
-#### 7. **Estadísticas de Equipos (TeamStatistics)**
-
-- Record de victorias/derrotas
-- Puntos a favor y en contra
-- Estadísticas ofensivas y defensivas
-- Eficiencia en terceras oportunidades y zona roja
-
-#### 8. **Tabla de Posiciones (Standings)**
-
-- Clasificación por división
-- Porcentaje de victorias
-- Diferencial de puntos
-- Records en casa/visitante
-
-#### 9. **Campos de Juego (Venues)**
-
-- Ubicación y capacidad
-- Instalaciones disponibles
-- Horarios de disponibilidad
-- Información de contacto
-
-#### 10. **Temporadas (Seasons)**
-
-- Agrupación de torneos por año
-- Fechas de inicio y fin
-- Estado de la temporada
-
-## 🛠️ Tecnologías Utilizadas
-
-- **Frontend**: Next.js 15 con React 19
-- **Backend**: Next.js API Routes
-- **Base de Datos**: MongoDB con Mongoose
-- **Lenguaje**: TypeScript
-- **Estilos**: Tailwind CSS
-- **Herramientas**: ESLint, PostCSS
-
-## 📁 Estructura del Proyecto
-
+```mermaid
+flowchart LR
+  Api["src/app/api\nRoute Handlers"] --> Services["src/services/backend\nCasos de uso"]
+  Services --> Entities["src/entities\nDominio"]
+  Services --> Repos["src/repositories\nContratos + Mongo"]
+  Repos --> Models["src/models\nMongoose"]
+  Models --> Mongo[(MongoDB)]
+  Api --> DTOs["src/app/DTOs\nRequests, responses, mappers"]
+  Services --> External["SMTP, Google Sheets,\nVercel Blob, Analytics"]
 ```
+
+Reglas rapidas para nuevas features:
+
+- Mantener los handlers de `src/app/api` delgados.
+- Poner reglas de negocio en `src/services/backend` o `src/entities`.
+- Acceder a MongoDB mediante repositorios cuando sea dominio principal.
+- Exponer respuestas mediante DTOs/mappers, no documentos Mongoose crudos.
+- Invalidar cache tags cuando una mutacion afecte pantallas publicas.
+- Auditar cambios admin sensibles.
+
+La explicacion completa esta en [docs/backend-architecture.md](docs/backend-architecture.md).
+
+## Estructura Del Proyecto
+
+```text
 src/
-├── app/                    # App Router de Next.js
-│   ├── page.tsx           # Página principal (Dashboard)
-│   ├── layout.tsx         # Layout principal
-│   └── globals.css        # Estilos globales
-├── lib/                   # Librerías y utilitarios
-│   ├── mongodb.ts         # Configuración de MongoDB
-│   └── statistics.ts      # Utilitarios de estadísticas
-├── models/                # Modelos de MongoDB
-│   ├── Tournament.ts      # Modelo de torneos
-│   ├── Division.ts        # Modelo de divisiones
-│   ├── Team.ts           # Modelo de equipos
-│   ├── Player.ts         # Modelo de jugadores
-│   ├── Game.ts           # Modelo de partidos
-│   ├── PlayerStatistics.ts # Estadísticas de jugadores
-│   ├── TeamStatistics.ts  # Estadísticas de equipos
-│   ├── Standing.ts        # Tabla de posiciones
-│   ├── Venue.ts          # Campos de juego
-│   ├── Season.ts         # Temporadas
-│   └── index.ts          # Exportaciones
-└── types/                # Definiciones de tipos
-    └── index.ts          # Tipos TypeScript
+├── app/
+│   ├── api/                 # Backend HTTP con Route Handlers
+│   ├── DTOs/                # Requests, responses y mappers
+│   └── */page.tsx           # Pantallas App Router
+├── components/              # Componentes UI reutilizables
+├── entities/                # Agregados y value objects del dominio
+├── hooks/                   # Hooks React
+├── lib/                     # Auth, MongoDB, cache, errores, settings y utilidades
+├── models/                  # Schemas Mongoose
+├── repositories/            # Contratos e implementaciones de persistencia
+├── services/
+│   ├── backend/             # Casos de uso del backend
+│   └── frontend/            # Clientes API y servicios UI
+└── types/                   # Tipos compartidos
+
+scripts/                     # Tareas operativas y migraciones
+docs/                        # Documentacion y artefactos
+public/                      # Imagenes y assets publicos
 ```
 
-## 🎯 Características Específicas de Flag Football
+## Requisitos
 
-### Posiciones de Jugadores
+- Node.js 18 o superior.
+- npm.
+- MongoDB local o remoto.
+- Cuenta/proyecto Vercel para deploy.
+- Credenciales opcionales segun feature: SMTP, Vercel Blob, Google Sheets.
 
-- **QB** (Quarterback): Lanza los pases
-- **WR** (Wide Receiver): Recibe pases
-- **RB** (Running Back): Corre con el balón
-- **C** (Center): Centra el balón
-- **G** (Guard): Línea ofensiva
-- **T** (Tackle): Línea ofensiva
-- **DE** (Defensive End): Línea defensiva
-- **DT** (Defensive Tackle): Línea defensiva
-- **LB** (Linebacker): Defensa media
-- **CB** (Cornerback): Defensa secundaria
-- **FS** (Free Safety): Seguridad libre
-- **SS** (Strong Safety): Seguridad fuerte
-- **K** (Kicker): Pateador
-- **P** (Punter): Despejador
-- **FLEX**: Posición flexible
+## Configuracion Local
 
-### Sistema de Puntuación
-
-- **Touchdown**: 6 puntos
-- **Extra Point 1 yarda**: 1 punto
-- **Extra Point 5 yardas**: 2 puntos
-- **Extra Point 10 yardas**: 3 puntos
-- **Safety**: 2 puntos
-- **Field Goal**: 3 puntos (opcional)
-
-### Estadísticas Detalladas
-
-#### Ofensivas
-
-- Pases completados/intentados
-- Yardas por pase y carrera
-- Touchdowns ofensivos
-- Intercepciones lanzadas
-- Recepciones y yardas recibidas
-
-#### Defensivas
-
-- Tacleadas y tacleadas asistidas
-- Sacks al quarterback
-- Intercepciones defensivas
-- Pases defendidos
-- Fumbles forzados y recuperados
-- Touchdowns defensivos
-
-## 🔧 Configuración del Proyecto
-
-### Requisitos Previos
-
-- Node.js 18+
-- MongoDB (local o en la nube)
-- npm o yarn
-
-### Instalación
-
-1. **Clonar el repositorio**
-
-```bash
-git clone <repository-url>
-cd lufa_fantasy
-```
-
-2. **Instalar dependencias**
+1. Instalar dependencias:
 
 ```bash
 npm install
 ```
 
-3. **Configurar variables de entorno**
+2. Crear archivo de entorno:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Editar `.env.local` con tus configuraciones:
+3. Configurar como minimo:
 
 ```env
+environment=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 MONGODB_URI=mongodb://localhost:27017/lufa_fantasy
-
-# Opcionales (no usados en el MVP actual)
-# NEXTAUTH_URL=http://localhost:3000
-# NEXTAUTH_SECRET=change-me
+JWT_SECRET=change-this-to-a-long-random-secret
 ```
 
-4. **Ejecutar en desarrollo**
+4. Ejecutar en desarrollo:
 
 ```bash
 npm run dev
 ```
 
-5. **Compilar para producción**
+La app queda disponible en `http://localhost:3000`.
 
-```bash
-npm run build
-npm start
-```
+## Variables De Entorno
 
-## ▲ Deploy en Vercel (Testing + Prod en paralelo)
+| Variable | Uso |
+| --- | --- |
+| `environment` | Selecciona base Mongo: `production` usa `prod`; cualquier otro valor usa `test`. |
+| `NEXT_PUBLIC_APP_URL` | URL publica para links de verificacion/notificaciones. |
+| `MONGODB_URI` | Conexion MongoDB. |
+| `JWT_SECRET` | Firma de sesiones JWT. |
+| `OTP_SECRET` | Pepper para OTPs. Si falta, se usa `JWT_SECRET`. |
+| `MAIL_FROM`, `MAIL_PROVIDER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Envio de emails. |
+| `BLOB_READ_WRITE_TOKEN` | Uploads a Vercel Blob. |
+| `FLAGS`, `FLAGS_SECRET` | Feature flags de Vercel. |
+| `CRON_SECRET` | Proteccion de endpoints cron. |
+| `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SHEETS_TAB_NAME`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY` | Importacion desde Google Sheets. |
 
-Este proyecto puede usar un solo proyecto de Vercel con 2 entornos activos al mismo tiempo:
+Ver [.env.example](.env.example) para el listado completo.
 
-- **Testing**: entorno **Preview** (ej: branch `testing`)
-- **Prod**: entorno **Production** (ej: branch `main`)
+## Scripts
 
-### 1) Preparar Vercel CLI y link del proyecto
+| Script | Descripcion |
+| --- | --- |
+| `npm run dev` | Inicia Next.js en desarrollo con Turbopack. |
+| `npm run build` | Compila la app para produccion. |
+| `npm start` | Sirve la build de produccion. |
+| `npm run lint` | Ejecuta lint configurado en el proyecto. |
+| `npm run seed` | Ejecuta seed con `.env`. |
+| `npm run db:migrate-game-events` | Migra eventos de partidos. |
+| `npm run db:sync-test-from-prod` | Sincroniza base de test desde produccion. |
+| `npm run vercel:pull:testing` | Descarga env vars de Vercel Preview. |
+| `npm run vercel:pull:prod` | Descarga env vars de Vercel Production. |
+| `npm run deploy:testing` | Deploy manual a Vercel Preview. |
+| `npm run deploy:prod` | Deploy manual a Vercel Production. |
+
+## Endpoints Principales
+
+| Grupo | Rutas |
+| --- | --- |
+| Auth | `/api/auth/login`, `/api/auth/register`, `/api/auth/me`, `/api/auth/logout`, `/api/auth/verify-registration`, `/api/auth/password-reset/*` |
+| Torneos | `/api/tournaments`, `/api/tournaments/[id]` |
+| Divisiones | `/api/divisions` |
+| Equipos | `/api/teams`, `/api/teams/[id]`, `/api/teams/[id]/players` |
+| Jugadores | `/api/players`, `/api/players/[id]` |
+| Partidos | `/api/games`, `/api/games/[id]`, `/api/games/[id]/start`, `/api/games/[id]/complete`, `/api/games/[id]/walkover`, `/api/games/[id]/events` |
+| Estadisticas | `/api/dashboard`, `/api/standings`, `/api/rankings/players`, `/api/statistics/players`, `/api/statistics/teams` |
+| Admin | `/api/admin/*` |
+| Operativo | `/api/health`, `/api/media/upload`, `/api/cron/import-players`, `/api/cron/weekly-digest` |
+
+El detalle metodo por metodo esta en [docs/backend-architecture.md](docs/backend-architecture.md#rutas-api).
+
+## Deploy En Vercel
+
+El proyecto soporta entornos paralelos:
+
+- **Testing**: Vercel Preview, normalmente desde una rama `testing`.
+- **Produccion**: Vercel Production, normalmente desde `main`.
+
+Preparacion inicial:
 
 ```bash
 npm i -g vercel
@@ -231,14 +190,7 @@ vercel login
 vercel link
 ```
 
-### 2) Configurar variables de entorno en ambos entornos
-
-Variables requeridas por esta app:
-
-- `MONGODB_URI`
-- `JWT_SECRET`
-
-Configúralas en Preview y Production:
+Configurar variables requeridas en Preview y Production:
 
 ```bash
 vercel env add MONGODB_URI preview
@@ -247,119 +199,77 @@ vercel env add JWT_SECRET preview
 vercel env add JWT_SECRET production
 ```
 
-### 3) Deploy manual en paralelo
-
-Puedes lanzar ambos deploys desde 2 terminales distintas:
+Deploy manual:
 
 ```bash
-# Terminal 1 - testing (preview)
 npm run deploy:testing
-
-# Terminal 2 - producción
 npm run deploy:prod
 ```
 
-Scripts disponibles en `package.json`:
+Recomendacion operativa:
 
-- `npm run deploy:testing`
-- `npm run deploy:prod`
-- `npm run vercel:pull:testing`
-- `npm run vercel:pull:prod`
+- Usar `testing` para previews estables.
+- Usar `main` para produccion.
+- Revisar que `environment=production` solo este en el entorno productivo, porque decide la base Mongo `prod`.
 
-### 4) Deploy automático por ramas (recomendado)
+## Crons
 
-- Define `main` como rama de producción en Vercel.
-- Usa una rama `testing` para preview estable.
-- Cada push a `testing` genera deploy preview.
-- Cada push/merge a `main` genera deploy prod.
+El backend espera estos procesos programados:
 
-### 5) Dominio sugerido
+| Ruta | Schedule | Funcion |
+| --- | --- | --- |
+| `/api/cron/import-players` | `0 6 * * *` | Importacion diaria de jugadores desde Google Sheets. |
+| `/api/cron/weekly-digest` | `0 8 * * 1` | Digest semanal. |
 
-- Producción: `app.tu-dominio.com` (Production)
-- Testing: `testing.tu-dominio.com` (alias a Preview)
+Los endpoints cron deben recibir el secreto configurado en `CRON_SECRET`.
 
-Para alias manual:
+## Modelo De Dominio
 
-```bash
-vercel alias set <preview-deployment-url> testing.tu-dominio.com
+Relaciones principales:
+
+```text
+Tournament (1) -> (N) Division
+Tournament (1) -> (N) Team participante
+Division (1) -> (N) Team
+Team (1) -> (N) Player
+Tournament + Division (1) -> (N) Game
+Game (1) -> (N) GameEvent
+Tournament + Division + Team (1) -> (1) Standing
+User (1) -> roles y permisos
 ```
 
-## 📊 Funcionalidades de Estadísticas
+Agregados principales:
 
-El sistema incluye utilitarios avanzados para el cálculo de estadísticas:
+- `Tournament`: temporada, formato, criterios de playoff, divisiones y equipos participantes.
+- `Division`: categoria competitiva.
+- `Team`: equipo, coaches, colores, contacto e imagenes.
+- `Player`: datos personales, equipo, posicion, camiseta y estado.
+- `Game`: partido, estado, fase, jueces, score, eventos y jugadores presentes.
+- `Standing`: tabla de posiciones, record, puntos, racha y desempates.
+- `User`: identidad, roles, estado activo y permisos.
 
-- **Passer Rating**: Calcula el rating del quarterback
-- **Promedios**: Yardas por intento, por recepción, etc.
-- **Eficiencias**: Terceras oportunidades, zona roja
-- **Clasificaciones**: Ordenamiento automático de standings
-- **Validaciones**: Números de jersey, puntuaciones, etc.
+## Desarrollo De Nuevas Features
 
-## 🚀 Próximas Características
+Checklist corto:
 
-- [ ] Sistema de autenticación
-- [ ] API REST completa
-- [ ] Dashboard en tiempo real
-- [ ] Generación de reportes
-- [ ] Aplicación móvil
-- [ ] Integración con redes sociales
-- [ ] Sistema de notificaciones
-- [ ] Modo offline
+1. Definir el comportamiento de negocio.
+2. Actualizar entidades/value objects si cambia el dominio.
+3. Agregar o extender contratos de repositorio si se necesita persistencia.
+4. Implementar queries Mongo en `src/repositories/mongodb`.
+5. Crear o extender un servicio backend.
+6. Definir DTOs y mappers.
+7. Agregar route handler.
+8. Validar auth/permisos.
+9. Usar `apiErrorResponse()` para errores.
+10. Invalidar cache y registrar auditoria cuando aplique.
 
-## 🤝 Contribuciones
+## Estado De Calidad
 
-Este es un proyecto de práctica personal. Si tienes sugerencias o mejoras:
+- El proyecto compila con TypeScript estricto.
+- No hay suite de tests automatizados declarada en `package.json`.
+- Para cambios de backend sensibles, validar al menos con `npm run build`.
+- La documentacion profunda de arquitectura identifica deuda y zonas de riesgo en [docs/backend-architecture.md](docs/backend-architecture.md#estado-actual-y-deuda-arquitectonica).
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+## Autor
 
-## 📝 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
-
-## 👨‍💻 Autor
-
-Desarrollado como proyecto de práctica para mejorar habilidades en TypeScript y desarrollo full-stack.
-
----
-
-## 📈 Modelo de Datos Completo
-
-### Relaciones Entre Entidades
-
-```
-Season (1) ↔ (N) Tournament
-Tournament (1) ↔ (N) Division
-Division (1) ↔ (N) Team
-Team (1) ↔ (N) Player
-Tournament + Division (1) ↔ (N) Game
-Game (1) ↔ (N) GameEvent
-Player + Tournament (1) ↔ (1) PlayerStatistics
-Team + Tournament (1) ↔ (1) TeamStatistics
-Division (1) ↔ (N) Standing
-Venue (1) ↔ (N) Game
-```
-
-### Índices de Base de Datos
-
-Para optimizar el rendimiento, se han implementado índices en:
-
-- Nombres únicos de torneos por año
-- Equipos únicos por división
-- Números de jersey únicos por equipo
-- Fechas de partidos
-- Estados de entidades
-- Ubicaciones geográficas de venues
-
-## 🎮 Casos de Uso Principales
-
-1. **Gestión de Torneos**: Crear y configurar nuevas competiciones
-2. **Registro de Equipos**: Inscribir equipos con sus jugadores
-3. **Programación**: Crear calendario de partidos
-4. **Seguimiento en Vivo**: Registrar eventos durante los juegos
-5. **Estadísticas**: Generar reportes y rankings
-6. **Tabla de Posiciones**: Mantener clasificaciones actualizadas
-
-Este sistema proporciona una base sólida para cualquier organización que desee gestionar ligas de Flag Football de manera profesional y completa.
+Proyecto personal para la gestion de LUFA Flag y practica de desarrollo full-stack con TypeScript.
