@@ -22,8 +22,9 @@ export class TournamentService {
     if (!reference) return "";
     if (typeof reference === "string") return reference;
 
-    if (typeof reference === "object" && "_id" in reference) {
-      const id = (reference as { _id?: unknown })._id;
+    if (typeof reference === "object" && reference && ("id" in reference || "_id" in reference)) {
+      const value = reference as { id?: unknown; _id?: unknown };
+      const id = value.id ?? value._id;
       return id ? id.toString() : "";
     }
 

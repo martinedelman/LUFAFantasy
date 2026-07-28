@@ -202,13 +202,9 @@ export class PlayerService {
       return this.sortPlayers(filteredPlayers);
     }
 
-    const queryFilters: {
-      team?: string;
-      status?: PlayerStatus;
-      $or?: Array<{ position: PlayerPosition } | { secondaryPosition: PlayerPosition }>;
-    } = {};
+    const queryFilters: { team?: string; status?: PlayerStatus; position?: PlayerPosition } = {};
     if (team) queryFilters.team = team;
-    if (position) queryFilters.$or = [{ position }, { secondaryPosition: position }];
+    if (position) queryFilters.position = position;
     if (status) queryFilters.status = status;
 
     const players = await this.playerRepo.findAll(queryFilters);

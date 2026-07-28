@@ -20,7 +20,13 @@ export class MongoPlayerRepository implements IPlayerRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Player[]> {
     await connectToDatabase();
-    const docs = await PlayerModel.find(filters || {})
+    const query: Record<string, unknown> = { ...(filters || {}) };
+    if (typeof query.position === "string") {
+      const position = query.position;
+      delete query.position;
+      query.$or = [{ position }, { secondaryPosition: position }];
+    }
+    const docs = await PlayerModel.find(query)
       .populate("team")
       .exec();
     return docs;

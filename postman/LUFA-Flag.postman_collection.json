@@ -1,0 +1,195 @@
+{
+  "info": {
+    "_postman_id": "c87e80a8-0be0-43e6-b0f9-0e6264bf5eea",
+    "name": "LUFA Flag API",
+    "description": "Colección completa de la API de LUFA Flag. Importá también el entorno `LUFA-Flag.local.postman_environment.json`. Público significa que la ruta no exige sesión actualmente; Privado usa la cookie `lufa_session`. Tras ejecutar Login, el script intenta guardar esa cookie en `session_token`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "session_token", "value": "" },
+    { "key": "cron_secret", "value": "" },
+    { "key": "tournament_id", "value": "" },
+    { "key": "division_id", "value": "" },
+    { "key": "team_id", "value": "" },
+    { "key": "player_id", "value": "" },
+    { "key": "game_id", "value": "" },
+    { "key": "event_id", "value": "" },
+    { "key": "judge_id", "value": "" },
+    { "key": "user_id", "value": "" },
+    { "key": "correction_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Públicos",
+          "item": [
+            { "name": "POST Login", "event": [{ "listen": "test", "script": { "exec": ["const setCookie = pm.response.headers.get('Set-Cookie') || '';", "const match = setCookie.match(/lufa_session=([^;]+)/);", "if (match) {", "  pm.collectionVariables.set('session_token', match[1]);", "  pm.environment.set('session_token', match[1]);", "}"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}" }, "url": "{{base_url}}/api/auth/login", "description": "Postman conserva la cookie automáticamente. El script también copia `lufa_session` a `session_token` cuando el header está disponible." } },
+            { "name": "POST Registro", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Usuario de prueba\",\n  \"email\": \"{{test_email}}\",\n  \"password\": \"{{test_password}}\"\n}" }, "url": "{{base_url}}/api/auth/register" } },
+            { "name": "POST Verificar registro", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"token\": \"{{verification_token}}\",\n  \"code\": \"{{verification_code}}\"\n}" }, "url": "{{base_url}}/api/auth/verify-registration" } },
+            { "name": "POST Solicitar reset de contraseña", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{test_email}}\"\n}" }, "url": "{{base_url}}/api/auth/password-reset/request" } },
+            { "name": "POST Confirmar reset de contraseña", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"password\": \"{{test_password}}\"\n}" }, "url": "{{base_url}}/api/auth/password-reset/confirm" } }
+          ]
+        },
+        {
+          "name": "Privados",
+          "item": [
+            { "name": "GET Sesión actual", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/auth/me" } },
+            { "name": "POST Cerrar sesión", "request": { "method": "POST", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/auth/logout" } }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Plataforma y contenido",
+      "item": [
+        {
+          "name": "Públicos",
+          "item": [
+            { "name": "GET Health", "request": { "method": "GET", "url": "{{base_url}}/api/health" } },
+            { "name": "GET Dashboard", "request": { "method": "GET", "url": "{{base_url}}/api/dashboard" } },
+            { "name": "GET Configuración pública", "request": { "method": "GET", "url": "{{base_url}}/api/site-settings" } },
+            { "name": "POST Interés en LUFA Flag", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"interestType\": \"play\",\n  \"name\": \"Nombre de prueba\",\n  \"ageRange\": \"25-34\",\n  \"location\": \"Montevideo\",\n  \"whatsapp\": \"099123456\",\n  \"experience\": \"Nunca jugué\"\n}" }, "url": "{{base_url}}/api/flag-interest" } }
+          ]
+        },
+        {
+          "name": "Privados",
+          "item": [
+            { "name": "GET Inscripciones de jugadores", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/flag-interest/player-registrations?status=pending" } },
+            { "name": "POST Subir media", "request": { "method": "POST", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "{{asset_file}}" }, { "key": "assetType", "value": "team_logo", "type": "text" }, { "key": "ownerType", "value": "team", "type": "text" }, { "key": "ownerId", "value": "{{team_id}}", "type": "text" }] }, "url": "{{base_url}}/api/media/upload" } }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Torneos",
+      "item": [
+        { "name": "Públicos", "item": [
+          { "name": "GET Listar torneos", "request": { "method": "GET", "url": "{{base_url}}/api/tournaments?status=active&page=1&limit=20" } },
+          { "name": "GET Torneo por ID", "request": { "method": "GET", "url": "{{base_url}}/api/tournaments/{{tournament_id}}" } }
+        ] },
+        { "name": "Privados", "item": [
+          { "name": "POST Crear torneo", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Torneo de prueba\",\n  \"season\": \"Apertura\",\n  \"year\": 2026,\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-31\",\n  \"registrationDeadline\": \"2026-07-31\",\n  \"format\": \"league\",\n  \"status\": \"active\",\n  \"divisions\": [\"{{division_id}}\"],\n  \"participatingTeams\": [\"{{team_id}}\"]\n}" }, "url": "{{base_url}}/api/tournaments" } },
+          { "name": "PUT Actualizar torneo", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Torneo actualizado\",\n  \"season\": \"Apertura\",\n  \"year\": 2026,\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-31\",\n  \"registrationDeadline\": \"2026-07-31\",\n  \"format\": \"league\",\n  \"status\": \"active\",\n  \"divisions\": [\"{{division_id}}\"]\n}" }, "url": "{{base_url}}/api/tournaments/{{tournament_id}}" } },
+          { "name": "DELETE Eliminar torneo", "request": { "method": "DELETE", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/tournaments/{{tournament_id}}" } }
+        ] }
+      ]
+    },
+    {
+      "name": "Divisiones",
+      "item": [
+        { "name": "Públicos", "item": [
+          { "name": "GET Listar divisiones", "request": { "method": "GET", "url": "{{base_url}}/api/divisions?tournament={{tournament_id}}&page=1&limit=20" } },
+          { "name": "POST Crear división (sin guardia de sesión)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Mixto\",\n  \"category\": \"mixto\",\n  \"ageGroup\": \"Adultos\",\n  \"tournament\": \"{{tournament_id}}\",\n  \"maxTeams\": 12\n}" }, "url": "{{base_url}}/api/divisions", "description": "La ruta actualmente no valida una sesión." } }
+        ] },
+        { "name": "Privados", "item": [] }
+      ]
+    },
+    {
+      "name": "Equipos",
+      "item": [
+        { "name": "Públicos", "item": [
+          { "name": "GET Listar equipos", "request": { "method": "GET", "url": "{{base_url}}/api/teams?division={{division_id}}&status=active&page=1&limit=20" } },
+          { "name": "GET Equipo por ID", "request": { "method": "GET", "url": "{{base_url}}/api/teams/{{team_id}}" } },
+          { "name": "OPTIONS Equipos (CORS)", "request": { "method": "OPTIONS", "url": "{{base_url}}/api/teams" } }
+        ] },
+        { "name": "Privados", "item": [
+          { "name": "POST Crear equipo", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Equipo de prueba\",\n  \"shortName\": \"EPT\",\n  \"division\": \"{{division_id}}\",\n  \"colors\": { \"primary\": \"#0f766e\", \"secondary\": \"#ffffff\" },\n  \"contact\": { \"email\": \"equipo@example.com\" },\n  \"status\": \"active\"\n}" }, "url": "{{base_url}}/api/teams" } },
+          { "name": "PUT Actualizar equipo", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Equipo actualizado\",\n  \"division\": \"{{division_id}}\",\n  \"colors\": { \"primary\": \"#0f766e\", \"secondary\": \"#ffffff\" },\n  \"contact\": { \"email\": \"equipo@example.com\" },\n  \"status\": \"active\"\n}" }, "url": "{{base_url}}/api/teams/{{team_id}}" } },
+          { "name": "DELETE Eliminar equipo", "request": { "method": "DELETE", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/teams/{{team_id}}" } },
+          { "name": "POST Asignar jugador a equipo", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{ \"playerId\": \"{{player_id}}\" }" }, "url": "{{base_url}}/api/teams/{{team_id}}/players" } }
+        ] }
+      ]
+    },
+    {
+      "name": "Jugadores",
+      "item": [
+        { "name": "Públicos", "item": [
+          { "name": "GET Listar jugadores", "request": { "method": "GET", "url": "{{base_url}}/api/players?team={{team_id}}&position=QB&status=active&page=1&limit=20" } },
+          { "name": "GET Jugador por ID", "request": { "method": "GET", "url": "{{base_url}}/api/players/{{player_id}}" } },
+          { "name": "POST Crear jugador (sin guardia de sesión)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Jugador\",\n  \"lastName\": \"Prueba\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"team\": \"{{team_id}}\",\n  \"position\": \"QB\",\n  \"email\": \"jugador@example.com\",\n  \"status\": \"active\"\n}" }, "url": "{{base_url}}/api/players", "description": "La ruta actualmente no valida una sesión." } },
+          { "name": "DELETE Eliminar jugador (sin guardia de sesión)", "request": { "method": "DELETE", "url": "{{base_url}}/api/players/{{player_id}}", "description": "La ruta actualmente no valida una sesión." } }
+        ] },
+        { "name": "Privados", "item": [
+          { "name": "PUT Actualizar jugador", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{ \"jerseyNumber\": 7 }" }, "url": "{{base_url}}/api/players/{{player_id}}", "description": "Administrador, dueño del perfil o juez (solo número de camiseta)." } }
+        ] }
+      ]
+    },
+    {
+      "name": "Partidos y Live Match",
+      "item": [
+        { "name": "Públicos", "item": [
+          { "name": "GET Listar partidos", "request": { "method": "GET", "url": "{{base_url}}/api/games?tournament={{tournament_id}}&division={{division_id}}&status=scheduled&phase=regular" } },
+          { "name": "GET Partido por ID", "request": { "method": "GET", "url": "{{base_url}}/api/games/{{game_id}}" } },
+          { "name": "POST Crear partido (sin guardia de sesión)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"tournament\": \"{{tournament_id}}\",\n  \"division\": \"{{division_id}}\",\n  \"homeTeam\": \"{{team_id}}\",\n  \"awayTeam\": \"{{away_team_id}}\",\n  \"venue\": \"Cancha de prueba\",\n  \"scheduledDate\": \"2026-08-10T18:00:00.000Z\",\n  \"phase\": \"regular\",\n  \"status\": \"scheduled\"\n}" }, "url": "{{base_url}}/api/games", "description": "La ruta actualmente no valida una sesión." } },
+          { "name": "PUT Actualizar partido (sin guardia de sesión)", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"id\": \"{{game_id}}\", \"status\": \"scheduled\" }" }, "url": "{{base_url}}/api/games" } },
+          { "name": "PUT Actualizar marcador (sin guardia de sesión)", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"score\": { \"home\": { \"total\": 6 }, \"away\": { \"total\": 0 } } }" }, "url": "{{base_url}}/api/games/{{game_id}}" } },
+          { "name": "PATCH Walk over (sin guardia de sesión)", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"winner\": \"home\" }" }, "url": "{{base_url}}/api/games/{{game_id}}/walkover" } },
+          { "name": "DELETE Eliminar partido (sin guardia de sesión)", "request": { "method": "DELETE", "url": "{{base_url}}/api/games/{{game_id}}" } }
+        ] },
+        { "name": "Privados", "item": [
+          { "name": "PATCH Iniciar/actualizar Live Match", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{ \"presentPlayers\": { \"home\": [\"{{player_id}}\"], \"away\": [] } }" }, "url": "{{base_url}}/api/games/{{game_id}}/start" } },
+          { "name": "POST Registrar evento", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{ \"quarter\": 1, \"type\": \"touchdown\", \"team\": \"{{team_id}}\", \"player\": \"{{player_id}}\", \"points\": 6 }" }, "url": "{{base_url}}/api/games/{{game_id}}/events" } },
+          { "name": "PATCH Corregir evento", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{ \"points\": 6 }" }, "url": "{{base_url}}/api/games/{{game_id}}/events/{{event_id}}" } },
+          { "name": "DELETE Eliminar evento", "request": { "method": "DELETE", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/games/{{game_id}}/events/{{event_id}}" } },
+          { "name": "PATCH Finalizar Live Match", "request": { "method": "PATCH", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/games/{{game_id}}/complete" } }
+        ] }
+      ]
+    },
+    {
+      "name": "Resultados y estadísticas",
+      "item": [
+        { "name": "Públicos", "item": [
+          { "name": "GET Posiciones", "request": { "method": "GET", "url": "{{base_url}}/api/standings?tournament={{tournament_id}}&division={{division_id}}" } },
+          { "name": "GET Ranking de jugadores", "request": { "method": "GET", "url": "{{base_url}}/api/rankings/players?tournament={{tournament_id}}&division={{division_id}}&limit=20" } },
+          { "name": "GET Estadísticas de jugadores", "request": { "method": "GET", "url": "{{base_url}}/api/statistics/players?tournament={{tournament_id}}&sortBy=totalPoints&order=desc&page=1&limit=20" } },
+          { "name": "GET Estadísticas de equipos", "request": { "method": "GET", "url": "{{base_url}}/api/statistics/teams?tournament={{tournament_id}}&sortBy=wins&order=desc&page=1&limit=20" } }
+        ] },
+        { "name": "Privados", "item": [
+          { "name": "POST Actualizar estadísticas de equipo", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{\n  \"team\": \"{{team_id}}\",\n  \"tournament\": \"{{tournament_id}}\",\n  \"division\": \"{{division_id}}\",\n  \"wins\": 1,\n  \"losses\": 0,\n  \"ties\": 0,\n  \"pointsFor\": 6,\n  \"pointsAgainst\": 0\n}" }, "url": "{{base_url}}/api/statistics/teams" } }
+        ] }
+      ]
+    },
+    {
+      "name": "Jueces",
+      "item": [
+        { "name": "Públicos", "item": [] },
+        { "name": "Privados", "item": [
+          { "name": "GET Listar jueces", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/judges" } },
+          { "name": "POST Crear juez", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{ \"firstName\": \"Juez\", \"lastName\": \"Prueba\" }" }, "url": "{{base_url}}/api/judges" } }
+        ] }
+      ]
+    },
+    {
+      "name": "Administración",
+      "item": [
+        { "name": "Públicos", "item": [] },
+        { "name": "Privados", "item": [
+          { "name": "GET Resumen administrativo", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/admin/stats" } },
+          { "name": "GET Salud del sistema", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/admin/system-health" } },
+          { "name": "GET Usuarios", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/admin/users?page=1&limit=20" } },
+          { "name": "PATCH Usuario", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{ \"role\": \"user\", \"isActive\": true }" }, "url": "{{base_url}}/api/admin/users/{{user_id}}" } },
+          { "name": "GET Audit logs", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/admin/audit-logs?page=1&limit=50" } },
+          { "name": "GET Intereses de LUFA", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/admin/flag-interests?page=1&limit=50" } },
+          { "name": "GET Correcciones pendientes", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/admin/game-event-corrections?status=pending" } },
+          { "name": "PATCH Resolver corrección", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{ \"status\": \"approved\" }" }, "url": "{{base_url}}/api/admin/game-event-corrections/{{correction_id}}" } },
+          { "name": "POST Simular importación de jugadores", "request": { "method": "POST", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/admin/player-import/dry-run" } },
+          { "name": "GET Configuración administrativa", "request": { "method": "GET", "header": [{ "key": "Cookie", "value": "lufa_session={{session_token}}" }], "url": "{{base_url}}/api/admin/settings" } },
+          { "name": "PATCH Configuración administrativa", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Cookie", "value": "lufa_session={{session_token}}" }], "body": { "mode": "raw", "raw": "{}" }, "url": "{{base_url}}/api/admin/settings" } }
+        ] }
+      ]
+    },
+    {
+      "name": "Cron",
+      "item": [
+        { "name": "Públicos", "item": [] },
+        { "name": "Privados", "item": [
+          { "name": "GET Importar jugadores", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{cron_secret}}" }], "url": "{{base_url}}/api/cron/import-players" } },
+          { "name": "GET Digest semanal", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{cron_secret}}" }], "url": "{{base_url}}/api/cron/weekly-digest" } }
+        ] }
+      ]
+    }
+  ]
+}

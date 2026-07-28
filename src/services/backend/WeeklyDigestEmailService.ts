@@ -1,5 +1,4 @@
-import connectToDatabase from "@/lib/mongodb";
-import { UserModel } from "@/models";
+import RepositoryContainer from "@/repositories";
 import type { NextGameResponseDto, TopPlayerResponseDto } from "@/app/DTOs";
 import { DashboardService } from "./DashboardService";
 import { EmailService } from "./EmailService";
@@ -162,10 +161,9 @@ function renderDigestHtml(games: NextGameResponseDto[], topScorers: TopPlayerRes
 export class WeeklyDigestEmailService {
   private emailService = new EmailService();
   private dashboardService = new DashboardService();
+  private userRepo = RepositoryContainer.getUserRepository();
 
   async sendWeeklyDigest() {
-    await connectToDatabase();
-
     const [users, dashboardStats] = await Promise.all([
       this.getRecipients(),
       this.dashboardService.getStats({
@@ -204,6 +202,6 @@ export class WeeklyDigestEmailService {
   }
 
   private async getRecipients() {
-    return UserModel.find({ isActive: true }, { email: 1 }).lean<{ email: string }[]>().exec();
+    return (await this.userRepo.findAll({ isActive: true })).map((user) => ({ email: user.email }));
   }
 }

@@ -3,12 +3,12 @@ import path from "path";
 import { NextResponse } from "next/server";
 import packageJson from "../../../../package.json";
 import type { PublicHealthComponentDto, PublicHealthResponseDto } from "@/app/DTOs";
+import { getAppEnvironment, hasConfiguredAppEnvironment } from "@/lib/appEnvironment";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const SERVICE_NAME = "lufa_fantasy";
-const REQUIRED_CONFIGURATION_KEYS = ["environment", "JWT_SECRET", "NEXT_PUBLIC_APP_URL"];
 const EXPECTED_CRONS = [
   { path: "/api/cron/import-players", schedule: "0 6 * * *" },
   { path: "/api/cron/weekly-digest", schedule: "0 8 * * 1" },
@@ -21,11 +21,11 @@ function noStoreHeaders() {
 }
 
 function getEnvironment() {
-  return process.env.environment || "missing";
+  return getAppEnvironment();
 }
 
 function getConfigurationComponent(): PublicHealthComponentDto {
-  const configured = REQUIRED_CONFIGURATION_KEYS.every((key) => Boolean(process.env[key]));
+  const configured = hasConfiguredAppEnvironment() && Boolean(process.env.JWT_SECRET) && Boolean(process.env.NEXT_PUBLIC_APP_URL);
 
   return {
     id: "configuration",
@@ -35,7 +35,9 @@ function getConfigurationComponent(): PublicHealthComponentDto {
 }
 
 async function getDatabaseComponent(): Promise<PublicHealthComponentDto> {
-  if (!process.env.MONGODB_URI) {
+  const { getDatabaseProvider } = await import("@/lib/databaseProvider");
+  const provider = getDatabaseProvider();
+  if (provider === "postgres" ? !process.env.DATABASE_URL : !process.env.MONGODB_URI) {
     return {
       id: "database",
       status: "degraded",
@@ -44,15 +46,8 @@ async function getDatabaseComponent(): Promise<PublicHealthComponentDto> {
   }
 
   try {
-    const { default: connectToDatabase } = await import("@/lib/mongodb");
-    const mongoose = await connectToDatabase();
-    const db = mongoose.connection.db;
-
-    if (!db) {
-      throw new Error("Database connection unavailable");
-    }
-
-    await db.admin().ping();
+    const { getReportingRepository } = await import("@/repositories/reporting");
+    await getReportingRepository().checkDatabaseHealth();
 
     return {
       id: "database",

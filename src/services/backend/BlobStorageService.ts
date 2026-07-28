@@ -1,5 +1,6 @@
 import RepositoryContainer from "@/repositories";
 import { StoredFileMetadata } from "@/repositories/contracts";
+import { getAppEnvironment } from "@/lib/appEnvironment";
 
 export type BlobAssetType = "team_logo" | "team_background" | "player_profile_picture";
 
@@ -17,7 +18,7 @@ export class BlobStorageService {
   private readonly maxImageSizeBytes = 5 * 1024 * 1024;
 
   private getEnvironmentFolder(): "prod_env" | "dev_env" {
-    return process.env.environment === "production" ? "prod_env" : "dev_env";
+    return getAppEnvironment() === "production" ? "prod_env" : "dev_env";
   }
 
   private getAssetFolder(assetType: BlobAssetType): "team_logos" | "team_backgrounds" | "profile_pictures" {

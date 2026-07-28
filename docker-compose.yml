@@ -4,7 +4,7 @@ services:
     container_name: lufa-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "127.0.0.1:${MONGODB_PORT:-27017}:27017"
     environment:
       MONGO_INITDB_DATABASE: lufa_fantasy
     volumes:
@@ -16,5 +16,25 @@ services:
       retries: 5
       start_period: 10s
 
+  postgres:
+    image: postgres:15
+    container_name: lufa-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5434}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lufa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lufa_local}
+      POSTGRES_DB: ${POSTGRES_DB:-lufa_fantasy}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lufa} -d ${POSTGRES_DB:-lufa_fantasy}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
 volumes:
   mongo_data:
+  postgres_data:

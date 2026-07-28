@@ -1,9 +1,7 @@
-import mongoose from "mongoose";
-import { GameEventCorrectionModel, type GameEventCorrectionOperation } from "@/models/GameEventCorrection";
-import { GameEventModel } from "@/models/GameEvent";
-import connectToDatabase from "@/lib/mongodb";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Game, GameEvent, GameEventType } from "@/entities/Game";
 import type { User } from "@/entities/User";
+import { getAuxiliaryRepository } from "@/repositories/auxiliary";
 import { GameService } from "./GameService";
 
 export interface GameEventCorrectionInput {
@@ -15,8 +13,11 @@ export interface GameEventCorrectionInput {
   details?: unknown;
 }
 
+type GameEventCorrectionOperation = "create" | "update" | "delete";
+
 export class GameEventCorrectionService {
   private gameService = new GameService();
+  private auxiliaryRepo = getAuxiliaryRepository();
 
   async createPendingCorrection(data: {
     game: Game;
@@ -25,8 +26,6 @@ export class GameEventCorrectionService {
     proposedEvent?: GameEventCorrectionInput;
     requestedBy: User;
   }) {
-    await connectToDatabase();
-
     if (data.game.status !== "completed") {
       throw new Error("Solo los partidos finalizados requieren aprobación de correcciones");
     }
@@ -37,7 +36,7 @@ export class GameEventCorrectionService {
 
     const originalEvent =
       data.eventId && data.operation !== "create"
-        ? await GameEventModel.findOne({ _id: data.eventId, game: data.game.id }).lean().exec()
+        ? await this.auxiliaryRepo.findGameEventSnapshot(data.game.id!, data.eventId)
         : null;
 
     if (data.operation !== "create" && !originalEvent) {
@@ -48,7 +47,7 @@ export class GameEventCorrectionService {
       ? this.gameService.buildValidatedGameEvent(data.game, data.proposedEvent)
       : undefined;
 
-    const correction = await GameEventCorrectionModel.create({
+    const correction = await this.auxiliaryRepo.createGameEventCorrection({
       game: data.game.id,
       event: data.eventId,
       operation: data.operation,
@@ -63,25 +62,8 @@ export class GameEventCorrectionService {
     return correction;
   }
 
-  async listPendingCorrections() {
-    await connectToDatabase();
-
-    return await GameEventCorrectionModel.find({ status: "pending" })
-      .populate({
-        path: "game",
-        populate: [
-          { path: "homeTeam", select: "name shortName" },
-          { path: "awayTeam", select: "name shortName" },
-          { path: "tournament", select: "name year" },
-          { path: "division", select: "name category" },
-        ],
-      })
-      .populate("proposedEvent.team", "name shortName")
-      .populate("proposedEvent.player", "firstName lastName jerseyNumber")
-      .populate("originalEvent.team", "name shortName")
-      .populate("originalEvent.player", "firstName lastName jerseyNumber")
-      .sort({ createdAt: 1 })
-      .exec();
+  async listPendingCorrections(): Promise<any[]> {
+    return (await this.auxiliaryRepo.listPendingGameEventCorrections()) as any[];
   }
 
   async approveCorrection(id: string, admin: User) {
@@ -106,29 +88,11 @@ export class GameEventCorrectionService {
       await this.gameService.removeGameEvent(this.getReferenceId(correction.game), this.getReferenceId(correction.event));
     }
 
-    await GameEventCorrectionModel.findByIdAndUpdate(id, {
-      $set: {
-        status: "approved",
-        reviewedBy: admin.id,
-        reviewedAt: new Date(),
-      },
-    }).exec();
+    await this.auxiliaryRepo.reviewGameEventCorrection(id, "approved", admin.id!, new Date());
   }
 
   async rejectCorrection(id: string, admin: User, note?: string) {
-    await connectToDatabase();
-    const updated = await GameEventCorrectionModel.findOneAndUpdate(
-      { _id: id, status: "pending" },
-      {
-        $set: {
-          status: "rejected",
-          reviewedBy: admin.id,
-          reviewedAt: new Date(),
-          reviewNote: note,
-        },
-      },
-      { new: true },
-    ).exec();
+    const updated = await this.auxiliaryRepo.reviewGameEventCorrection(id, "rejected", admin.id!, new Date(), note);
 
     if (!updated) {
       throw new Error("Solicitud de corrección no encontrada");
@@ -136,22 +100,21 @@ export class GameEventCorrectionService {
   }
 
   private async getPendingCorrection(id: string) {
-    await connectToDatabase();
-    const correction = await GameEventCorrectionModel.findOne({ _id: id, status: "pending" }).exec();
+    const correction = await this.auxiliaryRepo.findPendingGameEventCorrection(id);
 
     if (!correction) {
       throw new Error("Solicitud de corrección no encontrada");
     }
 
-    return correction;
+    return correction as any;
   }
 
   private toStoredPayload(event: GameEventCorrectionInput): GameEvent {
     return {
       quarter: Number(event.quarter),
       type: event.type,
-      team: this.toObjectId(event.team) as unknown as string,
-      player: event.player ? (this.toObjectId(event.player) as unknown as string) : undefined,
+      team: this.getReferenceId(event.team),
+      player: event.player ? this.getReferenceId(event.player) : undefined,
       points: event.points === undefined || event.points === null ? undefined : Number(event.points),
       details: event.details,
     };
@@ -168,21 +131,13 @@ export class GameEventCorrectionService {
     };
   }
 
-  private toObjectId(value: unknown): mongoose.Types.ObjectId | undefined {
-    const id = this.getReferenceId(value);
-    return mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : undefined;
-  }
-
   private getReferenceId(reference: unknown): string {
     if (!reference) return "";
     if (typeof reference === "string") return reference;
 
-    if (reference instanceof mongoose.Types.ObjectId) {
-      return reference.toString();
-    }
-
-    if (typeof reference === "object" && "_id" in reference) {
-      const id = (reference as { _id?: unknown })._id;
+    if (typeof reference === "object" && reference && ("id" in reference || "_id" in reference)) {
+      const value = reference as { id?: unknown; _id?: unknown };
+      const id = value.id ?? value._id;
       return id ? id.toString() : "";
     }
 

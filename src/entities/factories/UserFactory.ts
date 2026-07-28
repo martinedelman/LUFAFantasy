@@ -1,6 +1,5 @@
 import { User } from "../User";
 import type { UserRole } from "../User";
-import type { IUser } from "../../models/User";
 import type { UserRegistrationRequestDto } from "@/app/DTOs/Requests";
 import type { UserResponseDto } from "@/app/DTOs/Responses";
 import type { UserPersistenceDto } from "@/repositories/DTOs";
@@ -8,6 +7,17 @@ import type { UserPersistenceDto } from "@/repositories/DTOs";
 export type UserRegistrationDto = UserRegistrationRequestDto;
 export type UserApiResponse = UserResponseDto;
 export type { UserPersistenceDto };
+
+interface StoredUserRecord {
+  _id?: unknown;
+  email: string;
+  password: string;
+  name: string;
+  role: string;
+  isActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 /**
  * Factory para conversión de User entre capas
@@ -22,7 +32,7 @@ export class UserFactory {
    * @param doc Documento de MongoDB con interfaz IUser
    * @returns Instancia de User o null
    */
-  static fromDatabase(doc: IUser | null): User | null {
+  static fromDatabase(doc: StoredUserRecord | null): User | null {
     if (!doc) return null;
 
     return new User(
@@ -31,7 +41,7 @@ export class UserFactory {
       doc.name,
       doc.role as UserRole,
       doc.isActive ?? true,
-      doc._id?.toString(),
+      doc._id ? String(doc._id) : undefined,
       doc.createdAt,
       doc.updatedAt,
     );

@@ -1,10 +1,8 @@
 import crypto from "crypto";
-import mongoose from "mongoose";
 import { createSessionToken } from "@/lib/auth";
-import connectToDatabase from "@/lib/mongodb";
 import { User } from "@/entities/User";
 import RepositoryContainer from "@/repositories";
-import { OtpVerificationModel, type OtpPurpose } from "@/models/OtpVerification";
+import { getAuxiliaryRepository, type OtpPurpose } from "@/repositories/auxiliary";
 
 const REGISTRATION_OTP_TTL_MINUTES = 15;
 const PASSWORD_RESET_OTP_TTL_MINUTES = 15;
@@ -42,34 +40,22 @@ function generateNumericCode(length = 6) {
 
 export class OtpService {
   private userRepo = RepositoryContainer.getUserRepository();
+  private auxiliaryRepo = getAuxiliaryRepository();
 
   async createRegistrationOtp(user: User): Promise<RegistrationOtp> {
     if (!user.id) {
       throw new Error("Usuario inválido para generar OTP");
     }
 
-    await connectToDatabase();
-
     const purpose: OtpPurpose = "email_verification";
     const token = crypto.randomBytes(32).toString("hex");
     const code = generateNumericCode();
     const expiresAt = new Date(Date.now() + REGISTRATION_OTP_TTL_MINUTES * 60 * 1000);
 
-    await OtpVerificationModel.updateMany(
-      {
-        userId: new mongoose.Types.ObjectId(user.id),
-        purpose,
-        consumedAt: { $exists: false },
-      },
-      {
-        $set: {
-          consumedAt: new Date(),
-        },
-      },
-    ).exec();
-
-    await OtpVerificationModel.create({
-      userId: new mongoose.Types.ObjectId(user.id),
+    await this.auxiliaryRepo.deleteExpiredOtps(new Date());
+    await this.auxiliaryRepo.consumeOpenOtps(user.id, purpose, new Date());
+    await this.auxiliaryRepo.createOtp({
+      userId: user.id,
       email: user.email,
       purpose,
       tokenHash: hashOtpValue(token),
@@ -91,13 +77,7 @@ export class OtpService {
     token: string;
     code: string;
   }): Promise<{ user: User; sessionToken: string }> {
-    await connectToDatabase();
-
-    const otp = await OtpVerificationModel.findOne({
-      purpose: "email_verification",
-      tokenHash: hashOtpValue(data.token),
-      consumedAt: { $exists: false },
-    }).exec();
+    const otp = await this.auxiliaryRepo.findOpenOtpByToken("email_verification", hashOtpValue(data.token));
 
     if (!otp) {
       throw new Error("Código o link inválido");
@@ -113,15 +93,13 @@ export class OtpService {
 
     const isCodeValid = otp.codeHash === hashOtpValue(data.code.trim());
     if (!isCodeValid) {
-      otp.attempts += 1;
-      await otp.save();
+      await this.auxiliaryRepo.incrementOtpAttempts(otp.id);
       throw new Error("Código o link inválido");
     }
 
-    otp.consumedAt = new Date();
-    await otp.save();
+    await this.auxiliaryRepo.consumeOtp(otp.id, new Date());
 
-    const user = await this.userRepo.updateActiveStatus(otp.userId.toString(), true);
+    const user = await this.userRepo.updateActiveStatus(otp.userId, true);
     const sessionToken = createSessionToken({
       userId: user.id!,
       name: user.name,
@@ -137,28 +115,15 @@ export class OtpService {
       throw new Error("Usuario inválido para generar OTP");
     }
 
-    await connectToDatabase();
-
     const purpose: OtpPurpose = "password_reset";
     const token = crypto.randomBytes(32).toString("hex");
     const code = generateNumericCode();
     const expiresAt = new Date(Date.now() + PASSWORD_RESET_OTP_TTL_MINUTES * 60 * 1000);
 
-    await OtpVerificationModel.updateMany(
-      {
-        userId: new mongoose.Types.ObjectId(user.id),
-        purpose,
-        consumedAt: { $exists: false },
-      },
-      {
-        $set: {
-          consumedAt: new Date(),
-        },
-      },
-    ).exec();
-
-    await OtpVerificationModel.create({
-      userId: new mongoose.Types.ObjectId(user.id),
+    await this.auxiliaryRepo.deleteExpiredOtps(new Date());
+    await this.auxiliaryRepo.consumeOpenOtps(user.id, purpose, new Date());
+    await this.auxiliaryRepo.createOtp({
+      userId: user.id,
       email: user.email,
       purpose,
       tokenHash: hashOtpValue(token),
@@ -176,16 +141,8 @@ export class OtpService {
   }
 
   async verifyPasswordResetOtp(data: { email: string; code: string }): Promise<User> {
-    await connectToDatabase();
-
     const normalizedEmail = data.email.trim().toLowerCase();
-    const otp = await OtpVerificationModel.findOne({
-      email: normalizedEmail,
-      purpose: "password_reset",
-      consumedAt: { $exists: false },
-    })
-      .sort({ createdAt: -1 })
-      .exec();
+    const otp = await this.auxiliaryRepo.findLatestOpenOtpByEmail(normalizedEmail, "password_reset");
 
     if (!otp) {
       throw new Error("Código inválido");
@@ -201,15 +158,13 @@ export class OtpService {
 
     const isCodeValid = otp.codeHash === hashOtpValue(data.code.trim());
     if (!isCodeValid) {
-      otp.attempts += 1;
-      await otp.save();
+      await this.auxiliaryRepo.incrementOtpAttempts(otp.id);
       throw new Error("Código inválido");
     }
 
-    otp.consumedAt = new Date();
-    await otp.save();
+    await this.auxiliaryRepo.consumeOtp(otp.id, new Date());
 
-    const user = await this.userRepo.findById(otp.userId.toString());
+    const user = await this.userRepo.findById(otp.userId);
     if (!user) {
       throw new Error("Usuario no encontrado");
     }

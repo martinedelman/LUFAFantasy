@@ -1,8 +1,7 @@
 import { google } from "googleapis";
 import { EmergencyContact, Player, PlayerPosition } from "@/entities/Player";
 import { Team } from "@/entities/Team";
-import { PlayerImportMigrationModel } from "@/models";
-import connectToDatabase from "@/lib/mongodb";
+import { getAuxiliaryRepository } from "@/repositories/auxiliary";
 import { PlayerService } from "./PlayerService";
 import { TeamService } from "./TeamService";
 import { getConfiguredAppUrl, PreApprovedPlayerNotificationService } from "./PreApprovedPlayerNotificationService";
@@ -292,6 +291,7 @@ export class PlayerImportService {
   private playerService = new PlayerService();
   private teamService = new TeamService();
   private notificationService = new PreApprovedPlayerNotificationService();
+  private auxiliaryRepo = getAuxiliaryRepository();
 
   async importFromGoogleSheet(input: PlayerImportInput = {}): Promise<PlayerImportResult> {
     const rows = await this.fetchRowsFromGoogleSheet();
@@ -299,8 +299,6 @@ export class PlayerImportService {
   }
 
   async importRows(rows: PlayerImportRow[], dryRun = false): Promise<PlayerImportResult> {
-    await connectToDatabase();
-
     const result: PlayerImportResult = {
       created: 0,
       updated: 0,
@@ -313,11 +311,7 @@ export class PlayerImportService {
 
     // Single query to prefetch all already-migrated sourceKeys → O(1) per lookup
     const allSourceKeys = rows.map((row) => getSourceKey(row));
-    const migratedRecords = (await PlayerImportMigrationModel.find(
-      { sourceKey: { $in: allSourceKeys } },
-      { sourceKey: 1, _id: 0 },
-    ).lean()) as Array<{ sourceKey: string }>;
-    const migratedKeys = new Set(migratedRecords.map((r) => r.sourceKey));
+    const migratedKeys = new Set(await this.auxiliaryRepo.findImportSourceKeys(allSourceKeys));
 
     // Collect successful migrations to flush in a single insertMany at the end
     type PendingMigration = {
@@ -398,7 +392,7 @@ export class PlayerImportService {
     // ordered: false → continues on duplicate key errors (concurrent cron runs),
     // ignoring already-inserted docs without throwing.
     if (pendingMigrations.length > 0) {
-      await PlayerImportMigrationModel.insertMany(pendingMigrations, { ordered: false });
+      await this.auxiliaryRepo.createImportMigrations(pendingMigrations);
     }
 
     return result;

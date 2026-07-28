@@ -14,8 +14,9 @@ function getReferenceId(reference: unknown): string {
   if (!reference) return "";
   if (typeof reference === "string") return reference;
 
-  if (typeof reference === "object" && "_id" in reference) {
-    const id = (reference as { _id?: unknown })._id;
+  if (typeof reference === "object" && reference && ("id" in reference || "_id" in reference)) {
+    const value = reference as { id?: unknown; _id?: unknown };
+    const id = value.id ?? value._id;
     return id ? id.toString() : "";
   }
 
@@ -35,7 +36,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, message: "Torneo no encontrado" }, { status: 404 });
     }
 
-    // Obtener las divisiones pobladas
+    const participatingTeams = (
+      await Promise.all(
+        (tournament.participatingTeams || [])
+          .map(getReferenceId)
+          .filter(Boolean)
+          .map((teamId) => teamService.getTeamById(teamId)),
+      )
+    ).filter((team): team is NonNullable<typeof team> => team !== null);
+
+    // Obtener las divisiones pobladas. Los equipos mostrados son los
+    // inscriptos en este torneo, no todos los que pertenezcan globalmente a
+    // la división.
     const tournamentData: Omit<TournamentResponseDto, "divisions"> & { divisions: unknown[] } = {
       ...toTournamentResponseDto(tournament),
       divisions: tournament.divisions,
@@ -48,28 +60,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           if (!division) return null;
 
           const divisionData = toDivisionResponseDto(division);
-
-          // Popular los teams de cada división
-          if (division.teams && division.teams.length > 0) {
-            const divisionId = getReferenceId(division.id);
-            const populatedTeams = await Promise.all(
-              division.teams.map(async (teamReference) => {
-                const teamId = getReferenceId(teamReference);
-                if (!teamId) return null;
-
-                const team = await teamService.getTeamById(teamId);
-                if (!team) return null;
-
-                const teamDivisionId = getReferenceId(team.division);
-                if (teamDivisionId !== divisionId) {
-                  return null;
-                }
-
-                return toTeamResponseDto(team);
-              }),
-            );
-            divisionData.teams = populatedTeams.filter((team): team is NonNullable<typeof team> => team !== null);
-          }
+          const resolvedDivisionId = getReferenceId(division);
+          divisionData.teams = participatingTeams
+            .filter((team) => getReferenceId(team.division) === resolvedDivisionId)
+            .map(toTeamResponseDto);
 
           return divisionData;
         }),

@@ -1,21 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
-import mongoose from "mongoose";
 import sponsorData from "@/data/sponsors.json";
-import connectToDatabase from "@/lib/mongodb";
-import {
-  AdminAuditLogModel,
-  FlagInterestModel,
-  GameEventCorrectionModel,
-  GameModel,
-  JudgeModel,
-  PlayerModel,
-  SiteSettingsModel,
-  TeamModel,
-  TournamentModel,
-  UserModel,
-} from "@/models";
 import type { User, UserRole } from "@/entities/User";
+import { getAuxiliaryRepository } from "@/repositories/auxiliary";
+import { getDatabaseProvider } from "@/lib/databaseProvider";
 import { PlayerImportService } from "./PlayerImportService";
 import type {
   AdminAuditLogResponseDto,
@@ -49,8 +37,9 @@ const defaultSponsors = (sponsorData as Array<{ name: string; image: string; des
 function stringifyId(value: unknown) {
   if (!value) return "";
   if (typeof value === "string") return value;
-  if (typeof value === "object" && "_id" in value) {
-    const id = (value as { _id?: unknown })._id;
+  if (typeof value === "object" && value && ("id" in value || "_id" in value)) {
+    const record = value as { id?: unknown; _id?: unknown };
+    const id = record.id ?? record._id;
     return id ? String(id) : "";
   }
   return String(value);
@@ -203,131 +192,44 @@ function sanitizeText(value: unknown, fallback = "") {
   return typeof value === "string" ? value.trim() : fallback;
 }
 
-function actorObjectId(actor: User) {
-  if (!actor.id || !mongoose.Types.ObjectId.isValid(actor.id)) {
+function actorId(actor: User) {
+  if (!actor.id) {
     throw new Error("Admin inválido");
   }
-
-  return new mongoose.Types.ObjectId(actor.id);
+  return actor.id;
 }
 
 export class AdminService {
   private playerImportService = new PlayerImportService();
+  private auxiliaryRepo = getAuxiliaryRepository();
 
   async getSystemStats(): Promise<AdminSystemStatsResponseDto> {
-    await connectToDatabase();
-
-    const [
-      totalUsers,
-      activeUsers,
-      inactiveUsers,
-      totalAdmins,
-      totalYouthCoaches,
-      totalJudges,
-      activeTournaments,
-      upcomingTournaments,
-      totalTeams,
-      activeTeams,
-      totalPlayers,
-      activePlayers,
-      preApprovedPlayers,
-      totalGames,
-      completedGames,
-      scheduledGames,
-      inProgressGames,
-      pendingCorrections,
-      pendingFlagInterests,
-      playerFlagInterests,
-      sponsorFlagInterests,
-    ] = await Promise.all([
-      UserModel.countDocuments({}),
-      UserModel.countDocuments({ isActive: true }),
-      UserModel.countDocuments({ isActive: false }),
-      UserModel.countDocuments({ role: "admin", isActive: true }),
-      UserModel.countDocuments({ role: "entrenador_juveniles", isActive: true }),
-      JudgeModel.countDocuments({}),
-      TournamentModel.countDocuments({ status: "active" }),
-      TournamentModel.countDocuments({ status: "upcoming" }),
-      TeamModel.countDocuments({}),
-      TeamModel.countDocuments({ status: "active" }),
-      PlayerModel.countDocuments({}),
-      PlayerModel.countDocuments({ status: "active" }),
-      PlayerModel.countDocuments({ status: "pre_approved" }),
-      GameModel.countDocuments({}),
-      GameModel.countDocuments({ status: "completed" }),
-      GameModel.countDocuments({ status: "scheduled" }),
-      GameModel.countDocuments({ status: "in_progress" }),
-      GameEventCorrectionModel.countDocuments({ status: "pending" }),
-      FlagInterestModel.countDocuments({}),
-      FlagInterestModel.countDocuments({ interestType: { $in: ["play", "child"] } }),
-      FlagInterestModel.countDocuments({ interestType: "sponsor" }),
-    ]);
-
-    return {
-      totalUsers,
-      activeUsers,
-      inactiveUsers,
-      totalAdmins,
-      totalYouthCoaches,
-      totalJudges,
-      activeTournaments,
-      upcomingTournaments,
-      totalTeams,
-      activeTeams,
-      totalPlayers,
-      activePlayers,
-      preApprovedPlayers,
-      totalGames,
-      completedGames,
-      scheduledGames,
-      inProgressGames,
-      pendingCorrections,
-      pendingFlagInterests,
-      playerFlagInterests,
-      sponsorFlagInterests,
-    };
+    return (await this.auxiliaryRepo.getAdminSystemCounts()) as unknown as AdminSystemStatsResponseDto;
   }
 
   async listUsers(filters: { search?: string; role?: string; status?: string } = {}) {
-    await connectToDatabase();
-
-    const query: Record<string, unknown> = {};
     const search = filters.search?.trim();
-
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    if (filters.role && VALID_ROLES.includes(filters.role as UserRole)) {
-      query.role = filters.role;
-    }
-
-    if (filters.status === "active") {
-      query.isActive = true;
-    } else if (filters.status === "inactive") {
-      query.isActive = false;
-    }
-
-    const users = (await UserModel.find(query, { password: 0 })
-      .sort({ createdAt: -1 })
-      .limit(300)
-      .lean()
-      .exec()) as unknown as Array<Parameters<typeof toAdminUserResponse>[0]>;
+    const users = (await this.auxiliaryRepo.listAdminUsers({
+      ...(search ? { search } : {}),
+      ...(filters.role && VALID_ROLES.includes(filters.role as UserRole) ? { role: filters.role } : {}),
+      ...(filters.status === "active"
+        ? { isActive: true }
+        : filters.status === "inactive"
+          ? { isActive: false }
+          : {}),
+    })) as unknown as Array<Parameters<typeof toAdminUserResponse>[0]>;
 
     return users.map(toAdminUserResponse);
   }
 
   async updateUser(actor: User, targetUserId: string, data: UpdateAdminUserRequestDto) {
-    await connectToDatabase();
-
-    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+    if (!targetUserId) {
       throw new Error("Usuario inválido");
     }
 
-    const target = await UserModel.findById(targetUserId).exec();
+    const target = (await this.auxiliaryRepo.findAdminUserById(targetUserId)) as unknown as
+      | Parameters<typeof toAdminUserResponse>[0]
+      | null;
     if (!target) {
       throw new Error("Usuario no encontrado");
     }
@@ -350,22 +252,16 @@ export class AdminService {
     }
 
     if (target.role === "admin" && (nextRole !== "admin" || !nextIsActive)) {
-      const activeAdmins = await UserModel.countDocuments({
-        _id: { $ne: target._id },
-        role: "admin",
-        isActive: true,
-      });
+      const activeAdmins = await this.auxiliaryRepo.countOtherActiveAdmins(targetUserId);
 
       if (activeAdmins === 0) {
         throw new Error("Debe quedar al menos un administrador activo");
       }
     }
 
-    target.role = nextRole;
-    target.isActive = nextIsActive;
-    await target.save();
-
-    const after = toAdminUserResponse(target);
+    const updated = await this.auxiliaryRepo.updateAdminUser(targetUserId, nextRole, nextIsActive);
+    if (!updated) throw new Error("Usuario no encontrado");
+    const after = toAdminUserResponse(updated as unknown as Parameters<typeof toAdminUserResponse>[0]);
     await this.recordAudit(actor, {
       action: "user.updated",
       entityType: "user",
@@ -380,14 +276,13 @@ export class AdminService {
   }
 
   async getSiteSettings() {
-    await connectToDatabase();
-    const existing = await SiteSettingsModel.findOne({ key: SETTINGS_KEY }).exec();
+    const existing = await this.auxiliaryRepo.getSiteSettings();
 
     if (existing) {
-      return toSettingsResponse(existing);
+      return toSettingsResponse(existing as unknown as Parameters<typeof toSettingsResponse>[0]);
     }
 
-    const created = await SiteSettingsModel.create({
+    const created = await this.auxiliaryRepo.upsertSiteSettings({
       key: SETTINGS_KEY,
       whatsappMessageTemplate: DEFAULT_WHATSAPP_MESSAGE,
       contactEmail: "lufaflag@gmail.com",
@@ -406,11 +301,10 @@ export class AdminService {
       },
     });
 
-    return toSettingsResponse(created);
+    return toSettingsResponse(created as unknown as Parameters<typeof toSettingsResponse>[0]);
   }
 
   async updateSiteSettings(actor: User, data: UpdateSiteSettingsRequestDto) {
-    await connectToDatabase();
     const before = await this.getSiteSettings();
 
     const update: Record<string, unknown> = {};
@@ -457,13 +351,9 @@ export class AdminService {
       };
     }
 
-    const saved = await SiteSettingsModel.findOneAndUpdate(
-      { key: SETTINGS_KEY },
-      { $set: update },
-      { new: true, runValidators: true },
-    ).exec();
+    const saved = await this.auxiliaryRepo.upsertSiteSettings({ ...before, ...update });
 
-    const after = toSettingsResponse(saved!);
+    const after = toSettingsResponse(saved as unknown as Parameters<typeof toSettingsResponse>[0]);
     await this.recordAudit(actor, {
       action: "settings.updated",
       entityType: "site_settings",
@@ -478,35 +368,19 @@ export class AdminService {
   }
 
   async listAuditLogs(filters: { action?: string; entityType?: string; actorEmail?: string } = {}) {
-    await connectToDatabase();
-    const query: Record<string, unknown> = {};
-
-    if (filters.action) query.action = filters.action;
-    if (filters.entityType) query.entityType = filters.entityType;
-    if (filters.actorEmail) query.actorEmail = { $regex: filters.actorEmail.trim(), $options: "i" };
-
-    const logs = (await AdminAuditLogModel.find(query)
-      .sort({ createdAt: -1 })
-      .limit(200)
-      .lean()
-      .exec()) as unknown as Array<Parameters<typeof toAuditResponse>[0]>;
+    const logs = (await this.auxiliaryRepo.listAuditLogs({
+      ...(filters.action ? { action: filters.action } : {}),
+      ...(filters.entityType ? { entityType: filters.entityType } : {}),
+      ...(filters.actorEmail ? { actorEmail: filters.actorEmail.trim() } : {}),
+    })) as unknown as Array<Parameters<typeof toAuditResponse>[0]>;
 
     return logs.map(toAuditResponse);
   }
 
   async listFlagInterests(filters: { interestType?: string } = {}) {
-    await connectToDatabase();
-    const query: Record<string, unknown> = {};
-
-    if (filters.interestType) {
-      query.interestType = filters.interestType;
-    }
-
-    const docs = (await FlagInterestModel.find(query)
-      .sort({ createdAt: -1 })
-      .limit(300)
-      .lean()
-      .exec()) as unknown as Array<Parameters<typeof toFlagInterestResponse>[0]>;
+    const docs = (await this.auxiliaryRepo.listFlagInterests(filters)) as unknown as Array<
+      Parameters<typeof toFlagInterestResponse>[0]
+    >;
 
     return docs.map(toFlagInterestResponse);
   }
@@ -545,7 +419,11 @@ export class AdminService {
 
     return {
       checks: [
-        this.envCheck("database", "MONGODB_URI", "Conexión a base de datos"),
+        this.envCheck(
+          "database",
+          getDatabaseProvider() === "postgres" ? "DATABASE_URL" : "MONGODB_URI",
+          "Conexión a base de datos",
+        ),
         this.envCheck("session-signing", "JWT_SECRET", "Firma de sesiones"),
         this.envCheck("public-url", "NEXT_PUBLIC_APP_URL", "URL pública del sitio"),
         this.envCheck("cron-auth", "CRON_SECRET", "Autenticación de procesos programados"),
@@ -633,10 +511,8 @@ export class AdminService {
       metadata?: Record<string, unknown>;
     },
   ) {
-    await connectToDatabase();
-
-    await AdminAuditLogModel.create({
-      actorId: actorObjectId(actor),
+    await this.auxiliaryRepo.createAuditLog({
+      actorId: actorId(actor),
       actorName: actor.name,
       actorEmail: actor.email,
       action: input.action,
