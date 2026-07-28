@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
-
-const MONGODB_URI = process.env.MONGODB_URI;
-const MONGODB_DB_NAME = process.env.environment === "production" ? "prod" : "test";
-
-if (!MONGODB_URI) {
-  throw new Error("Falta configurar la conexión a base de datos");
-}
+import { getAppEnvironment } from "./appEnvironment";
 
 /**
  * Global es usado aquí para mantener una instancia de mongoose en caché durante el desarrollo.
@@ -24,6 +18,12 @@ const cached = global.mongoose || { conn: null, promise: null };
 global.mongoose = cached;
 
 async function connectToDatabase() {
+  const mongodbUri = process.env.MONGODB_URI;
+  const mongodbDbName = getAppEnvironment() === "production" ? "prod" : "test";
+  if (!mongodbUri) {
+    throw new Error("MONGODB_URI es requerida cuando DATABASE_PROVIDER=mongodb");
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
@@ -31,10 +31,10 @@ async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      dbName: MONGODB_DB_NAME,
+      dbName: mongodbDbName,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(mongodbUri, opts).then((mongoose) => {
       return mongoose;
     });
   }

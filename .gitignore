@@ -13,6 +13,7 @@
 # testing
 /coverage
 /.tmp/
+/mongo-postgres-migration-report*.json
 
 # next.js
 /.next/

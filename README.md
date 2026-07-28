@@ -1,6 +1,6 @@
 # LUFA Fantasy
 
-Sistema de gestion para ligas de Flag Football construido con **Next.js**, **TypeScript** y **MongoDB**. La app permite administrar torneos, divisiones, equipos, jugadores, partidos, tabla de posiciones, rankings, registros publicos, Live Match y herramientas operativas para administradores.
+Sistema de gestion para ligas de Flag Football construido con **Next.js** y **TypeScript**. La persistencia se puede ejecutar sobre **MongoDB/Mongoose** o **PostgreSQL/Prisma** mediante una variable de entorno, sin eliminar la implementacion Mongo existente.
 
 ## Documentacion Principal
 
@@ -16,7 +16,7 @@ Sistema de gestion para ligas de Flag Football construido con **Next.js**, **Typ
 | UI | React 19, Tailwind CSS |
 | Backend | Next.js Route Handlers |
 | Lenguaje | TypeScript |
-| Base de datos | MongoDB + Mongoose |
+| Base de datos | MongoDB + Mongoose o PostgreSQL 15 + Prisma |
 | Auth | JWT en cookie HTTP-only |
 | Email | Nodemailer via SMTP |
 | Storage | Vercel Blob |
@@ -45,9 +45,9 @@ El backend sigue una separacion por capas liviana:
 flowchart LR
   Api["src/app/api\nRoute Handlers"] --> Services["src/services/backend\nCasos de uso"]
   Services --> Entities["src/entities\nDominio"]
-  Services --> Repos["src/repositories\nContratos + Mongo"]
-  Repos --> Models["src/models\nMongoose"]
-  Models --> Mongo[(MongoDB)]
+  Services --> Repos["src/repositories\nContratos + selector de proveedor"]
+  Repos --> MongoAdapters["MongoDB + Mongoose"]
+  Repos --> PostgresAdapters["PostgreSQL + Prisma"]
   Api --> DTOs["src/app/DTOs\nRequests, responses, mappers"]
   Services --> External["SMTP, Google Sheets,\nVercel Blob, Analytics"]
 ```
@@ -56,7 +56,7 @@ Reglas rapidas para nuevas features:
 
 - Mantener los handlers de `src/app/api` delgados.
 - Poner reglas de negocio en `src/services/backend` o `src/entities`.
-- Acceder a MongoDB mediante repositorios cuando sea dominio principal.
+- Acceder a persistencia mediante repositorios, sin importar Mongoose o Prisma desde servicios y routes.
 - Exponer respuestas mediante DTOs/mappers, no documentos Mongoose crudos.
 - Invalidar cache tags cuando una mutacion afecte pantallas publicas.
 - Auditar cambios admin sensibles.
@@ -74,24 +74,28 @@ src/
 ├── components/              # Componentes UI reutilizables
 ├── entities/                # Agregados y value objects del dominio
 ├── hooks/                   # Hooks React
-├── lib/                     # Auth, MongoDB, cache, errores, settings y utilidades
+├── generated/prisma/        # Cliente Prisma generado
+├── lib/                     # Auth, proveedores de DB, cache, errores y utilidades
 ├── models/                  # Schemas Mongoose
-├── repositories/            # Contratos e implementaciones de persistencia
+├── repositories/            # Contratos e implementaciones MongoDB/PostgreSQL
 ├── services/
 │   ├── backend/             # Casos de uso del backend
 │   └── frontend/            # Clientes API y servicios UI
 └── types/                   # Tipos compartidos
 
-scripts/                     # Tareas operativas y migraciones
+prisma/                      # Schema y migraciones PostgreSQL
+scripts/                     # Tareas operativas y migracion de datos
 docs/                        # Documentacion y artefactos
 public/                      # Imagenes y assets publicos
 ```
 
 ## Requisitos
 
-- Node.js 18 o superior.
+- Node.js 20.19 o superior (requisito de Prisma 7).
 - npm.
-- MongoDB local o remoto.
+- MongoDB local o remoto para el proveedor Mongo y como origen de migracion.
+- PostgreSQL 15 para el proveedor Prisma.
+- Docker para levantar ambas bases localmente.
 - Cuenta/proyecto Vercel para deploy.
 - Credenciales opcionales segun feature: SMTP, Vercel Blob, Google Sheets.
 
@@ -106,19 +110,50 @@ npm install
 2. Crear archivo de entorno:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-3. Configurar como minimo:
+`.env` es local e ignorado por Git. Los scripts operativos del proyecto lo cargan
+explícitamente; no guardar secretos reales en `.env.example`.
+
+3. Levantar PostgreSQL local. Usa la imagen `postgres:15`, el contenedor
+   `lufa-postgres` y el puerto `5434` para no interferir con otras instalaciones.
+   El puerto se publica únicamente en `127.0.0.1`:
+
+```bash
+docker compose up -d postgres
+```
+
+Levantar MongoDB solo si se ejecutará el proveedor legado, una migración desde
+MongoDB o una recuperación:
+
+```bash
+docker compose up -d mongodb
+```
+
+4. La configuración mínima para correr con PostgreSQL es:
 
 ```env
-environment=development
+APP_ENV=development
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-MONGODB_URI=mongodb://localhost:27017/lufa_fantasy
-JWT_SECRET=change-this-to-a-long-random-secret
+DATABASE_PROVIDER=postgres
+DATABASE_URL=postgresql://lufa:lufa_local@localhost:5434/lufa_fantasy?schema=public
+JWT_SECRET=<generar-con-openssl-rand-base64-32>
 ```
 
-4. Ejecutar en desarrollo:
+`MONGODB_URI` no es necesaria para ejecutar la aplicación con PostgreSQL. Solo
+configurarla para los casos Mongo indicados arriba. Para conservar temporalmente
+el comportamiento anterior, usar `DATABASE_PROVIDER=mongodb` y configurar
+`MONGODB_URI`.
+
+5. Preparar PostgreSQL cuando se use Prisma:
+
+```bash
+npm run prisma:generate
+npm run db:postgres:migrate
+```
+
+6. Ejecutar en desarrollo:
 
 ```bash
 npm run dev
@@ -128,20 +163,24 @@ La app queda disponible en `http://localhost:3000`.
 
 ## Variables De Entorno
 
-| Variable | Uso |
-| --- | --- |
-| `environment` | Selecciona base Mongo: `production` usa `prod`; cualquier otro valor usa `test`. |
-| `NEXT_PUBLIC_APP_URL` | URL publica para links de verificacion/notificaciones. |
-| `MONGODB_URI` | Conexion MongoDB. |
-| `JWT_SECRET` | Firma de sesiones JWT. |
-| `OTP_SECRET` | Pepper para OTPs. Si falta, se usa `JWT_SECRET`. |
-| `MAIL_FROM`, `MAIL_PROVIDER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Envio de emails. |
-| `BLOB_READ_WRITE_TOKEN` | Uploads a Vercel Blob. |
-| `FLAGS`, `FLAGS_SECRET` | Feature flags de Vercel. |
-| `CRON_SECRET` | Proteccion de endpoints cron. |
-| `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SHEETS_TAB_NAME`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY` | Importacion desde Google Sheets. |
+La plantilla [.env.example](.env.example) agrupa todas las variables por función
+y marca cuándo son necesarias. Usar `APP_ENV`; la clave en minúsculas
+`environment` continúa soportada únicamente para despliegues anteriores. No
+confundir `APP_ENV` con `NODE_ENV`, que es gestionada por Next.js.
+`NEXT_PUBLIC_APP_URL` es la única URL que se debe configurar: `APP_URL` es un
+fallback legado y `VERCEL_URL` lo inyecta Vercel automáticamente.
 
-Ver [.env.example](.env.example) para el listado completo.
+| Grupo | Variables | Cuándo configurarlas |
+| --- | --- | --- |
+| Runtime PostgreSQL | `APP_ENV`, `NEXT_PUBLIC_APP_URL`, `DATABASE_PROVIDER`, `DATABASE_URL`, `JWT_SECRET` | Siempre en la aplicación PostgreSQL. `DATABASE_PROVIDER` debe declararse como `postgres`; no depender del fallback legado a MongoDB. |
+| Docker local | `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Al iniciar el contenedor. Deben coincidir con `DATABASE_URL`; Docker no la actualiza automáticamente. |
+| MongoDB legado | `MONGODB_URI`, `MONGODB_PORT` | Solo para el proveedor MongoDB, migración, rollback o sincronización desde Mongo. El origen de una migración se elige con `--source-db`. |
+| Sesiones | `OTP_SECRET` | Opcional; si falta, los OTP usan `JWT_SECRET`. |
+| Email | `MAIL_FROM`, `MAIL_PROVIDER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Para enviar email. En producción son indispensables `SMTP_HOST`, `SMTP_USER` y `SMTP_PASS`. |
+| Media | `BLOB_READ_WRITE_TOKEN` | Solo para cargas de imágenes a Vercel Blob. |
+| Feature flags | `FLAGS`, `FLAGS_SECRET` | Solo al habilitar Vercel Flags; vacías mantienen las flags desactivadas. |
+| Crons | `CRON_SECRET` | Para autorizar las rutas cron. |
+| Google Sheets | `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SHEETS_TAB_NAME`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY` | Únicamente para importación de jugadores; se necesitan las cuatro. |
 
 ## Scripts
 
@@ -151,6 +190,13 @@ Ver [.env.example](.env.example) para el listado completo.
 | `npm run build` | Compila la app para produccion. |
 | `npm start` | Sirve la build de produccion. |
 | `npm run lint` | Ejecuta lint configurado en el proyecto. |
+| `npm run prisma:generate` | Genera el cliente tipado de Prisma. |
+| `npm run prisma:validate` | Valida el schema Prisma. |
+| `npm run db:postgres:migrate` | Aplica las migraciones PostgreSQL pendientes. |
+| `npm run db:postgres:dev` | Crea/aplica migraciones durante desarrollo. |
+| `npm run test:postgres` | Prepara el schema aislado `integration` y prueba repositorios y migracion. |
+| `npm run db:migrate:mongo-to-postgres -- --source-db=<db>` | Valida una migracion Mongo -> PostgreSQL sin escribir (dry-run). |
+| `npm run db:migrate:mongo-to-postgres -- --source-db=<db> --apply` | Ejecuta la migracion idempotente y genera un reporte JSON. |
 | `npm run seed` | Ejecuta seed con `.env`. |
 | `npm run db:migrate-game-events` | Migra eventos de partidos. |
 | `npm run db:sync-test-from-prod` | Sincroniza base de test desde produccion. |
@@ -158,6 +204,16 @@ Ver [.env.example](.env.example) para el listado completo.
 | `npm run vercel:pull:prod` | Descarga env vars de Vercel Production. |
 | `npm run deploy:testing` | Deploy manual a Vercel Preview. |
 | `npm run deploy:prod` | Deploy manual a Vercel Production. |
+
+La migracion no crea tablas separadas para `venues` ni `seasons`: la aplicacion usa
+el venue embebido en cada partido y la temporada almacenada en cada torneo. Si esas
+colecciones Mongo contienen documentos, el reporte los registra como omitidos.
+
+La migracion crea un snapshot temporal por lotes, valida referencias y restricciones
+unicas antes de escribir, ejecuta todos los upserts en una transaccion y compara
+identidades, campos persistidos y relaciones al finalizar. Por defecto rechaza filas
+ajenas en PostgreSQL para evitar falsos positivos; `--allow-extra-target` solo debe
+usarse de forma consciente en entornos de prueba que comparten schema.
 
 ## Endpoints Principales
 
@@ -190,14 +246,26 @@ vercel login
 vercel link
 ```
 
-Configurar variables requeridas en Preview y Production:
+Configurar las variables requeridas en Preview y Production. Para la aplicación
+PostgreSQL no agregar MongoDB salvo que ese entorno vaya a ejecutar una migración,
+un rollback o el proveedor legado:
 
 ```bash
-vercel env add MONGODB_URI preview
-vercel env add MONGODB_URI production
+vercel env add APP_ENV preview
+vercel env add APP_ENV production
+vercel env add NEXT_PUBLIC_APP_URL preview
+vercel env add NEXT_PUBLIC_APP_URL production
+vercel env add DATABASE_PROVIDER preview
+vercel env add DATABASE_PROVIDER production
+vercel env add DATABASE_URL preview
+vercel env add DATABASE_URL production
 vercel env add JWT_SECRET preview
 vercel env add JWT_SECRET production
 ```
+
+Agregar `MONGODB_URI` únicamente en los entornos que aún la necesiten. Las
+credenciales de SMTP, Blob, crons, Google Sheets y flags se agregan solo si la
+funcionalidad correspondiente estará habilitada.
 
 Deploy manual:
 
@@ -210,7 +278,9 @@ Recomendacion operativa:
 
 - Usar `testing` para previews estables.
 - Usar `main` para produccion.
-- Revisar que `environment=production` solo este en el entorno productivo, porque decide la base Mongo `prod`.
+- Ejecutar `npm run db:postgres:migrate` contra PostgreSQL antes de cambiar `DATABASE_PROVIDER`.
+- Ejecutar primero la migracion de datos en dry-run, revisar el reporte y recien despues repetir con `--apply`.
+- Mantener `MONGODB_URI` durante la transicion y como fuente de rollback.
 
 ## Crons
 
@@ -255,7 +325,7 @@ Checklist corto:
 1. Definir el comportamiento de negocio.
 2. Actualizar entidades/value objects si cambia el dominio.
 3. Agregar o extender contratos de repositorio si se necesita persistencia.
-4. Implementar queries Mongo en `src/repositories/mongodb`.
+4. Implementar ambos adapters cuando el contrato necesite nuevas operaciones.
 5. Crear o extender un servicio backend.
 6. Definir DTOs y mappers.
 7. Agregar route handler.
@@ -266,8 +336,8 @@ Checklist corto:
 ## Estado De Calidad
 
 - El proyecto compila con TypeScript estricto.
-- No hay suite de tests automatizados declarada en `package.json`.
-- Para cambios de backend sensibles, validar al menos con `npm run build`.
+- Hay tests de integracion de repositorios Prisma y de migracion idempotente Mongo -> PostgreSQL.
+- Para cambios de persistencia, ejecutar `npm run test:postgres`, `npx tsc --noEmit` y builds con ambos proveedores.
 - La documentacion profunda de arquitectura identifica deuda y zonas de riesgo en [docs/backend-architecture.md](docs/backend-architecture.md#estado-actual-y-deuda-arquitectonica).
 
 ## Autor

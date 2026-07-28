@@ -19,6 +19,16 @@ import { MongoGameRepository } from "./mongodb/MongoGameRepository";
 import { MongoStandingRepository } from "./mongodb/MongoStandingRepository";
 import { MongoDivisionRepository } from "./mongodb/MongoDivisionRepository";
 import { VercelBlobFileStorageRepository } from "./blob/VercelBlobFileStorageRepository";
+import { getDatabaseProvider } from "@/lib/databaseProvider";
+import {
+  PrismaDivisionRepository,
+  PrismaGameRepository,
+  PrismaPlayerRepository,
+  PrismaStandingRepository,
+  PrismaTeamRepository,
+  PrismaTournamentRepository,
+  PrismaUserRepository,
+} from "./prisma";
 
 /**
  * Dependency Injection Container para repositorios
@@ -39,7 +49,8 @@ class RepositoryContainer {
    */
   static getUserRepository(): IUserRepository {
     if (!this.userRepo) {
-      this.userRepo = new MongoUserRepository();
+      this.userRepo =
+        getDatabaseProvider() === "postgres" ? new PrismaUserRepository() : new MongoUserRepository();
     }
     return this.userRepo;
   }
@@ -49,7 +60,10 @@ class RepositoryContainer {
    */
   static getTournamentRepository(): ITournamentRepository {
     if (!this.tournamentRepo) {
-      this.tournamentRepo = new MongoTournamentRepository();
+      this.tournamentRepo =
+        getDatabaseProvider() === "postgres"
+          ? new PrismaTournamentRepository()
+          : new MongoTournamentRepository();
     }
     return this.tournamentRepo;
   }
@@ -59,7 +73,8 @@ class RepositoryContainer {
    */
   static getTeamRepository(): ITeamRepository {
     if (!this.teamRepo) {
-      this.teamRepo = new MongoTeamRepository();
+      this.teamRepo =
+        getDatabaseProvider() === "postgres" ? new PrismaTeamRepository() : new MongoTeamRepository();
     }
     return this.teamRepo;
   }
@@ -69,7 +84,8 @@ class RepositoryContainer {
    */
   static getPlayerRepository(): IPlayerRepository {
     if (!this.playerRepo) {
-      this.playerRepo = new MongoPlayerRepository();
+      this.playerRepo =
+        getDatabaseProvider() === "postgres" ? new PrismaPlayerRepository() : new MongoPlayerRepository();
     }
     return this.playerRepo;
   }
@@ -79,7 +95,8 @@ class RepositoryContainer {
    */
   static getGameRepository(): IGameRepository {
     if (!this.gameRepo) {
-      this.gameRepo = new MongoGameRepository();
+      this.gameRepo =
+        getDatabaseProvider() === "postgres" ? new PrismaGameRepository() : new MongoGameRepository();
     }
     return this.gameRepo;
   }
@@ -89,7 +106,8 @@ class RepositoryContainer {
    */
   static getStandingRepository(): IStandingRepository {
     if (!this.standingRepo) {
-      this.standingRepo = new MongoStandingRepository();
+      this.standingRepo =
+        getDatabaseProvider() === "postgres" ? new PrismaStandingRepository() : new MongoStandingRepository();
     }
     return this.standingRepo;
   }
@@ -99,7 +117,8 @@ class RepositoryContainer {
    */
   static getDivisionRepository(): IDivisionRepository {
     if (!this.divisionRepo) {
-      this.divisionRepo = new MongoDivisionRepository();
+      this.divisionRepo =
+        getDatabaseProvider() === "postgres" ? new PrismaDivisionRepository() : new MongoDivisionRepository();
     }
     return this.divisionRepo;
   }

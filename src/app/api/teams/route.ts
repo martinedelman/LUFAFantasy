@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Types } from "mongoose";
 import { TeamService, AuthService } from "@/services/backend";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue, invalidateCacheByPrefix } from "@/lib/serverCache";
 import { TeamStatus } from "@/entities/Team";
-import { PlayerModel } from "@/models";
+import { getReportingRepository } from "@/repositories/reporting";
 import { toTeamResponseDto } from "@/app/DTOs";
 import type { CreateTeamRequestDto } from "@/app/DTOs";
 
 const teamService = new TeamService();
 const authService = new AuthService();
+const reportingRepo = getReportingRepository();
 const TEAMS_CACHE_TTL_SECONDS = 1800; // 30 minutos
 const TEAM_RELATED_CACHE_PREFIXES = ["teams", "dashboard", "standings", "rankings"];
 const PUBLIC_GET_CORS_HEADERS = {
@@ -76,23 +76,12 @@ export async function GET(request: NextRequest) {
         // Convertir a respuesta API
         const responseData = paginatedTeams.map((team) => toTeamResponseDto(team));
         const teamIds = responseData.flatMap((team) => (team._id ? [team._id] : []));
-        const activePlayerCounts = await PlayerModel.aggregate<{ _id: unknown; count: number }>([
-          {
-            $match: {
-              team: { $in: teamIds.map((teamId) => new Types.ObjectId(teamId)) },
-              status: "active",
-            },
-          },
-          { $group: { _id: "$team", count: { $sum: 1 } } },
-        ]).exec();
-        const activePlayerCountByTeam = new Map(
-          activePlayerCounts.map(({ _id, count }) => [String(_id), count]),
-        );
+        const activePlayerCountByTeam = await reportingRepo.getActivePlayerCounts(teamIds);
 
         return {
           data: responseData.map((team) => ({
             ...team,
-            activePlayerCount: team._id ? (activePlayerCountByTeam.get(team._id) ?? 0) : 0,
+            activePlayerCount: team._id ? (activePlayerCountByTeam[team._id] ?? 0) : 0,
           })),
           pagination: {
             current: page,

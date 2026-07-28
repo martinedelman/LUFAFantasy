@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
 import { getSessionTokenFromRequest } from "@/lib/auth";
-import connectToDatabase from "@/lib/mongodb";
-import { FlagInterestModel } from "@/models";
+import { getAuxiliaryRepository } from "@/repositories/auxiliary";
 import { AdminService, AuthService } from "@/services/backend";
 
 const authService = new AuthService();
 const adminService = new AdminService();
+const auxiliaryRepo = getAuxiliaryRepository();
 const allowedRoles = new Set(["admin", "entrenador_juveniles"]);
 
 interface PlayerRegistrationDocument {
@@ -57,12 +57,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await connectToDatabase();
-    const docs = (await FlagInterestModel.find({ interestType: { $in: ["play", "child"] } })
-      .sort({ createdAt: -1 })
-      .limit(250)
-      .lean()
-      .exec()) as unknown as PlayerRegistrationDocument[];
+    const docs = (await auxiliaryRepo.listFlagInterests({
+      playerRegistrationsOnly: true,
+    })) as unknown as PlayerRegistrationDocument[];
 
     const settings = await adminService.getSiteSettings();
 

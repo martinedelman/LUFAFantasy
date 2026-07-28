@@ -3,6 +3,8 @@ export { AuthService } from "./AuthService";
 export { GameService } from "./GameService";
 export { GameEventCorrectionService } from "./GameEventCorrectionService";
 export { StandingService } from "./StandingService";
+export { StatisticsService } from "./StatisticsService";
+export { PlayerRankingService } from "./PlayerRankingService";
 export { TournamentService } from "./TournamentService";
 export { TeamService } from "./TeamService";
 export { PlayerService } from "./PlayerService";

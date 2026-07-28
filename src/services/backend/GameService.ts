@@ -431,8 +431,9 @@ export class GameService {
     if (!reference) return "";
     if (typeof reference === "string") return reference;
 
-    if (typeof reference === "object" && "_id" in reference) {
-      const id = (reference as { _id?: unknown })._id;
+    if (typeof reference === "object" && reference && ("id" in reference || "_id" in reference)) {
+      const value = reference as { id?: unknown; _id?: unknown };
+      const id = value.id ?? value._id;
       return id ? id.toString() : "";
     }
 
@@ -546,18 +547,13 @@ export class GameService {
       status?: GameStatus;
       phase?: GamePhase;
       playoffSlot?: string;
-      $or?: Array<Record<string, unknown>>;
     } = {};
 
     if (filters.tournament) queryFilters.tournament = filters.tournament;
     if (filters.division) queryFilters.division = filters.division;
     if (filters.status) queryFilters.status = filters.status;
     if (filters.playoffSlot) queryFilters.playoffSlot = filters.playoffSlot;
-    if (filters.phase === "regular") {
-      queryFilters.$or = [{ phase: "regular" }, { phase: { $exists: false } }];
-    } else if (filters.phase) {
-      queryFilters.phase = filters.phase;
-    }
+    if (filters.phase) queryFilters.phase = filters.phase;
 
     return await this.gameRepo.findAll(queryFilters);
   }

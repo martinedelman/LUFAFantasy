@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
-import connectToDatabase from "@/lib/mongodb";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { safeTrack } from "@/lib/serverAnalytics";
-import { FlagInterestModel } from "@/models";
+import { getAuxiliaryRepository } from "@/repositories/auxiliary";
 import { EmailService } from "@/services/backend";
 
 const emailService = new EmailService();
+const auxiliaryRepo = getAuxiliaryRepository();
 
 const interestLabels = {
   play: "Quiero jugar",
@@ -137,8 +137,7 @@ export async function POST(request: NextRequest) {
         : []),
     ];
 
-    await connectToDatabase();
-    await FlagInterestModel.create({
+    await auxiliaryRepo.createFlagInterest({
       interestType,
       interestLabel,
       name,
@@ -149,7 +148,6 @@ export async function POST(request: NextRequest) {
       experience,
       company,
       sponsorInterest,
-      source: "sumate",
     });
 
     await emailService.send({

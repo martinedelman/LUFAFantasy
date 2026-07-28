@@ -1,6 +1,5 @@
 import sponsorData from "@/data/sponsors.json";
-import connectToDatabase from "@/lib/mongodb";
-import { SiteSettingsModel } from "@/models";
+import { getAuxiliaryRepository } from "@/repositories/auxiliary";
 import type { PublicSiteSettingsResponseDto, SiteSettingsResponseDto, SiteSponsorResponseDto } from "@/app/DTOs";
 
 interface PublicSiteSettingsDocument {
@@ -81,10 +80,7 @@ function toPublicSettings(settings: SiteSettingsResponseDto): PublicSiteSettings
 
 async function getSiteSettingsForPublicSurface(): Promise<SiteSettingsResponseDto> {
   try {
-    await connectToDatabase();
-    const settings = (await SiteSettingsModel.findOne({ key: "global" }).lean().exec()) as
-      | PublicSiteSettingsDocument
-      | null;
+    const settings = (await getAuxiliaryRepository().getSiteSettings()) as PublicSiteSettingsDocument | null;
 
     if (!settings) {
       return defaultSiteSettings;
