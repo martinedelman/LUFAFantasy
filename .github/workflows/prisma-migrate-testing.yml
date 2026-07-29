@@ -1,0 +1,65 @@
+name: Deploy Prisma migrations to testing
+
+on:
+  push:
+    branches:
+      - testing
+    paths:
+      - "prisma/migrations/**"
+      - "prisma/schema.prisma"
+      - "prisma.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/prisma-migrate-testing.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prisma-migrate-supabase-testing
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Migrate Supabase testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: supabase-testing
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Validate database URL
+        shell: bash
+        run: |
+          node -e '
+            const value = process.env.DATABASE_URL;
+            if (!value) throw new Error("The DATABASE_URL secret is missing or empty.");
+            const url = new URL(value);
+            if (!["postgres:", "postgresql:"].includes(url.protocol)) {
+              throw new Error("DATABASE_URL must use the postgres:// or postgresql:// protocol.");
+            }
+            if (!url.hostname) throw new Error("DATABASE_URL must include a database host.");
+          '
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npm run prisma:validate
+
+      - name: Apply pending migrations
+        run: npm run db:postgres:migrate
+
+      - name: Verify migration status
+        run: npx prisma migrate status

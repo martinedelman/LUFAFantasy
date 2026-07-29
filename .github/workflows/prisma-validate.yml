@@ -1,0 +1,49 @@
+name: Validate Prisma migrations
+
+on:
+  pull_request:
+    branches:
+      - testing
+      - main
+    paths:
+      - "prisma/**"
+      - "prisma.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/prisma-*.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prisma-validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate schema and generate client
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Prisma only parses this URL during validate/generate; no database connection is made.
+      DATABASE_URL: postgresql://prisma:prisma@localhost:5432/lufa_validation?schema=public
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npm run prisma:validate
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
