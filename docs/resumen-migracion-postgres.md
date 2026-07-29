@@ -67,7 +67,10 @@ npm run db:postgres:migrate
 ```
 
 La configuración mínima está documentada en `.env.example`. Para desarrollo se
-usa `DATABASE_PROVIDER=postgres` y una `DATABASE_URL` con `schema=public`.
+usa `DATABASE_PROVIDER=postgres`, `DATABASE_URL` para el runtime y `DIRECT_URL`
+para Prisma CLI y migraciones. En Docker ambas apuntan a PostgreSQL local con
+`schema=public`; en Supabase se separan entre pooler transaccional y conexión de
+sesión.
 
 ## Compatibilidad y ajustes de interfaz
 

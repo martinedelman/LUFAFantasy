@@ -138,6 +138,7 @@ APP_ENV=development
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 DATABASE_PROVIDER=postgres
 DATABASE_URL=postgresql://lufa:lufa_local@localhost:5434/lufa_fantasy?schema=public
+DIRECT_URL=postgresql://lufa:lufa_local@localhost:5434/lufa_fantasy?schema=public
 JWT_SECRET=<generar-con-openssl-rand-base64-32>
 ```
 
@@ -172,8 +173,9 @@ fallback legado y `VERCEL_URL` lo inyecta Vercel automáticamente.
 
 | Grupo | Variables | Cuándo configurarlas |
 | --- | --- | --- |
-| Runtime PostgreSQL | `APP_ENV`, `NEXT_PUBLIC_APP_URL`, `DATABASE_PROVIDER`, `DATABASE_URL`, `JWT_SECRET` | Siempre en la aplicación PostgreSQL. `DATABASE_PROVIDER` debe declararse como `postgres`; no depender del fallback legado a MongoDB. |
-| Docker local | `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Al iniciar el contenedor. Deben coincidir con `DATABASE_URL`; Docker no la actualiza automáticamente. |
+| Runtime PostgreSQL | `APP_ENV`, `NEXT_PUBLIC_APP_URL`, `DATABASE_PROVIDER`, `DATABASE_URL`, `JWT_SECRET` | Siempre en la aplicación PostgreSQL. `DATABASE_URL` es la conexión del runtime; en Vercel debe usar el pooler transaccional. |
+| Prisma CLI y migraciones | `DIRECT_URL` | Preferida por `prisma migrate` y por la migración Mongo→Postgres. En Supabase debe usar conexión directa si hay IPv6 o el pooler de sesión IPv4. Si falta, las herramientas usan `DATABASE_URL` por compatibilidad local. |
+| Docker local | `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Al iniciar el contenedor. Deben coincidir con `DATABASE_URL` y `DIRECT_URL`; Docker no las actualiza automáticamente. |
 | MongoDB legado | `MONGODB_URI`, `MONGODB_PORT` | Solo para el proveedor MongoDB, migración, rollback o sincronización desde Mongo. El origen de una migración se elige con `--source-db`. |
 | Sesiones | `OTP_SECRET` | Opcional; si falta, los OTP usan `JWT_SECRET`. |
 | Email | `MAIL_FROM`, `MAIL_PROVIDER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Para enviar email. En producción son indispensables `SMTP_HOST`, `SMTP_USER` y `SMTP_PASS`. |
@@ -259,9 +261,15 @@ vercel env add DATABASE_PROVIDER preview
 vercel env add DATABASE_PROVIDER production
 vercel env add DATABASE_URL preview
 vercel env add DATABASE_URL production
+vercel env add DIRECT_URL preview
+vercel env add DIRECT_URL production
 vercel env add JWT_SECRET preview
 vercel env add JWT_SECRET production
 ```
+
+En el panel de Vercel se pega únicamente el valor de cada URL: no incluir el
+nombre de la variable ni comillas. Las comillas de un archivo `.env` son sintaxis
+de dotenv, pero en el panel pasarían a formar parte del secreto.
 
 Agregar `MONGODB_URI` únicamente en los entornos que aún la necesiten. Las
 credenciales de SMTP, Blob, crons, Google Sheets y flags se agregan solo si la

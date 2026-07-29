@@ -14,11 +14,30 @@ valores independientes para cada entorno cuando corresponda:
 | `APP_ENV` | `development` | `production` | No | Entorno funcional de LUFA. No usar la clave antigua `environment` en configuraciones nuevas. |
 | `NEXT_PUBLIC_APP_URL` | URL pública de Preview | `https://flag.lufa.com.uy` (o la URL final) | No | Única URL que se configura manualmente. Se expone al navegador. |
 | `DATABASE_PROVIDER` | `postgres` | `postgres` | No | Selecciona Prisma como proveedor activo. |
-| `DATABASE_URL` | PostgreSQL de Preview | PostgreSQL de Production | Sí | Debe apuntar a bases separadas y usar SSL si el proveedor lo requiere. |
+| `DATABASE_URL` | Pooler transaccional de Preview | Pooler transaccional de Production | Sí | Conexión del runtime serverless. En Supabase usa el puerto `6543` y `pgbouncer=true`. |
+| `DIRECT_URL` | Conexión de sesión de Preview | Conexión de sesión de Production | Sí | Preferida por Prisma CLI y los scripts de migración. En Supabase usa conexión directa si existe IPv6 o el pooler de sesión IPv4 en `5432`. |
 | `JWT_SECRET` | Valor aleatorio propio | Valor aleatorio propio | Sí | Generar uno distinto por entorno con `openssl rand -base64 32`. |
 
 No configurar `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`,
 `POSTGRES_DB` ni `MONGODB_PORT` en Vercel: se usan únicamente para Docker local.
+
+## URLs de Supabase
+
+Para Vercel y otros runtimes serverless:
+
+```dotenv
+DATABASE_URL="postgresql://postgres.<project-ref>:<password-percent-encoded>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require&schema=public"
+```
+
+Para Prisma CLI y los scripts de migración:
+
+```dotenv
+DIRECT_URL="postgresql://postgres.<project-ref>:<password-percent-encoded>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require&schema=public"
+```
+
+Codificar una sola vez únicamente la contraseña, no la URL completa. En archivos
+`.env` las comillas son sintaxis válida. En el campo **Value** de Vercel se debe
+pegar solo la URL, sin comillas y sin el prefijo `DATABASE_URL=` o `DIRECT_URL=`.
 
 ## MongoDB durante la transición
 
@@ -57,7 +76,8 @@ usar siempre `NEXT_PUBLIC_APP_URL`.
 
 1. Crear o confirmar una instancia PostgreSQL exclusiva para Preview y otra para
    Production. No reutilizar la base productiva en Preview.
-2. Cargar `DATABASE_URL` y las cinco variables obligatorias en Vercel.
+2. Cargar `DATABASE_URL`, `DIRECT_URL` y las demás variables obligatorias en
+   Vercel. Limitar ambas al entorno y, para Preview, a la rama correspondiente.
 3. Aplicar las migraciones Prisma contra la base correspondiente:
 
    ```bash
@@ -81,12 +101,12 @@ usar siempre `NEXT_PUBLIC_APP_URL`.
 
 ## Checklist de seguridad
 
-- Marcar como secretos: `DATABASE_URL`, `JWT_SECRET`, `OTP_SECRET`,
+- Marcar como secretos: `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `OTP_SECRET`,
   `SMTP_PASS`, `BLOB_READ_WRITE_TOKEN`, `CRON_SECRET`, `GOOGLE_PRIVATE_KEY`,
   `FLAGS_SECRET` y, si se conserva, `MONGODB_URI`.
 - Usar secretos diferentes en Preview y Production.
 - No usar secretos bajo el prefijo `NEXT_PUBLIC_`.
 - Rotar `JWT_SECRET` y `OTP_SECRET` de manera coordinada: al rotarlos se
   invalidarán sesiones y OTPs en curso.
-- Limitar `DATABASE_URL` de Preview a una base sin datos productivos y con
-  permisos mínimos.
+- Limitar `DATABASE_URL` y `DIRECT_URL` de Preview a una base sin datos
+  productivos y con permisos mínimos.
