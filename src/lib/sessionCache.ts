@@ -40,8 +40,8 @@ class SessionCache {
       });
 
       this.flush();
-    } catch {
-      // No bloquear la app por cache corrupto.
+    } catch (error) {
+      console.warn("[SessionCache] Cache corrupto, limpiando datos:", error);
       this.store.clear();
     }
   }

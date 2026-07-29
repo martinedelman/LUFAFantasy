@@ -186,6 +186,7 @@ export default function EditTournamentPage() {
         }
       } catch {
         setAvailableDivisions([]);
+        setError("No se pudieron cargar las divisiones. Por favor, recarga la página.");
       } finally {
         setLoadingDivisions(false);
       }
@@ -205,6 +206,7 @@ export default function EditTournamentPage() {
         }
       } catch {
         setAvailableTeams([]);
+        setError("No se pudieron cargar los equipos. Por favor, recarga la página.");
       } finally {
         setLoadingTeams(false);
       }

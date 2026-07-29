@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
+import InlineFeedback from "@/components/InlineFeedback";
 import Modal from "@/components/Modal";
 import Tag from "@/components/Tag";
 import Avatar from "@/components/Avatar";
@@ -355,6 +356,7 @@ export default function TeamViewerPage() {
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [statsWarning, setStatsWarning] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"info" | "roster" | "games" | "stats">("info");
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
   const [rosterForm, setRosterForm] = useState({
@@ -443,9 +445,10 @@ export default function TeamViewerPage() {
             setTeamStats(emptyTeamStats(loadedTeam));
           }
         } catch (statsError) {
-          console.log("Stats not available:", statsError);
+          console.warn("Stats not available:", statsError);
           setTeamGames([]);
           setTeamStats(emptyTeamStats(loadedTeam));
+          setStatsWarning("No se pudieron cargar las estadísticas del equipo.");
         }
       } catch {
         setError("Error de conexión. Por favor, intenta de nuevo.");
@@ -1323,6 +1326,11 @@ export default function TeamViewerPage() {
             {/* Stats Tab */}
             {activeTab === "stats" && (
               <div>
+                {statsWarning && (
+                  <div className="mb-4">
+                    <InlineFeedback variant="warning" message={statsWarning} compact />
+                  </div>
+                )}
                 {teamStats ? (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

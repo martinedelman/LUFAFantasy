@@ -53,8 +53,8 @@ export default function ProfilePage() {
           router.replace(`/players/${data.data._id}`);
           return;
         }
-      } catch {
-        // noop
+      } catch (error) {
+        console.warn("No se pudo verificar el perfil de jugador:", error);
       } finally {
         if (isActive) {
           setIsCheckingPlayer(false);

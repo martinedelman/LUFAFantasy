@@ -113,6 +113,7 @@ export default function CreateTeamPage() {
         }
       } catch (error) {
         console.error("Error loading divisions:", error);
+        setError("No se pudieron cargar las divisiones. Por favor, recarga la página.");
       } finally {
         setLoadingDivisions(false);
       }
