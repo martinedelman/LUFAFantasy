@@ -175,9 +175,9 @@ function normalizeName(...values: unknown[]): string {
 async function main() {
   const options = parseOptions(process.argv.slice(2));
   const mongoUri = process.env.MONGODB_URI;
-  const databaseUrl = process.env.DATABASE_URL;
+  const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
   if (!mongoUri) throw new Error("MONGODB_URI es requerida");
-  if (!databaseUrl) throw new Error("DATABASE_URL es requerida");
+  if (!databaseUrl) throw new Error("DIRECT_URL o DATABASE_URL es requerida");
 
   const mongo = new mongoose.mongo.MongoClient(mongoUri, { readPreference: "primary" });
   const configuredSchema = new URL(databaseUrl).searchParams.get("schema");
