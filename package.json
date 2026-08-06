@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "seed": "node --env-file=.env --import tsx scripts/seed.ts",
     "db:migrate-game-events": "node --env-file=.env --import tsx scripts/migrate-game-events.ts",
     "db:sync-test-from-prod": "node --env-file=.env --import tsx scripts/sync-test-db-from-prod.ts",
@@ -39,11 +41,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9",
     "eslint-config-next": "^15.5.6",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }
