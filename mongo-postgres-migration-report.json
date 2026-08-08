@@ -1,0 +1,45 @@
+{
+  "mode": "apply",
+  "sourceDatabase": "test",
+  "targetDatabase": "postgres",
+  "startedAt": "2026-07-29T20:42:28.027Z",
+  "sourceCounts": {
+    "users": 6,
+    "tournaments": 2,
+    "divisions": 3,
+    "teams": 15,
+    "players": 197,
+    "judges": 15,
+    "games": 68,
+    "game_events": 532,
+    "standings": 15,
+    "player_statistics": 0,
+    "team_statistics": 0,
+    "otpverifications": 0,
+    "game_event_corrections": 3,
+    "player_import_migrations": 102,
+    "site_settings": 1,
+    "flaginterests": 2,
+    "admin_audit_logs": 0,
+    "venues": 0,
+    "seasons": 0
+  },
+  "targetCounts": {},
+  "issues": [
+    "corrections.6a418ce166962299617b8798: referencia requestedBy inválida (6a24f2660b5d3641073b2a78)",
+    "corrections.6a418d855f15758912d5768c: referencia requestedBy inválida (6a24f2660b5d3641073b2a78)",
+    "corrections.6a42e051f9315371293f4cc1: referencia requestedBy inválida (6a24f2660b5d3641073b2a78)",
+    "tournaments: PostgreSQL contiene 1 fila(s) ajenas al origen; vacíe el destino o use --allow-extra-target conscientemente",
+    "games: PostgreSQL contiene 1 fila(s) ajenas al origen; vacíe el destino o use --allow-extra-target conscientemente",
+    "standings: PostgreSQL contiene 4 fila(s) ajenas al origen; vacíe el destino o use --allow-extra-target conscientemente",
+    "flaginterests: PostgreSQL contiene 2 fila(s) ajenas al origen; vacíe el destino o use --allow-extra-target conscientemente",
+    "admin_audit_logs: PostgreSQL contiene 11 fila(s) ajenas al origen; vacíe el destino o use --allow-extra-target conscientemente",
+    "Preflight falló con 8 problema(s)"
+  ],
+  "warnings": [
+    "divisions.69f90ee145d790af61450d6c: se omitió tournament inexistente (69f90ee145d790af61450d5f)",
+    "divisions.69f90ee145d790af61450d6e: se omitió tournament inexistente (69f90ee145d790af61450d5f)",
+    "divisions.69f90ee145d790af61450d6d: se omitió tournament inexistente (69f90ee145d790af61450d5f)"
+  ],
+  "completedAt": "2026-07-29T20:42:32.634Z"
+}

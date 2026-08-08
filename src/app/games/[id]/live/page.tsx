@@ -223,18 +223,22 @@ export default function LiveMatchPage() {
 
       // Fetch players for both teams
       if (gameData.data.homeTeam) {
-        const homePlayersRes = await fetch(`/api/players?team=${gameData.data.homeTeam._id}&limit=50`);
+        const homePlayersRes = await fetch(
+          `/api/players?team=${gameData.data.homeTeam._id}&status=active&all=true`,
+        );
         const homePlayersData: ApiResponse<PlayerApiResponse[]> = await homePlayersRes.json();
         if (homePlayersData.success && homePlayersData.data) {
-          setHomePlayers(sortPlayersByJerseyNumber(homePlayersData.data.filter((p) => p.status === "active")));
+          setHomePlayers(sortPlayersByJerseyNumber(homePlayersData.data));
         }
       }
 
       if (gameData.data.awayTeam) {
-        const awayPlayersRes = await fetch(`/api/players?team=${gameData.data.awayTeam._id}&limit=50`);
+        const awayPlayersRes = await fetch(
+          `/api/players?team=${gameData.data.awayTeam._id}&status=active&all=true`,
+        );
         const awayPlayersData: ApiResponse<PlayerApiResponse[]> = await awayPlayersRes.json();
         if (awayPlayersData.success && awayPlayersData.data) {
-          setAwayPlayers(sortPlayersByJerseyNumber(awayPlayersData.data.filter((p) => p.status === "active")));
+          setAwayPlayers(sortPlayersByJerseyNumber(awayPlayersData.data));
         }
       }
     } catch {

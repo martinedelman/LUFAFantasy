@@ -385,7 +385,7 @@ export default function TeamViewerPage() {
 
   const fetchPlayers = useCallback(async () => {
     try {
-      const response = await fetch(`/api/players?team=${teamId}`);
+      const response = await fetch(`/api/players?team=${teamId}&all=true`);
       const data = await response.json();
 
       if (data.success) {

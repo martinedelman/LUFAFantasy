@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
+    const returnAll = searchParams.get("all") === "true";
 
     if (email) {
       const player = await playerService.getPlayerByEmail(email);
@@ -84,9 +85,10 @@ export async function GET(request: NextRequest) {
 
     // Aplicar paginación
     const total = allPlayers.length;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedPlayers = allPlayers.slice(startIndex, endIndex);
+    const startIndex = returnAll ? 0 : (page - 1) * limit;
+    const endIndex = returnAll ? total : startIndex + limit;
+    const paginatedPlayers = returnAll ? allPlayers : allPlayers.slice(startIndex, endIndex);
+    const totalPages = returnAll ? 1 : Math.ceil(total / limit);
 
     // Convertir a respuesta API
     const responseData = paginatedPlayers.map((player) => toPlayerResponseDto(player));
@@ -95,11 +97,11 @@ export async function GET(request: NextRequest) {
       success: true,
       data: responseData,
       pagination: {
-        current: page,
-        total: Math.ceil(total / limit),
-        pages: Math.ceil(total / limit),
-        hasNext: endIndex < total,
-        hasPrev: page > 1,
+        current: returnAll ? 1 : page,
+        total: totalPages,
+        pages: totalPages,
+        hasNext: returnAll ? false : endIndex < total,
+        hasPrev: returnAll ? false : page > 1,
       },
     });
   } catch (error) {
