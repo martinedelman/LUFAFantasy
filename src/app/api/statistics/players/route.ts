@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
       message: "Error al obtener estadísticas de jugadores",
       status: 500,
       route: "/api/statistics/players",
-      exposeError: true,
+
     });
   }
 }

@@ -84,7 +84,7 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implement profile update API call
-    console.log("Updating profile:", formData);
+    void formData;
     setIsEditing(false);
   };
 

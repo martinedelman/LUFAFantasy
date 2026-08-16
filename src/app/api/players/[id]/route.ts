@@ -198,11 +198,27 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 /**
- * DELETE /api/players/:id - Elimina un jugador
+ * DELETE /api/players/:id - Elimina un jugador (solo admin)
  */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const token = getSessionTokenFromRequest(request);
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "No autenticado" },
+        { status: 401 },
+      );
+    }
+
+    const isAdmin = await authService.verifyAdmin(token);
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, message: "No autorizado. Solo administradores pueden eliminar jugadores" },
+        { status: 403 },
+      );
+    }
 
     await playerService.deletePlayer(id);
 

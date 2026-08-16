@@ -87,7 +87,7 @@ export class MongoTeamRepository implements ITeamRepository {
 
   async existsWithName(name: string, tournamentId?: string): Promise<boolean> {
     await connectToDatabase();
-    const query: Record<string, unknown> = { name: { $regex: new RegExp(`^${name}$`, "i") } };
+    const query: Record<string, unknown> = { name: { $regex: new RegExp(`^${escapeRegExp(name)}$`, "i") } };
     if (tournamentId) {
       query.tournament = tournamentId;
     }

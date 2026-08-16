@@ -198,7 +198,6 @@ export async function GET(request: NextRequest) {
       message: "Error al obtener estadísticas de equipos",
       status: 500,
       route: "/api/statistics/teams",
-      exposeError: true,
     });
   }
 }
@@ -247,7 +246,6 @@ export async function POST(request: NextRequest) {
       message: "Error al actualizar estadísticas de equipo",
       status: 400,
       route: "/api/statistics/teams",
-      exposeError: true,
     });
   }
 }

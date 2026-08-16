@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GameService } from "@/services/backend";
+import { GameService, AuthService } from "@/services/backend";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { UpdateGameScoreRequestDto } from "@/app/DTOs";
 
 const gameService = new GameService();
+const authService = new AuthService();
 
 /**
  * GET /api/games/:id - Obtiene un partido por ID
@@ -37,11 +39,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 /**
- * PUT /api/games/:id - Actualiza el score de un partido
+ * PUT /api/games/:id - Actualiza el score de un partido (solo admin/juez)
  */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const token = getSessionTokenFromRequest(request);
+    const canUseLiveMatch = token ? await authService.verifyLiveMatchAccess(token) : false;
+
+    if (!canUseLiveMatch) {
+      return NextResponse.json(
+        { success: false, message: "No autorizado. Solo administradores o jueces pueden actualizar scores" },
+        { status: token ? 403 : 401 },
+      );
+    }
+
     const body = (await request.json()) as UpdateGameScoreRequestDto;
 
     if (!body.score) {
@@ -92,11 +104,27 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 /**
- * DELETE /api/games/:id - Elimina un partido
+ * DELETE /api/games/:id - Elimina un partido (solo admin)
  */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const token = getSessionTokenFromRequest(request);
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "No autenticado" },
+        { status: 401 },
+      );
+    }
+
+    const isAdmin = await authService.verifyAdmin(token);
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, message: "No autorizado. Solo administradores pueden eliminar partidos" },
+        { status: 403 },
+      );
+    }
 
     await gameService.deleteGame(id);
 

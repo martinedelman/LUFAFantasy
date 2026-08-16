@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GameService, JudgeService } from "@/services/backend";
+import { GameService, JudgeService, AuthService } from "@/services/backend";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import type { GamePhase, GameStatus } from "@/entities/Game";
 import { toGameResponseDto } from "@/app/DTOs";
@@ -7,6 +8,7 @@ import type { CreateGameRequestDto, UpdateGameRequestDto } from "@/app/DTOs";
 
 const gameService = new GameService();
 const judgeService = new JudgeService();
+const authService = new AuthService();
 const OFFICIAL_ROLES = ["referee", "down_judge", "side_judge", "table_judge"] as const;
 const GAME_PHASES: GamePhase[] = ["regular", "playoff", "final"];
 
@@ -117,14 +119,31 @@ export async function GET(request: NextRequest) {
       message: "Error al obtener partidos",
       status: 500,
       route: "/api/games",
-      exposeError: true,
+
     });
   }
 }
 
-// POST /api/games - Crear nuevo partido
+// POST /api/games - Crear nuevo partido (solo admin)
 export async function POST(request: NextRequest) {
   try {
+    const token = getSessionTokenFromRequest(request);
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "No autenticado" },
+        { status: 401 },
+      );
+    }
+
+    const isAdmin = await authService.verifyAdmin(token);
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, message: "No autorizado. Solo administradores pueden crear partidos" },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as CreateGameRequestDto;
 
     // Validaciones básicas
@@ -167,9 +186,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/games - Actualizar partido existente
+// PUT /api/games - Actualizar partido existente (solo admin)
 export async function PUT(request: NextRequest) {
   try {
+    const token = getSessionTokenFromRequest(request);
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "No autenticado" },
+        { status: 401 },
+      );
+    }
+
+    const isAdmin = await authService.verifyAdmin(token);
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, message: "No autorizado. Solo administradores pueden actualizar partidos" },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as UpdateGameRequestDto;
     const gameId = body.id;
 

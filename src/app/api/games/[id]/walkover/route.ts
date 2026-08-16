@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GameService } from "@/services/backend";
+import { GameService, AuthService } from "@/services/backend";
+import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toGameResponseDto } from "@/app/DTOs";
 
 const gameService = new GameService();
+const authService = new AuthService();
 
 interface WalkOverRequest {
   winner: "home" | "away";
@@ -16,6 +18,16 @@ interface WalkOverRequest {
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const token = getSessionTokenFromRequest(request);
+    const canUseLiveMatch = token ? await authService.verifyLiveMatchAccess(token) : false;
+
+    if (!canUseLiveMatch) {
+      return NextResponse.json(
+        { success: false, message: "No autorizado. Solo administradores o jueces pueden marcar Walk Over" },
+        { status: token ? 403 : 401 },
+      );
+    }
+
     const body = (await request.json()) as WalkOverRequest;
 
     if (body.winner !== "home" && body.winner !== "away") {
