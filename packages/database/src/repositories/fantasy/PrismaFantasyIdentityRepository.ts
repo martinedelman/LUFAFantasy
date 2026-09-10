@@ -1,6 +1,7 @@
 import type {
   FantasyFeatureAssignment,
   FantasyIdentityRepository,
+  FantasyOnboardingState,
   FantasyUserRecord,
 } from "@lufa/fantasy-core";
 import { getPrismaClient } from "@lufa/database/prisma";
@@ -19,7 +20,7 @@ export class PrismaFantasyIdentityRepository implements FantasyIdentityRepositor
   }
 
   createUser(data: { name: string; email: string; passwordHash: string }): Promise<FantasyUserRecord> {
-    return this.db.fantasyUser.create({ data });
+    return this.db.fantasyUser.create({ data: { ...data, onboarding: { create: {} } } });
   }
 
   updateUser(id: string, data: { name?: string; passwordHash?: string }): Promise<FantasyUserRecord> {
@@ -54,6 +55,18 @@ export class PrismaFantasyIdentityRepository implements FantasyIdentityRepositor
       where: { userId },
       select: { key: true, enabled: true },
     });
+  }
+
+  async getOnboarding(userId: string): Promise<FantasyOnboardingState | null> {
+    const onboarding = await this.db.fantasyOnboarding.findUnique({ where: { userId } });
+    if (!onboarding) return null;
+    return {
+      version: onboarding.version,
+      status: onboarding.status as FantasyOnboardingState["status"],
+      currentStep: onboarding.currentStep as FantasyOnboardingState["currentStep"],
+      startedAt: onboarding.startedAt?.toISOString() || null,
+      completedAt: onboarding.completedAt?.toISOString() || null,
+    };
   }
 
   async createAudit(data: {

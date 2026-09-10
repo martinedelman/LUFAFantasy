@@ -23,14 +23,21 @@ export function fantasyApiErrorResponse({
   fallback = "No pudimos completar la operación. Probá nuevamente en unos segundos.",
 }: Options) {
   const internalMessage = error instanceof Error ? error.message : String(error);
-  const knownMessage = knownMessages.find((message) => internalMessage === message || internalMessage.startsWith(message));
+  // Sólo exponemos mensajes que la ruta declaró explícitamente como seguros. Conservamos
+  // el detalle de validación para que la persona usuaria pueda corregir el formulario.
+  const knownMessage = knownMessages.some((message) => internalMessage === message || internalMessage.startsWith(message))
+    ? internalMessage
+    : undefined;
   const malformedRequest = error instanceof SyntaxError;
   const duplicateEmail = errorCode(error) === "P2002" && route.endsWith("/register");
+  const duplicatePick = errorCode(error) === "P2002" && route.endsWith("/picks");
   const message = malformedRequest
     ? "La solicitud no tiene un formato válido"
     : duplicateEmail
       ? "El email ya está registrado"
+      : duplicatePick
+        ? "Ese jugador ya fue elegido. Actualizá el draft y elegí otro."
       : knownMessage || fallback;
-  const status = malformedRequest ? 400 : duplicateEmail ? 409 : knownMessage ? knownStatus : 500;
+  const status = malformedRequest ? 400 : duplicateEmail || duplicatePick ? 409 : knownMessage ? knownStatus : 500;
   return apiErrorResponse({ request, error, message, status, route });
 }

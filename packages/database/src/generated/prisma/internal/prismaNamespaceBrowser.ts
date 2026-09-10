@@ -76,7 +76,14 @@ export const ModelName = {
   FantasyUser: 'FantasyUser',
   FantasyPasswordReset: 'FantasyPasswordReset',
   FantasyFeatureAssignment: 'FantasyFeatureAssignment',
-  FantasyAuditLog: 'FantasyAuditLog'
+  FantasyAuditLog: 'FantasyAuditLog',
+  FantasyOnboarding: 'FantasyOnboarding',
+  FantasyLeague: 'FantasyLeague',
+  FantasyLeagueMember: 'FantasyLeagueMember',
+  FantasyTeam: 'FantasyTeam',
+  FantasyDraft: 'FantasyDraft',
+  FantasyDraftPick: 'FantasyDraftPick',
+  FantasyPlayerFavorite: 'FantasyPlayerFavorite'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -500,6 +507,104 @@ export const FantasyAuditLogScalarFieldEnum = {
 } as const
 
 export type FantasyAuditLogScalarFieldEnum = (typeof FantasyAuditLogScalarFieldEnum)[keyof typeof FantasyAuditLogScalarFieldEnum]
+
+
+export const FantasyOnboardingScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  version: 'version',
+  status: 'status',
+  currentStep: 'currentStep',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FantasyOnboardingScalarFieldEnum = (typeof FantasyOnboardingScalarFieldEnum)[keyof typeof FantasyOnboardingScalarFieldEnum]
+
+
+export const FantasyLeagueScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  inviteCode: 'inviteCode',
+  commissionerId: 'commissionerId',
+  status: 'status',
+  maxMembers: 'maxMembers',
+  rosterSize: 'rosterSize',
+  turnSeconds: 'turnSeconds',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FantasyLeagueScalarFieldEnum = (typeof FantasyLeagueScalarFieldEnum)[keyof typeof FantasyLeagueScalarFieldEnum]
+
+
+export const FantasyLeagueMemberScalarFieldEnum = {
+  id: 'id',
+  leagueId: 'leagueId',
+  userId: 'userId',
+  role: 'role',
+  status: 'status',
+  joinedAt: 'joinedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FantasyLeagueMemberScalarFieldEnum = (typeof FantasyLeagueMemberScalarFieldEnum)[keyof typeof FantasyLeagueMemberScalarFieldEnum]
+
+
+export const FantasyTeamScalarFieldEnum = {
+  id: 'id',
+  memberId: 'memberId',
+  name: 'name',
+  avatar: 'avatar',
+  budget: 'budget',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FantasyTeamScalarFieldEnum = (typeof FantasyTeamScalarFieldEnum)[keyof typeof FantasyTeamScalarFieldEnum]
+
+
+export const FantasyDraftScalarFieldEnum = {
+  id: 'id',
+  leagueId: 'leagueId',
+  status: 'status',
+  currentPick: 'currentPick',
+  startedAt: 'startedAt',
+  pickDeadline: 'pickDeadline',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FantasyDraftScalarFieldEnum = (typeof FantasyDraftScalarFieldEnum)[keyof typeof FantasyDraftScalarFieldEnum]
+
+
+export const FantasyDraftPickScalarFieldEnum = {
+  id: 'id',
+  draftId: 'draftId',
+  memberId: 'memberId',
+  teamId: 'teamId',
+  playerId: 'playerId',
+  round: 'round',
+  overall: 'overall',
+  autoPicked: 'autoPicked',
+  createdAt: 'createdAt'
+} as const
+
+export type FantasyDraftPickScalarFieldEnum = (typeof FantasyDraftPickScalarFieldEnum)[keyof typeof FantasyDraftPickScalarFieldEnum]
+
+
+export const FantasyPlayerFavoriteScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  playerId: 'playerId',
+  createdAt: 'createdAt'
+} as const
+
+export type FantasyPlayerFavoriteScalarFieldEnum = (typeof FantasyPlayerFavoriteScalarFieldEnum)[keyof typeof FantasyPlayerFavoriteScalarFieldEnum]
 
 
 export const SortOrder = {

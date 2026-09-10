@@ -2,50 +2,64 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { Brand } from "./Brand";
-import { CloseIcon, GridIcon, LogOutIcon, MailIcon, MenuIcon, UserIcon, UsersIcon } from "./icons";
+import { LogOutIcon } from "./icons";
+import { fantasyRequest } from "@/lib/fantasyApi";
 import { useSession } from "./SessionProvider";
+import { useOnboarding } from "./onboarding/OnboardingProvider";
 
-const links = [
-  { href: "/app", label: "Resumen", icon: GridIcon },
-  { href: "/app/leagues", label: "Mis ligas", icon: UsersIcon },
-  { href: "/app/invitations", label: "Invitaciones", icon: MailIcon },
-  { href: "/app/profile", label: "Mi perfil", icon: UserIcon },
-];
+interface LeagueNavigationItem {
+  id: string;
+  name: string;
+  teamName: string;
+}
+
+function currentLeagueId(pathname: string) {
+  return pathname.match(/^\/app\/leagues\/([^/]+)/)?.[1] || null;
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading } = useSession();
-  const [open, setOpen] = useState(false);
+  const { openHelp } = useOnboarding();
+  const [leagues, setLeagues] = useState<LeagueNavigationItem[]>([]);
 
   useEffect(() => { if (!loading && !user) router.replace("/auth/signin"); }, [loading, user, router]);
-  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (!user) return;
+    void fantasyRequest<LeagueNavigationItem[]>("/leagues").then(setLeagues).catch(() => setLeagues([]));
+  }, [user]);
+
+  const activeLeagueId = currentLeagueId(pathname) || leagues[0]?.id || "";
+  const activeLeague = useMemo(() => leagues.find((league) => league.id === activeLeagueId), [activeLeagueId, leagues]);
 
   async function logout() {
     await fetch("/api/fantasy/v1/auth/logout", { method: "POST" });
-    router.replace("/"); router.refresh();
+    router.replace("/");
+    router.refresh();
   }
 
   if (loading || !user) return <div className="shell-loading" aria-label="Cargando"><span className="loading-mark"><i /><i /><i /></span></div>;
   const initials = user.name.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const leagueLink = (hash: string) => activeLeagueId ? `/app/leagues/${activeLeagueId}${hash}` : "/app/leagues";
+  const leagueLinks = [
+    { href: "/app", label: "Resumen", active: pathname === "/app" },
+    { href: leagueLink("#overview"), label: "Liga", active: pathname.startsWith("/app/leagues/") },
+    { href: activeLeagueId ? `/app/leagues/${activeLeagueId}/team` : "/app/leagues", label: "Mi equipo", active: pathname.endsWith("/team") },
+    { href: leagueLink("#draft"), label: "Draft", active: false },
+    { href: activeLeagueId ? `/app/leagues/${activeLeagueId}/players` : "/app/leagues", label: "Jugadores", active: pathname.endsWith("/players") },
+    { href: "/app/leagues", label: "Mis ligas", active: pathname === "/app/leagues" },
+  ];
 
   return <div className="product-layout">
-    <aside className={`sidebar${open ? " open" : ""}`}>
-      <Brand />
-      <span className="nav-label">Tu fantasy</span>
-      <nav className="side-nav" aria-label="Aplicación">
-        {links.map(({ href, label, icon: Icon }) => {
-          const active = href === "/app" ? pathname === href : pathname.startsWith(href);
-          return <Link key={href} href={href} className={`side-link${active ? " active" : ""}`}><Icon />{label}</Link>;
-        })}
-      </nav>
-      <div className="sidebar-footer"><div className="user-chip"><span className="user-avatar">{initials}</span><div className="user-meta"><strong>{user.name}</strong><span>{user.email}</span></div><button className="icon-button" type="button" onClick={logout} aria-label="Cerrar sesión"><LogOutIcon /></button></div></div>
-    </aside>
-    <div className="product-main">
-      <header className="product-topbar"><button className="icon-button mobile-menu" type="button" onClick={() => setOpen((value) => !value)} aria-label={open ? "Cerrar menú" : "Abrir menú"}>{open ? <CloseIcon /> : <MenuIcon />}</button><span>Fantasy flag · Uruguay</span><span className="beta-badge">ACCESO ANTICIPADO</span></header>
-      <main className="product-content">{children}</main>
-    </div>
+    <header className="product-topbar">
+      <div className="topbar-brand"><Brand compact /></div>
+      <div className="league-selector"><label htmlFor="active-league">Liga activa</label><select id="active-league" value={activeLeagueId} disabled={!leagues.length} onChange={(event) => router.push(`/app/leagues/${event.target.value}`)}>{!leagues.length && <option value="">Sin liga seleccionada</option>}{leagues.map((league) => <option key={league.id} value={league.id}>{league.name} · {league.teamName}</option>)}</select></div>
+      <nav className="league-nav" data-onboarding="league-nav" aria-label="Navegación de liga">{leagueLinks.map((link) => <Link key={link.label} href={link.href} className={`league-nav-link${link.active ? " active" : ""}`}>{link.label}</Link>)}</nav>
+      <div className="topbar-user"><button className="topbar-help" type="button" onClick={openHelp}>Ayuda</button><Link className="topbar-avatar" href="/app/profile" aria-label="Mi perfil">{initials}</Link><div><strong>{activeLeague?.teamName || user.name}</strong><span>{activeLeague ? activeLeague.name : "Tu fantasy"}</span></div><button className="icon-button" type="button" onClick={logout} aria-label="Cerrar sesión"><LogOutIcon /></button></div>
+    </header>
+    <main className="product-content">{children}</main>
   </div>;
 }

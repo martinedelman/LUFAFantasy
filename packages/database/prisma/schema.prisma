@@ -149,6 +149,8 @@ model Player {
   events           GameEvent[]             @relation("EventPlayer")
   importMigrations PlayerImportMigration[]
   playerStats      PlayerStatistics[]
+  fantasyDraftPicks FantasyDraftPick[]
+  fantasyFavorites  FantasyPlayerFavorite[]
 
   @@index([firstName, lastName])
   @@index([teamId])
@@ -508,6 +510,10 @@ model FantasyUser {
   passwordResets    FantasyPasswordReset[]
   featureAssignments FantasyFeatureAssignment[]
   auditLogs          FantasyAuditLog[]
+  leagueMemberships  FantasyLeagueMember[]
+  commissionedLeagues FantasyLeague[] @relation("FantasyLeagueCommissioner")
+  playerFavorites     FantasyPlayerFavorite[]
+  onboarding          FantasyOnboarding?
 
   @@map("fantasy_users")
 }
@@ -554,4 +560,131 @@ model FantasyAuditLog {
   @@index([actorId, createdAt])
   @@index([action, createdAt])
   @@map("fantasy_audit_logs")
+}
+
+model FantasyOnboarding {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  version     Int      @default(1)
+  status      String   @default("not_started")
+  currentStep String   @default("welcome") @map("current_step")
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user FantasyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("fantasy_onboardings")
+}
+
+model FantasyLeague {
+  id              String   @id @default(cuid())
+  name            String
+  inviteCode      String   @unique @map("invite_code")
+  commissionerId  String   @map("commissioner_id")
+  status          String   @default("lobby")
+  maxMembers      Int      @default(8) @map("max_members")
+  rosterSize      Int      @default(6) @map("roster_size")
+  turnSeconds     Int      @default(90) @map("turn_seconds")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  commissioner FantasyUser         @relation("FantasyLeagueCommissioner", fields: [commissionerId], references: [id], onDelete: Restrict)
+  members      FantasyLeagueMember[]
+  draft        FantasyDraft?
+
+  @@index([commissionerId, createdAt])
+  @@index([status])
+  @@map("fantasy_leagues")
+}
+
+model FantasyLeagueMember {
+  id        String   @id @default(cuid())
+  leagueId  String   @map("league_id")
+  userId    String   @map("user_id")
+  role      String   @default("member")
+  status    String   @default("active")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  league FantasyLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  user   FantasyUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team   FantasyTeam?
+  picks  FantasyDraftPick[]
+
+  @@unique([leagueId, userId])
+  @@index([userId, status])
+  @@map("fantasy_league_members")
+}
+
+model FantasyTeam {
+  id        String   @id @default(cuid())
+  memberId  String   @unique @map("member_id")
+  name      String
+  avatar    String?  @map("avatar")
+  budget    Int      @default(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  member FantasyLeagueMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  picks  FantasyDraftPick[]
+
+  @@map("fantasy_teams")
+}
+
+model FantasyDraft {
+  id              String    @id @default(cuid())
+  leagueId        String    @unique @map("league_id")
+  status          String    @default("pending")
+  currentPick     Int       @default(1) @map("current_pick")
+  startedAt       DateTime? @map("started_at")
+  pickDeadline    DateTime? @map("pick_deadline")
+  completedAt     DateTime? @map("completed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  league FantasyLeague     @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  picks  FantasyDraftPick[]
+
+  @@index([status, pickDeadline])
+  @@map("fantasy_drafts")
+}
+
+model FantasyDraftPick {
+  id        String   @id @default(cuid())
+  draftId   String   @map("draft_id")
+  memberId  String   @map("member_id")
+  teamId    String   @map("team_id")
+  playerId  String   @map("player_id")
+  round     Int
+  overall   Int      @map("overall")
+  autoPicked Boolean @default(false) @map("auto_picked")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  draft  FantasyDraft        @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  member FantasyLeagueMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  team   FantasyTeam         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player Player              @relation(fields: [playerId], references: [id], onDelete: Restrict)
+
+  @@unique([draftId, playerId])
+  @@unique([draftId, overall])
+  @@index([teamId, createdAt])
+  @@map("fantasy_draft_picks")
+}
+
+model FantasyPlayerFavorite {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  playerId  String   @map("player_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   FantasyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  player Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, playerId])
+  @@index([userId, createdAt])
+  @@map("fantasy_player_favorites")
 }

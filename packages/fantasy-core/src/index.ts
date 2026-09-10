@@ -2,6 +2,8 @@ import * as bcrypt from "bcryptjs";
 import { createHash, randomInt } from "node:crypto";
 import { jwtVerify, SignJWT } from "jose";
 
+export * from "./leagues";
+
 export const FANTASY_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 export interface FantasyUserRecord {
@@ -25,6 +27,17 @@ export interface FantasyFeatureAssignment {
   enabled: boolean;
 }
 
+export const FANTASY_ONBOARDING_STEPS = ["welcome", "league", "navigation", "players", "favorite", "team", "draft"] as const;
+export type FantasyOnboardingStep = (typeof FANTASY_ONBOARDING_STEPS)[number];
+export type FantasyOnboardingStatus = "not_started" | "in_progress" | "completed" | "skipped";
+export interface FantasyOnboardingState {
+  version: number;
+  status: FantasyOnboardingStatus;
+  currentStep: FantasyOnboardingStep;
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
 export interface FantasyIdentityRepository {
   findUserById(id: string): Promise<FantasyUserRecord | null>;
   findUserByEmail(email: string): Promise<FantasyUserRecord | null>;
@@ -33,6 +46,7 @@ export interface FantasyIdentityRepository {
   createPasswordReset(data: { userId: string; codeHash: string; expiresAt: Date }): Promise<void>;
   consumePasswordReset(data: { userId: string; codeHash: string; now: Date }): Promise<boolean>;
   getFeatureAssignments(userId: string): Promise<FantasyFeatureAssignment[]>;
+  getOnboarding(userId: string): Promise<FantasyOnboardingState | null>;
   createAudit(data: {
     actorId?: string;
     action: string;
@@ -164,12 +178,12 @@ export class FantasyIdentityService {
   async bootstrap(userId: string) {
     const configuredDefaults: Record<string, boolean> = {
       invitations: true,
-      leagues: false,
+      leagues: true,
       live_scoring: false,
     };
     const assignments = await this.repository.getFeatureAssignments(userId);
     for (const assignment of assignments) configuredDefaults[assignment.key] = assignment.enabled;
-    return { features: configuredDefaults };
+    return { features: configuredDefaults, onboarding: await this.repository.getOnboarding(userId) };
   }
 
   private async createSession(user: FantasyUserRecord) {

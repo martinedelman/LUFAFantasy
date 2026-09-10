@@ -22,6 +22,7 @@ function repository(): FantasyIdentityRepository {
     createPasswordReset: async () => undefined,
     consumePasswordReset: async () => true,
     getFeatureAssignments: async () => [],
+    getOnboarding: async () => null,
     createAudit: async () => undefined,
   };
 }

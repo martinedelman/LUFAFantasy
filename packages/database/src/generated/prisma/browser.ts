@@ -147,3 +147,38 @@ export type FantasyFeatureAssignment = Prisma.FantasyFeatureAssignmentModel
  * 
  */
 export type FantasyAuditLog = Prisma.FantasyAuditLogModel
+/**
+ * Model FantasyOnboarding
+ * 
+ */
+export type FantasyOnboarding = Prisma.FantasyOnboardingModel
+/**
+ * Model FantasyLeague
+ * 
+ */
+export type FantasyLeague = Prisma.FantasyLeagueModel
+/**
+ * Model FantasyLeagueMember
+ * 
+ */
+export type FantasyLeagueMember = Prisma.FantasyLeagueMemberModel
+/**
+ * Model FantasyTeam
+ * 
+ */
+export type FantasyTeam = Prisma.FantasyTeamModel
+/**
+ * Model FantasyDraft
+ * 
+ */
+export type FantasyDraft = Prisma.FantasyDraftModel
+/**
+ * Model FantasyDraftPick
+ * 
+ */
+export type FantasyDraftPick = Prisma.FantasyDraftPickModel
+/**
+ * Model FantasyPlayerFavorite
+ * 
+ */
+export type FantasyPlayerFavorite = Prisma.FantasyPlayerFavoriteModel

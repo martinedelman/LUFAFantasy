@@ -193,6 +193,10 @@ export type FantasyUserWhereInput = {
   passwordResets?: Prisma.FantasyPasswordResetListRelationFilter
   featureAssignments?: Prisma.FantasyFeatureAssignmentListRelationFilter
   auditLogs?: Prisma.FantasyAuditLogListRelationFilter
+  leagueMemberships?: Prisma.FantasyLeagueMemberListRelationFilter
+  commissionedLeagues?: Prisma.FantasyLeagueListRelationFilter
+  playerFavorites?: Prisma.FantasyPlayerFavoriteListRelationFilter
+  onboarding?: Prisma.XOR<Prisma.FantasyOnboardingNullableScalarRelationFilter, Prisma.FantasyOnboardingWhereInput> | null
 }
 
 export type FantasyUserOrderByWithRelationInput = {
@@ -205,6 +209,10 @@ export type FantasyUserOrderByWithRelationInput = {
   passwordResets?: Prisma.FantasyPasswordResetOrderByRelationAggregateInput
   featureAssignments?: Prisma.FantasyFeatureAssignmentOrderByRelationAggregateInput
   auditLogs?: Prisma.FantasyAuditLogOrderByRelationAggregateInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberOrderByRelationAggregateInput
+  commissionedLeagues?: Prisma.FantasyLeagueOrderByRelationAggregateInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteOrderByRelationAggregateInput
+  onboarding?: Prisma.FantasyOnboardingOrderByWithRelationInput
 }
 
 export type FantasyUserWhereUniqueInput = Prisma.AtLeast<{
@@ -220,6 +228,10 @@ export type FantasyUserWhereUniqueInput = Prisma.AtLeast<{
   passwordResets?: Prisma.FantasyPasswordResetListRelationFilter
   featureAssignments?: Prisma.FantasyFeatureAssignmentListRelationFilter
   auditLogs?: Prisma.FantasyAuditLogListRelationFilter
+  leagueMemberships?: Prisma.FantasyLeagueMemberListRelationFilter
+  commissionedLeagues?: Prisma.FantasyLeagueListRelationFilter
+  playerFavorites?: Prisma.FantasyPlayerFavoriteListRelationFilter
+  onboarding?: Prisma.XOR<Prisma.FantasyOnboardingNullableScalarRelationFilter, Prisma.FantasyOnboardingWhereInput> | null
 }, "id" | "email">
 
 export type FantasyUserOrderByWithAggregationInput = {
@@ -256,6 +268,10 @@ export type FantasyUserCreateInput = {
   passwordResets?: Prisma.FantasyPasswordResetCreateNestedManyWithoutUserInput
   featureAssignments?: Prisma.FantasyFeatureAssignmentCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.FantasyAuditLogCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingCreateNestedOneWithoutUserInput
 }
 
 export type FantasyUserUncheckedCreateInput = {
@@ -268,6 +284,10 @@ export type FantasyUserUncheckedCreateInput = {
   passwordResets?: Prisma.FantasyPasswordResetUncheckedCreateNestedManyWithoutUserInput
   featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.FantasyAuditLogUncheckedCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type FantasyUserUpdateInput = {
@@ -280,6 +300,10 @@ export type FantasyUserUpdateInput = {
   passwordResets?: Prisma.FantasyPasswordResetUpdateManyWithoutUserNestedInput
   featureAssignments?: Prisma.FantasyFeatureAssignmentUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.FantasyAuditLogUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUpdateOneWithoutUserNestedInput
 }
 
 export type FantasyUserUncheckedUpdateInput = {
@@ -292,6 +316,10 @@ export type FantasyUserUncheckedUpdateInput = {
   passwordResets?: Prisma.FantasyPasswordResetUncheckedUpdateManyWithoutUserNestedInput
   featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.FantasyAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type FantasyUserCreateManyInput = {
@@ -402,6 +430,62 @@ export type FantasyUserUpdateOneWithoutAuditLogsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.FantasyUserUpdateToOneWithWhereWithoutAuditLogsInput, Prisma.FantasyUserUpdateWithoutAuditLogsInput>, Prisma.FantasyUserUncheckedUpdateWithoutAuditLogsInput>
 }
 
+export type FantasyUserCreateNestedOneWithoutOnboardingInput = {
+  create?: Prisma.XOR<Prisma.FantasyUserCreateWithoutOnboardingInput, Prisma.FantasyUserUncheckedCreateWithoutOnboardingInput>
+  connectOrCreate?: Prisma.FantasyUserCreateOrConnectWithoutOnboardingInput
+  connect?: Prisma.FantasyUserWhereUniqueInput
+}
+
+export type FantasyUserUpdateOneRequiredWithoutOnboardingNestedInput = {
+  create?: Prisma.XOR<Prisma.FantasyUserCreateWithoutOnboardingInput, Prisma.FantasyUserUncheckedCreateWithoutOnboardingInput>
+  connectOrCreate?: Prisma.FantasyUserCreateOrConnectWithoutOnboardingInput
+  upsert?: Prisma.FantasyUserUpsertWithoutOnboardingInput
+  connect?: Prisma.FantasyUserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.FantasyUserUpdateToOneWithWhereWithoutOnboardingInput, Prisma.FantasyUserUpdateWithoutOnboardingInput>, Prisma.FantasyUserUncheckedUpdateWithoutOnboardingInput>
+}
+
+export type FantasyUserCreateNestedOneWithoutCommissionedLeaguesInput = {
+  create?: Prisma.XOR<Prisma.FantasyUserCreateWithoutCommissionedLeaguesInput, Prisma.FantasyUserUncheckedCreateWithoutCommissionedLeaguesInput>
+  connectOrCreate?: Prisma.FantasyUserCreateOrConnectWithoutCommissionedLeaguesInput
+  connect?: Prisma.FantasyUserWhereUniqueInput
+}
+
+export type FantasyUserUpdateOneRequiredWithoutCommissionedLeaguesNestedInput = {
+  create?: Prisma.XOR<Prisma.FantasyUserCreateWithoutCommissionedLeaguesInput, Prisma.FantasyUserUncheckedCreateWithoutCommissionedLeaguesInput>
+  connectOrCreate?: Prisma.FantasyUserCreateOrConnectWithoutCommissionedLeaguesInput
+  upsert?: Prisma.FantasyUserUpsertWithoutCommissionedLeaguesInput
+  connect?: Prisma.FantasyUserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.FantasyUserUpdateToOneWithWhereWithoutCommissionedLeaguesInput, Prisma.FantasyUserUpdateWithoutCommissionedLeaguesInput>, Prisma.FantasyUserUncheckedUpdateWithoutCommissionedLeaguesInput>
+}
+
+export type FantasyUserCreateNestedOneWithoutLeagueMembershipsInput = {
+  create?: Prisma.XOR<Prisma.FantasyUserCreateWithoutLeagueMembershipsInput, Prisma.FantasyUserUncheckedCreateWithoutLeagueMembershipsInput>
+  connectOrCreate?: Prisma.FantasyUserCreateOrConnectWithoutLeagueMembershipsInput
+  connect?: Prisma.FantasyUserWhereUniqueInput
+}
+
+export type FantasyUserUpdateOneRequiredWithoutLeagueMembershipsNestedInput = {
+  create?: Prisma.XOR<Prisma.FantasyUserCreateWithoutLeagueMembershipsInput, Prisma.FantasyUserUncheckedCreateWithoutLeagueMembershipsInput>
+  connectOrCreate?: Prisma.FantasyUserCreateOrConnectWithoutLeagueMembershipsInput
+  upsert?: Prisma.FantasyUserUpsertWithoutLeagueMembershipsInput
+  connect?: Prisma.FantasyUserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.FantasyUserUpdateToOneWithWhereWithoutLeagueMembershipsInput, Prisma.FantasyUserUpdateWithoutLeagueMembershipsInput>, Prisma.FantasyUserUncheckedUpdateWithoutLeagueMembershipsInput>
+}
+
+export type FantasyUserCreateNestedOneWithoutPlayerFavoritesInput = {
+  create?: Prisma.XOR<Prisma.FantasyUserCreateWithoutPlayerFavoritesInput, Prisma.FantasyUserUncheckedCreateWithoutPlayerFavoritesInput>
+  connectOrCreate?: Prisma.FantasyUserCreateOrConnectWithoutPlayerFavoritesInput
+  connect?: Prisma.FantasyUserWhereUniqueInput
+}
+
+export type FantasyUserUpdateOneRequiredWithoutPlayerFavoritesNestedInput = {
+  create?: Prisma.XOR<Prisma.FantasyUserCreateWithoutPlayerFavoritesInput, Prisma.FantasyUserUncheckedCreateWithoutPlayerFavoritesInput>
+  connectOrCreate?: Prisma.FantasyUserCreateOrConnectWithoutPlayerFavoritesInput
+  upsert?: Prisma.FantasyUserUpsertWithoutPlayerFavoritesInput
+  connect?: Prisma.FantasyUserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.FantasyUserUpdateToOneWithWhereWithoutPlayerFavoritesInput, Prisma.FantasyUserUpdateWithoutPlayerFavoritesInput>, Prisma.FantasyUserUncheckedUpdateWithoutPlayerFavoritesInput>
+}
+
 export type FantasyUserCreateWithoutPasswordResetsInput = {
   id?: string
   name: string
@@ -411,6 +495,10 @@ export type FantasyUserCreateWithoutPasswordResetsInput = {
   updatedAt?: Date | string
   featureAssignments?: Prisma.FantasyFeatureAssignmentCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.FantasyAuditLogCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingCreateNestedOneWithoutUserInput
 }
 
 export type FantasyUserUncheckedCreateWithoutPasswordResetsInput = {
@@ -422,6 +510,10 @@ export type FantasyUserUncheckedCreateWithoutPasswordResetsInput = {
   updatedAt?: Date | string
   featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.FantasyAuditLogUncheckedCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type FantasyUserCreateOrConnectWithoutPasswordResetsInput = {
@@ -449,6 +541,10 @@ export type FantasyUserUpdateWithoutPasswordResetsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   featureAssignments?: Prisma.FantasyFeatureAssignmentUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.FantasyAuditLogUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUpdateOneWithoutUserNestedInput
 }
 
 export type FantasyUserUncheckedUpdateWithoutPasswordResetsInput = {
@@ -460,6 +556,10 @@ export type FantasyUserUncheckedUpdateWithoutPasswordResetsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.FantasyAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type FantasyUserCreateWithoutFeatureAssignmentsInput = {
@@ -471,6 +571,10 @@ export type FantasyUserCreateWithoutFeatureAssignmentsInput = {
   updatedAt?: Date | string
   passwordResets?: Prisma.FantasyPasswordResetCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.FantasyAuditLogCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingCreateNestedOneWithoutUserInput
 }
 
 export type FantasyUserUncheckedCreateWithoutFeatureAssignmentsInput = {
@@ -482,6 +586,10 @@ export type FantasyUserUncheckedCreateWithoutFeatureAssignmentsInput = {
   updatedAt?: Date | string
   passwordResets?: Prisma.FantasyPasswordResetUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.FantasyAuditLogUncheckedCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type FantasyUserCreateOrConnectWithoutFeatureAssignmentsInput = {
@@ -509,6 +617,10 @@ export type FantasyUserUpdateWithoutFeatureAssignmentsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passwordResets?: Prisma.FantasyPasswordResetUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.FantasyAuditLogUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUpdateOneWithoutUserNestedInput
 }
 
 export type FantasyUserUncheckedUpdateWithoutFeatureAssignmentsInput = {
@@ -520,6 +632,10 @@ export type FantasyUserUncheckedUpdateWithoutFeatureAssignmentsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passwordResets?: Prisma.FantasyPasswordResetUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.FantasyAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type FantasyUserCreateWithoutAuditLogsInput = {
@@ -531,6 +647,10 @@ export type FantasyUserCreateWithoutAuditLogsInput = {
   updatedAt?: Date | string
   passwordResets?: Prisma.FantasyPasswordResetCreateNestedManyWithoutUserInput
   featureAssignments?: Prisma.FantasyFeatureAssignmentCreateNestedManyWithoutUserInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingCreateNestedOneWithoutUserInput
 }
 
 export type FantasyUserUncheckedCreateWithoutAuditLogsInput = {
@@ -542,6 +662,10 @@ export type FantasyUserUncheckedCreateWithoutAuditLogsInput = {
   updatedAt?: Date | string
   passwordResets?: Prisma.FantasyPasswordResetUncheckedCreateNestedManyWithoutUserInput
   featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedCreateNestedManyWithoutUserInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type FantasyUserCreateOrConnectWithoutAuditLogsInput = {
@@ -569,6 +693,10 @@ export type FantasyUserUpdateWithoutAuditLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passwordResets?: Prisma.FantasyPasswordResetUpdateManyWithoutUserNestedInput
   featureAssignments?: Prisma.FantasyFeatureAssignmentUpdateManyWithoutUserNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUpdateOneWithoutUserNestedInput
 }
 
 export type FantasyUserUncheckedUpdateWithoutAuditLogsInput = {
@@ -580,6 +708,314 @@ export type FantasyUserUncheckedUpdateWithoutAuditLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   passwordResets?: Prisma.FantasyPasswordResetUncheckedUpdateManyWithoutUserNestedInput
   featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedUpdateOneWithoutUserNestedInput
+}
+
+export type FantasyUserCreateWithoutOnboardingInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  passwordResets?: Prisma.FantasyPasswordResetCreateNestedManyWithoutUserInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.FantasyAuditLogCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutUserInput
+}
+
+export type FantasyUserUncheckedCreateWithoutOnboardingInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUncheckedCreateNestedManyWithoutUserInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.FantasyAuditLogUncheckedCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type FantasyUserCreateOrConnectWithoutOnboardingInput = {
+  where: Prisma.FantasyUserWhereUniqueInput
+  create: Prisma.XOR<Prisma.FantasyUserCreateWithoutOnboardingInput, Prisma.FantasyUserUncheckedCreateWithoutOnboardingInput>
+}
+
+export type FantasyUserUpsertWithoutOnboardingInput = {
+  update: Prisma.XOR<Prisma.FantasyUserUpdateWithoutOnboardingInput, Prisma.FantasyUserUncheckedUpdateWithoutOnboardingInput>
+  create: Prisma.XOR<Prisma.FantasyUserCreateWithoutOnboardingInput, Prisma.FantasyUserUncheckedCreateWithoutOnboardingInput>
+  where?: Prisma.FantasyUserWhereInput
+}
+
+export type FantasyUserUpdateToOneWithWhereWithoutOnboardingInput = {
+  where?: Prisma.FantasyUserWhereInput
+  data: Prisma.XOR<Prisma.FantasyUserUpdateWithoutOnboardingInput, Prisma.FantasyUserUncheckedUpdateWithoutOnboardingInput>
+}
+
+export type FantasyUserUpdateWithoutOnboardingInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUpdateManyWithoutUserNestedInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.FantasyAuditLogUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutUserNestedInput
+}
+
+export type FantasyUserUncheckedUpdateWithoutOnboardingInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUncheckedUpdateManyWithoutUserNestedInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.FantasyAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type FantasyUserCreateWithoutCommissionedLeaguesInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  passwordResets?: Prisma.FantasyPasswordResetCreateNestedManyWithoutUserInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.FantasyAuditLogCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberCreateNestedManyWithoutUserInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingCreateNestedOneWithoutUserInput
+}
+
+export type FantasyUserUncheckedCreateWithoutCommissionedLeaguesInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUncheckedCreateNestedManyWithoutUserInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.FantasyAuditLogUncheckedCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedCreateNestedOneWithoutUserInput
+}
+
+export type FantasyUserCreateOrConnectWithoutCommissionedLeaguesInput = {
+  where: Prisma.FantasyUserWhereUniqueInput
+  create: Prisma.XOR<Prisma.FantasyUserCreateWithoutCommissionedLeaguesInput, Prisma.FantasyUserUncheckedCreateWithoutCommissionedLeaguesInput>
+}
+
+export type FantasyUserUpsertWithoutCommissionedLeaguesInput = {
+  update: Prisma.XOR<Prisma.FantasyUserUpdateWithoutCommissionedLeaguesInput, Prisma.FantasyUserUncheckedUpdateWithoutCommissionedLeaguesInput>
+  create: Prisma.XOR<Prisma.FantasyUserCreateWithoutCommissionedLeaguesInput, Prisma.FantasyUserUncheckedCreateWithoutCommissionedLeaguesInput>
+  where?: Prisma.FantasyUserWhereInput
+}
+
+export type FantasyUserUpdateToOneWithWhereWithoutCommissionedLeaguesInput = {
+  where?: Prisma.FantasyUserWhereInput
+  data: Prisma.XOR<Prisma.FantasyUserUpdateWithoutCommissionedLeaguesInput, Prisma.FantasyUserUncheckedUpdateWithoutCommissionedLeaguesInput>
+}
+
+export type FantasyUserUpdateWithoutCommissionedLeaguesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUpdateManyWithoutUserNestedInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.FantasyAuditLogUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUpdateManyWithoutUserNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUpdateOneWithoutUserNestedInput
+}
+
+export type FantasyUserUncheckedUpdateWithoutCommissionedLeaguesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUncheckedUpdateManyWithoutUserNestedInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.FantasyAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedUpdateOneWithoutUserNestedInput
+}
+
+export type FantasyUserCreateWithoutLeagueMembershipsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  passwordResets?: Prisma.FantasyPasswordResetCreateNestedManyWithoutUserInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.FantasyAuditLogCreateNestedManyWithoutActorInput
+  commissionedLeagues?: Prisma.FantasyLeagueCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingCreateNestedOneWithoutUserInput
+}
+
+export type FantasyUserUncheckedCreateWithoutLeagueMembershipsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUncheckedCreateNestedManyWithoutUserInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.FantasyAuditLogUncheckedCreateNestedManyWithoutActorInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedCreateNestedManyWithoutCommissionerInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutUserInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedCreateNestedOneWithoutUserInput
+}
+
+export type FantasyUserCreateOrConnectWithoutLeagueMembershipsInput = {
+  where: Prisma.FantasyUserWhereUniqueInput
+  create: Prisma.XOR<Prisma.FantasyUserCreateWithoutLeagueMembershipsInput, Prisma.FantasyUserUncheckedCreateWithoutLeagueMembershipsInput>
+}
+
+export type FantasyUserUpsertWithoutLeagueMembershipsInput = {
+  update: Prisma.XOR<Prisma.FantasyUserUpdateWithoutLeagueMembershipsInput, Prisma.FantasyUserUncheckedUpdateWithoutLeagueMembershipsInput>
+  create: Prisma.XOR<Prisma.FantasyUserCreateWithoutLeagueMembershipsInput, Prisma.FantasyUserUncheckedCreateWithoutLeagueMembershipsInput>
+  where?: Prisma.FantasyUserWhereInput
+}
+
+export type FantasyUserUpdateToOneWithWhereWithoutLeagueMembershipsInput = {
+  where?: Prisma.FantasyUserWhereInput
+  data: Prisma.XOR<Prisma.FantasyUserUpdateWithoutLeagueMembershipsInput, Prisma.FantasyUserUncheckedUpdateWithoutLeagueMembershipsInput>
+}
+
+export type FantasyUserUpdateWithoutLeagueMembershipsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUpdateManyWithoutUserNestedInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.FantasyAuditLogUpdateManyWithoutActorNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUpdateOneWithoutUserNestedInput
+}
+
+export type FantasyUserUncheckedUpdateWithoutLeagueMembershipsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUncheckedUpdateManyWithoutUserNestedInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.FantasyAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedUpdateManyWithoutCommissionerNestedInput
+  playerFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedUpdateOneWithoutUserNestedInput
+}
+
+export type FantasyUserCreateWithoutPlayerFavoritesInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  passwordResets?: Prisma.FantasyPasswordResetCreateNestedManyWithoutUserInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.FantasyAuditLogCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueCreateNestedManyWithoutCommissionerInput
+  onboarding?: Prisma.FantasyOnboardingCreateNestedOneWithoutUserInput
+}
+
+export type FantasyUserUncheckedCreateWithoutPlayerFavoritesInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUncheckedCreateNestedManyWithoutUserInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.FantasyAuditLogUncheckedCreateNestedManyWithoutActorInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedCreateNestedManyWithoutCommissionerInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedCreateNestedOneWithoutUserInput
+}
+
+export type FantasyUserCreateOrConnectWithoutPlayerFavoritesInput = {
+  where: Prisma.FantasyUserWhereUniqueInput
+  create: Prisma.XOR<Prisma.FantasyUserCreateWithoutPlayerFavoritesInput, Prisma.FantasyUserUncheckedCreateWithoutPlayerFavoritesInput>
+}
+
+export type FantasyUserUpsertWithoutPlayerFavoritesInput = {
+  update: Prisma.XOR<Prisma.FantasyUserUpdateWithoutPlayerFavoritesInput, Prisma.FantasyUserUncheckedUpdateWithoutPlayerFavoritesInput>
+  create: Prisma.XOR<Prisma.FantasyUserCreateWithoutPlayerFavoritesInput, Prisma.FantasyUserUncheckedCreateWithoutPlayerFavoritesInput>
+  where?: Prisma.FantasyUserWhereInput
+}
+
+export type FantasyUserUpdateToOneWithWhereWithoutPlayerFavoritesInput = {
+  where?: Prisma.FantasyUserWhereInput
+  data: Prisma.XOR<Prisma.FantasyUserUpdateWithoutPlayerFavoritesInput, Prisma.FantasyUserUncheckedUpdateWithoutPlayerFavoritesInput>
+}
+
+export type FantasyUserUpdateWithoutPlayerFavoritesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUpdateManyWithoutUserNestedInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.FantasyAuditLogUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUpdateManyWithoutCommissionerNestedInput
+  onboarding?: Prisma.FantasyOnboardingUpdateOneWithoutUserNestedInput
+}
+
+export type FantasyUserUncheckedUpdateWithoutPlayerFavoritesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  passwordResets?: Prisma.FantasyPasswordResetUncheckedUpdateManyWithoutUserNestedInput
+  featureAssignments?: Prisma.FantasyFeatureAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.FantasyAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  leagueMemberships?: Prisma.FantasyLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+  commissionedLeagues?: Prisma.FantasyLeagueUncheckedUpdateManyWithoutCommissionerNestedInput
+  onboarding?: Prisma.FantasyOnboardingUncheckedUpdateOneWithoutUserNestedInput
 }
 
 
@@ -591,12 +1027,18 @@ export type FantasyUserCountOutputType = {
   passwordResets: number
   featureAssignments: number
   auditLogs: number
+  leagueMemberships: number
+  commissionedLeagues: number
+  playerFavorites: number
 }
 
 export type FantasyUserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   passwordResets?: boolean | FantasyUserCountOutputTypeCountPasswordResetsArgs
   featureAssignments?: boolean | FantasyUserCountOutputTypeCountFeatureAssignmentsArgs
   auditLogs?: boolean | FantasyUserCountOutputTypeCountAuditLogsArgs
+  leagueMemberships?: boolean | FantasyUserCountOutputTypeCountLeagueMembershipsArgs
+  commissionedLeagues?: boolean | FantasyUserCountOutputTypeCountCommissionedLeaguesArgs
+  playerFavorites?: boolean | FantasyUserCountOutputTypeCountPlayerFavoritesArgs
 }
 
 /**
@@ -630,6 +1072,27 @@ export type FantasyUserCountOutputTypeCountAuditLogsArgs<ExtArgs extends runtime
   where?: Prisma.FantasyAuditLogWhereInput
 }
 
+/**
+ * FantasyUserCountOutputType without action
+ */
+export type FantasyUserCountOutputTypeCountLeagueMembershipsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FantasyLeagueMemberWhereInput
+}
+
+/**
+ * FantasyUserCountOutputType without action
+ */
+export type FantasyUserCountOutputTypeCountCommissionedLeaguesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FantasyLeagueWhereInput
+}
+
+/**
+ * FantasyUserCountOutputType without action
+ */
+export type FantasyUserCountOutputTypeCountPlayerFavoritesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FantasyPlayerFavoriteWhereInput
+}
+
 
 export type FantasyUserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -641,6 +1104,10 @@ export type FantasyUserSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   passwordResets?: boolean | Prisma.FantasyUser$passwordResetsArgs<ExtArgs>
   featureAssignments?: boolean | Prisma.FantasyUser$featureAssignmentsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.FantasyUser$auditLogsArgs<ExtArgs>
+  leagueMemberships?: boolean | Prisma.FantasyUser$leagueMembershipsArgs<ExtArgs>
+  commissionedLeagues?: boolean | Prisma.FantasyUser$commissionedLeaguesArgs<ExtArgs>
+  playerFavorites?: boolean | Prisma.FantasyUser$playerFavoritesArgs<ExtArgs>
+  onboarding?: boolean | Prisma.FantasyUser$onboardingArgs<ExtArgs>
   _count?: boolean | Prisma.FantasyUserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["fantasyUser"]>
 
@@ -676,6 +1143,10 @@ export type FantasyUserInclude<ExtArgs extends runtime.Types.Extensions.Internal
   passwordResets?: boolean | Prisma.FantasyUser$passwordResetsArgs<ExtArgs>
   featureAssignments?: boolean | Prisma.FantasyUser$featureAssignmentsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.FantasyUser$auditLogsArgs<ExtArgs>
+  leagueMemberships?: boolean | Prisma.FantasyUser$leagueMembershipsArgs<ExtArgs>
+  commissionedLeagues?: boolean | Prisma.FantasyUser$commissionedLeaguesArgs<ExtArgs>
+  playerFavorites?: boolean | Prisma.FantasyUser$playerFavoritesArgs<ExtArgs>
+  onboarding?: boolean | Prisma.FantasyUser$onboardingArgs<ExtArgs>
   _count?: boolean | Prisma.FantasyUserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type FantasyUserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -687,6 +1158,10 @@ export type $FantasyUserPayload<ExtArgs extends runtime.Types.Extensions.Interna
     passwordResets: Prisma.$FantasyPasswordResetPayload<ExtArgs>[]
     featureAssignments: Prisma.$FantasyFeatureAssignmentPayload<ExtArgs>[]
     auditLogs: Prisma.$FantasyAuditLogPayload<ExtArgs>[]
+    leagueMemberships: Prisma.$FantasyLeagueMemberPayload<ExtArgs>[]
+    commissionedLeagues: Prisma.$FantasyLeaguePayload<ExtArgs>[]
+    playerFavorites: Prisma.$FantasyPlayerFavoritePayload<ExtArgs>[]
+    onboarding: Prisma.$FantasyOnboardingPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1092,6 +1567,10 @@ export interface Prisma__FantasyUserClient<T, Null = never, ExtArgs extends runt
   passwordResets<T extends Prisma.FantasyUser$passwordResetsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyUser$passwordResetsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FantasyPasswordResetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   featureAssignments<T extends Prisma.FantasyUser$featureAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyUser$featureAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FantasyFeatureAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditLogs<T extends Prisma.FantasyUser$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyUser$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FantasyAuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  leagueMemberships<T extends Prisma.FantasyUser$leagueMembershipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyUser$leagueMembershipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FantasyLeagueMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  commissionedLeagues<T extends Prisma.FantasyUser$commissionedLeaguesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyUser$commissionedLeaguesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FantasyLeaguePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  playerFavorites<T extends Prisma.FantasyUser$playerFavoritesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyUser$playerFavoritesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FantasyPlayerFavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  onboarding<T extends Prisma.FantasyUser$onboardingArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyUser$onboardingArgs<ExtArgs>>): Prisma.Prisma__FantasyOnboardingClient<runtime.Types.Result.GetResult<Prisma.$FantasyOnboardingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1589,6 +2068,97 @@ export type FantasyUser$auditLogsArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.FantasyAuditLogScalarFieldEnum | Prisma.FantasyAuditLogScalarFieldEnum[]
+}
+
+/**
+ * FantasyUser.leagueMemberships
+ */
+export type FantasyUser$leagueMembershipsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FantasyLeagueMember
+   */
+  select?: Prisma.FantasyLeagueMemberSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FantasyLeagueMember
+   */
+  omit?: Prisma.FantasyLeagueMemberOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FantasyLeagueMemberInclude<ExtArgs> | null
+  where?: Prisma.FantasyLeagueMemberWhereInput
+  orderBy?: Prisma.FantasyLeagueMemberOrderByWithRelationInput | Prisma.FantasyLeagueMemberOrderByWithRelationInput[]
+  cursor?: Prisma.FantasyLeagueMemberWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FantasyLeagueMemberScalarFieldEnum | Prisma.FantasyLeagueMemberScalarFieldEnum[]
+}
+
+/**
+ * FantasyUser.commissionedLeagues
+ */
+export type FantasyUser$commissionedLeaguesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FantasyLeague
+   */
+  select?: Prisma.FantasyLeagueSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FantasyLeague
+   */
+  omit?: Prisma.FantasyLeagueOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FantasyLeagueInclude<ExtArgs> | null
+  where?: Prisma.FantasyLeagueWhereInput
+  orderBy?: Prisma.FantasyLeagueOrderByWithRelationInput | Prisma.FantasyLeagueOrderByWithRelationInput[]
+  cursor?: Prisma.FantasyLeagueWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FantasyLeagueScalarFieldEnum | Prisma.FantasyLeagueScalarFieldEnum[]
+}
+
+/**
+ * FantasyUser.playerFavorites
+ */
+export type FantasyUser$playerFavoritesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FantasyPlayerFavorite
+   */
+  select?: Prisma.FantasyPlayerFavoriteSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FantasyPlayerFavorite
+   */
+  omit?: Prisma.FantasyPlayerFavoriteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FantasyPlayerFavoriteInclude<ExtArgs> | null
+  where?: Prisma.FantasyPlayerFavoriteWhereInput
+  orderBy?: Prisma.FantasyPlayerFavoriteOrderByWithRelationInput | Prisma.FantasyPlayerFavoriteOrderByWithRelationInput[]
+  cursor?: Prisma.FantasyPlayerFavoriteWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FantasyPlayerFavoriteScalarFieldEnum | Prisma.FantasyPlayerFavoriteScalarFieldEnum[]
+}
+
+/**
+ * FantasyUser.onboarding
+ */
+export type FantasyUser$onboardingArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FantasyOnboarding
+   */
+  select?: Prisma.FantasyOnboardingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FantasyOnboarding
+   */
+  omit?: Prisma.FantasyOnboardingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FantasyOnboardingInclude<ExtArgs> | null
+  where?: Prisma.FantasyOnboardingWhereInput
 }
 
 /**
