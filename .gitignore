@@ -17,7 +17,12 @@
 
 # next.js
 /.next/
+**/.next/
 /out/
+
+# turborepo
+/.turbo/
+**/.turbo/
 
 # production
 /build

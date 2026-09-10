@@ -1,0 +1,17 @@
+{
+  "buildCommand": "cd ../.. && npx turbo run build --filter=@lufa/api...",
+  "crons": [
+    {
+      "path": "/api/cron/import-players",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/import-players",
+      "schedule": "0 * * * 0"
+    },
+    {
+      "path": "/api/cron/weekly-digest",
+      "schedule": "0 8 * * 1"
+    }
+  ]
+}

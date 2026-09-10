@@ -1,0 +1,9 @@
+{
+  "name": "@lufa/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./requests": "./src/Requests/index.ts", "./responses": "./src/Responses/index.ts", "./types": "./src/types.ts", "./legacy-types": "./src/legacyTypes.ts", "./*": "./src/*" },
+  "scripts": { "build": "tsc --noEmit", "lint": "eslint src", "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
+  "devDependencies": { "typescript": "5.9.2", "vitest": "4.1.10" }
+}

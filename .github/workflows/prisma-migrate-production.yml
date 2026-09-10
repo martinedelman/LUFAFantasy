@@ -5,9 +5,9 @@ on:
     branches:
       - main
     paths:
-      - "prisma/migrations/**"
-      - "prisma/schema.prisma"
-      - "prisma.config.ts"
+      - "packages/database/prisma/migrations/**"
+      - "packages/database/prisma/schema.prisma"
+      - "packages/database/package.json"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/prisma-migrate-production.yml"
@@ -72,4 +72,4 @@ jobs:
         run: npm run db:postgres:migrate
 
       - name: Verify migration status
-        run: npx prisma migrate status
+        run: npm run prisma:status

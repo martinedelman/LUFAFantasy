@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/app/DTOs": ["../contracts/src/index.ts"],
+      "@/data/sponsors.json": ["src/sponsors.json"],
+      "@/entities/*": ["../sports/src/entities/*"],
+      "@/lib/databaseProvider": ["../database/src/databaseProvider.ts"],
+      "@/repositories": ["../database/src/repositories/index.ts"],
+      "@/repositories/*": ["../database/src/repositories/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

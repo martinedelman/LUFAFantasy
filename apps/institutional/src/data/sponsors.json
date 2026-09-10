@@ -1,0 +1,27 @@
+[
+  {
+    "name": "3D10",
+    "image": "/sponsors/3D10.png",
+    "description": "Sponsor oficial 3D10"
+  },
+  {
+    "name": "CMC",
+    "image": "/sponsors/CMC.png",
+    "description": "Sponsor oficial CMC"
+  },
+  {
+    "name": "Wilson",
+    "image": "/sponsors/Wilson.png",
+    "description": "Sponsor oficial Wilson"
+  },
+  {
+    "name": "Sense",
+    "image": "/sponsors/Sense.png",
+    "description": "20% de descuento en todos los servicios de Sense Fitness"
+  },
+  {
+    "name": "Perto",
+    "image": "/sponsors/Perto.png",
+    "description": "Almacén natural"
+  }
+]

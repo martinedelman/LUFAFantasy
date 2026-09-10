@@ -1,0 +1,70 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalPassThroughEnv": [
+    "DIRECT_URL",
+    "JWT_SECRET",
+    "FANTASY_JWT_SECRET",
+    "FANTASY_RESET_SECRET",
+    "OTP_SECRET",
+    "INSTITUTIONAL_APP_URL",
+    "APP_URL",
+    "NEXT_PUBLIC_APP_URL",
+    "CRON_SECRET",
+    "MAIL_FROM",
+    "MAIL_PROVIDER",
+    "SMTP_*",
+    "GOOGLE_*",
+    "BLOB_READ_WRITE_TOKEN",
+    "FLAGS",
+    "FLAGS_SECRET"
+  ],
+  "tasks": {
+    "generate": { "cache": false },
+    "build": {
+      "dependsOn": ["^build", "generate"],
+      "env": ["API_URL", "APP_ENV", "DATABASE_PROVIDER", "DATABASE_URL", "MONGODB_URI", "MONGODB_DATABASE"]
+    },
+    "@lufa/api#build": {
+      "dependsOn": ["^build", "generate"],
+      "outputs": [".next/**"],
+      "env": ["APP_ENV", "DATABASE_PROVIDER", "DATABASE_URL", "MONGODB_URI", "MONGODB_DATABASE"]
+    },
+    "@lufa/institutional#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"],
+      "env": ["APP_ENV", "APP_URL", "API_URL"]
+    },
+    "@lufa/fantasy#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"],
+      "env": ["APP_ENV", "APP_URL", "API_URL"]
+    },
+    "lint": { "dependsOn": ["^lint"] },
+    "typecheck": { "dependsOn": ["^typecheck"] },
+    "test": { "dependsOn": ["^build"] },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "APP_ENV",
+        "APP_URL",
+        "API_URL",
+        "DATABASE_PROVIDER",
+        "DATABASE_URL",
+        "DIRECT_URL",
+        "MONGODB_URI",
+        "MONGODB_DATABASE",
+        "JWT_SECRET",
+        "FANTASY_JWT_SECRET",
+        "FANTASY_RESET_SECRET",
+        "OTP_SECRET",
+        "INSTITUTIONAL_APP_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "CRON_SECRET",
+        "SMTP_*",
+        "GOOGLE_*",
+        "BLOB_READ_WRITE_TOKEN"
+      ]
+    }
+  }
+}

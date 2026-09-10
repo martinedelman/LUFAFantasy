@@ -5,7 +5,7 @@ import path from "node:path";
 import readline from "node:readline";
 import mongoose from "mongoose";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { Prisma, PrismaClient } from "../src/generated/prisma/client";
+import { Prisma, PrismaClient } from "../packages/database/src/generated/prisma/client";
 
 type Document = Record<string, any>;
 

@@ -1,0 +1,10 @@
+{
+  "name": "@lufa/identity-institutional",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./ports": "./src/ports/index.ts", "./ports/*": "./src/ports/*.ts", "./services/*": "./src/services/*.ts", "./sessionToken": "./src/sessionToken.ts" },
+  "scripts": { "build": "tsc --noEmit", "lint": "eslint src", "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
+  "dependencies": { "@lufa/sports": "*", "bcryptjs": "3.0.2", "jose": "6.1.0" },
+  "devDependencies": { "typescript": "5.9.2", "vitest": "4.1.10" }
+}

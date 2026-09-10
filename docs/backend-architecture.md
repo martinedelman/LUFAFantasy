@@ -1,4 +1,6 @@
-# Arquitectura del Backend
+# Arquitectura histórica del backend
+
+> Este documento describe el diseño previo a la separación. Para la arquitectura vigente del monorepo, consultar [monorepo-architecture.md](monorepo-architecture.md).
 
 Este documento describe como esta organizado el backend de LUFA Fantasy y como extenderlo sin romper las reglas de negocio existentes. Esta pensado para futuros agentes y desarrolladores que necesiten agregar features con codigo limpio.
 

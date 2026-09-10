@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/entities/*": ["../sports/src/entities/*"],
+      "@/repositories": ["../database/src/repositories/index.ts"],
+      "@/repositories/*": ["../database/src/repositories/*"],
+      "@/lib/auth": ["../../apps/api/src/lib/auth.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

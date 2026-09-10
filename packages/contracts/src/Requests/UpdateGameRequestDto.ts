@@ -1,0 +1,15 @@
+import type { GamePhase, GameStatus } from "../types";
+import type { GameOfficialAssignmentRequestDto } from "./CreateGameRequestDto";
+
+export interface UpdateGameRequestDto {
+  id: string;
+  homeTeam?: string | null;
+  awayTeam?: string | null;
+  scheduledDate?: string;
+  status?: GameStatus;
+  phase?: GamePhase;
+  playoffSlot?: string | null;
+  week?: number;
+  round?: string;
+  officials?: GameOfficialAssignmentRequestDto[];
+}

@@ -1,0 +1,88 @@
+name: Monorepo CI
+
+on:
+  pull_request:
+    branches: [testing, main]
+  push:
+    branches: [testing]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monorepo-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run prisma:generate
+      - run: npm run prisma:validate
+        env:
+          DATABASE_URL: postgresql://prisma:prisma@localhost:5432/lufa_validation?schema=public
+      - run: npm run check:boundaries
+      - run: npm run check:api-parity
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+        env:
+          APP_ENV: testing
+          DATABASE_PROVIDER: postgres
+          DATABASE_URL: postgresql://prisma:prisma@localhost:5432/lufa_validation?schema=public
+          JWT_SECRET: ci-only-secret
+          INSTITUTIONAL_APP_URL: http://localhost:3000
+          API_URL: http://localhost:3001
+
+  postgres-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: lufa
+          POSTGRES_PASSWORD: lufa
+          POSTGRES_DB: lufa_fantasy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lufa -d lufa_fantasy"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: testing
+      DATABASE_PROVIDER: postgres
+      DATABASE_URL: postgresql://lufa:lufa@localhost:5432/lufa_fantasy?schema=integration
+      DIRECT_URL: postgresql://lufa:lufa@localhost:5432/lufa_fantasy?schema=integration
+      JWT_SECRET: ci-only-secret
+      INSTITUTIONAL_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:postgres:test:prepare
+      - run: npm run test:postgres

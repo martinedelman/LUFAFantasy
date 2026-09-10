@@ -1,0 +1,48 @@
+{
+  "name": "@lufa/database",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./appEnvironment": "./src/appEnvironment.ts",
+    "./databaseProvider": "./src/databaseProvider.ts",
+    "./mongodb": "./src/mongodb.ts",
+    "./prisma": "./src/prisma.ts",
+    "./models": "./src/models/index.ts",
+    "./models/*": "./src/models/*.ts",
+    "./generated/*": "./src/generated/*.ts",
+    "./repositories": "./src/repositories/index.ts",
+    "./repositories/contracts": "./src/repositories/contracts/index.ts",
+    "./repositories/contracts/*": "./src/repositories/contracts/*.ts",
+    "./repositories/auxiliary": "./src/repositories/auxiliary/index.ts",
+    "./repositories/auxiliary/*": "./src/repositories/auxiliary/*.ts",
+    "./repositories/reporting": "./src/repositories/reporting/index.ts",
+    "./repositories/reporting/*": "./src/repositories/reporting/*.ts",
+    "./repositories/fantasy": "./src/repositories/fantasy/index.ts"
+  },
+  "scripts": {
+    "generate": "prisma generate --config=../../prisma.config.ts",
+    "build": "tsc --noEmit",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests --exclude src/repositories/prisma/provider.integration.test.ts",
+    "prisma:generate": "prisma generate --config=../../prisma.config.ts",
+    "prisma:validate": "prisma validate --config=../../prisma.config.ts",
+    "prisma:status": "prisma migrate status --config=../../prisma.config.ts",
+    "db:postgres:migrate": "prisma migrate deploy --config=../../prisma.config.ts",
+    "db:postgres:test:prepare": "prisma migrate deploy --config=../../prisma.config.ts",
+    "test:postgres": "vitest run src/repositories/prisma/provider.integration.test.ts"
+  },
+  "dependencies": {
+    "@lufa/contracts": "*",
+    "@lufa/fantasy-core": "*",
+    "@lufa/identity-institutional": "*",
+    "@lufa/sports": "*",
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "7.9.1",
+    "mongoose": "8.16.0",
+    "pg": "8.22.0"
+  },
+  "devDependencies": { "@types/pg": "8.20.0", "prisma": "7.9.1", "typescript": "5.9.2", "vitest": "4.1.10" }
+}

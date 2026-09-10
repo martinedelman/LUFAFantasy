@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import connectToDatabase from "../src/lib/mongodb";
-import { PlayerModel } from "../src/models/Player";
+import connectToDatabase from "../packages/database/src/mongodb";
+import { PlayerModel } from "../packages/database/src/models/Player";
 
 const OLD_SENTINEL = new Date("2000-01-01T00:00:00.000Z");
 const NEW_SENTINEL = new Date("1900-01-01T00:00:00.000Z");

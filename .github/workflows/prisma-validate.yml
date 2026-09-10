@@ -6,8 +6,8 @@ on:
       - testing
       - main
     paths:
-      - "prisma/**"
-      - "prisma.config.ts"
+      - "packages/database/prisma/**"
+      - "packages/database/package.json"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/prisma-*.yml"

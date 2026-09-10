@@ -1,0 +1,27 @@
+import type { IRepository } from "@lufa/sports/ports";
+import { User } from "@lufa/sports/entities/User";
+
+/**
+ * Interface para el repositorio de Users
+ */
+export interface IUserRepository extends IRepository<User> {
+  /**
+   * Busca un usuario por email
+   */
+  findByEmail(email: string): Promise<User | null>;
+
+  /**
+   * Busca todos los administradores activos
+   */
+  findActiveAdmins(): Promise<User[]>;
+
+  /**
+   * Actualiza el estado activo de un usuario
+   */
+  updateActiveStatus(id: string, isActive: boolean): Promise<User>;
+
+  /**
+   * Actualiza el hash de contraseña de un usuario
+   */
+  updatePasswordHash(id: string, passwordHash: string): Promise<User>;
+}
