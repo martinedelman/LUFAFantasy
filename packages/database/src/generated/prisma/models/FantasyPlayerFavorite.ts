@@ -28,6 +28,7 @@ export type FantasyPlayerFavoriteMinAggregateOutputType = {
   id: string | null
   userId: string | null
   playerId: string | null
+  defenseTeamId: string | null
   createdAt: Date | null
 }
 
@@ -35,6 +36,7 @@ export type FantasyPlayerFavoriteMaxAggregateOutputType = {
   id: string | null
   userId: string | null
   playerId: string | null
+  defenseTeamId: string | null
   createdAt: Date | null
 }
 
@@ -42,6 +44,7 @@ export type FantasyPlayerFavoriteCountAggregateOutputType = {
   id: number
   userId: number
   playerId: number
+  defenseTeamId: number
   createdAt: number
   _all: number
 }
@@ -51,6 +54,7 @@ export type FantasyPlayerFavoriteMinAggregateInputType = {
   id?: true
   userId?: true
   playerId?: true
+  defenseTeamId?: true
   createdAt?: true
 }
 
@@ -58,6 +62,7 @@ export type FantasyPlayerFavoriteMaxAggregateInputType = {
   id?: true
   userId?: true
   playerId?: true
+  defenseTeamId?: true
   createdAt?: true
 }
 
@@ -65,6 +70,7 @@ export type FantasyPlayerFavoriteCountAggregateInputType = {
   id?: true
   userId?: true
   playerId?: true
+  defenseTeamId?: true
   createdAt?: true
   _all?: true
 }
@@ -144,7 +150,8 @@ export type FantasyPlayerFavoriteGroupByArgs<ExtArgs extends runtime.Types.Exten
 export type FantasyPlayerFavoriteGroupByOutputType = {
   id: string
   userId: string
-  playerId: string
+  playerId: string | null
+  defenseTeamId: string | null
   createdAt: Date
   _count: FantasyPlayerFavoriteCountAggregateOutputType | null
   _min: FantasyPlayerFavoriteMinAggregateOutputType | null
@@ -172,38 +179,46 @@ export type FantasyPlayerFavoriteWhereInput = {
   NOT?: Prisma.FantasyPlayerFavoriteWhereInput | Prisma.FantasyPlayerFavoriteWhereInput[]
   id?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
   userId?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
-  playerId?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
+  playerId?: Prisma.StringNullableFilter<"FantasyPlayerFavorite"> | string | null
+  defenseTeamId?: Prisma.StringNullableFilter<"FantasyPlayerFavorite"> | string | null
   createdAt?: Prisma.DateTimeFilter<"FantasyPlayerFavorite"> | Date | string
   user?: Prisma.XOR<Prisma.FantasyUserScalarRelationFilter, Prisma.FantasyUserWhereInput>
-  player?: Prisma.XOR<Prisma.PlayerScalarRelationFilter, Prisma.PlayerWhereInput>
+  player?: Prisma.XOR<Prisma.PlayerNullableScalarRelationFilter, Prisma.PlayerWhereInput> | null
+  defenseTeam?: Prisma.XOR<Prisma.TeamNullableScalarRelationFilter, Prisma.TeamWhereInput> | null
 }
 
 export type FantasyPlayerFavoriteOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  playerId?: Prisma.SortOrder
+  playerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   user?: Prisma.FantasyUserOrderByWithRelationInput
   player?: Prisma.PlayerOrderByWithRelationInput
+  defenseTeam?: Prisma.TeamOrderByWithRelationInput
 }
 
 export type FantasyPlayerFavoriteWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   userId_playerId?: Prisma.FantasyPlayerFavoriteUserIdPlayerIdCompoundUniqueInput
+  userId_defenseTeamId?: Prisma.FantasyPlayerFavoriteUserIdDefenseTeamIdCompoundUniqueInput
   AND?: Prisma.FantasyPlayerFavoriteWhereInput | Prisma.FantasyPlayerFavoriteWhereInput[]
   OR?: Prisma.FantasyPlayerFavoriteWhereInput[]
   NOT?: Prisma.FantasyPlayerFavoriteWhereInput | Prisma.FantasyPlayerFavoriteWhereInput[]
   userId?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
-  playerId?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
+  playerId?: Prisma.StringNullableFilter<"FantasyPlayerFavorite"> | string | null
+  defenseTeamId?: Prisma.StringNullableFilter<"FantasyPlayerFavorite"> | string | null
   createdAt?: Prisma.DateTimeFilter<"FantasyPlayerFavorite"> | Date | string
   user?: Prisma.XOR<Prisma.FantasyUserScalarRelationFilter, Prisma.FantasyUserWhereInput>
-  player?: Prisma.XOR<Prisma.PlayerScalarRelationFilter, Prisma.PlayerWhereInput>
-}, "id" | "userId_playerId">
+  player?: Prisma.XOR<Prisma.PlayerNullableScalarRelationFilter, Prisma.PlayerWhereInput> | null
+  defenseTeam?: Prisma.XOR<Prisma.TeamNullableScalarRelationFilter, Prisma.TeamWhereInput> | null
+}, "id" | "userId_playerId" | "userId_defenseTeamId">
 
 export type FantasyPlayerFavoriteOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  playerId?: Prisma.SortOrder
+  playerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.FantasyPlayerFavoriteCountOrderByAggregateInput
   _max?: Prisma.FantasyPlayerFavoriteMaxOrderByAggregateInput
@@ -216,7 +231,8 @@ export type FantasyPlayerFavoriteScalarWhereWithAggregatesInput = {
   NOT?: Prisma.FantasyPlayerFavoriteScalarWhereWithAggregatesInput | Prisma.FantasyPlayerFavoriteScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"FantasyPlayerFavorite"> | string
   userId?: Prisma.StringWithAggregatesFilter<"FantasyPlayerFavorite"> | string
-  playerId?: Prisma.StringWithAggregatesFilter<"FantasyPlayerFavorite"> | string
+  playerId?: Prisma.StringNullableWithAggregatesFilter<"FantasyPlayerFavorite"> | string | null
+  defenseTeamId?: Prisma.StringNullableWithAggregatesFilter<"FantasyPlayerFavorite"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"FantasyPlayerFavorite"> | Date | string
 }
 
@@ -224,13 +240,15 @@ export type FantasyPlayerFavoriteCreateInput = {
   id?: string
   createdAt?: Date | string
   user: Prisma.FantasyUserCreateNestedOneWithoutPlayerFavoritesInput
-  player: Prisma.PlayerCreateNestedOneWithoutFantasyFavoritesInput
+  player?: Prisma.PlayerCreateNestedOneWithoutFantasyFavoritesInput
+  defenseTeam?: Prisma.TeamCreateNestedOneWithoutFantasyDefenseFavoritesInput
 }
 
 export type FantasyPlayerFavoriteUncheckedCreateInput = {
   id?: string
   userId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   createdAt?: Date | string
 }
 
@@ -238,20 +256,23 @@ export type FantasyPlayerFavoriteUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.FantasyUserUpdateOneRequiredWithoutPlayerFavoritesNestedInput
-  player?: Prisma.PlayerUpdateOneRequiredWithoutFantasyFavoritesNestedInput
+  player?: Prisma.PlayerUpdateOneWithoutFantasyFavoritesNestedInput
+  defenseTeam?: Prisma.TeamUpdateOneWithoutFantasyDefenseFavoritesNestedInput
 }
 
 export type FantasyPlayerFavoriteUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type FantasyPlayerFavoriteCreateManyInput = {
   id?: string
   userId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   createdAt?: Date | string
 }
 
@@ -263,7 +284,8 @@ export type FantasyPlayerFavoriteUpdateManyMutationInput = {
 export type FantasyPlayerFavoriteUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -282,10 +304,16 @@ export type FantasyPlayerFavoriteUserIdPlayerIdCompoundUniqueInput = {
   playerId: string
 }
 
+export type FantasyPlayerFavoriteUserIdDefenseTeamIdCompoundUniqueInput = {
+  userId: string
+  defenseTeamId: string
+}
+
 export type FantasyPlayerFavoriteCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   playerId?: Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -293,6 +321,7 @@ export type FantasyPlayerFavoriteMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   playerId?: Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -300,7 +329,50 @@ export type FantasyPlayerFavoriteMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   playerId?: Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type FantasyPlayerFavoriteCreateNestedManyWithoutDefenseTeamInput = {
+  create?: Prisma.XOR<Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput, Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput> | Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput[] | Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput[]
+  connectOrCreate?: Prisma.FantasyPlayerFavoriteCreateOrConnectWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteCreateOrConnectWithoutDefenseTeamInput[]
+  createMany?: Prisma.FantasyPlayerFavoriteCreateManyDefenseTeamInputEnvelope
+  connect?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+}
+
+export type FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutDefenseTeamInput = {
+  create?: Prisma.XOR<Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput, Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput> | Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput[] | Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput[]
+  connectOrCreate?: Prisma.FantasyPlayerFavoriteCreateOrConnectWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteCreateOrConnectWithoutDefenseTeamInput[]
+  createMany?: Prisma.FantasyPlayerFavoriteCreateManyDefenseTeamInputEnvelope
+  connect?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+}
+
+export type FantasyPlayerFavoriteUpdateManyWithoutDefenseTeamNestedInput = {
+  create?: Prisma.XOR<Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput, Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput> | Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput[] | Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput[]
+  connectOrCreate?: Prisma.FantasyPlayerFavoriteCreateOrConnectWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteCreateOrConnectWithoutDefenseTeamInput[]
+  upsert?: Prisma.FantasyPlayerFavoriteUpsertWithWhereUniqueWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteUpsertWithWhereUniqueWithoutDefenseTeamInput[]
+  createMany?: Prisma.FantasyPlayerFavoriteCreateManyDefenseTeamInputEnvelope
+  set?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+  disconnect?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+  delete?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+  connect?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+  update?: Prisma.FantasyPlayerFavoriteUpdateWithWhereUniqueWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteUpdateWithWhereUniqueWithoutDefenseTeamInput[]
+  updateMany?: Prisma.FantasyPlayerFavoriteUpdateManyWithWhereWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteUpdateManyWithWhereWithoutDefenseTeamInput[]
+  deleteMany?: Prisma.FantasyPlayerFavoriteScalarWhereInput | Prisma.FantasyPlayerFavoriteScalarWhereInput[]
+}
+
+export type FantasyPlayerFavoriteUncheckedUpdateManyWithoutDefenseTeamNestedInput = {
+  create?: Prisma.XOR<Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput, Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput> | Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput[] | Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput[]
+  connectOrCreate?: Prisma.FantasyPlayerFavoriteCreateOrConnectWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteCreateOrConnectWithoutDefenseTeamInput[]
+  upsert?: Prisma.FantasyPlayerFavoriteUpsertWithWhereUniqueWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteUpsertWithWhereUniqueWithoutDefenseTeamInput[]
+  createMany?: Prisma.FantasyPlayerFavoriteCreateManyDefenseTeamInputEnvelope
+  set?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+  disconnect?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+  delete?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+  connect?: Prisma.FantasyPlayerFavoriteWhereUniqueInput | Prisma.FantasyPlayerFavoriteWhereUniqueInput[]
+  update?: Prisma.FantasyPlayerFavoriteUpdateWithWhereUniqueWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteUpdateWithWhereUniqueWithoutDefenseTeamInput[]
+  updateMany?: Prisma.FantasyPlayerFavoriteUpdateManyWithWhereWithoutDefenseTeamInput | Prisma.FantasyPlayerFavoriteUpdateManyWithWhereWithoutDefenseTeamInput[]
+  deleteMany?: Prisma.FantasyPlayerFavoriteScalarWhereInput | Prisma.FantasyPlayerFavoriteScalarWhereInput[]
 }
 
 export type FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput = {
@@ -387,15 +459,68 @@ export type FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.FantasyPlayerFavoriteScalarWhereInput | Prisma.FantasyPlayerFavoriteScalarWhereInput[]
 }
 
+export type FantasyPlayerFavoriteCreateWithoutDefenseTeamInput = {
+  id?: string
+  createdAt?: Date | string
+  user: Prisma.FantasyUserCreateNestedOneWithoutPlayerFavoritesInput
+  player?: Prisma.PlayerCreateNestedOneWithoutFantasyFavoritesInput
+}
+
+export type FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput = {
+  id?: string
+  userId: string
+  playerId?: string | null
+  createdAt?: Date | string
+}
+
+export type FantasyPlayerFavoriteCreateOrConnectWithoutDefenseTeamInput = {
+  where: Prisma.FantasyPlayerFavoriteWhereUniqueInput
+  create: Prisma.XOR<Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput, Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput>
+}
+
+export type FantasyPlayerFavoriteCreateManyDefenseTeamInputEnvelope = {
+  data: Prisma.FantasyPlayerFavoriteCreateManyDefenseTeamInput | Prisma.FantasyPlayerFavoriteCreateManyDefenseTeamInput[]
+  skipDuplicates?: boolean
+}
+
+export type FantasyPlayerFavoriteUpsertWithWhereUniqueWithoutDefenseTeamInput = {
+  where: Prisma.FantasyPlayerFavoriteWhereUniqueInput
+  update: Prisma.XOR<Prisma.FantasyPlayerFavoriteUpdateWithoutDefenseTeamInput, Prisma.FantasyPlayerFavoriteUncheckedUpdateWithoutDefenseTeamInput>
+  create: Prisma.XOR<Prisma.FantasyPlayerFavoriteCreateWithoutDefenseTeamInput, Prisma.FantasyPlayerFavoriteUncheckedCreateWithoutDefenseTeamInput>
+}
+
+export type FantasyPlayerFavoriteUpdateWithWhereUniqueWithoutDefenseTeamInput = {
+  where: Prisma.FantasyPlayerFavoriteWhereUniqueInput
+  data: Prisma.XOR<Prisma.FantasyPlayerFavoriteUpdateWithoutDefenseTeamInput, Prisma.FantasyPlayerFavoriteUncheckedUpdateWithoutDefenseTeamInput>
+}
+
+export type FantasyPlayerFavoriteUpdateManyWithWhereWithoutDefenseTeamInput = {
+  where: Prisma.FantasyPlayerFavoriteScalarWhereInput
+  data: Prisma.XOR<Prisma.FantasyPlayerFavoriteUpdateManyMutationInput, Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutDefenseTeamInput>
+}
+
+export type FantasyPlayerFavoriteScalarWhereInput = {
+  AND?: Prisma.FantasyPlayerFavoriteScalarWhereInput | Prisma.FantasyPlayerFavoriteScalarWhereInput[]
+  OR?: Prisma.FantasyPlayerFavoriteScalarWhereInput[]
+  NOT?: Prisma.FantasyPlayerFavoriteScalarWhereInput | Prisma.FantasyPlayerFavoriteScalarWhereInput[]
+  id?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
+  userId?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
+  playerId?: Prisma.StringNullableFilter<"FantasyPlayerFavorite"> | string | null
+  defenseTeamId?: Prisma.StringNullableFilter<"FantasyPlayerFavorite"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"FantasyPlayerFavorite"> | Date | string
+}
+
 export type FantasyPlayerFavoriteCreateWithoutPlayerInput = {
   id?: string
   createdAt?: Date | string
   user: Prisma.FantasyUserCreateNestedOneWithoutPlayerFavoritesInput
+  defenseTeam?: Prisma.TeamCreateNestedOneWithoutFantasyDefenseFavoritesInput
 }
 
 export type FantasyPlayerFavoriteUncheckedCreateWithoutPlayerInput = {
   id?: string
   userId: string
+  defenseTeamId?: string | null
   createdAt?: Date | string
 }
 
@@ -425,25 +550,17 @@ export type FantasyPlayerFavoriteUpdateManyWithWhereWithoutPlayerInput = {
   data: Prisma.XOR<Prisma.FantasyPlayerFavoriteUpdateManyMutationInput, Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerInput>
 }
 
-export type FantasyPlayerFavoriteScalarWhereInput = {
-  AND?: Prisma.FantasyPlayerFavoriteScalarWhereInput | Prisma.FantasyPlayerFavoriteScalarWhereInput[]
-  OR?: Prisma.FantasyPlayerFavoriteScalarWhereInput[]
-  NOT?: Prisma.FantasyPlayerFavoriteScalarWhereInput | Prisma.FantasyPlayerFavoriteScalarWhereInput[]
-  id?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
-  userId?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
-  playerId?: Prisma.StringFilter<"FantasyPlayerFavorite"> | string
-  createdAt?: Prisma.DateTimeFilter<"FantasyPlayerFavorite"> | Date | string
-}
-
 export type FantasyPlayerFavoriteCreateWithoutUserInput = {
   id?: string
   createdAt?: Date | string
-  player: Prisma.PlayerCreateNestedOneWithoutFantasyFavoritesInput
+  player?: Prisma.PlayerCreateNestedOneWithoutFantasyFavoritesInput
+  defenseTeam?: Prisma.TeamCreateNestedOneWithoutFantasyDefenseFavoritesInput
 }
 
 export type FantasyPlayerFavoriteUncheckedCreateWithoutUserInput = {
   id?: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   createdAt?: Date | string
 }
 
@@ -473,9 +590,38 @@ export type FantasyPlayerFavoriteUpdateManyWithWhereWithoutUserInput = {
   data: Prisma.XOR<Prisma.FantasyPlayerFavoriteUpdateManyMutationInput, Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserInput>
 }
 
+export type FantasyPlayerFavoriteCreateManyDefenseTeamInput = {
+  id?: string
+  userId: string
+  playerId?: string | null
+  createdAt?: Date | string
+}
+
+export type FantasyPlayerFavoriteUpdateWithoutDefenseTeamInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.FantasyUserUpdateOneRequiredWithoutPlayerFavoritesNestedInput
+  player?: Prisma.PlayerUpdateOneWithoutFantasyFavoritesNestedInput
+}
+
+export type FantasyPlayerFavoriteUncheckedUpdateWithoutDefenseTeamInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FantasyPlayerFavoriteUncheckedUpdateManyWithoutDefenseTeamInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type FantasyPlayerFavoriteCreateManyPlayerInput = {
   id?: string
   userId: string
+  defenseTeamId?: string | null
   createdAt?: Date | string
 }
 
@@ -483,41 +629,48 @@ export type FantasyPlayerFavoriteUpdateWithoutPlayerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.FantasyUserUpdateOneRequiredWithoutPlayerFavoritesNestedInput
+  defenseTeam?: Prisma.TeamUpdateOneWithoutFantasyDefenseFavoritesNestedInput
 }
 
 export type FantasyPlayerFavoriteUncheckedUpdateWithoutPlayerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type FantasyPlayerFavoriteCreateManyUserInput = {
   id?: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   createdAt?: Date | string
 }
 
 export type FantasyPlayerFavoriteUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  player?: Prisma.PlayerUpdateOneRequiredWithoutFantasyFavoritesNestedInput
+  player?: Prisma.PlayerUpdateOneWithoutFantasyFavoritesNestedInput
+  defenseTeam?: Prisma.TeamUpdateOneWithoutFantasyDefenseFavoritesNestedInput
 }
 
 export type FantasyPlayerFavoriteUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type FantasyPlayerFavoriteUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -527,60 +680,72 @@ export type FantasyPlayerFavoriteSelect<ExtArgs extends runtime.Types.Extensions
   id?: boolean
   userId?: boolean
   playerId?: boolean
+  defenseTeamId?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.FantasyUserDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyPlayerFavorite$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyPlayerFavorite$defenseTeamArgs<ExtArgs>
 }, ExtArgs["result"]["fantasyPlayerFavorite"]>
 
 export type FantasyPlayerFavoriteSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
   playerId?: boolean
+  defenseTeamId?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.FantasyUserDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyPlayerFavorite$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyPlayerFavorite$defenseTeamArgs<ExtArgs>
 }, ExtArgs["result"]["fantasyPlayerFavorite"]>
 
 export type FantasyPlayerFavoriteSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
   playerId?: boolean
+  defenseTeamId?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.FantasyUserDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyPlayerFavorite$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyPlayerFavorite$defenseTeamArgs<ExtArgs>
 }, ExtArgs["result"]["fantasyPlayerFavorite"]>
 
 export type FantasyPlayerFavoriteSelectScalar = {
   id?: boolean
   userId?: boolean
   playerId?: boolean
+  defenseTeamId?: boolean
   createdAt?: boolean
 }
 
-export type FantasyPlayerFavoriteOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "playerId" | "createdAt", ExtArgs["result"]["fantasyPlayerFavorite"]>
+export type FantasyPlayerFavoriteOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "playerId" | "defenseTeamId" | "createdAt", ExtArgs["result"]["fantasyPlayerFavorite"]>
 export type FantasyPlayerFavoriteInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.FantasyUserDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyPlayerFavorite$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyPlayerFavorite$defenseTeamArgs<ExtArgs>
 }
 export type FantasyPlayerFavoriteIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.FantasyUserDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyPlayerFavorite$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyPlayerFavorite$defenseTeamArgs<ExtArgs>
 }
 export type FantasyPlayerFavoriteIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.FantasyUserDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyPlayerFavorite$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyPlayerFavorite$defenseTeamArgs<ExtArgs>
 }
 
 export type $FantasyPlayerFavoritePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "FantasyPlayerFavorite"
   objects: {
     user: Prisma.$FantasyUserPayload<ExtArgs>
-    player: Prisma.$PlayerPayload<ExtArgs>
+    player: Prisma.$PlayerPayload<ExtArgs> | null
+    defenseTeam: Prisma.$TeamPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     userId: string
-    playerId: string
+    playerId: string | null
+    defenseTeamId: string | null
     createdAt: Date
   }, ExtArgs["result"]["fantasyPlayerFavorite"]>
   composites: {}
@@ -977,7 +1142,8 @@ readonly fields: FantasyPlayerFavoriteFieldRefs;
 export interface Prisma__FantasyPlayerFavoriteClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.FantasyUserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyUserDefaultArgs<ExtArgs>>): Prisma.Prisma__FantasyUserClient<runtime.Types.Result.GetResult<Prisma.$FantasyUserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  player<T extends Prisma.PlayerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PlayerDefaultArgs<ExtArgs>>): Prisma.Prisma__PlayerClient<runtime.Types.Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  player<T extends Prisma.FantasyPlayerFavorite$playerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyPlayerFavorite$playerArgs<ExtArgs>>): Prisma.Prisma__PlayerClient<runtime.Types.Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  defenseTeam<T extends Prisma.FantasyPlayerFavorite$defenseTeamArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyPlayerFavorite$defenseTeamArgs<ExtArgs>>): Prisma.Prisma__TeamClient<runtime.Types.Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1010,6 +1176,7 @@ export interface FantasyPlayerFavoriteFieldRefs {
   readonly id: Prisma.FieldRef<"FantasyPlayerFavorite", 'String'>
   readonly userId: Prisma.FieldRef<"FantasyPlayerFavorite", 'String'>
   readonly playerId: Prisma.FieldRef<"FantasyPlayerFavorite", 'String'>
+  readonly defenseTeamId: Prisma.FieldRef<"FantasyPlayerFavorite", 'String'>
   readonly createdAt: Prisma.FieldRef<"FantasyPlayerFavorite", 'DateTime'>
 }
     
@@ -1409,6 +1576,44 @@ export type FantasyPlayerFavoriteDeleteManyArgs<ExtArgs extends runtime.Types.Ex
    * Limit how many FantasyPlayerFavorites to delete.
    */
   limit?: number
+}
+
+/**
+ * FantasyPlayerFavorite.player
+ */
+export type FantasyPlayerFavorite$playerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Player
+   */
+  select?: Prisma.PlayerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Player
+   */
+  omit?: Prisma.PlayerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PlayerInclude<ExtArgs> | null
+  where?: Prisma.PlayerWhereInput
+}
+
+/**
+ * FantasyPlayerFavorite.defenseTeam
+ */
+export type FantasyPlayerFavorite$defenseTeamArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Team
+   */
+  select?: Prisma.TeamSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Team
+   */
+  omit?: Prisma.TeamOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TeamInclude<ExtArgs> | null
+  where?: Prisma.TeamWhereInput
 }
 
 /**

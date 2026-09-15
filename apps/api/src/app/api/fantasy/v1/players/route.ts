@@ -93,9 +93,25 @@ export async function GET(request: NextRequest) {
         lastSeasonPoints: Math.round(points * 100) / 100,
         gamesPlayed,
         favorite: player.fantasyFavorites.length > 0,
+        kind: "player" as const,
       };
-    }).sort((left, right) => right.lastSeasonPoints - left.lastSeasonPoints || left.name.localeCompare(right.name, "es"));
-    return NextResponse.json({ success: true, data: { season: latestTournament ? `Temporada ${latestTournament.year}` : "Sin temporada registrada", players: data } });
+    });
+    const defenses = position && position !== "DEF EQUIPO"
+      ? []
+      : await db.team.findMany({
+        where: {
+          ...(teamId ? { id: teamId } : {}),
+          ...(status ? { status } : {}),
+          ...(search ? { name: { contains: search, mode: "insensitive" } } : {}),
+        },
+        select: { id: true, name: true, status: true, fantasyDefenseFavorites: { where: { userId: user.id }, select: { id: true } } },
+        orderBy: { name: "asc" },
+      });
+    const allEntries = position === "DEF EQUIPO"
+      ? defenses.map((team) => ({ id: `team-defense:${team.id}`, name: `${team.name} Defensa`, position: "DEF EQUIPO", secondaryPosition: null, status: team.status, profilePicture: null, teamId: team.id, teamName: team.name, lastSeasonPoints: 0, gamesPlayed: 0, favorite: team.fantasyDefenseFavorites.length > 0, kind: "team_defense" as const }))
+      : [...data, ...defenses.map((team) => ({ id: `team-defense:${team.id}`, name: `${team.name} Defensa`, position: "DEF EQUIPO", secondaryPosition: null, status: team.status, profilePicture: null, teamId: team.id, teamName: team.name, lastSeasonPoints: 0, gamesPlayed: 0, favorite: team.fantasyDefenseFavorites.length > 0, kind: "team_defense" as const }))];
+    const sorted = allEntries.sort((left, right) => right.lastSeasonPoints - left.lastSeasonPoints || left.name.localeCompare(right.name, "es"));
+    return NextResponse.json({ success: true, data: { season: latestTournament ? `Temporada ${latestTournament.year}` : "Sin temporada registrada", players: sorted } });
   } catch (error) {
     return fantasyApiErrorResponse({ request, error, route: "/api/fantasy/v1/players" });
   }

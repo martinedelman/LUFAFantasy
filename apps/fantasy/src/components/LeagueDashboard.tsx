@@ -12,6 +12,7 @@ interface LeagueSummary {
   status: "lobby" | "drafting" | "drafted";
   memberCount: number;
   maxMembers: number;
+  benchSize: number;
   rosterSize: number;
   teamName: string;
 }
@@ -41,7 +42,7 @@ export function LeagueDashboard() {
   const draftsInProgress = leagues.filter((league) => league.status === "drafting").length;
   return <>
     <header className="page-heading"><div><span className="eyebrow">Tu temporada está en juego</span><h1>Resumen</h1><p>Estas son las ligas y los equipos que estás preparando para competir.</p></div><Link className="button button-ghost" href="/app/leagues">Ver todas las ligas</Link></header>
-    <section className="league-list-section dashboard-league-list"><div className="section-inline-heading"><div><span className="eyebrow">Tu vestuario</span><h2>Mis ligas</h2></div><span>{leagues.length} {leagues.length === 1 ? "liga" : "ligas"}</span></div><div className="league-list">{leagues.map((league) => <Link href={`/app/leagues/${league.id}`} className="league-card" key={league.id}><span className={`league-status ${league.status}`}>{statusLabel(league.status)}</span><strong>{league.name}</strong><small>{league.teamName} · {league.memberCount}/{league.maxMembers} equipos · roster de {league.rosterSize}</small><span>Ver liga →</span></Link>)}</div></section>
+    <section className="league-list-section dashboard-league-list"><div className="section-inline-heading"><div><span className="eyebrow">Tu vestuario</span><h2>Mis ligas</h2></div><span>{leagues.length} {leagues.length === 1 ? "liga" : "ligas"}</span></div><div className="league-list">{leagues.map((league) => <Link href={`/app/leagues/${league.id}`} className="league-card" key={league.id}><span className={`league-status ${league.status}`}>{statusLabel(league.status)}</span><strong>{league.name}</strong><small>{league.teamName} · {league.memberCount}/{league.maxMembers} equipos · {league.rosterSize} jugadores ({league.benchSize} suplentes)</small><span>Ver liga →</span></Link>)}</div></section>
     <div className="stat-grid"><article className="stat-card"><span>Ligas activas</span><strong>{leagues.length}</strong></article><article className="stat-card"><span>Planteles</span><strong>{leagues.length}</strong></article><article className="stat-card"><span>Drafts en curso</span><strong>{draftsInProgress}</strong></article></div>
   </>;
 }

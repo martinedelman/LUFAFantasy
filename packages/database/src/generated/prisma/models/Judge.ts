@@ -190,6 +190,7 @@ export type JudgeWhereInput = {
   normalizedName?: Prisma.StringFilter<"Judge"> | string
   createdAt?: Prisma.DateTimeFilter<"Judge"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Judge"> | Date | string
+  digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
 }
 
 export type JudgeOrderByWithRelationInput = {
@@ -199,6 +200,7 @@ export type JudgeOrderByWithRelationInput = {
   normalizedName?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  digitalCredentials?: Prisma.DigitalCredentialOrderByRelationAggregateInput
 }
 
 export type JudgeWhereUniqueInput = Prisma.AtLeast<{
@@ -211,6 +213,7 @@ export type JudgeWhereUniqueInput = Prisma.AtLeast<{
   lastName?: Prisma.StringFilter<"Judge"> | string
   createdAt?: Prisma.DateTimeFilter<"Judge"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Judge"> | Date | string
+  digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
 }, "id" | "normalizedName">
 
 export type JudgeOrderByWithAggregationInput = {
@@ -244,6 +247,7 @@ export type JudgeCreateInput = {
   normalizedName: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutJudgeInput
 }
 
 export type JudgeUncheckedCreateInput = {
@@ -253,6 +257,7 @@ export type JudgeUncheckedCreateInput = {
   normalizedName: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutJudgeInput
 }
 
 export type JudgeUpdateInput = {
@@ -262,6 +267,7 @@ export type JudgeUpdateInput = {
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutJudgeNestedInput
 }
 
 export type JudgeUncheckedUpdateInput = {
@@ -271,6 +277,7 @@ export type JudgeUncheckedUpdateInput = {
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutJudgeNestedInput
 }
 
 export type JudgeCreateManyInput = {
@@ -327,6 +334,108 @@ export type JudgeMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type JudgeNullableScalarRelationFilter = {
+  is?: Prisma.JudgeWhereInput | null
+  isNot?: Prisma.JudgeWhereInput | null
+}
+
+export type JudgeCreateNestedOneWithoutDigitalCredentialsInput = {
+  create?: Prisma.XOR<Prisma.JudgeCreateWithoutDigitalCredentialsInput, Prisma.JudgeUncheckedCreateWithoutDigitalCredentialsInput>
+  connectOrCreate?: Prisma.JudgeCreateOrConnectWithoutDigitalCredentialsInput
+  connect?: Prisma.JudgeWhereUniqueInput
+}
+
+export type JudgeUpdateOneWithoutDigitalCredentialsNestedInput = {
+  create?: Prisma.XOR<Prisma.JudgeCreateWithoutDigitalCredentialsInput, Prisma.JudgeUncheckedCreateWithoutDigitalCredentialsInput>
+  connectOrCreate?: Prisma.JudgeCreateOrConnectWithoutDigitalCredentialsInput
+  upsert?: Prisma.JudgeUpsertWithoutDigitalCredentialsInput
+  disconnect?: Prisma.JudgeWhereInput | boolean
+  delete?: Prisma.JudgeWhereInput | boolean
+  connect?: Prisma.JudgeWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.JudgeUpdateToOneWithWhereWithoutDigitalCredentialsInput, Prisma.JudgeUpdateWithoutDigitalCredentialsInput>, Prisma.JudgeUncheckedUpdateWithoutDigitalCredentialsInput>
+}
+
+export type JudgeCreateWithoutDigitalCredentialsInput = {
+  id?: string
+  firstName: string
+  lastName: string
+  normalizedName: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type JudgeUncheckedCreateWithoutDigitalCredentialsInput = {
+  id?: string
+  firstName: string
+  lastName: string
+  normalizedName: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type JudgeCreateOrConnectWithoutDigitalCredentialsInput = {
+  where: Prisma.JudgeWhereUniqueInput
+  create: Prisma.XOR<Prisma.JudgeCreateWithoutDigitalCredentialsInput, Prisma.JudgeUncheckedCreateWithoutDigitalCredentialsInput>
+}
+
+export type JudgeUpsertWithoutDigitalCredentialsInput = {
+  update: Prisma.XOR<Prisma.JudgeUpdateWithoutDigitalCredentialsInput, Prisma.JudgeUncheckedUpdateWithoutDigitalCredentialsInput>
+  create: Prisma.XOR<Prisma.JudgeCreateWithoutDigitalCredentialsInput, Prisma.JudgeUncheckedCreateWithoutDigitalCredentialsInput>
+  where?: Prisma.JudgeWhereInput
+}
+
+export type JudgeUpdateToOneWithWhereWithoutDigitalCredentialsInput = {
+  where?: Prisma.JudgeWhereInput
+  data: Prisma.XOR<Prisma.JudgeUpdateWithoutDigitalCredentialsInput, Prisma.JudgeUncheckedUpdateWithoutDigitalCredentialsInput>
+}
+
+export type JudgeUpdateWithoutDigitalCredentialsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type JudgeUncheckedUpdateWithoutDigitalCredentialsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+
+/**
+ * Count Type JudgeCountOutputType
+ */
+
+export type JudgeCountOutputType = {
+  digitalCredentials: number
+}
+
+export type JudgeCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  digitalCredentials?: boolean | JudgeCountOutputTypeCountDigitalCredentialsArgs
+}
+
+/**
+ * JudgeCountOutputType without action
+ */
+export type JudgeCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the JudgeCountOutputType
+   */
+  select?: Prisma.JudgeCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * JudgeCountOutputType without action
+ */
+export type JudgeCountOutputTypeCountDigitalCredentialsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DigitalCredentialWhereInput
+}
 
 
 export type JudgeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -336,6 +445,8 @@ export type JudgeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   normalizedName?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  digitalCredentials?: boolean | Prisma.Judge$digitalCredentialsArgs<ExtArgs>
+  _count?: boolean | Prisma.JudgeCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["judge"]>
 
 export type JudgeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -366,10 +477,18 @@ export type JudgeSelectScalar = {
 }
 
 export type JudgeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "firstName" | "lastName" | "normalizedName" | "createdAt" | "updatedAt", ExtArgs["result"]["judge"]>
+export type JudgeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  digitalCredentials?: boolean | Prisma.Judge$digitalCredentialsArgs<ExtArgs>
+  _count?: boolean | Prisma.JudgeCountOutputTypeDefaultArgs<ExtArgs>
+}
+export type JudgeIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type JudgeIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
 
 export type $JudgePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Judge"
-  objects: {}
+  objects: {
+    digitalCredentials: Prisma.$DigitalCredentialPayload<ExtArgs>[]
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     firstName: string
@@ -771,6 +890,7 @@ readonly fields: JudgeFieldRefs;
  */
 export interface Prisma__JudgeClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  digitalCredentials<T extends Prisma.Judge$digitalCredentialsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Judge$digitalCredentialsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DigitalCredentialPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -823,6 +943,10 @@ export type JudgeFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.Interna
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
+  /**
    * Filter, which Judge to fetch.
    */
   where: Prisma.JudgeWhereUniqueInput
@@ -841,6 +965,10 @@ export type JudgeFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Extensions.
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
+  /**
    * Filter, which Judge to fetch.
    */
   where: Prisma.JudgeWhereUniqueInput
@@ -858,6 +986,10 @@ export type JudgeFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Omit specific fields from the Judge
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
   /**
    * Filter, which Judge to fetch.
    */
@@ -907,6 +1039,10 @@ export type JudgeFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions.I
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
+  /**
    * Filter, which Judge to fetch.
    */
   where?: Prisma.JudgeWhereInput
@@ -954,6 +1090,10 @@ export type JudgeFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Omit specific fields from the Judge
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
   /**
    * Filter, which Judges to fetch.
    */
@@ -1003,6 +1143,10 @@ export type JudgeCreateArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
+  /**
    * The data needed to create a Judge.
    */
   data: Prisma.XOR<Prisma.JudgeCreateInput, Prisma.JudgeUncheckedCreateInput>
@@ -1050,6 +1194,10 @@ export type JudgeUpdateArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    * Omit specific fields from the Judge
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
   /**
    * The data needed to update a Judge.
    */
@@ -1117,6 +1265,10 @@ export type JudgeUpsertArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
+  /**
    * The filter to search for the Judge to update in case it exists.
    */
   where: Prisma.JudgeWhereUniqueInput
@@ -1143,6 +1295,10 @@ export type JudgeDeleteArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
+  /**
    * Filter which Judge to delete.
    */
   where: Prisma.JudgeWhereUniqueInput
@@ -1163,6 +1319,30 @@ export type JudgeDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
 }
 
 /**
+ * Judge.digitalCredentials
+ */
+export type Judge$digitalCredentialsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DigitalCredential
+   */
+  select?: Prisma.DigitalCredentialSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DigitalCredential
+   */
+  omit?: Prisma.DigitalCredentialOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DigitalCredentialInclude<ExtArgs> | null
+  where?: Prisma.DigitalCredentialWhereInput
+  orderBy?: Prisma.DigitalCredentialOrderByWithRelationInput | Prisma.DigitalCredentialOrderByWithRelationInput[]
+  cursor?: Prisma.DigitalCredentialWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DigitalCredentialScalarFieldEnum | Prisma.DigitalCredentialScalarFieldEnum[]
+}
+
+/**
  * Judge without action
  */
 export type JudgeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1174,4 +1354,8 @@ export type JudgeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    * Omit specific fields from the Judge
    */
   omit?: Prisma.JudgeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JudgeInclude<ExtArgs> | null
 }

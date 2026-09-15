@@ -4,7 +4,7 @@ import { getPrismaClient } from "@lufa/database/prisma";
 import { fantasyUserFromRequest } from "@/lib/fantasyAuth";
 import { fantasyApiErrorResponse } from "@/lib/fantasyApiError";
 
-const knownMessages = ["Elegí un jugador", "El draft todavía", "El draft ya", "No es tu turno", "Ese jugador", "No quedan"];
+const knownMessages = ["Elegí un jugador o una defensa", "El draft todavía", "El draft ya", "No es tu turno", "Ese jugador", "Esa defensa", "No quedan"];
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const user = await fantasyUserFromRequest(request);
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   try {
     const { id } = await context.params;
     const body = await request.json();
-    const league = await serviceContainer.fantasyCompetitionService.makePick(user.id, { leagueId: id, playerId: String(body.playerId || "") });
+    const league = await serviceContainer.fantasyCompetitionService.makePick(user.id, { leagueId: id, playerId: body.playerId ? String(body.playerId) : undefined, defenseTeamId: body.defenseTeamId ? String(body.defenseTeamId) : undefined });
     const onboarding = await getPrismaClient().fantasyOnboarding.findUnique({ where: { userId: user.id } });
     if (onboarding?.status === "in_progress" && onboarding.currentStep === "draft") {
       await getPrismaClient().fantasyAuditLog.create({ data: { actorId: user.id, action: "fantasy.onboarding.first_pick" } });

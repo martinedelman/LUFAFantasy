@@ -5,8 +5,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { fantasyRequest } from "@/lib/fantasyApi";
 import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 
-interface LeagueSummary { id: string; name: string; inviteCode: string; status: "lobby" | "drafting" | "drafted"; memberCount: number; maxMembers: number; rosterSize: number; isCommissioner: boolean; teamName: string; draftStatus: string | null }
-const initialCreate = { name: "", teamName: "", maxMembers: "8", rosterSize: "12", turnSeconds: "90" };
+interface LeagueSummary { id: string; name: string; inviteCode: string; status: "lobby" | "drafting" | "drafted"; memberCount: number; maxMembers: number; benchSize: number; rosterSize: number; isCommissioner: boolean; teamName: string; draftStatus: string | null }
+const initialCreate = { name: "", teamName: "", maxMembers: "8", benchSize: "4", turnSeconds: "90" };
 
 export function LeagueHub({ joinOnly = false }: { joinOnly?: boolean }) {
   const { advanceFromAction } = useOnboarding();
@@ -29,7 +29,7 @@ export function LeagueHub({ joinOnly = false }: { joinOnly?: boolean }) {
   async function createLeague(event: FormEvent) {
     event.preventDefault(); setSaving(true); setError(""); setNotice("");
     try {
-      const league = await fantasyRequest<LeagueSummary>("/leagues", { method: "POST", body: JSON.stringify({ ...create, maxMembers: Number(create.maxMembers), rosterSize: Number(create.rosterSize), turnSeconds: Number(create.turnSeconds) }) });
+      const league = await fantasyRequest<LeagueSummary>("/leagues", { method: "POST", body: JSON.stringify({ ...create, maxMembers: Number(create.maxMembers), benchSize: Number(create.benchSize), turnSeconds: Number(create.turnSeconds) }) });
       await advanceFromAction("league");
       window.location.assign(`/app/leagues/${league.id}`);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos crear la liga."); }
@@ -49,7 +49,7 @@ export function LeagueHub({ joinOnly = false }: { joinOnly?: boolean }) {
         <span className="eyebrow">Nueva competencia</span><h2>Creá tu liga</h2><p>Elegí la configuración inicial. Después invitás a tu gente con un código único.</p>
         <label>Nombre de la liga<input value={create.name} onChange={(event) => setCreate({ ...create, name: event.target.value })} placeholder="Ej. Los domingos" required maxLength={48} /></label>
         <label>Nombre de tu equipo<input value={create.teamName} onChange={(event) => setCreate({ ...create, teamName: event.target.value })} placeholder="Ej. Los Violeta" required maxLength={32} /></label>
-        <div className="league-settings"><label>Participantes<select value={create.maxMembers} onChange={(event) => setCreate({ ...create, maxMembers: event.target.value })}>{[2, 4, 6, 8, 10, 12].map((value) => <option key={value}>{value}</option>)}</select></label><label>Roster<input value="12 espacios oficiales" readOnly aria-label="Roster de 12 espacios oficiales" /></label><label>Reloj<select value={create.turnSeconds} onChange={(event) => setCreate({ ...create, turnSeconds: event.target.value })}>{[30, 60, 90, 120].map((value) => <option key={value} value={value}>{value}s</option>)}</select></label></div>
+        <div className="league-settings"><label>Participantes<select value={create.maxMembers} onChange={(event) => setCreate({ ...create, maxMembers: event.target.value })}>{[2, 4, 6, 8, 10, 12].map((value) => <option key={value}>{value}</option>)}</select></label><label>Suplentes<select value={create.benchSize} onChange={(event) => setCreate({ ...create, benchSize: event.target.value })}>{[0, 2, 4, 6, 8, 10].map((value) => <option key={value}>{value}</option>)}</select></label><label>Reloj<select value={create.turnSeconds} onChange={(event) => setCreate({ ...create, turnSeconds: event.target.value })}>{[30, 60, 90, 120].map((value) => <option key={value} value={value}>{value}s</option>)}</select></label></div>
         <button className="button button-primary" disabled={saving}>{saving ? "Creando…" : "Crear liga"}</button>
       </form>;
   const joinForm = <form className="league-form" onSubmit={joinLeague}>

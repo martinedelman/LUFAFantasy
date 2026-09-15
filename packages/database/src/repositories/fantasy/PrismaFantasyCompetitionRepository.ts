@@ -2,15 +2,33 @@ import {
   draftTurn,
   type CreateFantasyLeagueInput,
   type FantasyCompetitionRepository,
+  type FantasyDraftStatus,
   type FantasyLeagueDetail,
+  type FantasyLeagueStatus,
   type FantasyLeagueSummary,
+  rosterTotal,
 } from "@lufa/fantasy-core";
 import { getPrismaClient } from "@lufa/database/prisma";
-import type { PrismaClient } from "@lufa/database/generated/prisma/client";
+import type { Prisma, PrismaClient } from "@lufa/database/generated/prisma/client";
 import { randomBytes } from "node:crypto";
 
-type Db = Pick<PrismaClient, "fantasyLeague" | "fantasyDraft" | "fantasyDraftPick" | "fantasyAuditLog" | "player">;
+type Db = Pick<PrismaClient, "fantasyLeague" | "fantasyDraft" | "fantasyDraftPick" | "fantasyAuditLog" | "player" | "team">;
 const activeMembers = { where: { status: "active" }, orderBy: { joinedAt: "asc" as const }, include: { user: true, team: true } };
+type ActiveMember = Prisma.FantasyLeagueMemberGetPayload<{ include: { user: true; team: true } }>;
+type LeagueSummaryRecord = {
+  id: string; name: string; inviteCode: string; status: string; maxMembers: number; rosterSize: number; turnSeconds: number; commissionerId: string;
+  members: ActiveMember[]; draft: { status: string } | null;
+};
+type LeagueForPick = LeagueSummaryRecord & { draft: { id: string; currentPick: number } };
+type DraftPickRecord = {
+  id: string; overall: number; round: number; autoPicked: boolean; playerId: string | null; defenseTeamId: string | null;
+  team: { id: string; name: string };
+  player: { id: string; firstName: string; lastName: string; position: string; team: { name: string } } | null;
+  defenseTeam: { id: string; name: string } | null;
+};
+type LeagueDetailRecord = LeagueSummaryRecord & {
+  draft: null | { id: string; status: string; currentPick: number; pickDeadline: Date | null; picks: DraftPickRecord[] };
+};
 
 function inviteCode() { return randomBytes(5).toString("hex").toUpperCase(); }
 function nameOf(player: { firstName: string; lastName: string }) { return `${player.firstName} ${player.lastName}`.trim(); }
@@ -27,7 +45,8 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
             inviteCode: inviteCode(),
             commissionerId: data.userId,
             maxMembers: data.maxMembers ?? 8,
-            rosterSize: data.rosterSize ?? 6,
+            // Legacy column retained as the configurable bench count.
+            rosterSize: data.benchSize ?? 4,
             turnSeconds: data.turnSeconds ?? 90,
             members: {
               create: {
@@ -77,7 +96,7 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
       });
     });
     await this.audit(data.userId, "fantasy.league.joined", { leagueId: league.id });
-    return this.detail(league, data.userId);
+    return (await this.getLeague(league.id, data.userId))!;
   }
 
   async getLeague(leagueId: string, userId: string): Promise<FantasyLeagueDetail | null> {
@@ -86,7 +105,7 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
       where: { id: leagueId, members: { some: { userId, status: "active" } } },
       include: {
         members: activeMembers,
-        draft: { include: { picks: { orderBy: { overall: "asc" }, include: { team: true, player: { include: { team: true } } } } } },
+        draft: { include: { picks: { orderBy: { overall: "asc" }, include: { team: true, player: { include: { team: true } }, defenseTeam: true } } } },
       },
     });
     return league ? this.detail(league, userId) : null;
@@ -100,9 +119,12 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
       if (league.status !== "lobby" || league.draft) throw new Error("El draft ya fue iniciado");
       if (league.members.length < 2) throw new Error("Necesitás al menos dos equipos para iniciar el draft");
       if (league.members.some((member) => !member.team)) throw new Error("Hay equipos incompletos en la liga");
-      const playerCount = await tx.player.count({ where: { status: "active" } });
-      const needed = league.members.length * league.rosterSize;
-      if (playerCount < needed) throw new Error("No hay suficientes jugadores activos para completar este draft");
+      const [playerCount, defenseCount] = await Promise.all([
+        tx.player.count({ where: { status: "active" } }),
+        tx.team.count({ where: { status: "active" } }),
+      ]);
+      const needed = league.members.length * rosterTotal(league.rosterSize);
+      if (playerCount + defenseCount < needed) throw new Error("No hay suficientes jugadores o defensas de equipo disponibles para completar este draft");
       const now = new Date();
       await tx.fantasyLeague.update({ where: { id: leagueId }, data: { status: "drafting" } });
       await tx.fantasyDraft.create({ data: { leagueId, status: "active", currentPick: 1, startedAt: now, pickDeadline: new Date(now.getTime() + league.turnSeconds * 1000) } });
@@ -111,7 +133,7 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
     return (await this.getLeague(leagueId, userId))!;
   }
 
-  async makePick(data: { userId: string; leagueId: string; playerId: string }): Promise<FantasyLeagueDetail> {
+  async makePick(data: { userId: string; leagueId: string; playerId?: string; defenseTeamId?: string }): Promise<FantasyLeagueDetail> {
     await this.db.$transaction(async (tx) => {
       await this.advanceExpiredTurns(data.leagueId, tx);
       const league = await tx.fantasyLeague.findUnique({
@@ -120,37 +142,56 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
       });
       if (!league || !league.draft) throw new Error("El draft todavía no está disponible");
       if (league.draft.status !== "active") throw new Error("El draft ya finalizó");
-      const current = this.currentMember(league.members, league.draft.currentPick);
+      const draftLeague: LeagueForPick = { ...league, draft: league.draft };
+      const current = this.currentMember(draftLeague.members, draftLeague.draft.currentPick);
       if (!current || current.userId !== data.userId || !current.team) throw new Error("No es tu turno para elegir");
-      const player = await tx.player.findFirst({ where: { id: data.playerId, status: "active" } });
-      if (!player) throw new Error("Ese jugador no está disponible");
-      const taken = await tx.fantasyDraftPick.count({ where: { draftId: league.draft.id, playerId: data.playerId } });
-      if (taken) throw new Error("Ese jugador ya fue elegido por otro equipo");
-      await this.createPick(tx, league, current, player.id, false);
+      if (data.playerId) {
+        const player = await tx.player.findFirst({ where: { id: data.playerId, status: "active" } });
+        if (!player) throw new Error("Ese jugador no está disponible");
+        const taken = await tx.fantasyDraftPick.count({ where: { draftId: draftLeague.draft.id, playerId: data.playerId } });
+        if (taken) throw new Error("Ese jugador ya fue elegido por otro equipo");
+        await this.createPick(tx, draftLeague, current, { playerId: player.id }, false);
+      } else {
+        const defense = await tx.team.findFirst({ where: { id: data.defenseTeamId, status: "active" } });
+        if (!defense) throw new Error("Esa defensa de equipo no está disponible");
+        const taken = await tx.fantasyDraftPick.count({ where: { draftId: draftLeague.draft.id, defenseTeamId: defense.id } });
+        if (taken) throw new Error("Esa defensa de equipo ya fue elegida");
+        await this.createPick(tx, draftLeague, current, { defenseTeamId: defense.id }, false);
+      }
     }, { isolationLevel: "Serializable" });
-    await this.audit(data.userId, "fantasy.draft.pick_made", { leagueId: data.leagueId, playerId: data.playerId });
+    await this.audit(data.userId, "fantasy.draft.pick_made", { leagueId: data.leagueId, playerId: data.playerId, defenseTeamId: data.defenseTeamId });
     return (await this.getLeague(data.leagueId, data.userId))!;
   }
 
   private async advanceExpiredTurns(leagueId: string, client: Db = this.db) {
     const draftState = await client.fantasyLeague.findUnique({ where: { id: leagueId }, include: { members: activeMembers, draft: true } });
     if (!draftState?.draft || draftState.draft.status !== "active" || !draftState.draft.pickDeadline || draftState.draft.pickDeadline > new Date()) return;
-    const current = this.currentMember(draftState.members, draftState.draft.currentPick);
+    const activeDraftState: LeagueForPick = { ...draftState, draft: draftState.draft };
+    const current = this.currentMember(activeDraftState.members, activeDraftState.draft.currentPick);
     if (!current?.team) return;
-    const selected = await client.fantasyDraftPick.findMany({ where: { draftId: draftState.draft.id }, select: { playerId: true } });
+    const selected = await client.fantasyDraftPick.findMany({ where: { draftId: activeDraftState.draft.id }, select: { playerId: true, defenseTeamId: true } });
     const player = await client.player.findFirst({
-      where: { status: "active", id: { notIn: selected.map((pick) => pick.playerId) } },
+      where: { status: "active", id: { notIn: selected.map((pick) => pick.playerId).filter((playerId): playerId is string => Boolean(playerId)) } },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     });
-    if (!player) throw new Error("No quedan jugadores disponibles para el draft");
-    await this.createPick(client, draftState, current, player.id, true);
+    if (player) {
+      await this.createPick(client, activeDraftState, current, { playerId: player.id }, true);
+      return;
+    }
+    const defense = await client.team.findFirst({
+      where: { status: "active", id: { notIn: selected.map((pick) => pick.defenseTeamId).filter((teamId): teamId is string => Boolean(teamId)) } },
+      orderBy: { name: "asc" },
+    });
+    if (!defense) throw new Error("No quedan jugadores ni defensas de equipo disponibles para el draft");
+    await this.createPick(client, activeDraftState, current, { defenseTeamId: defense.id }, true);
   }
 
-  private async createPick(client: Db, league: any, member: any, playerId: string, autoPicked: boolean) {
+  private async createPick(client: Db, league: LeagueForPick, member: ActiveMember, selection: { playerId?: string; defenseTeamId?: string }, autoPicked: boolean) {
     const draft = league.draft;
+    if (!member.team) throw new Error("El equipo del participante no está disponible");
     const { round } = draftTurn(draft.currentPick, league.members.length);
-    const total = league.members.length * league.rosterSize;
-    await client.fantasyDraftPick.create({ data: { draftId: draft.id, memberId: member.id, teamId: member.team.id, playerId, round, overall: draft.currentPick, autoPicked } });
+    const total = league.members.length * rosterTotal(league.rosterSize);
+    await client.fantasyDraftPick.create({ data: { draftId: draft.id, memberId: member.id, teamId: member.team.id, ...selection, round, overall: draft.currentPick, autoPicked } });
     const completed = draft.currentPick >= total;
     await client.fantasyDraft.update({
       where: { id: draft.id },
@@ -161,43 +202,56 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
     if (completed) await client.fantasyLeague.update({ where: { id: league.id }, data: { status: "drafted" } });
   }
 
-  private currentMember(members: any[], currentPick: number) {
+  private currentMember(members: ActiveMember[], currentPick: number) {
     if (!members.length) return null;
     return members[draftTurn(currentPick, members.length).memberIndex] || null;
   }
 
-  private summary(league: any, userId: string): FantasyLeagueSummary {
-    const member = league.members.find((item: any) => item.userId === userId);
+  private summary(league: LeagueSummaryRecord, userId: string): FantasyLeagueSummary {
+    const member = league.members.find((item) => item.userId === userId);
     return {
-      id: league.id, name: league.name, inviteCode: league.inviteCode, status: league.status,
-      memberCount: league.members.length, maxMembers: league.maxMembers, rosterSize: league.rosterSize,
+      id: league.id, name: league.name, inviteCode: league.inviteCode, status: league.status as FantasyLeagueStatus,
+      memberCount: league.members.length, maxMembers: league.maxMembers, benchSize: league.rosterSize, rosterSize: rosterTotal(league.rosterSize),
       isCommissioner: league.commissionerId === userId, teamName: member?.team?.name || "Equipo",
-      draftStatus: league.draft?.status || null,
+      draftStatus: league.draft ? league.draft.status as FantasyDraftStatus : null,
     };
   }
 
-  private async detail(league: any, userId: string): Promise<FantasyLeagueDetail> {
+  private async detail(league: LeagueDetailRecord, userId: string): Promise<FantasyLeagueDetail> {
     const summary = this.summary(league, userId);
-    const members = league.members.map((member: any) => ({
-      id: member.id, name: member.user.name, role: member.role, team: { id: member.team.id, name: member.team.name, avatar: member.team.avatar, pickCount: league.draft?.picks?.filter((pick: any) => pick.teamId === member.team.id).length || 0 },
-    }));
+    const members = league.members.map((member) => {
+      if (!member.team) throw new Error("El equipo del participante no está disponible");
+      return {
+        id: member.id, name: member.user.name, role: member.role as "commissioner" | "member",
+        team: { id: member.team.id, name: member.team.name, avatar: member.team.avatar, pickCount: league.draft?.picks.filter((pick) => pick.team.id === member.team!.id).length || 0 },
+      };
+    });
     if (!league.draft) return { ...summary, turnSeconds: league.turnSeconds, members, draft: null };
     const draft = league.draft;
     const current = draft.status === "active" ? this.currentMember(league.members, draft.currentPick) : null;
-    const selectedIds = draft.picks.map((pick: any) => pick.playerId);
+    const selectedPlayerIds = draft.picks.map((pick) => pick.playerId).filter((id): id is string => id !== null);
+    const selectedDefenseIds = draft.picks.map((pick) => pick.defenseTeamId).filter((id): id is string => id !== null);
     const available = draft.status === "active"
-      ? await this.db.player.findMany({ where: { status: "active", id: { notIn: selectedIds } }, include: { team: true }, orderBy: [{ lastName: "asc" }, { firstName: "asc" }], take: 120 })
+      ? await this.db.player.findMany({ where: { status: "active", id: { notIn: selectedPlayerIds } }, include: { team: true }, orderBy: [{ lastName: "asc" }, { firstName: "asc" }], take: 120 })
       : [];
+    const availableDefenses = draft.status === "active"
+      ? await this.db.team.findMany({ where: { status: "active", id: { notIn: selectedDefenseIds } }, orderBy: { name: "asc" } })
+      : [];
+    const picks: NonNullable<FantasyLeagueDetail["draft"]>["picks"] = draft.picks.flatMap<NonNullable<FantasyLeagueDetail["draft"]>["picks"][number]>((pick) => {
+      if (pick.player) return [{ id: pick.id, overall: pick.overall, round: pick.round, autoPicked: pick.autoPicked, teamName: pick.team.name, player: { id: pick.player.id, name: nameOf(pick.player), position: pick.player.position, teamName: pick.player.team.name, kind: "player" } }];
+      if (pick.defenseTeam) return [{ id: pick.id, overall: pick.overall, round: pick.round, autoPicked: pick.autoPicked, teamName: pick.team.name, player: { id: `team-defense:${pick.defenseTeam.id}`, name: `${pick.defenseTeam.name} Defensa`, position: "DEF EQUIPO", teamName: pick.defenseTeam.name, kind: "team_defense" } }];
+      return [];
+    });
     return {
       ...summary,
       turnSeconds: league.turnSeconds,
       members,
       draft: {
-        id: draft.id, status: draft.status, currentPick: draft.currentPick, totalPicks: league.members.length * league.rosterSize,
+        id: draft.id, status: draft.status as FantasyDraftStatus, currentPick: draft.currentPick, totalPicks: league.members.length * rosterTotal(league.rosterSize),
         pickDeadline: draft.pickDeadline?.toISOString() || null, currentMemberId: current?.id || null,
         currentTeamName: current?.team?.name || null, isMyTurn: current?.userId === userId,
-        picks: draft.picks.map((pick: any) => ({ id: pick.id, overall: pick.overall, round: pick.round, autoPicked: pick.autoPicked, teamName: pick.team.name, player: { id: pick.player.id, name: nameOf(pick.player), position: pick.player.position, teamName: pick.player.team.name } })),
-        availablePlayers: available.map((player) => ({ id: player.id, name: nameOf(player), position: player.position, teamName: player.team.name })),
+        picks,
+        availablePlayers: [...available.map((player) => ({ id: player.id, name: nameOf(player), position: player.position, teamName: player.team.name, kind: "player" as const })), ...availableDefenses.map((team) => ({ id: `team-defense:${team.id}`, name: `${team.name} Defensa`, position: "DEF EQUIPO", teamName: team.name, kind: "team_defense" as const }))],
       },
     };
   }

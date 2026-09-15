@@ -3,7 +3,7 @@ import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { fantasyUserFromRequest } from "@/lib/fantasyAuth";
 import { fantasyApiErrorResponse } from "@/lib/fantasyApiError";
 
-const knownMessages = ["El nombre de la liga", "El nombre del equipo", "La cantidad de participantes", "El tamaño del roster", "El reloj del draft"];
+const knownMessages = ["El nombre de la liga", "El nombre del equipo", "La cantidad de participantes", "La cantidad de suplentes", "El reloj del draft"];
 
 export async function GET(request: NextRequest) {
   const user = await fantasyUserFromRequest(request);
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const league = await serviceContainer.fantasyCompetitionService.createLeague(user.id, {
       name: String(body.name || ""), teamName: String(body.teamName || ""),
       maxMembers: body.maxMembers === undefined ? undefined : Number(body.maxMembers),
-      rosterSize: body.rosterSize === undefined ? undefined : Number(body.rosterSize),
+      benchSize: body.benchSize === undefined ? undefined : Number(body.benchSize),
       turnSeconds: body.turnSeconds === undefined ? undefined : Number(body.turnSeconds),
     });
     return NextResponse.json({ success: true, data: league }, { status: 201 });

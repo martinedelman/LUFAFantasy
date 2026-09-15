@@ -14,7 +14,7 @@ export interface CreateFantasyLeagueInput {
   name: string;
   teamName: string;
   maxMembers?: number;
-  rosterSize?: number;
+  benchSize?: number;
   turnSeconds?: number;
 }
 
@@ -25,7 +25,8 @@ export interface JoinFantasyLeagueInput {
 
 export interface MakeFantasyPickInput {
   leagueId: string;
-  playerId: string;
+  playerId?: string;
+  defenseTeamId?: string;
 }
 
 export interface FantasyLeagueSummary {
@@ -35,6 +36,7 @@ export interface FantasyLeagueSummary {
   status: FantasyLeagueStatus;
   memberCount: number;
   maxMembers: number;
+  benchSize: number;
   rosterSize: number;
   isCommissioner: boolean;
   teamName: string;
@@ -64,9 +66,9 @@ export interface FantasyLeagueDetail extends FantasyLeagueSummary {
       round: number;
       autoPicked: boolean;
       teamName: string;
-      player: { id: string; name: string; position: string; teamName: string };
+      player: { id: string; name: string; position: string; teamName: string; kind: "player" | "team_defense" };
     }>;
-    availablePlayers: Array<{ id: string; name: string; position: string; teamName: string }>;
+    availablePlayers: Array<{ id: string; name: string; position: string; teamName: string; kind: "player" | "team_defense" }>;
   };
 }
 
@@ -88,6 +90,10 @@ export function draftTurn(currentPick: number, memberCount: number) {
   return { round, memberIndex: round % 2 === 1 ? position : memberCount - 1 - position };
 }
 
+/** Fixed lineup: QB, C, 2 WR, RB/WR, 2 defense and 1 defensive team. */
+export const STARTER_SLOTS = 8;
+export function rosterTotal(benchSize: number) { return STARTER_SLOTS + benchSize; }
+
 export class FantasyCompetitionService {
   constructor(private readonly repository: FantasyCompetitionRepository) {}
 
@@ -97,7 +103,7 @@ export class FantasyCompetitionService {
       name: readable(input.name, "El nombre de la liga", 3, 48),
       teamName: readable(input.teamName, "El nombre del equipo", 3, 32),
       maxMembers: whole(input.maxMembers, 8, 2, 12, "La cantidad de participantes"),
-      rosterSize: 12,
+      benchSize: whole(input.benchSize, 4, 0, 10, "La cantidad de suplentes"),
       turnSeconds: whole(input.turnSeconds, 90, 30, 300, "El reloj del draft"),
     });
   }
@@ -114,7 +120,9 @@ export class FantasyCompetitionService {
   startDraft(userId: string, leagueId: string) { return this.repository.startDraft(leagueId, userId); }
 
   makePick(userId: string, input: MakeFantasyPickInput) {
-    if (!input.playerId?.trim()) throw new Error("Elegí un jugador antes de confirmar");
-    return this.repository.makePick({ userId, leagueId: input.leagueId, playerId: input.playerId.trim() });
+    const playerId = input.playerId?.trim();
+    const defenseTeamId = input.defenseTeamId?.trim();
+    if ((playerId && defenseTeamId) || (!playerId && !defenseTeamId)) throw new Error("Elegí un jugador o una defensa de equipo antes de confirmar");
+    return this.repository.makePick({ userId, leagueId: input.leagueId, playerId, defenseTeamId });
   }
 }

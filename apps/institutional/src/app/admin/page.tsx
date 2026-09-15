@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import AdminProtection from "@/components/AdminProtection";
+import DigitalCredentialAdmin from "@/components/DigitalCredentialAdmin";
 import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import Toast from "@/components/Toast";
@@ -24,7 +25,7 @@ import type {
 } from "@lufa/contracts";
 import type { UserRole } from "@lufa/contracts";
 
-type AdminTab = "overview" | "users" | "pending" | "content" | "system" | "audit";
+type AdminTab = "overview" | "users" | "pending" | "content" | "credentials" | "system" | "audit";
 
 type AdminToastState = {
   variant: "info" | "warning" | "error" | "success";
@@ -61,6 +62,7 @@ const tabs: Array<{ id: AdminTab; label: string }> = [
   { id: "users", label: "Usuarios" },
   { id: "pending", label: "Pendientes" },
   { id: "content", label: "Contenido" },
+  { id: "credentials", label: "ID Digital" },
   { id: "system", label: "Sistema" },
   { id: "audit", label: "Auditoría" },
 ];
@@ -1372,6 +1374,8 @@ function AdminPanelContent() {
                 </section>
               </section>
             )}
+
+            {activeTab === "credentials" && <DigitalCredentialAdmin />}
 
             {activeTab === "audit" && (
               <section className="space-y-5">

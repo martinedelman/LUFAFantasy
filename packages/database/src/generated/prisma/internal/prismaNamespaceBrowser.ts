@@ -83,7 +83,9 @@ export const ModelName = {
   FantasyTeam: 'FantasyTeam',
   FantasyDraft: 'FantasyDraft',
   FantasyDraftPick: 'FantasyDraftPick',
-  FantasyPlayerFavorite: 'FantasyPlayerFavorite'
+  FantasyPlayerFavorite: 'FantasyPlayerFavorite',
+  DigitalCredential: 'DigitalCredential',
+  DigitalCredentialAudit: 'DigitalCredentialAudit'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -588,6 +590,7 @@ export const FantasyDraftPickScalarFieldEnum = {
   memberId: 'memberId',
   teamId: 'teamId',
   playerId: 'playerId',
+  defenseTeamId: 'defenseTeamId',
   round: 'round',
   overall: 'overall',
   autoPicked: 'autoPicked',
@@ -601,10 +604,47 @@ export const FantasyPlayerFavoriteScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   playerId: 'playerId',
+  defenseTeamId: 'defenseTeamId',
   createdAt: 'createdAt'
 } as const
 
 export type FantasyPlayerFavoriteScalarFieldEnum = (typeof FantasyPlayerFavoriteScalarFieldEnum)[keyof typeof FantasyPlayerFavoriteScalarFieldEnum]
+
+
+export const DigitalCredentialScalarFieldEnum = {
+  id: 'id',
+  publicId: 'publicId',
+  userId: 'userId',
+  playerId: 'playerId',
+  judgeId: 'judgeId',
+  subjectType: 'subjectType',
+  memberNumber: 'memberNumber',
+  displayName: 'displayName',
+  profilePicture: 'profilePicture',
+  roleLabel: 'roleLabel',
+  organizationName: 'organizationName',
+  nationalityCode: 'nationalityCode',
+  dateOfBirth: 'dateOfBirth',
+  status: 'status',
+  issuedAt: 'issuedAt',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt',
+  renewedFromId: 'renewedFromId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DigitalCredentialScalarFieldEnum = (typeof DigitalCredentialScalarFieldEnum)[keyof typeof DigitalCredentialScalarFieldEnum]
+
+
+export const DigitalCredentialAuditScalarFieldEnum = {
+  id: 'id',
+  credentialId: 'credentialId',
+  action: 'action',
+  createdAt: 'createdAt'
+} as const
+
+export type DigitalCredentialAuditScalarFieldEnum = (typeof DigitalCredentialAuditScalarFieldEnum)[keyof typeof DigitalCredentialAuditScalarFieldEnum]
 
 
 export const SortOrder = {

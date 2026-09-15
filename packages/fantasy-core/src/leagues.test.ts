@@ -27,7 +27,7 @@ describe("FantasyCompetitionService", () => {
       name: "Liga del Flag",
       teamName: "Violetas",
       maxMembers: 8,
-      rosterSize: 12,
+      benchSize: 4,
       turnSeconds: 90,
     });
   });

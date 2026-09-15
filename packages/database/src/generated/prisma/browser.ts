@@ -182,3 +182,13 @@ export type FantasyDraftPick = Prisma.FantasyDraftPickModel
  * 
  */
 export type FantasyPlayerFavorite = Prisma.FantasyPlayerFavoriteModel
+/**
+ * Model DigitalCredential
+ * 
+ */
+export type DigitalCredential = Prisma.DigitalCredentialModel
+/**
+ * Model DigitalCredentialAudit
+ * 
+ */
+export type DigitalCredentialAudit = Prisma.DigitalCredentialAuditModel

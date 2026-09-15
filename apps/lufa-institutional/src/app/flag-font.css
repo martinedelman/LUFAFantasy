@@ -1,0 +1,19 @@
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.brand,
+.hero h1,
+.discipline-card strong,
+.about-copy h2,
+.section-heading h2 {
+  font-family: inherit;
+  font-stretch: normal;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}

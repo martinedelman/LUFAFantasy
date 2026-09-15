@@ -6,11 +6,12 @@ import { fantasyRequest } from "@/lib/fantasyApi";
 interface LeagueDetail {
   name: string;
   teamName: string;
+  benchSize: number;
   rosterSize: number;
   draft: null | { picks: Array<{ overall: number; teamName: string; player: { name: string; position: string; teamName: string } }> };
 }
 
-const rosterSlots = [
+const starterSlots = [
   { label: "QB", eligible: ["QB"], group: "starters" },
   { label: "C", eligible: ["C"], group: "starters" },
   { label: "WR", eligible: ["WR"], group: "starters" },
@@ -19,10 +20,6 @@ const rosterSlots = [
   { label: "DEF", eligible: ["LB", "CB", "FS", "SS"], group: "defense" },
   { label: "DEF", eligible: ["LB", "CB", "FS", "SS"], group: "defense" },
   { label: "DEF EQUIPO", eligible: [], group: "defense" },
-  { label: "SUPLENTE", eligible: [], group: "bench" },
-  { label: "SUPLENTE", eligible: [], group: "bench" },
-  { label: "SUPLENTE", eligible: [], group: "bench" },
-  { label: "SUPLENTE", eligible: [], group: "bench" },
 ];
 
 const rosterGroups = [
@@ -45,23 +42,25 @@ export function MyTeam({ leagueId }: { leagueId: string }) {
   }, [league]);
 
   const roster = useMemo(() => {
+    const rosterSlots = [...starterSlots, ...Array.from({ length: league?.benchSize ?? 4 }, () => ({ label: "SUPLENTE", eligible: [] as string[], group: "bench" }))];
     const available = [...draftedPlayers];
     return rosterSlots.map((slot) => {
-      if (slot.label === "DEF EQUIPO") return { slot, pick: undefined };
-      const index = slot.label === "SUPLENTE"
+      const index = slot.label === "DEF EQUIPO"
+        ? available.findIndex((pick) => pick.player.position === "DEF EQUIPO")
+        : slot.label === "SUPLENTE"
         ? 0
         : available.findIndex((pick) => [pick.player.position, ...pick.player.position.split("/")].some((position) => slot.eligible.includes(position)));
       const pick = index >= 0 ? available.splice(index, 1)[0] : undefined;
       return { slot, pick };
     });
-  }, [draftedPlayers]);
+  }, [draftedPlayers, league?.benchSize]);
 
   if (!league && !error) return <div className="shell-loading"><span className="loading-mark"><i /><i /><i /></span></div>;
   if (error) return <p className="form-message" role="alert">{error}</p>;
 
   return <div className="my-team-page">
-    <header className="page-heading"><div><span className="eyebrow">Mi equipo</span><h1>{league!.teamName}</h1><p>{league!.name} · {draftedPlayers.length}/{rosterSlots.length} espacios definidos para tu plantel.</p></div><span className="beta-badge">ROSTER OFICIAL</span></header>
-    <section className="roster-summary"><span>1 QB · 1 C · 2 WR · 1 RB/WR · 2 DEF · 1 defensa de equipo · 4 suplentes</span><b>{draftedPlayers.length} seleccionados</b></section>
+    <header className="page-heading"><div><span className="eyebrow">Mi equipo</span><h1>{league!.teamName}</h1><p>{league!.name} · {draftedPlayers.length}/{roster.length} espacios definidos para tu plantel.</p></div><span className="beta-badge">ROSTER OFICIAL</span></header>
+    <section className="roster-summary"><span>1 QB · 1 C · 2 WR · 1 RB/WR · 2 DEF · 1 defensa de equipo · {league!.benchSize} suplentes</span><b>{draftedPlayers.length}/{roster.length} seleccionados</b></section>
     <div className="roster-groups" aria-label="Roster del equipo" data-onboarding="team-roster">{rosterGroups.map((group) => {
       const groupSlots = roster.filter(({ slot }) => slot.group === group.id);
       const selected = groupSlots.filter(({ pick }) => Boolean(pick)).length;

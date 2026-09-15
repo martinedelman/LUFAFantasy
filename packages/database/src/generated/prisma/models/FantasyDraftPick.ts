@@ -42,6 +42,7 @@ export type FantasyDraftPickMinAggregateOutputType = {
   memberId: string | null
   teamId: string | null
   playerId: string | null
+  defenseTeamId: string | null
   round: number | null
   overall: number | null
   autoPicked: boolean | null
@@ -54,6 +55,7 @@ export type FantasyDraftPickMaxAggregateOutputType = {
   memberId: string | null
   teamId: string | null
   playerId: string | null
+  defenseTeamId: string | null
   round: number | null
   overall: number | null
   autoPicked: boolean | null
@@ -66,6 +68,7 @@ export type FantasyDraftPickCountAggregateOutputType = {
   memberId: number
   teamId: number
   playerId: number
+  defenseTeamId: number
   round: number
   overall: number
   autoPicked: number
@@ -90,6 +93,7 @@ export type FantasyDraftPickMinAggregateInputType = {
   memberId?: true
   teamId?: true
   playerId?: true
+  defenseTeamId?: true
   round?: true
   overall?: true
   autoPicked?: true
@@ -102,6 +106,7 @@ export type FantasyDraftPickMaxAggregateInputType = {
   memberId?: true
   teamId?: true
   playerId?: true
+  defenseTeamId?: true
   round?: true
   overall?: true
   autoPicked?: true
@@ -114,6 +119,7 @@ export type FantasyDraftPickCountAggregateInputType = {
   memberId?: true
   teamId?: true
   playerId?: true
+  defenseTeamId?: true
   round?: true
   overall?: true
   autoPicked?: true
@@ -212,7 +218,8 @@ export type FantasyDraftPickGroupByOutputType = {
   draftId: string
   memberId: string
   teamId: string
-  playerId: string
+  playerId: string | null
+  defenseTeamId: string | null
   round: number
   overall: number
   autoPicked: boolean
@@ -247,7 +254,8 @@ export type FantasyDraftPickWhereInput = {
   draftId?: Prisma.StringFilter<"FantasyDraftPick"> | string
   memberId?: Prisma.StringFilter<"FantasyDraftPick"> | string
   teamId?: Prisma.StringFilter<"FantasyDraftPick"> | string
-  playerId?: Prisma.StringFilter<"FantasyDraftPick"> | string
+  playerId?: Prisma.StringNullableFilter<"FantasyDraftPick"> | string | null
+  defenseTeamId?: Prisma.StringNullableFilter<"FantasyDraftPick"> | string | null
   round?: Prisma.IntFilter<"FantasyDraftPick"> | number
   overall?: Prisma.IntFilter<"FantasyDraftPick"> | number
   autoPicked?: Prisma.BoolFilter<"FantasyDraftPick"> | boolean
@@ -255,7 +263,8 @@ export type FantasyDraftPickWhereInput = {
   draft?: Prisma.XOR<Prisma.FantasyDraftScalarRelationFilter, Prisma.FantasyDraftWhereInput>
   member?: Prisma.XOR<Prisma.FantasyLeagueMemberScalarRelationFilter, Prisma.FantasyLeagueMemberWhereInput>
   team?: Prisma.XOR<Prisma.FantasyTeamScalarRelationFilter, Prisma.FantasyTeamWhereInput>
-  player?: Prisma.XOR<Prisma.PlayerScalarRelationFilter, Prisma.PlayerWhereInput>
+  player?: Prisma.XOR<Prisma.PlayerNullableScalarRelationFilter, Prisma.PlayerWhereInput> | null
+  defenseTeam?: Prisma.XOR<Prisma.TeamNullableScalarRelationFilter, Prisma.TeamWhereInput> | null
 }
 
 export type FantasyDraftPickOrderByWithRelationInput = {
@@ -263,7 +272,8 @@ export type FantasyDraftPickOrderByWithRelationInput = {
   draftId?: Prisma.SortOrder
   memberId?: Prisma.SortOrder
   teamId?: Prisma.SortOrder
-  playerId?: Prisma.SortOrder
+  playerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrderInput | Prisma.SortOrder
   round?: Prisma.SortOrder
   overall?: Prisma.SortOrder
   autoPicked?: Prisma.SortOrder
@@ -272,11 +282,13 @@ export type FantasyDraftPickOrderByWithRelationInput = {
   member?: Prisma.FantasyLeagueMemberOrderByWithRelationInput
   team?: Prisma.FantasyTeamOrderByWithRelationInput
   player?: Prisma.PlayerOrderByWithRelationInput
+  defenseTeam?: Prisma.TeamOrderByWithRelationInput
 }
 
 export type FantasyDraftPickWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   draftId_playerId?: Prisma.FantasyDraftPickDraftIdPlayerIdCompoundUniqueInput
+  draftId_defenseTeamId?: Prisma.FantasyDraftPickDraftIdDefenseTeamIdCompoundUniqueInput
   draftId_overall?: Prisma.FantasyDraftPickDraftIdOverallCompoundUniqueInput
   AND?: Prisma.FantasyDraftPickWhereInput | Prisma.FantasyDraftPickWhereInput[]
   OR?: Prisma.FantasyDraftPickWhereInput[]
@@ -284,7 +296,8 @@ export type FantasyDraftPickWhereUniqueInput = Prisma.AtLeast<{
   draftId?: Prisma.StringFilter<"FantasyDraftPick"> | string
   memberId?: Prisma.StringFilter<"FantasyDraftPick"> | string
   teamId?: Prisma.StringFilter<"FantasyDraftPick"> | string
-  playerId?: Prisma.StringFilter<"FantasyDraftPick"> | string
+  playerId?: Prisma.StringNullableFilter<"FantasyDraftPick"> | string | null
+  defenseTeamId?: Prisma.StringNullableFilter<"FantasyDraftPick"> | string | null
   round?: Prisma.IntFilter<"FantasyDraftPick"> | number
   overall?: Prisma.IntFilter<"FantasyDraftPick"> | number
   autoPicked?: Prisma.BoolFilter<"FantasyDraftPick"> | boolean
@@ -292,15 +305,17 @@ export type FantasyDraftPickWhereUniqueInput = Prisma.AtLeast<{
   draft?: Prisma.XOR<Prisma.FantasyDraftScalarRelationFilter, Prisma.FantasyDraftWhereInput>
   member?: Prisma.XOR<Prisma.FantasyLeagueMemberScalarRelationFilter, Prisma.FantasyLeagueMemberWhereInput>
   team?: Prisma.XOR<Prisma.FantasyTeamScalarRelationFilter, Prisma.FantasyTeamWhereInput>
-  player?: Prisma.XOR<Prisma.PlayerScalarRelationFilter, Prisma.PlayerWhereInput>
-}, "id" | "draftId_playerId" | "draftId_overall">
+  player?: Prisma.XOR<Prisma.PlayerNullableScalarRelationFilter, Prisma.PlayerWhereInput> | null
+  defenseTeam?: Prisma.XOR<Prisma.TeamNullableScalarRelationFilter, Prisma.TeamWhereInput> | null
+}, "id" | "draftId_playerId" | "draftId_defenseTeamId" | "draftId_overall">
 
 export type FantasyDraftPickOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   draftId?: Prisma.SortOrder
   memberId?: Prisma.SortOrder
   teamId?: Prisma.SortOrder
-  playerId?: Prisma.SortOrder
+  playerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrderInput | Prisma.SortOrder
   round?: Prisma.SortOrder
   overall?: Prisma.SortOrder
   autoPicked?: Prisma.SortOrder
@@ -320,7 +335,8 @@ export type FantasyDraftPickScalarWhereWithAggregatesInput = {
   draftId?: Prisma.StringWithAggregatesFilter<"FantasyDraftPick"> | string
   memberId?: Prisma.StringWithAggregatesFilter<"FantasyDraftPick"> | string
   teamId?: Prisma.StringWithAggregatesFilter<"FantasyDraftPick"> | string
-  playerId?: Prisma.StringWithAggregatesFilter<"FantasyDraftPick"> | string
+  playerId?: Prisma.StringNullableWithAggregatesFilter<"FantasyDraftPick"> | string | null
+  defenseTeamId?: Prisma.StringNullableWithAggregatesFilter<"FantasyDraftPick"> | string | null
   round?: Prisma.IntWithAggregatesFilter<"FantasyDraftPick"> | number
   overall?: Prisma.IntWithAggregatesFilter<"FantasyDraftPick"> | number
   autoPicked?: Prisma.BoolWithAggregatesFilter<"FantasyDraftPick"> | boolean
@@ -336,7 +352,8 @@ export type FantasyDraftPickCreateInput = {
   draft: Prisma.FantasyDraftCreateNestedOneWithoutPicksInput
   member: Prisma.FantasyLeagueMemberCreateNestedOneWithoutPicksInput
   team: Prisma.FantasyTeamCreateNestedOneWithoutPicksInput
-  player: Prisma.PlayerCreateNestedOneWithoutFantasyDraftPicksInput
+  player?: Prisma.PlayerCreateNestedOneWithoutFantasyDraftPicksInput
+  defenseTeam?: Prisma.TeamCreateNestedOneWithoutFantasyDefensePicksInput
 }
 
 export type FantasyDraftPickUncheckedCreateInput = {
@@ -344,7 +361,8 @@ export type FantasyDraftPickUncheckedCreateInput = {
   draftId: string
   memberId: string
   teamId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -360,7 +378,8 @@ export type FantasyDraftPickUpdateInput = {
   draft?: Prisma.FantasyDraftUpdateOneRequiredWithoutPicksNestedInput
   member?: Prisma.FantasyLeagueMemberUpdateOneRequiredWithoutPicksNestedInput
   team?: Prisma.FantasyTeamUpdateOneRequiredWithoutPicksNestedInput
-  player?: Prisma.PlayerUpdateOneRequiredWithoutFantasyDraftPicksNestedInput
+  player?: Prisma.PlayerUpdateOneWithoutFantasyDraftPicksNestedInput
+  defenseTeam?: Prisma.TeamUpdateOneWithoutFantasyDefensePicksNestedInput
 }
 
 export type FantasyDraftPickUncheckedUpdateInput = {
@@ -368,7 +387,8 @@ export type FantasyDraftPickUncheckedUpdateInput = {
   draftId?: Prisma.StringFieldUpdateOperationsInput | string
   memberId?: Prisma.StringFieldUpdateOperationsInput | string
   teamId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -380,7 +400,8 @@ export type FantasyDraftPickCreateManyInput = {
   draftId: string
   memberId: string
   teamId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -400,7 +421,8 @@ export type FantasyDraftPickUncheckedUpdateManyInput = {
   draftId?: Prisma.StringFieldUpdateOperationsInput | string
   memberId?: Prisma.StringFieldUpdateOperationsInput | string
   teamId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -422,6 +444,11 @@ export type FantasyDraftPickDraftIdPlayerIdCompoundUniqueInput = {
   playerId: string
 }
 
+export type FantasyDraftPickDraftIdDefenseTeamIdCompoundUniqueInput = {
+  draftId: string
+  defenseTeamId: string
+}
+
 export type FantasyDraftPickDraftIdOverallCompoundUniqueInput = {
   draftId: string
   overall: number
@@ -433,6 +460,7 @@ export type FantasyDraftPickCountOrderByAggregateInput = {
   memberId?: Prisma.SortOrder
   teamId?: Prisma.SortOrder
   playerId?: Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrder
   round?: Prisma.SortOrder
   overall?: Prisma.SortOrder
   autoPicked?: Prisma.SortOrder
@@ -450,6 +478,7 @@ export type FantasyDraftPickMaxOrderByAggregateInput = {
   memberId?: Prisma.SortOrder
   teamId?: Prisma.SortOrder
   playerId?: Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrder
   round?: Prisma.SortOrder
   overall?: Prisma.SortOrder
   autoPicked?: Prisma.SortOrder
@@ -462,6 +491,7 @@ export type FantasyDraftPickMinOrderByAggregateInput = {
   memberId?: Prisma.SortOrder
   teamId?: Prisma.SortOrder
   playerId?: Prisma.SortOrder
+  defenseTeamId?: Prisma.SortOrder
   round?: Prisma.SortOrder
   overall?: Prisma.SortOrder
   autoPicked?: Prisma.SortOrder
@@ -471,6 +501,48 @@ export type FantasyDraftPickMinOrderByAggregateInput = {
 export type FantasyDraftPickSumOrderByAggregateInput = {
   round?: Prisma.SortOrder
   overall?: Prisma.SortOrder
+}
+
+export type FantasyDraftPickCreateNestedManyWithoutDefenseTeamInput = {
+  create?: Prisma.XOR<Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput, Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput> | Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput[] | Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput[]
+  connectOrCreate?: Prisma.FantasyDraftPickCreateOrConnectWithoutDefenseTeamInput | Prisma.FantasyDraftPickCreateOrConnectWithoutDefenseTeamInput[]
+  createMany?: Prisma.FantasyDraftPickCreateManyDefenseTeamInputEnvelope
+  connect?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+}
+
+export type FantasyDraftPickUncheckedCreateNestedManyWithoutDefenseTeamInput = {
+  create?: Prisma.XOR<Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput, Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput> | Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput[] | Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput[]
+  connectOrCreate?: Prisma.FantasyDraftPickCreateOrConnectWithoutDefenseTeamInput | Prisma.FantasyDraftPickCreateOrConnectWithoutDefenseTeamInput[]
+  createMany?: Prisma.FantasyDraftPickCreateManyDefenseTeamInputEnvelope
+  connect?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+}
+
+export type FantasyDraftPickUpdateManyWithoutDefenseTeamNestedInput = {
+  create?: Prisma.XOR<Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput, Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput> | Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput[] | Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput[]
+  connectOrCreate?: Prisma.FantasyDraftPickCreateOrConnectWithoutDefenseTeamInput | Prisma.FantasyDraftPickCreateOrConnectWithoutDefenseTeamInput[]
+  upsert?: Prisma.FantasyDraftPickUpsertWithWhereUniqueWithoutDefenseTeamInput | Prisma.FantasyDraftPickUpsertWithWhereUniqueWithoutDefenseTeamInput[]
+  createMany?: Prisma.FantasyDraftPickCreateManyDefenseTeamInputEnvelope
+  set?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+  disconnect?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+  delete?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+  connect?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+  update?: Prisma.FantasyDraftPickUpdateWithWhereUniqueWithoutDefenseTeamInput | Prisma.FantasyDraftPickUpdateWithWhereUniqueWithoutDefenseTeamInput[]
+  updateMany?: Prisma.FantasyDraftPickUpdateManyWithWhereWithoutDefenseTeamInput | Prisma.FantasyDraftPickUpdateManyWithWhereWithoutDefenseTeamInput[]
+  deleteMany?: Prisma.FantasyDraftPickScalarWhereInput | Prisma.FantasyDraftPickScalarWhereInput[]
+}
+
+export type FantasyDraftPickUncheckedUpdateManyWithoutDefenseTeamNestedInput = {
+  create?: Prisma.XOR<Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput, Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput> | Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput[] | Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput[]
+  connectOrCreate?: Prisma.FantasyDraftPickCreateOrConnectWithoutDefenseTeamInput | Prisma.FantasyDraftPickCreateOrConnectWithoutDefenseTeamInput[]
+  upsert?: Prisma.FantasyDraftPickUpsertWithWhereUniqueWithoutDefenseTeamInput | Prisma.FantasyDraftPickUpsertWithWhereUniqueWithoutDefenseTeamInput[]
+  createMany?: Prisma.FantasyDraftPickCreateManyDefenseTeamInputEnvelope
+  set?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+  disconnect?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+  delete?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+  connect?: Prisma.FantasyDraftPickWhereUniqueInput | Prisma.FantasyDraftPickWhereUniqueInput[]
+  update?: Prisma.FantasyDraftPickUpdateWithWhereUniqueWithoutDefenseTeamInput | Prisma.FantasyDraftPickUpdateWithWhereUniqueWithoutDefenseTeamInput[]
+  updateMany?: Prisma.FantasyDraftPickUpdateManyWithWhereWithoutDefenseTeamInput | Prisma.FantasyDraftPickUpdateManyWithWhereWithoutDefenseTeamInput[]
+  deleteMany?: Prisma.FantasyDraftPickScalarWhereInput | Prisma.FantasyDraftPickScalarWhereInput[]
 }
 
 export type FantasyDraftPickCreateNestedManyWithoutPlayerInput = {
@@ -641,6 +713,72 @@ export type FantasyDraftPickUncheckedUpdateManyWithoutDraftNestedInput = {
   deleteMany?: Prisma.FantasyDraftPickScalarWhereInput | Prisma.FantasyDraftPickScalarWhereInput[]
 }
 
+export type FantasyDraftPickCreateWithoutDefenseTeamInput = {
+  id?: string
+  round: number
+  overall: number
+  autoPicked?: boolean
+  createdAt?: Date | string
+  draft: Prisma.FantasyDraftCreateNestedOneWithoutPicksInput
+  member: Prisma.FantasyLeagueMemberCreateNestedOneWithoutPicksInput
+  team: Prisma.FantasyTeamCreateNestedOneWithoutPicksInput
+  player?: Prisma.PlayerCreateNestedOneWithoutFantasyDraftPicksInput
+}
+
+export type FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput = {
+  id?: string
+  draftId: string
+  memberId: string
+  teamId: string
+  playerId?: string | null
+  round: number
+  overall: number
+  autoPicked?: boolean
+  createdAt?: Date | string
+}
+
+export type FantasyDraftPickCreateOrConnectWithoutDefenseTeamInput = {
+  where: Prisma.FantasyDraftPickWhereUniqueInput
+  create: Prisma.XOR<Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput, Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput>
+}
+
+export type FantasyDraftPickCreateManyDefenseTeamInputEnvelope = {
+  data: Prisma.FantasyDraftPickCreateManyDefenseTeamInput | Prisma.FantasyDraftPickCreateManyDefenseTeamInput[]
+  skipDuplicates?: boolean
+}
+
+export type FantasyDraftPickUpsertWithWhereUniqueWithoutDefenseTeamInput = {
+  where: Prisma.FantasyDraftPickWhereUniqueInput
+  update: Prisma.XOR<Prisma.FantasyDraftPickUpdateWithoutDefenseTeamInput, Prisma.FantasyDraftPickUncheckedUpdateWithoutDefenseTeamInput>
+  create: Prisma.XOR<Prisma.FantasyDraftPickCreateWithoutDefenseTeamInput, Prisma.FantasyDraftPickUncheckedCreateWithoutDefenseTeamInput>
+}
+
+export type FantasyDraftPickUpdateWithWhereUniqueWithoutDefenseTeamInput = {
+  where: Prisma.FantasyDraftPickWhereUniqueInput
+  data: Prisma.XOR<Prisma.FantasyDraftPickUpdateWithoutDefenseTeamInput, Prisma.FantasyDraftPickUncheckedUpdateWithoutDefenseTeamInput>
+}
+
+export type FantasyDraftPickUpdateManyWithWhereWithoutDefenseTeamInput = {
+  where: Prisma.FantasyDraftPickScalarWhereInput
+  data: Prisma.XOR<Prisma.FantasyDraftPickUpdateManyMutationInput, Prisma.FantasyDraftPickUncheckedUpdateManyWithoutDefenseTeamInput>
+}
+
+export type FantasyDraftPickScalarWhereInput = {
+  AND?: Prisma.FantasyDraftPickScalarWhereInput | Prisma.FantasyDraftPickScalarWhereInput[]
+  OR?: Prisma.FantasyDraftPickScalarWhereInput[]
+  NOT?: Prisma.FantasyDraftPickScalarWhereInput | Prisma.FantasyDraftPickScalarWhereInput[]
+  id?: Prisma.StringFilter<"FantasyDraftPick"> | string
+  draftId?: Prisma.StringFilter<"FantasyDraftPick"> | string
+  memberId?: Prisma.StringFilter<"FantasyDraftPick"> | string
+  teamId?: Prisma.StringFilter<"FantasyDraftPick"> | string
+  playerId?: Prisma.StringNullableFilter<"FantasyDraftPick"> | string | null
+  defenseTeamId?: Prisma.StringNullableFilter<"FantasyDraftPick"> | string | null
+  round?: Prisma.IntFilter<"FantasyDraftPick"> | number
+  overall?: Prisma.IntFilter<"FantasyDraftPick"> | number
+  autoPicked?: Prisma.BoolFilter<"FantasyDraftPick"> | boolean
+  createdAt?: Prisma.DateTimeFilter<"FantasyDraftPick"> | Date | string
+}
+
 export type FantasyDraftPickCreateWithoutPlayerInput = {
   id?: string
   round: number
@@ -650,6 +788,7 @@ export type FantasyDraftPickCreateWithoutPlayerInput = {
   draft: Prisma.FantasyDraftCreateNestedOneWithoutPicksInput
   member: Prisma.FantasyLeagueMemberCreateNestedOneWithoutPicksInput
   team: Prisma.FantasyTeamCreateNestedOneWithoutPicksInput
+  defenseTeam?: Prisma.TeamCreateNestedOneWithoutFantasyDefensePicksInput
 }
 
 export type FantasyDraftPickUncheckedCreateWithoutPlayerInput = {
@@ -657,6 +796,7 @@ export type FantasyDraftPickUncheckedCreateWithoutPlayerInput = {
   draftId: string
   memberId: string
   teamId: string
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -689,21 +829,6 @@ export type FantasyDraftPickUpdateManyWithWhereWithoutPlayerInput = {
   data: Prisma.XOR<Prisma.FantasyDraftPickUpdateManyMutationInput, Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerInput>
 }
 
-export type FantasyDraftPickScalarWhereInput = {
-  AND?: Prisma.FantasyDraftPickScalarWhereInput | Prisma.FantasyDraftPickScalarWhereInput[]
-  OR?: Prisma.FantasyDraftPickScalarWhereInput[]
-  NOT?: Prisma.FantasyDraftPickScalarWhereInput | Prisma.FantasyDraftPickScalarWhereInput[]
-  id?: Prisma.StringFilter<"FantasyDraftPick"> | string
-  draftId?: Prisma.StringFilter<"FantasyDraftPick"> | string
-  memberId?: Prisma.StringFilter<"FantasyDraftPick"> | string
-  teamId?: Prisma.StringFilter<"FantasyDraftPick"> | string
-  playerId?: Prisma.StringFilter<"FantasyDraftPick"> | string
-  round?: Prisma.IntFilter<"FantasyDraftPick"> | number
-  overall?: Prisma.IntFilter<"FantasyDraftPick"> | number
-  autoPicked?: Prisma.BoolFilter<"FantasyDraftPick"> | boolean
-  createdAt?: Prisma.DateTimeFilter<"FantasyDraftPick"> | Date | string
-}
-
 export type FantasyDraftPickCreateWithoutMemberInput = {
   id?: string
   round: number
@@ -712,14 +837,16 @@ export type FantasyDraftPickCreateWithoutMemberInput = {
   createdAt?: Date | string
   draft: Prisma.FantasyDraftCreateNestedOneWithoutPicksInput
   team: Prisma.FantasyTeamCreateNestedOneWithoutPicksInput
-  player: Prisma.PlayerCreateNestedOneWithoutFantasyDraftPicksInput
+  player?: Prisma.PlayerCreateNestedOneWithoutFantasyDraftPicksInput
+  defenseTeam?: Prisma.TeamCreateNestedOneWithoutFantasyDefensePicksInput
 }
 
 export type FantasyDraftPickUncheckedCreateWithoutMemberInput = {
   id?: string
   draftId: string
   teamId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -760,14 +887,16 @@ export type FantasyDraftPickCreateWithoutTeamInput = {
   createdAt?: Date | string
   draft: Prisma.FantasyDraftCreateNestedOneWithoutPicksInput
   member: Prisma.FantasyLeagueMemberCreateNestedOneWithoutPicksInput
-  player: Prisma.PlayerCreateNestedOneWithoutFantasyDraftPicksInput
+  player?: Prisma.PlayerCreateNestedOneWithoutFantasyDraftPicksInput
+  defenseTeam?: Prisma.TeamCreateNestedOneWithoutFantasyDefensePicksInput
 }
 
 export type FantasyDraftPickUncheckedCreateWithoutTeamInput = {
   id?: string
   draftId: string
   memberId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -808,14 +937,16 @@ export type FantasyDraftPickCreateWithoutDraftInput = {
   createdAt?: Date | string
   member: Prisma.FantasyLeagueMemberCreateNestedOneWithoutPicksInput
   team: Prisma.FantasyTeamCreateNestedOneWithoutPicksInput
-  player: Prisma.PlayerCreateNestedOneWithoutFantasyDraftPicksInput
+  player?: Prisma.PlayerCreateNestedOneWithoutFantasyDraftPicksInput
+  defenseTeam?: Prisma.TeamCreateNestedOneWithoutFantasyDefensePicksInput
 }
 
 export type FantasyDraftPickUncheckedCreateWithoutDraftInput = {
   id?: string
   memberId: string
   teamId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -848,11 +979,60 @@ export type FantasyDraftPickUpdateManyWithWhereWithoutDraftInput = {
   data: Prisma.XOR<Prisma.FantasyDraftPickUpdateManyMutationInput, Prisma.FantasyDraftPickUncheckedUpdateManyWithoutDraftInput>
 }
 
+export type FantasyDraftPickCreateManyDefenseTeamInput = {
+  id?: string
+  draftId: string
+  memberId: string
+  teamId: string
+  playerId?: string | null
+  round: number
+  overall: number
+  autoPicked?: boolean
+  createdAt?: Date | string
+}
+
+export type FantasyDraftPickUpdateWithoutDefenseTeamInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  round?: Prisma.IntFieldUpdateOperationsInput | number
+  overall?: Prisma.IntFieldUpdateOperationsInput | number
+  autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  draft?: Prisma.FantasyDraftUpdateOneRequiredWithoutPicksNestedInput
+  member?: Prisma.FantasyLeagueMemberUpdateOneRequiredWithoutPicksNestedInput
+  team?: Prisma.FantasyTeamUpdateOneRequiredWithoutPicksNestedInput
+  player?: Prisma.PlayerUpdateOneWithoutFantasyDraftPicksNestedInput
+}
+
+export type FantasyDraftPickUncheckedUpdateWithoutDefenseTeamInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  draftId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  round?: Prisma.IntFieldUpdateOperationsInput | number
+  overall?: Prisma.IntFieldUpdateOperationsInput | number
+  autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FantasyDraftPickUncheckedUpdateManyWithoutDefenseTeamInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  draftId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  round?: Prisma.IntFieldUpdateOperationsInput | number
+  overall?: Prisma.IntFieldUpdateOperationsInput | number
+  autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type FantasyDraftPickCreateManyPlayerInput = {
   id?: string
   draftId: string
   memberId: string
   teamId: string
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -868,6 +1048,7 @@ export type FantasyDraftPickUpdateWithoutPlayerInput = {
   draft?: Prisma.FantasyDraftUpdateOneRequiredWithoutPicksNestedInput
   member?: Prisma.FantasyLeagueMemberUpdateOneRequiredWithoutPicksNestedInput
   team?: Prisma.FantasyTeamUpdateOneRequiredWithoutPicksNestedInput
+  defenseTeam?: Prisma.TeamUpdateOneWithoutFantasyDefensePicksNestedInput
 }
 
 export type FantasyDraftPickUncheckedUpdateWithoutPlayerInput = {
@@ -875,6 +1056,7 @@ export type FantasyDraftPickUncheckedUpdateWithoutPlayerInput = {
   draftId?: Prisma.StringFieldUpdateOperationsInput | string
   memberId?: Prisma.StringFieldUpdateOperationsInput | string
   teamId?: Prisma.StringFieldUpdateOperationsInput | string
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -886,6 +1068,7 @@ export type FantasyDraftPickUncheckedUpdateManyWithoutPlayerInput = {
   draftId?: Prisma.StringFieldUpdateOperationsInput | string
   memberId?: Prisma.StringFieldUpdateOperationsInput | string
   teamId?: Prisma.StringFieldUpdateOperationsInput | string
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -896,7 +1079,8 @@ export type FantasyDraftPickCreateManyMemberInput = {
   id?: string
   draftId: string
   teamId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -911,14 +1095,16 @@ export type FantasyDraftPickUpdateWithoutMemberInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   draft?: Prisma.FantasyDraftUpdateOneRequiredWithoutPicksNestedInput
   team?: Prisma.FantasyTeamUpdateOneRequiredWithoutPicksNestedInput
-  player?: Prisma.PlayerUpdateOneRequiredWithoutFantasyDraftPicksNestedInput
+  player?: Prisma.PlayerUpdateOneWithoutFantasyDraftPicksNestedInput
+  defenseTeam?: Prisma.TeamUpdateOneWithoutFantasyDefensePicksNestedInput
 }
 
 export type FantasyDraftPickUncheckedUpdateWithoutMemberInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   draftId?: Prisma.StringFieldUpdateOperationsInput | string
   teamId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -929,7 +1115,8 @@ export type FantasyDraftPickUncheckedUpdateManyWithoutMemberInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   draftId?: Prisma.StringFieldUpdateOperationsInput | string
   teamId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -940,7 +1127,8 @@ export type FantasyDraftPickCreateManyTeamInput = {
   id?: string
   draftId: string
   memberId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -955,14 +1143,16 @@ export type FantasyDraftPickUpdateWithoutTeamInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   draft?: Prisma.FantasyDraftUpdateOneRequiredWithoutPicksNestedInput
   member?: Prisma.FantasyLeagueMemberUpdateOneRequiredWithoutPicksNestedInput
-  player?: Prisma.PlayerUpdateOneRequiredWithoutFantasyDraftPicksNestedInput
+  player?: Prisma.PlayerUpdateOneWithoutFantasyDraftPicksNestedInput
+  defenseTeam?: Prisma.TeamUpdateOneWithoutFantasyDefensePicksNestedInput
 }
 
 export type FantasyDraftPickUncheckedUpdateWithoutTeamInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   draftId?: Prisma.StringFieldUpdateOperationsInput | string
   memberId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -973,7 +1163,8 @@ export type FantasyDraftPickUncheckedUpdateManyWithoutTeamInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   draftId?: Prisma.StringFieldUpdateOperationsInput | string
   memberId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -984,7 +1175,8 @@ export type FantasyDraftPickCreateManyDraftInput = {
   id?: string
   memberId: string
   teamId: string
-  playerId: string
+  playerId?: string | null
+  defenseTeamId?: string | null
   round: number
   overall: number
   autoPicked?: boolean
@@ -999,14 +1191,16 @@ export type FantasyDraftPickUpdateWithoutDraftInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   member?: Prisma.FantasyLeagueMemberUpdateOneRequiredWithoutPicksNestedInput
   team?: Prisma.FantasyTeamUpdateOneRequiredWithoutPicksNestedInput
-  player?: Prisma.PlayerUpdateOneRequiredWithoutFantasyDraftPicksNestedInput
+  player?: Prisma.PlayerUpdateOneWithoutFantasyDraftPicksNestedInput
+  defenseTeam?: Prisma.TeamUpdateOneWithoutFantasyDefensePicksNestedInput
 }
 
 export type FantasyDraftPickUncheckedUpdateWithoutDraftInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   memberId?: Prisma.StringFieldUpdateOperationsInput | string
   teamId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1017,7 +1211,8 @@ export type FantasyDraftPickUncheckedUpdateManyWithoutDraftInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   memberId?: Prisma.StringFieldUpdateOperationsInput | string
   teamId?: Prisma.StringFieldUpdateOperationsInput | string
-  playerId?: Prisma.StringFieldUpdateOperationsInput | string
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defenseTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   round?: Prisma.IntFieldUpdateOperationsInput | number
   overall?: Prisma.IntFieldUpdateOperationsInput | number
   autoPicked?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1032,6 +1227,7 @@ export type FantasyDraftPickSelect<ExtArgs extends runtime.Types.Extensions.Inte
   memberId?: boolean
   teamId?: boolean
   playerId?: boolean
+  defenseTeamId?: boolean
   round?: boolean
   overall?: boolean
   autoPicked?: boolean
@@ -1039,7 +1235,8 @@ export type FantasyDraftPickSelect<ExtArgs extends runtime.Types.Extensions.Inte
   draft?: boolean | Prisma.FantasyDraftDefaultArgs<ExtArgs>
   member?: boolean | Prisma.FantasyLeagueMemberDefaultArgs<ExtArgs>
   team?: boolean | Prisma.FantasyTeamDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyDraftPick$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyDraftPick$defenseTeamArgs<ExtArgs>
 }, ExtArgs["result"]["fantasyDraftPick"]>
 
 export type FantasyDraftPickSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1048,6 +1245,7 @@ export type FantasyDraftPickSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   memberId?: boolean
   teamId?: boolean
   playerId?: boolean
+  defenseTeamId?: boolean
   round?: boolean
   overall?: boolean
   autoPicked?: boolean
@@ -1055,7 +1253,8 @@ export type FantasyDraftPickSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   draft?: boolean | Prisma.FantasyDraftDefaultArgs<ExtArgs>
   member?: boolean | Prisma.FantasyLeagueMemberDefaultArgs<ExtArgs>
   team?: boolean | Prisma.FantasyTeamDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyDraftPick$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyDraftPick$defenseTeamArgs<ExtArgs>
 }, ExtArgs["result"]["fantasyDraftPick"]>
 
 export type FantasyDraftPickSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1064,6 +1263,7 @@ export type FantasyDraftPickSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   memberId?: boolean
   teamId?: boolean
   playerId?: boolean
+  defenseTeamId?: boolean
   round?: boolean
   overall?: boolean
   autoPicked?: boolean
@@ -1071,7 +1271,8 @@ export type FantasyDraftPickSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   draft?: boolean | Prisma.FantasyDraftDefaultArgs<ExtArgs>
   member?: boolean | Prisma.FantasyLeagueMemberDefaultArgs<ExtArgs>
   team?: boolean | Prisma.FantasyTeamDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyDraftPick$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyDraftPick$defenseTeamArgs<ExtArgs>
 }, ExtArgs["result"]["fantasyDraftPick"]>
 
 export type FantasyDraftPickSelectScalar = {
@@ -1080,30 +1281,34 @@ export type FantasyDraftPickSelectScalar = {
   memberId?: boolean
   teamId?: boolean
   playerId?: boolean
+  defenseTeamId?: boolean
   round?: boolean
   overall?: boolean
   autoPicked?: boolean
   createdAt?: boolean
 }
 
-export type FantasyDraftPickOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "draftId" | "memberId" | "teamId" | "playerId" | "round" | "overall" | "autoPicked" | "createdAt", ExtArgs["result"]["fantasyDraftPick"]>
+export type FantasyDraftPickOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "draftId" | "memberId" | "teamId" | "playerId" | "defenseTeamId" | "round" | "overall" | "autoPicked" | "createdAt", ExtArgs["result"]["fantasyDraftPick"]>
 export type FantasyDraftPickInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   draft?: boolean | Prisma.FantasyDraftDefaultArgs<ExtArgs>
   member?: boolean | Prisma.FantasyLeagueMemberDefaultArgs<ExtArgs>
   team?: boolean | Prisma.FantasyTeamDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyDraftPick$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyDraftPick$defenseTeamArgs<ExtArgs>
 }
 export type FantasyDraftPickIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   draft?: boolean | Prisma.FantasyDraftDefaultArgs<ExtArgs>
   member?: boolean | Prisma.FantasyLeagueMemberDefaultArgs<ExtArgs>
   team?: boolean | Prisma.FantasyTeamDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyDraftPick$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyDraftPick$defenseTeamArgs<ExtArgs>
 }
 export type FantasyDraftPickIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   draft?: boolean | Prisma.FantasyDraftDefaultArgs<ExtArgs>
   member?: boolean | Prisma.FantasyLeagueMemberDefaultArgs<ExtArgs>
   team?: boolean | Prisma.FantasyTeamDefaultArgs<ExtArgs>
-  player?: boolean | Prisma.PlayerDefaultArgs<ExtArgs>
+  player?: boolean | Prisma.FantasyDraftPick$playerArgs<ExtArgs>
+  defenseTeam?: boolean | Prisma.FantasyDraftPick$defenseTeamArgs<ExtArgs>
 }
 
 export type $FantasyDraftPickPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1112,14 +1317,16 @@ export type $FantasyDraftPickPayload<ExtArgs extends runtime.Types.Extensions.In
     draft: Prisma.$FantasyDraftPayload<ExtArgs>
     member: Prisma.$FantasyLeagueMemberPayload<ExtArgs>
     team: Prisma.$FantasyTeamPayload<ExtArgs>
-    player: Prisma.$PlayerPayload<ExtArgs>
+    player: Prisma.$PlayerPayload<ExtArgs> | null
+    defenseTeam: Prisma.$TeamPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     draftId: string
     memberId: string
     teamId: string
-    playerId: string
+    playerId: string | null
+    defenseTeamId: string | null
     round: number
     overall: number
     autoPicked: boolean
@@ -1521,7 +1728,8 @@ export interface Prisma__FantasyDraftPickClient<T, Null = never, ExtArgs extends
   draft<T extends Prisma.FantasyDraftDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyDraftDefaultArgs<ExtArgs>>): Prisma.Prisma__FantasyDraftClient<runtime.Types.Result.GetResult<Prisma.$FantasyDraftPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   member<T extends Prisma.FantasyLeagueMemberDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyLeagueMemberDefaultArgs<ExtArgs>>): Prisma.Prisma__FantasyLeagueMemberClient<runtime.Types.Result.GetResult<Prisma.$FantasyLeagueMemberPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   team<T extends Prisma.FantasyTeamDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyTeamDefaultArgs<ExtArgs>>): Prisma.Prisma__FantasyTeamClient<runtime.Types.Result.GetResult<Prisma.$FantasyTeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  player<T extends Prisma.PlayerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PlayerDefaultArgs<ExtArgs>>): Prisma.Prisma__PlayerClient<runtime.Types.Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  player<T extends Prisma.FantasyDraftPick$playerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyDraftPick$playerArgs<ExtArgs>>): Prisma.Prisma__PlayerClient<runtime.Types.Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  defenseTeam<T extends Prisma.FantasyDraftPick$defenseTeamArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FantasyDraftPick$defenseTeamArgs<ExtArgs>>): Prisma.Prisma__TeamClient<runtime.Types.Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1556,6 +1764,7 @@ export interface FantasyDraftPickFieldRefs {
   readonly memberId: Prisma.FieldRef<"FantasyDraftPick", 'String'>
   readonly teamId: Prisma.FieldRef<"FantasyDraftPick", 'String'>
   readonly playerId: Prisma.FieldRef<"FantasyDraftPick", 'String'>
+  readonly defenseTeamId: Prisma.FieldRef<"FantasyDraftPick", 'String'>
   readonly round: Prisma.FieldRef<"FantasyDraftPick", 'Int'>
   readonly overall: Prisma.FieldRef<"FantasyDraftPick", 'Int'>
   readonly autoPicked: Prisma.FieldRef<"FantasyDraftPick", 'Boolean'>
@@ -1958,6 +2167,44 @@ export type FantasyDraftPickDeleteManyArgs<ExtArgs extends runtime.Types.Extensi
    * Limit how many FantasyDraftPicks to delete.
    */
   limit?: number
+}
+
+/**
+ * FantasyDraftPick.player
+ */
+export type FantasyDraftPick$playerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Player
+   */
+  select?: Prisma.PlayerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Player
+   */
+  omit?: Prisma.PlayerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PlayerInclude<ExtArgs> | null
+  where?: Prisma.PlayerWhereInput
+}
+
+/**
+ * FantasyDraftPick.defenseTeam
+ */
+export type FantasyDraftPick$defenseTeamArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Team
+   */
+  select?: Prisma.TeamSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Team
+   */
+  omit?: Prisma.TeamOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TeamInclude<ExtArgs> | null
+  where?: Prisma.TeamWhereInput
 }
 
 /**

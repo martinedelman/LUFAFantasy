@@ -429,7 +429,9 @@ export const ModelName = {
   FantasyTeam: 'FantasyTeam',
   FantasyDraft: 'FantasyDraft',
   FantasyDraftPick: 'FantasyDraftPick',
-  FantasyPlayerFavorite: 'FantasyPlayerFavorite'
+  FantasyPlayerFavorite: 'FantasyPlayerFavorite',
+  DigitalCredential: 'DigitalCredential',
+  DigitalCredentialAudit: 'DigitalCredentialAudit'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -445,7 +447,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite"
+    modelProps: "user" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite" | "digitalCredential" | "digitalCredentialAudit"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2891,6 +2893,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    DigitalCredential: {
+      payload: Prisma.$DigitalCredentialPayload<ExtArgs>
+      fields: Prisma.DigitalCredentialFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DigitalCredentialFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DigitalCredentialFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload>
+        }
+        findFirst: {
+          args: Prisma.DigitalCredentialFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DigitalCredentialFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload>
+        }
+        findMany: {
+          args: Prisma.DigitalCredentialFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload>[]
+        }
+        create: {
+          args: Prisma.DigitalCredentialCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload>
+        }
+        createMany: {
+          args: Prisma.DigitalCredentialCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DigitalCredentialCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload>[]
+        }
+        delete: {
+          args: Prisma.DigitalCredentialDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload>
+        }
+        update: {
+          args: Prisma.DigitalCredentialUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload>
+        }
+        deleteMany: {
+          args: Prisma.DigitalCredentialDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DigitalCredentialUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DigitalCredentialUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload>[]
+        }
+        upsert: {
+          args: Prisma.DigitalCredentialUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialPayload>
+        }
+        aggregate: {
+          args: Prisma.DigitalCredentialAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDigitalCredential>
+        }
+        groupBy: {
+          args: Prisma.DigitalCredentialGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DigitalCredentialGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DigitalCredentialCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DigitalCredentialCountAggregateOutputType> | number
+        }
+      }
+    }
+    DigitalCredentialAudit: {
+      payload: Prisma.$DigitalCredentialAuditPayload<ExtArgs>
+      fields: Prisma.DigitalCredentialAuditFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DigitalCredentialAuditFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DigitalCredentialAuditFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload>
+        }
+        findFirst: {
+          args: Prisma.DigitalCredentialAuditFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DigitalCredentialAuditFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload>
+        }
+        findMany: {
+          args: Prisma.DigitalCredentialAuditFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload>[]
+        }
+        create: {
+          args: Prisma.DigitalCredentialAuditCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload>
+        }
+        createMany: {
+          args: Prisma.DigitalCredentialAuditCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DigitalCredentialAuditCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload>[]
+        }
+        delete: {
+          args: Prisma.DigitalCredentialAuditDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload>
+        }
+        update: {
+          args: Prisma.DigitalCredentialAuditUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload>
+        }
+        deleteMany: {
+          args: Prisma.DigitalCredentialAuditDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DigitalCredentialAuditUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DigitalCredentialAuditUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload>[]
+        }
+        upsert: {
+          args: Prisma.DigitalCredentialAuditUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DigitalCredentialAuditPayload>
+        }
+        aggregate: {
+          args: Prisma.DigitalCredentialAuditAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDigitalCredentialAudit>
+        }
+        groupBy: {
+          args: Prisma.DigitalCredentialAuditGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DigitalCredentialAuditGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DigitalCredentialAuditCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DigitalCredentialAuditCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -3416,6 +3566,7 @@ export const FantasyDraftPickScalarFieldEnum = {
   memberId: 'memberId',
   teamId: 'teamId',
   playerId: 'playerId',
+  defenseTeamId: 'defenseTeamId',
   round: 'round',
   overall: 'overall',
   autoPicked: 'autoPicked',
@@ -3429,10 +3580,47 @@ export const FantasyPlayerFavoriteScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   playerId: 'playerId',
+  defenseTeamId: 'defenseTeamId',
   createdAt: 'createdAt'
 } as const
 
 export type FantasyPlayerFavoriteScalarFieldEnum = (typeof FantasyPlayerFavoriteScalarFieldEnum)[keyof typeof FantasyPlayerFavoriteScalarFieldEnum]
+
+
+export const DigitalCredentialScalarFieldEnum = {
+  id: 'id',
+  publicId: 'publicId',
+  userId: 'userId',
+  playerId: 'playerId',
+  judgeId: 'judgeId',
+  subjectType: 'subjectType',
+  memberNumber: 'memberNumber',
+  displayName: 'displayName',
+  profilePicture: 'profilePicture',
+  roleLabel: 'roleLabel',
+  organizationName: 'organizationName',
+  nationalityCode: 'nationalityCode',
+  dateOfBirth: 'dateOfBirth',
+  status: 'status',
+  issuedAt: 'issuedAt',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt',
+  renewedFromId: 'renewedFromId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DigitalCredentialScalarFieldEnum = (typeof DigitalCredentialScalarFieldEnum)[keyof typeof DigitalCredentialScalarFieldEnum]
+
+
+export const DigitalCredentialAuditScalarFieldEnum = {
+  id: 'id',
+  credentialId: 'credentialId',
+  action: 'action',
+  createdAt: 'createdAt'
+} as const
+
+export type DigitalCredentialAuditScalarFieldEnum = (typeof DigitalCredentialAuditScalarFieldEnum)[keyof typeof DigitalCredentialAuditScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -3749,6 +3937,8 @@ export type GlobalOmitConfig = {
   fantasyDraft?: Prisma.FantasyDraftOmit
   fantasyDraftPick?: Prisma.FantasyDraftPickOmit
   fantasyPlayerFavorite?: Prisma.FantasyPlayerFavoriteOmit
+  digitalCredential?: Prisma.DigitalCredentialOmit
+  digitalCredentialAudit?: Prisma.DigitalCredentialAuditOmit
 }
 
 /* Types for Logging */
