@@ -2,6 +2,7 @@ import { UpcomingGames } from "@/components/UpcomingGames";
 import { AuthControl } from "@/components/AuthControl";
 import Image from "next/image";
 import Link from "next/link";
+import styles from "./page.module.css";
 
 const flagUrl = process.env.NEXT_PUBLIC_FLAG_URL || "https://flag.lufa.com.uy";
 
@@ -24,7 +25,15 @@ export default function HomePage() {
       </header>
 
       <section className="hero" id="inicio" aria-labelledby="portal-title">
-        <div className="hero-image" role="img" aria-label="Partido de flag football de LUFA" />
+        <div
+          className="hero-image"
+          role="img"
+          aria-label="Plantel uruguayo de football americano"
+          style={{
+            backgroundImage:
+              'linear-gradient(90deg, #0c507daa 0%, #0c507d55 48%, #0c507d11), url("/lufa-charruas-bears-team.jpg")',
+          }}
+        />
         <div className="hero-panel">
           <p className="eyebrow">Liga Uruguaya de Football Americano</p>
           <h1 id="portal-title">Bienvenidos<br />a la LUFA</h1>
@@ -41,8 +50,19 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div
+        className={styles.communityPhoto}
+        role="img"
+        aria-label="Jugadores de la selección uruguaya de football americano reunidos antes de un partido"
+      />
+
       <section className="about-section" id="acerca" aria-labelledby="about-title">
-        <div className="about-image" role="img" aria-label="Acción de football americano en Uruguay" />
+        <div
+          className="about-image"
+          role="img"
+          aria-label="Comunidad del football americano uruguayo"
+          style={{ backgroundImage: 'url("/lufa-bears-charruas-community.jpg")' }}
+        />
         <div className="about-copy">
           <p className="eyebrow">Institucional</p>
           <h2 id="about-title">Acerca de LUFA</h2>
