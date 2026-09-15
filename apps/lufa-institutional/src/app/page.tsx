@@ -8,8 +8,8 @@ const flagUrl = process.env.NEXT_PUBLIC_FLAG_URL || "https://flag.lufa.com.uy";
 
 export default function HomePage() {
   return (
-    <main className="page-shell">
-      <header className="header">
+    <main className={`${styles.portal} page-shell`}>
+      <header className={`header ${styles.header}`}>
         <Link className="brand" href="/" aria-label="Inicio LUFA">
           <Image src="/lufa_icon.png" alt="" width={78} height={78} priority />
           <span>Liga Uruguaya de Football Americano</span>
@@ -24,45 +24,57 @@ export default function HomePage() {
         <div className="header-session"><AuthControl /></div>
       </header>
 
-      <section className="hero" id="inicio" aria-labelledby="portal-title">
-        <div
-          className="hero-image"
-          role="img"
-          aria-label="Plantel uruguayo de football americano"
-          style={{
-            backgroundImage:
-              'linear-gradient(90deg, #0c507daa 0%, #0c507d55 48%, #0c507d11), url("/lufa-charruas-bears-team.jpg")',
-          }}
+      <section className={`hero ${styles.hero}`} id="inicio" aria-labelledby="portal-title">
+        <Image
+          className={styles.heroImage}
+          src="/lufa-charruas-bears-team.jpg"
+          alt="Plantel uruguayo de football americano"
+          fill
+          priority
+          sizes="(max-width: 720px) 100vw, 94vw"
         />
+        <div className={styles.heroShade} aria-hidden="true" />
         <div className="hero-panel">
           <p className="eyebrow">Liga Uruguaya de Football Americano</p>
-          <h1 id="portal-title">Bienvenidos<br />a la LUFA</h1>
+          <h1 id="portal-title">
+            Bienvenidos<br />a la LUFA
+          </h1>
           <p>El espacio institucional para nuestras disciplinas.</p>
         </div>
       </section>
 
-      <section className="discipline-section" aria-label="Disciplinas LUFA">
+      <section className={`discipline-section ${styles.disciplines}`} aria-label="Disciplinas LUFA">
         <a className="discipline-card flag-card" href={flagUrl}>
-          <span>01</span><strong>Flag Football</strong><small>Ver competencia y novedades</small>
+          <span>01</span>
+          <strong>Flag Football</strong>
+          <small>Ver competencia y novedades</small>
+          <i aria-hidden="true">↗</i>
         </a>
         <div className="discipline-card tackle-card" aria-disabled="true">
-          <span>02</span><strong>Tackle Football</strong><small>Próximamente</small>
+          <span>02</span>
+          <strong>Tackle Football</strong>
+          <small>Próximamente</small>
         </div>
       </section>
 
-      <div
-        className={styles.communityPhoto}
-        role="img"
-        aria-label="Jugadores de la selección uruguaya de football americano reunidos antes de un partido"
-      />
-
-      <section className="about-section" id="acerca" aria-labelledby="about-title">
-        <div
-          className="about-image"
-          role="img"
-          aria-label="Comunidad del football americano uruguayo"
-          style={{ backgroundImage: 'url("/lufa-bears-charruas-community.jpg")' }}
+      <figure className={styles.communityPhoto}>
+        <Image
+          src="/lufa-charruas-huddle.jpg"
+          alt="Jugadores de la selección uruguaya de football americano reunidos antes de un partido"
+          fill
+          sizes="(max-width: 720px) 100vw, 94vw"
         />
+      </figure>
+
+      <section className={`about-section ${styles.about}`} id="acerca" aria-labelledby="about-title">
+        <div className={`about-image ${styles.aboutImage}`}>
+          <Image
+            src="/lufa-bears-charruas-community.jpg"
+            alt="Comunidad del football americano uruguayo"
+            fill
+            sizes="(max-width: 720px) 100vw, 47vw"
+          />
+        </div>
         <div className="about-copy">
           <p className="eyebrow">Institucional</p>
           <h2 id="about-title">Acerca de LUFA</h2>
@@ -72,12 +84,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="games-section" id="proximos-partidos" aria-labelledby="games-title">
-        <div className="section-heading"><p className="eyebrow">Calendario</p><h2 id="games-title">Próximos partidos</h2></div>
+      <section className={`games-section ${styles.games}`} id="proximos-partidos" aria-labelledby="games-title">
+        <div className="section-heading">
+          <p className="eyebrow">Calendario</p>
+          <h2 id="games-title">Próximos partidos</h2>
+        </div>
         <UpcomingGames />
       </section>
 
-      <footer>LUFA · Liga Uruguaya de Football Americano</footer>
+      <footer className={styles.footer}>
+        <Image src="/lufa_icon.png" alt="" width={44} height={44} />
+        <span>LUFA · Liga Uruguaya de Football Americano</span>
+      </footer>
     </main>
   );
 }
