@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_MAX_AGE_SECONDS } from "@lufa/identity-institutional";
+import { SHARED_SESSION_COOKIE_DOMAIN } from "@lufa/api-client/authUrls";
 export type { SessionPayload } from "@lufa/identity-institutional";
 export { createSessionToken, verifySessionToken } from "@lufa/identity-institutional";
 
@@ -15,6 +16,7 @@ export function setSessionCookie(response: NextResponse, token: string) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: SESSION_MAX_AGE_SECONDS,
+    domain: SHARED_SESSION_COOKIE_DOMAIN,
   });
 }
 
@@ -25,5 +27,6 @@ export function clearSessionCookie(response: NextResponse) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
+    domain: SHARED_SESSION_COOKIE_DOMAIN,
   });
 }

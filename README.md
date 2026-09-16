@@ -56,7 +56,9 @@ Puertos por defecto:
 - API: `http://localhost:3001`
 - Fantasy: `http://localhost:3002`
 
-Institutional continúa solicitando `/api/*`; su rewrite usa `API_URL` para dirigir esas llamadas a la API independiente. La cookie institucional continúa siendo `lufa_session`, HTTP-only y host-only. Fantasy consume `/api/fantasy/v1/*` mediante su propio rewrite y usa la cookie host-only `fantasy_session`; no comparte usuarios ni sesión con Institutional.
+Institutional continúa solicitando `/api/*`; su rewrite usa `API_URL` para dirigir esas llamadas a la API independiente. Fantasy consume `/api/fantasy/v1/*` mediante su propio rewrite y usa la cookie host-only `fantasy_session`; no comparte usuarios ni sesión con Institutional.
+
+La autenticación institucional se centraliza en la aplicación LUFA (`/auth/login`, `/auth/signup`, `/auth/verify` y `/auth/forgot-password`). En producción, `lufa_session` se comparte únicamente entre `lufa.com.uy` y `flag.lufa.com.uy` mediante el dominio `.lufa.com.uy`; en desarrollo sigue siendo host-only. `NEXT_PUBLIC_LUFA_URL` es opcional para personalizar el host central: por defecto usa `http://localhost:3003` localmente y `https://lufa.com.uy` en producción.
 
 ## Configuración
 

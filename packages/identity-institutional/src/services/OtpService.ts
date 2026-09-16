@@ -39,6 +39,8 @@ export interface RegistrationOtp {
   verificationUrl: string;
 }
 
+export type RegistrationVerificationUrlFactory = (token: string) => string;
+
 export interface PasswordResetOtp {
   code: string;
   expiresAt: Date;
@@ -74,7 +76,10 @@ export class OtpService {
     private readonly auxiliaryRepo: OtpRepositoryPort,
   ) {}
 
-  async createRegistrationOtp(user: User): Promise<RegistrationOtp> {
+  async createRegistrationOtp(
+    user: User,
+    verificationUrlFactory?: RegistrationVerificationUrlFactory,
+  ): Promise<RegistrationOtp> {
     if (!user.id) {
       throw new Error("Usuario inválido para generar OTP");
     }
@@ -101,7 +106,9 @@ export class OtpService {
       token,
       code,
       expiresAt,
-      verificationUrl: `${getAppUrl()}/auth/verify?token=${encodeURIComponent(token)}`,
+      verificationUrl: verificationUrlFactory
+        ? verificationUrlFactory(token)
+        : `${getAppUrl()}/auth/verify?token=${encodeURIComponent(token)}`,
     };
   }
 

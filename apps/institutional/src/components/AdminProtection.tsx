@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { UserRole } from "@lufa/contracts";
+import { currentFlagAuthUrl } from "@/lib/centralAuth";
 
 interface AdminProtectionProps {
   children: React.ReactNode;
@@ -20,7 +21,7 @@ export default function AdminProtection({
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/auth/signin");
+      window.location.assign(currentFlagAuthUrl("login"));
     }
   }, [user, isLoading, router]);
 
@@ -43,7 +44,7 @@ export default function AdminProtection({
           <h2 className="text-xl font-bold mb-2 text-gray-900">Acceso requerido</h2>
           <p className="text-gray-600 mb-4">Debes iniciar sesión para acceder a esta página.</p>
           <button
-            onClick={() => router.push("/auth/signin")}
+            onClick={() => window.location.assign(currentFlagAuthUrl("login"))}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
           >
             Iniciar Sesión

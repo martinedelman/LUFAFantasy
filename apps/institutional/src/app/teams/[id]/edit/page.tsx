@@ -4,6 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
 import InlineFeedback from "@/components/InlineFeedback";
 import { useAuth } from "@/hooks/useAuth";
+import { currentFlagAuthUrl } from "@/lib/centralAuth";
 
 interface Division {
   _id: string;
@@ -296,7 +297,7 @@ export default function EditTeamPage() {
   };
   useEffect(() => {
     if (!isAuthLoading && !user) {
-      router.push("/auth/signin");
+      window.location.assign(currentFlagAuthUrl("login"));
     }
   }, [isAuthLoading, router, user]);
 

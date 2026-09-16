@@ -2,7 +2,7 @@ import { User } from "@lufa/sports/entities/User";
 import type { UserRole } from "@lufa/sports/entities/User";
 import type { IUserRepository } from "../ports";
 import { verifySessionToken, createSessionToken } from "../sessionToken";
-import { OtpService } from "./OtpService";
+import { OtpService, type RegistrationVerificationUrlFactory } from "./OtpService";
 
 export interface AuthEmailPort {
   sendTemplate(template:
@@ -61,12 +61,18 @@ export class AuthService {
   /**
    * Registra un nuevo usuario
    */
-  async register(data: { email: string; password: string; name: string; role?: UserRole }): Promise<User> {
+  async register(data: {
+    email: string;
+    password: string;
+    name: string;
+    role?: UserRole;
+    verificationUrlFactory?: RegistrationVerificationUrlFactory;
+  }): Promise<User> {
     // Verificar que el email no esté en uso
     const existingUser = await this.userRepo.findByEmail(data.email);
     if (existingUser) {
       if (!existingUser.isActive) {
-        await this.sendRegistrationVerification(existingUser);
+        await this.sendRegistrationVerification(existingUser, data.verificationUrlFactory);
         return existingUser;
       }
 
@@ -86,13 +92,13 @@ export class AuthService {
     }
 
     const createdUser = await this.userRepo.create(user);
-    await this.sendRegistrationVerification(createdUser);
+    await this.sendRegistrationVerification(createdUser, data.verificationUrlFactory);
 
     return createdUser;
   }
 
-  private async sendRegistrationVerification(user: User): Promise<void> {
-    const otp = await this.otpService.createRegistrationOtp(user);
+  private async sendRegistrationVerification(user: User, verificationUrlFactory?: RegistrationVerificationUrlFactory): Promise<void> {
+    const otp = await this.otpService.createRegistrationOtp(user, verificationUrlFactory);
 
     await this.emailService.sendTemplate({
       name: "registration-verification",
