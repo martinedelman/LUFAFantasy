@@ -137,14 +137,16 @@ export class PrismaReportingRepository implements IReportingRepository {
   }
 
   private nextGame(game: any): NextGameResponseDto {
-    const venue = game.venue as { name?: string };
+    const venue = game.venue as { name?: string; address?: string };
     const score = game.score as { home?: { total?: number }; away?: { total?: number } };
     return {
       id: game.id,
       homeTeam: game.homeTeam?.name || "N/A",
       awayTeam: game.awayTeam?.name || "N/A",
       division: game.division?.name || "N/A",
+      modality: "flag",
       venue: venue?.name || "N/A",
+      venueAddress: venue?.address || undefined,
       scheduledDate: game.scheduledDate.toISOString(),
       status: game.status,
       score: { home: Number(score?.home?.total ?? 0), away: Number(score?.away?.total ?? 0) },
