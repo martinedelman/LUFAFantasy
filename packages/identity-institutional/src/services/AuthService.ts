@@ -1,8 +1,9 @@
 import { User } from "@lufa/sports/entities/User";
 import type { UserRole } from "@lufa/sports/entities/User";
-import type { IUserRepository } from "../ports";
+import type { ExternalIdentityPort, IUserRepository } from "../ports";
 import { verifySessionToken, createSessionToken } from "../sessionToken";
 import { OtpService } from "./OtpService";
+import { randomBytes } from "node:crypto";
 
 export interface AuthEmailPort {
   sendTemplate(template:
@@ -27,6 +28,7 @@ export class AuthService {
     private readonly userRepo: IUserRepository,
     private readonly emailService: AuthEmailPort,
     private readonly otpService: OtpService,
+    private readonly externalIdentity?: ExternalIdentityPort,
   ) {}
 
   /**
@@ -56,6 +58,47 @@ export class AuthService {
     });
 
     return { user, token };
+  }
+
+  async loginWithExternalIdToken(idToken: string): Promise<{ user: User; token: string }> {
+    if (!this.externalIdentity) {
+      throw new Error("Auth0 no está configurado");
+    }
+
+    const identity = await this.externalIdentity.verifyIdToken(idToken);
+    if (!identity.emailVerified) {
+      throw new Error("Verificá tu email en Auth0 antes de ingresar");
+    }
+
+    let user = await this.userRepo.findByEmail(identity.email);
+    if (!user) {
+      user = new User(
+        identity.email,
+        await User.hashPassword(randomBytes(32).toString("hex")),
+        identity.name || identity.email.split("@")[0],
+        "user",
+        true,
+      );
+
+      const validation = user.validate();
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(", "));
+      }
+
+      user = await this.userRepo.create(user);
+    } else if (!user.isActive) {
+      user = await this.userRepo.updateActiveStatus(user.id!, true);
+    }
+
+    return {
+      user,
+      token: createSessionToken({
+        userId: user.id!,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }),
+    };
   }
 
   /**

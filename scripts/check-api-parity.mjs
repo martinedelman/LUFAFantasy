@@ -46,6 +46,7 @@ PATCH /api/games/:id/events/:eventId
 PATCH /api/games/:id/start
 PATCH /api/games/:id/walkover
 POST /api/admin/player-import/dry-run
+POST /api/auth/auth0/session
 POST /api/auth/login
 POST /api/auth/logout
 POST /api/auth/password-reset/confirm
