@@ -16,18 +16,24 @@
     "GOOGLE_*",
     "BLOB_READ_WRITE_TOKEN",
     "FLAGS",
-    "FLAGS_SECRET"
+    "FLAGS_SECRET",
+    "environment",
+    "POSTGRES_DB",
+    "POSTGRES_PORT",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_USER",
+    "ZOHO_ACCOUNT_TYPE"
   ],
   "tasks": {
     "generate": { "cache": false },
     "build": {
       "dependsOn": ["^build", "generate"],
-      "env": ["API_URL", "APP_ENV", "DATABASE_PROVIDER", "DATABASE_URL", "MONGODB_URI", "MONGODB_DATABASE"]
+      "env": ["API_URL", "APP_ENV", "environment", "DATABASE_PROVIDER", "DATABASE_URL", "MONGODB_URI", "MONGODB_DATABASE"]
     },
     "@lufa/api#build": {
       "dependsOn": ["^build", "generate"],
       "outputs": [".next/**"],
-      "env": ["APP_ENV", "DATABASE_PROVIDER", "DATABASE_URL", "MONGODB_URI", "MONGODB_DATABASE"]
+      "env": ["APP_ENV", "environment", "DATABASE_PROVIDER", "DATABASE_URL", "MONGODB_URI", "MONGODB_DATABASE"]
     },
     "@lufa/institutional#build": {
       "dependsOn": ["^build"],
