@@ -1,0 +1,129 @@
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+}
+
+.site-nav-toggle {
+  display: none;
+}
+
+.site-nav .site-nav-menu {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.7vw, 30px);
+}
+
+.site-nav-session {
+  display: flex;
+  align-items: center;
+  margin-left: clamp(6px, 1vw, 18px);
+  padding-left: clamp(14px, 1.7vw, 26px);
+  border-left: 1px solid rgb(6 65 102 / 14%);
+}
+
+.site-nav-session .sign-in-trigger {
+  padding: 7px 14px;
+  border-color: rgb(6 65 102 / 22%);
+  color: #386986;
+  font-size: 13px;
+}
+
+.site-nav-session .sign-in-trigger:hover,
+.site-nav-session .sign-in-trigger:focus-visible {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .site-nav-toggle {
+    position: relative;
+    z-index: 12;
+    display: grid;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid rgb(6 65 102 / 14%);
+    border-radius: 12px;
+    background: #fff;
+    place-content: center;
+    cursor: pointer;
+  }
+
+  .site-nav-toggle span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: #042f4e;
+    transition: transform 180ms ease, opacity 180ms ease;
+  }
+
+  .site-nav-open .site-nav-toggle span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .site-nav-open .site-nav-toggle span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .site-nav-open .site-nav-toggle span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .site-nav .site-nav-menu {
+    position: absolute;
+    z-index: 11;
+    top: calc(100% + 1px);
+    right: 0;
+    left: 0;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px 18px 20px;
+    border-bottom: 1px solid rgb(6 65 102 / 12%);
+    background: #fff;
+    box-shadow: 0 24px 48px rgb(3 47 76 / 18%);
+  }
+
+  .site-nav.site-nav-open .site-nav-menu {
+    display: flex;
+  }
+
+  .site-nav .site-nav-menu > a,
+  .site-nav .site-nav-menu > span {
+    padding: 15px 0;
+    border-bottom: 1px solid rgb(6 65 102 / 8%);
+    font-size: 1.05rem;
+    font-weight: 650;
+  }
+
+  .site-nav .site-nav-menu > a::after {
+    content: none;
+  }
+
+  .site-nav-session {
+    justify-content: stretch;
+    margin: 18px 0 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .site-nav-session .sign-in-trigger,
+  .site-nav-session .session-user {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 16px;
+    font-size: 15px;
+  }
+
+  .site-nav-backdrop {
+    position: fixed;
+    z-index: 9;
+    inset: 0;
+    background: rgb(4 47 78 / 35%);
+  }
+}

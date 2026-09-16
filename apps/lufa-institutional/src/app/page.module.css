@@ -46,8 +46,8 @@
   height: 58px;
 }
 
-.header :global(nav) {
-  gap: clamp(14px, 1.7vw, 30px);
+.header :global(.site-nav-menu) {
+  flex-wrap: wrap;
 }
 
 .header :global(nav a),
@@ -491,15 +491,10 @@
   font-size: 0.84rem;
 }
 
-.footerBrand,
-.footerAccess {
+.footerBrand {
   display: flex;
   align-items: center;
   gap: 14px;
-}
-
-.footerAccess :global(.header-session) {
-  justify-self: auto;
 }
 
 @media (max-width: 1100px) {
@@ -511,9 +506,9 @@
     grid-template-columns: 1fr;
   }
 
-  .header :global(nav) {
+  .header :global(.site-nav) {
     grid-column: 1 / -1;
-    justify-content: flex-start;
+    justify-self: start;
   }
 
   .about {
@@ -531,12 +526,19 @@
   }
 
   .portal :global([id]) {
-    scroll-margin-top: 140px;
+    scroll-margin-top: 84px;
   }
 
   .header {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
     min-height: auto;
-    padding: 12px 18px 14px;
+    padding: 10px 18px;
+  }
+
+  .header :global(.site-nav) {
+    grid-column: auto;
+    justify-self: end;
   }
 
   .header :global(.brand) {
@@ -547,17 +549,6 @@
   .header :global(.brand img) {
     width: 46px;
     height: 46px;
-  }
-
-  .header :global(nav) {
-    width: calc(100vw - 36px);
-    padding: 6px 0 3px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .header :global(nav::-webkit-scrollbar) {
-    display: none;
   }
 
   .hero {

@@ -1,5 +1,5 @@
 import { UpcomingGames } from "@/components/UpcomingGames";
-import { AuthControl } from "@/components/AuthControl";
+import { SiteNav } from "@/components/SiteNav";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
@@ -14,14 +14,7 @@ export default function HomePage() {
           <Image src="/lufa_icon.png" alt="" width={78} height={78} priority />
           <span>Liga Uruguaya de Football Americano</span>
         </Link>
-        <nav aria-label="Navegación principal">
-          <Link href="#inicio">Inicio</Link>
-          <Link href="#acerca">Acerca de LUFA</Link>
-          <Link href="#proximos-partidos">Próximos partidos</Link>
-          <Link href="#sumate">Sumate</Link>
-          <a href={flagUrl}>Flag Football</a>
-          <span aria-disabled="true">Tackle <small>Próximamente</small></span>
-        </nav>
+        <SiteNav flagUrl={flagUrl} />
       </header>
 
       <section className={`hero ${styles.hero}`} id="inicio" aria-labelledby="portal-title">
@@ -135,10 +128,7 @@ export default function HomePage() {
           <Image src="/lufa_icon.png" alt="" width={44} height={44} />
           <span>LUFA · Liga Uruguaya de Football Americano</span>
         </div>
-        <div className={styles.footerAccess}>
-          <span>¿Ya sos parte de LUFA?</span>
-          <AuthControl />
-        </div>
+        <span>Montevideo, Uruguay</span>
       </footer>
     </main>
   );
