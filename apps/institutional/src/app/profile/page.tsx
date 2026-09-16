@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import type { ApiResponseDto, PlayerResponseDto } from "@lufa/contracts";
+import { currentFlagAuthUrl } from "@/lib/centralAuth";
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -25,7 +26,7 @@ export default function ProfilePage() {
     }
 
     if (!user) {
-      router.push("/auth/signin");
+      window.location.assign(currentFlagAuthUrl("login"));
     } else {
       setFormData({
         name: user.name || "",

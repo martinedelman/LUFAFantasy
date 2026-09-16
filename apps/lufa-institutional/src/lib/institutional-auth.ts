@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_API_URL, getApiUrl } from "@lufa/api-client";
+import { SHARED_SESSION_COOKIE_DOMAIN } from "@lufa/api-client/authUrls";
 
 const PRODUCTION_API_URL = "https://flag.lufa.com.uy";
 export const SESSION_COOKIE_NAME = "lufa_session";
@@ -10,7 +11,9 @@ export function getInstitutionalApiUrl() {
 
 export function copySessionCookie(source: Response, target: NextResponse) {
   const cookie = source.headers.get("set-cookie");
-  if (cookie) target.headers.set("set-cookie", cookie);
+  if (!cookie) return false;
+  target.headers.set("set-cookie", cookie);
+  return true;
 }
 
 export function requestSessionHeader(request: NextRequest): Record<string, string> {
@@ -19,7 +22,14 @@ export function requestSessionHeader(request: NextRequest): Record<string, strin
 }
 
 export function clearSessionCookie(response: NextResponse) {
-  response.cookies.set(SESSION_COOKIE_NAME, "", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
+  response.cookies.set(SESSION_COOKIE_NAME, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+    domain: SHARED_SESSION_COOKIE_DOMAIN,
+  });
 }
 
 export function safeAuthError(status: number) {

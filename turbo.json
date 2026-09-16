@@ -9,6 +9,8 @@
     "INSTITUTIONAL_APP_URL",
     "APP_URL",
     "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_LUFA_URL",
+    "NEXT_PUBLIC_FLAG_URL",
     "CRON_SECRET",
     "MAIL_FROM",
     "MAIL_PROVIDER",
@@ -38,12 +40,12 @@
     "@lufa/institutional#build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**"],
-      "env": ["APP_ENV", "APP_URL", "API_URL"]
+      "env": ["APP_ENV", "APP_URL", "API_URL", "NEXT_PUBLIC_LUFA_URL"]
     },
     "@lufa/lufa-institutional#build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**"],
-      "env": ["APP_ENV", "APP_URL", "API_URL", "NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_FLAG_URL"]
+      "env": ["APP_ENV", "APP_URL", "API_URL", "NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_LUFA_URL", "NEXT_PUBLIC_FLAG_URL"]
     },
     "@lufa/fantasy#build": {
       "dependsOn": ["^build"],
@@ -71,6 +73,8 @@
         "OTP_SECRET",
         "INSTITUTIONAL_APP_URL",
         "NEXT_PUBLIC_APP_URL",
+        "NEXT_PUBLIC_LUFA_URL",
+        "NEXT_PUBLIC_FLAG_URL",
         "CRON_SECRET",
         "SMTP_*",
         "GOOGLE_*",

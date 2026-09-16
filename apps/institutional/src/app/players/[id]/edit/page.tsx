@@ -5,6 +5,7 @@ import ImageUploader from "@/components/ImageUploader";
 import InlineFeedback from "@/components/InlineFeedback";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
+import { currentFlagAuthUrl } from "@/lib/centralAuth";
 
 interface Team {
   _id: string;
@@ -249,7 +250,7 @@ export default function EditPlayerPage() {
   };
   useEffect(() => {
     if (!isAuthLoading && !user) {
-      router.push("/auth/signin");
+      window.location.assign(currentFlagAuthUrl("login"));
     }
   }, [isAuthLoading, router, user]);
 

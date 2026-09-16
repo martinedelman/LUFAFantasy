@@ -5,6 +5,7 @@ import { apiErrorResponse } from "@/lib/apiError";
 import { safeTrack } from "@/lib/serverAnalytics";
 import { toRegisteredUserResponseDto } from "@/app/DTOs";
 import type { UserRegistrationRequestDto } from "@/app/DTOs";
+import { registrationReturnTo, registrationVerificationUrl } from "@/lib/authReturnTo";
 
 const authService = serviceContainer.authService;
 
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { name, email, password } = (await request.json()) as UserRegistrationRequestDto;
+    const { name, email, password, returnTo } = (await request.json()) as UserRegistrationRequestDto & { returnTo?: unknown };
 
     // Validaciones básicas
     if (!name || !email || !password) {
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
       email: email.toLowerCase().trim(),
       password,
       role: "user",
+      verificationUrlFactory: (token) => registrationVerificationUrl(token, registrationReturnTo(returnTo)),
     });
 
     await safeTrack("Registration requested", {
