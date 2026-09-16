@@ -3,6 +3,7 @@ import { createHash, randomInt } from "node:crypto";
 import { jwtVerify, SignJWT } from "jose";
 
 export * from "./leagues";
+export * from "./scoring";
 
 export const FANTASY_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
