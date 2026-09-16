@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import path from "node:path";
+import { apiEndpoint } from "@lufa/api-client/config.ts";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@lufa/api-client", "@lufa/contracts"],
@@ -16,12 +17,10 @@ const nextConfig: NextConfig = {
     return config;
   },
   async rewrites() {
-    const apiUrl = (process.env.API_URL || "http://localhost:3001").replace(/\/$/, "");
-
     return [
       {
         source: "/api/:path*",
-        destination: `${apiUrl}/api/:path*`,
+        destination: apiEndpoint(":path*"),
       },
     ];
   },

@@ -1,3 +1,7 @@
+import { resolveApiBaseUrl } from "./config";
+
+export * from "./config";
+
 export interface ApiClientOptions {
   baseUrl?: string;
   fetch?: typeof globalThis.fetch;
@@ -8,7 +12,7 @@ export class ApiClient {
   private readonly fetchImplementation: typeof globalThis.fetch;
 
   constructor(options: ApiClientOptions = {}) {
-    this.baseUrl = (options.baseUrl || "/api").replace(/\/$/, "");
+    this.baseUrl = (options.baseUrl || resolveApiBaseUrl()).replace(/\/$/, "");
     this.fetchImplementation = options.fetch || globalThis.fetch;
   }
 

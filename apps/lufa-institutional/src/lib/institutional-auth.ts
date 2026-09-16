@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DEFAULT_API_URL, getApiUrl } from "@lufa/api-client";
 
 const PRODUCTION_API_URL = "https://flag.lufa.com.uy";
-const LOCAL_API_URL = "http://localhost:3001";
 export const SESSION_COOKIE_NAME = "lufa_session";
 
 export function getInstitutionalApiUrl() {
-  const configuredApiUrl = process.env.API_URL;
-  const fallbackApiUrl = process.env.NODE_ENV === "production" ? PRODUCTION_API_URL : LOCAL_API_URL;
-  return (configuredApiUrl || fallbackApiUrl).replace(/\/$/, "");
+  return getApiUrl(process.env.NODE_ENV === "production" ? PRODUCTION_API_URL : DEFAULT_API_URL);
 }
 
 export function copySessionCookie(source: Response, target: NextResponse) {
