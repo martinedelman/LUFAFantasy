@@ -3,11 +3,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
 import { TournamentStatus } from "@lufa/sports/entities/Tournament";
 import { getSessionTokenFromRequest } from "@/lib/auth";
-import { toTournamentResponseDto } from "@/app/DTOs";
-import type { CreateTournamentRequestDto } from "@/app/DTOs";
+import { toDivisionResponseDto, toTournamentResponseDto } from "@/app/DTOs";
+import type { CreateTournamentRequestDto, TournamentResponseDto } from "@/app/DTOs";
+import type { Tournament } from "@lufa/sports/entities/Tournament";
 
 const tournamentService = serviceContainer.tournamentService;
+const divisionService = serviceContainer.divisionService;
 const authService = serviceContainer.authService;
+
+async function toPopulatedTournamentResponse(tournament: Tournament): Promise<TournamentResponseDto> {
+  const divisions = await Promise.all(
+    tournament.divisions.map((divisionId) => divisionService.getDivisionById(divisionId)),
+  );
+
+  return {
+    ...toTournamentResponseDto(tournament),
+    divisions: divisions.filter((division): division is NonNullable<typeof division> => division !== null).map(toDivisionResponseDto),
+  };
+}
 
 /**
  * GET /api/tournaments - Obtiene todos los torneos con filtros y paginación
@@ -35,7 +48,7 @@ export async function GET(request: NextRequest) {
     const paginatedTournaments = allTournaments.slice(startIndex, endIndex);
 
     // Convertir a respuesta API
-    const responseData = paginatedTournaments.map((tournament) => toTournamentResponseDto(tournament));
+    const responseData = await Promise.all(paginatedTournaments.map(toPopulatedTournamentResponse));
 
     return NextResponse.json({
       success: true,

@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "año inválido" }, { status: 400 });
     }
 
-    const cacheKey = buildRequestCacheKey("rankings:players:v5", searchParams);
+    // v6 invalida resultados calculados antes de la migración de datos a PostgreSQL.
+    const cacheKey = buildRequestCacheKey("rankings:players:v6", searchParams);
     const rankings = await getCachedValue(
       cacheKey,
       RANKINGS_CACHE_TTL_SECONDS * 1000,

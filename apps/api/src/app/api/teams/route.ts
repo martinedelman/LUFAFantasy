@@ -5,10 +5,11 @@ import { apiErrorResponse } from "@/lib/apiError";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue, invalidateCacheByPrefix } from "@/lib/serverCache";
 import { TeamStatus } from "@lufa/sports/entities/Team";
 import { getReportingRepository } from "@lufa/database/repositories/reporting";
-import { toTeamResponseDto } from "@/app/DTOs";
+import { toDivisionResponseDto, toTeamResponseDto } from "@/app/DTOs";
 import type { CreateTeamRequestDto } from "@/app/DTOs";
 
 const teamService = serviceContainer.teamService;
+const divisionService = serviceContainer.divisionService;
 const authService = serviceContainer.authService;
 const reportingRepo = getReportingRepository();
 const TEAMS_CACHE_TTL_SECONDS = 1800; // 30 minutos
@@ -47,7 +48,8 @@ function sanitizeContactForService(contact: CreateTeamRequestDto["contact"]) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const cacheKey = buildRequestCacheKey("teams:list", searchParams);
+    // v2 invalida respuestas que exponían la división solamente como ID.
+    const cacheKey = buildRequestCacheKey("teams:list:v2", searchParams);
     const payload = await getCachedValue(
       cacheKey,
       TEAMS_CACHE_TTL_SECONDS * 1000,
@@ -75,12 +77,18 @@ export async function GET(request: NextRequest) {
 
         // Convertir a respuesta API
         const responseData = paginatedTeams.map((team) => toTeamResponseDto(team));
+        const divisionIds = [...new Set(responseData.flatMap((team) => typeof team.division === "string" ? [team.division] : []))];
+        const divisions = await Promise.all(divisionIds.map((divisionId) => divisionService.getDivisionById(divisionId)));
+        const divisionsById = new Map(
+          divisions.flatMap((division) => division?.id ? [[division.id, toDivisionResponseDto(division)] as const] : []),
+        );
         const teamIds = responseData.flatMap((team) => (team._id ? [team._id] : []));
         const activePlayerCountByTeam = await reportingRepo.getActivePlayerCounts(teamIds);
 
         return {
           data: responseData.map((team) => ({
             ...team,
+            division: typeof team.division === "string" ? (divisionsById.get(team.division) ?? team.division) : team.division,
             activePlayerCount: team._id ? (activePlayerCountByTeam[team._id] ?? 0) : 0,
           })),
           pagination: {

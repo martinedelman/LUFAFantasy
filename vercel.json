@@ -1,0 +1,4 @@
+{
+  "buildCommand": "npx turbo run build --filter=@lufa/fantasy...",
+  "outputDirectory": "apps/fantasy/.next"
+}
