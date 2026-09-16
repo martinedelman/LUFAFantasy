@@ -15,6 +15,10 @@
   letter-spacing: 0.18em;
 }
 
+.portal :global([id]) {
+  scroll-margin-top: 132px;
+}
+
 .header {
   position: sticky;
   z-index: 10;
@@ -524,6 +528,10 @@
 @media (max-width: 760px) {
   .portal {
     width: 100%;
+  }
+
+  .portal :global([id]) {
+    scroll-margin-top: 140px;
   }
 
   .header {
