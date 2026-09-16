@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
+import { apiEndpoint } from "@lufa/api-client";
 
 export const dynamic = "force-dynamic";
 
 const appUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
-const apiUrl = (process.env.API_URL || "http://localhost:3001").replace(/\/$/, "");
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
@@ -57,7 +57,7 @@ interface SitemapResource {
 }
 
 async function fetchResources(path: string): Promise<SitemapResource[]> {
-  const response = await fetch(`${apiUrl}/api/${path}`, {
+  const response = await fetch(apiEndpoint(path), {
     cache: "no-store",
     signal: AbortSignal.timeout(5_000),
   });

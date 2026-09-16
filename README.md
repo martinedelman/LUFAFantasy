@@ -66,6 +66,8 @@ Cada aplicación documenta únicamente sus variables en su propio `.env.example`
 - `apps/institutional/.env.example`: `APP_URL`, `API_URL` y flags.
 - `apps/fantasy/.env.example`: entorno, URL pública y `API_URL` para el rewrite privado.
 
+`API_URL` se resuelve en un único lugar: `@lufa/api-client` (`packages/api-client/src/config.ts`). Usá `getApiUrl()` para la base, `apiEndpoint("games")` para una URL absoluta del servidor (`${API_URL}/api/games`) y `resolveApiBaseUrl()` cuando el mismo código corre en servidor y navegador (en el navegador devuelve `/api` y el rewrite de Next.js lo reenvía a `API_URL`). Los `next.config.ts` y las llamadas server-side no deben leer `process.env.API_URL` directamente.
+
 En `APP_ENV=testing`, PostgreSQL es el provider predeterminado. MongoDB no se activa ante errores de PostgreSQL: requiere `DATABASE_PROVIDER=mongodb`, `MONGODB_URI` y `MONGODB_DATABASE` explícitos.
 
 ## Comandos

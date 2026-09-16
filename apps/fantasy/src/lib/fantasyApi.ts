@@ -1,3 +1,7 @@
+import { resolveApiBaseUrl } from "@lufa/api-client";
+
+const fantasyEndpoint = (path: string) => `${resolveApiBaseUrl()}/fantasy/v1${path}`;
+
 export interface FantasyUser {
   id: string;
   name: string;
@@ -27,7 +31,7 @@ async function apiEnvelope<T>(response: Response): Promise<ApiEnvelope<T>> {
 }
 
 export async function fantasyRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api/fantasy/v1${path}`, {
+  const response = await fetch(fantasyEndpoint(path), {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
@@ -38,7 +42,7 @@ export async function fantasyRequest<T>(path: string, init?: RequestInit): Promi
 }
 
 export async function fantasyAction(path: string, init?: RequestInit): Promise<void> {
-  const response = await fetch(`/api/fantasy/v1${path}`, {
+  const response = await fetch(fantasyEndpoint(path), {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });

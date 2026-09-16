@@ -1,3 +1,5 @@
+import { resolveApiBaseUrl } from "@lufa/api-client";
+
 /**
  * Cliente base para peticiones a la API
  * Maneja configuración común: headers, error handling, etc.
@@ -5,7 +7,7 @@
 export class BaseApiClient {
   protected baseUrl: string;
 
-  constructor(baseUrl: string = "/api") {
+  constructor(baseUrl: string = resolveApiBaseUrl()) {
     this.baseUrl = baseUrl;
   }
 
