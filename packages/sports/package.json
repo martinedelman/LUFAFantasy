@@ -1,0 +1,10 @@
+{
+  "name": "@lufa/sports",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./entities": "./src/entities/index.ts", "./entities/*": "./src/entities/*.ts", "./ports": "./src/ports/index.ts", "./ports/*": "./src/ports/*.ts", "./services/*": "./src/services/*.ts" },
+  "scripts": { "build": "tsc --noEmit", "lint": "eslint src", "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
+  "dependencies": { "bcryptjs": "3.0.2" },
+  "devDependencies": { "typescript": "5.9.2", "vitest": "4.1.10" }
+}

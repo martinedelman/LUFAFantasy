@@ -1,0 +1,10 @@
+{
+  "name": "@lufa/operations",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./services/*": "./src/services/*.ts" },
+  "scripts": { "build": "tsc --noEmit", "lint": "eslint src", "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
+  "dependencies": { "@lufa/contracts": "*", "@lufa/integrations": "*", "@lufa/sports": "*", "googleapis": "172.0.0" },
+  "devDependencies": { "typescript": "5.9.2", "vitest": "4.1.10" }
+}

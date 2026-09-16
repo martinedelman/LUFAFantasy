@@ -1,12 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/import-players",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/import-players",
-      "schedule": "0 * * * 0"
-    }
-  ]
+  "buildCommand": "npx turbo run build --filter=@lufa/fantasy...",
+  "outputDirectory": "apps/fantasy/.next"
 }

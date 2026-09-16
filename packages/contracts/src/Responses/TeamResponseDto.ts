@@ -1,0 +1,36 @@
+import type { TeamStatus } from "../types";
+import type { Coach } from "../types";
+
+export interface TeamResponseDto {
+  _id?: string;
+  name: string;
+  shortName?: string;
+  logo?: string;
+  backgroundImage?: string;
+  colors: {
+    primary: string;
+    secondary?: string;
+  };
+  division: string;
+  tournament?: string;
+  players: string[];
+  activePlayerCount?: number;
+  coach?: Coach;
+  coaches?: Coach[];
+  contact: {
+    email?: string;
+    phone?: string;
+    address?: string;
+    socialMedia?: {
+      facebook?: string;
+      instagram?: string;
+      x?: string;
+      twitter?: string;
+    };
+  };
+  registrationDate: string;
+  status: TeamStatus;
+  canEdit?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}

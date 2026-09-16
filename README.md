@@ -1,275 +1,108 @@
-# LUFA Fantasy
+# LUFA Platform
 
-Sistema de gestion para ligas de Flag Football construido con **Next.js**, **TypeScript** y **MongoDB**. La app permite administrar torneos, divisiones, equipos, jugadores, partidos, tabla de posiciones, rankings, registros publicos, Live Match y herramientas operativas para administradores.
+Monorepo de LUFA Flag con tres aplicaciones Next.js desplegables de forma independiente. La web institucional conserva el comportamiento público existente; Fantasy comienza como una aplicación aislada y pública; la API es la única aplicación que puede acceder a persistencia e integraciones privadas.
 
-## Documentacion Principal
-
-- [Arquitectura del backend](docs/backend-architecture.md): capas, componentes, flujos de interaccion, endpoints, servicios, persistencia y guia para agregar features con clean code.
-- [Propuesta LUFA Flag](docs/propuesta-lufa-flag.html): material comercial/institucional.
-- [Sponsors 2026](docs/sponsors-2026/index.html): pagina estatica de sponsors.
-
-## Stack
-
-| Area | Tecnologia |
-| --- | --- |
-| Aplicacion | Next.js 15 App Router |
-| UI | React 19, Tailwind CSS |
-| Backend | Next.js Route Handlers |
-| Lenguaje | TypeScript |
-| Base de datos | MongoDB + Mongoose |
-| Auth | JWT en cookie HTTP-only |
-| Email | Nodemailer via SMTP |
-| Storage | Vercel Blob |
-| Deploy | Vercel |
-| Integraciones | Google Sheets, Vercel Analytics, Vercel Flags |
-
-## Funcionalidades
-
-- Gestion de torneos, divisiones, equipos, jugadores y jueces.
-- Programacion de partidos regulares, playoffs y finales.
-- Live Match con eventos de partido, jugadores presentes, inicio, finalizacion y walkover.
-- Tabla de posiciones viva para temporada regular con desempates IFAF.
-- Rankings y estadisticas de jugadores/equipos.
-- Registro, login, verificacion por OTP y reset de password.
-- Panel admin para usuarios, settings, auditoria, intereses y health operativo.
-- Correcciones de eventos enviadas por jueces y aprobadas/rechazadas por admin.
-- Importacion idempotente de jugadores desde Google Sheets.
-- Upload de imagenes a Vercel Blob.
-- Crons para importacion y digest semanal.
-
-## Arquitectura
-
-El backend sigue una separacion por capas liviana:
-
-```mermaid
-flowchart LR
-  Api["src/app/api\nRoute Handlers"] --> Services["src/services/backend\nCasos de uso"]
-  Services --> Entities["src/entities\nDominio"]
-  Services --> Repos["src/repositories\nContratos + Mongo"]
-  Repos --> Models["src/models\nMongoose"]
-  Models --> Mongo[(MongoDB)]
-  Api --> DTOs["src/app/DTOs\nRequests, responses, mappers"]
-  Services --> External["SMTP, Google Sheets,\nVercel Blob, Analytics"]
-```
-
-Reglas rapidas para nuevas features:
-
-- Mantener los handlers de `src/app/api` delgados.
-- Poner reglas de negocio en `src/services/backend` o `src/entities`.
-- Acceder a MongoDB mediante repositorios cuando sea dominio principal.
-- Exponer respuestas mediante DTOs/mappers, no documentos Mongoose crudos.
-- Invalidar cache tags cuando una mutacion afecte pantallas publicas.
-- Auditar cambios admin sensibles.
-
-La explicacion completa esta en [docs/backend-architecture.md](docs/backend-architecture.md).
-
-## Estructura Del Proyecto
+## Estructura
 
 ```text
-src/
-├── app/
-│   ├── api/                 # Backend HTTP con Route Handlers
-│   ├── DTOs/                # Requests, responses y mappers
-│   └── */page.tsx           # Pantallas App Router
-├── components/              # Componentes UI reutilizables
-├── entities/                # Agregados y value objects del dominio
-├── hooks/                   # Hooks React
-├── lib/                     # Auth, MongoDB, cache, errores, settings y utilidades
-├── models/                  # Schemas Mongoose
-├── repositories/            # Contratos e implementaciones de persistencia
-├── services/
-│   ├── backend/             # Casos de uso del backend
-│   └── frontend/            # Clientes API y servicios UI
-└── types/                   # Tipos compartidos
-
-scripts/                     # Tareas operativas y migraciones
-docs/                        # Documentacion y artefactos
-public/                      # Imagenes y assets publicos
+apps/
+├── institutional          # Web institucional
+├── fantasy                # Producto Fantasy independiente (Huddle)
+└── api                    # Route Handlers y composition root
+packages/
+├── fantasy-core           # Identidad y casos de uso propios de Fantasy
+├── sports                 # Dominio y casos de uso deportivos
+├── identity-institutional # Auth, OTP y sesión institucional
+├── operations             # Admin, reporting, imports y digest
+├── database               # Prisma, Mongoose y repositorios
+├── integrations           # SMTP, Blob y servicios externos
+├── contracts              # DTOs públicos
+└── api-client             # Cliente HTTP isomórfico
 ```
+
+La dirección permitida es:
+
+```text
+Frontend → contracts/api-client
+API → application modules + infrastructure
+Application → domain + ports
+Infrastructure → implements ports
+Domain → sin dependencias de framework o persistencia
+```
+
+Las reglas ejecutables están en `scripts/check-architecture-boundaries.mjs`. La línea base de los 45 Route Handlers y sus 63 combinaciones método/path está protegida por `scripts/check-api-parity.mjs`.
 
 ## Requisitos
 
-- Node.js 18 o superior.
-- npm.
-- MongoDB local o remoto.
-- Cuenta/proyecto Vercel para deploy.
-- Credenciales opcionales segun feature: SMTP, Vercel Blob, Google Sheets.
+- Node.js 22 o superior.
+- npm 10.
+- PostgreSQL para el entorno oficial de testing.
+- MongoDB sólo si se selecciona manualmente como fallback.
 
-## Configuracion Local
-
-1. Instalar dependencias:
+## Desarrollo local
 
 ```bash
 npm install
-```
-
-2. Crear archivo de entorno:
-
-```bash
-cp .env.example .env.local
-```
-
-3. Configurar como minimo:
-
-```env
-environment=development
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-MONGODB_URI=mongodb://localhost:27017/lufa_fantasy
-JWT_SECRET=change-this-to-a-long-random-secret
-```
-
-4. Ejecutar en desarrollo:
-
-```bash
+cp apps/api/.env.example apps/api/.env.local
+cp apps/institutional/.env.example apps/institutional/.env.local
+cp apps/fantasy/.env.example apps/fantasy/.env.local
+npm run prisma:generate
 npm run dev
 ```
 
-La app queda disponible en `http://localhost:3000`.
+Puertos por defecto:
 
-## Variables De Entorno
+- Institutional: `http://localhost:3000`
+- API: `http://localhost:3001`
+- Fantasy: `http://localhost:3002`
 
-| Variable | Uso |
+Institutional continúa solicitando `/api/*`; su rewrite usa `API_URL` para dirigir esas llamadas a la API independiente. La cookie institucional continúa siendo `lufa_session`, HTTP-only y host-only. Fantasy consume `/api/fantasy/v1/*` mediante su propio rewrite y usa la cookie host-only `fantasy_session`; no comparte usuarios ni sesión con Institutional.
+
+## Configuración
+
+Cada aplicación documenta únicamente sus variables en su propio `.env.example`:
+
+- `apps/api/.env.example`: base de datos, secretos, SMTP e integraciones.
+- `apps/institutional/.env.example`: `APP_URL`, `API_URL` y flags.
+- `apps/fantasy/.env.example`: entorno, URL pública y `API_URL` para el rewrite privado.
+
+En `APP_ENV=testing`, PostgreSQL es el provider predeterminado. MongoDB no se activa ante errores de PostgreSQL: requiere `DATABASE_PROVIDER=mongodb`, `MONGODB_URI` y `MONGODB_DATABASE` explícitos.
+
+## Comandos
+
+| Comando | Propósito |
 | --- | --- |
-| `environment` | Selecciona base Mongo: `production` usa `prod`; cualquier otro valor usa `test`. |
-| `NEXT_PUBLIC_APP_URL` | URL publica para links de verificacion/notificaciones. |
-| `MONGODB_URI` | Conexion MongoDB. |
-| `JWT_SECRET` | Firma de sesiones JWT. |
-| `OTP_SECRET` | Pepper para OTPs. Si falta, se usa `JWT_SECRET`. |
-| `MAIL_FROM`, `MAIL_PROVIDER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Envio de emails. |
-| `BLOB_READ_WRITE_TOKEN` | Uploads a Vercel Blob. |
-| `FLAGS`, `FLAGS_SECRET` | Feature flags de Vercel. |
-| `CRON_SECRET` | Proteccion de endpoints cron. |
-| `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SHEETS_TAB_NAME`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY` | Importacion desde Google Sheets. |
+| `npm run dev` | Ejecuta los tres workspaces en paralelo. |
+| `npm run dev:institutional` | Ejecuta sólo la web institucional. |
+| `npm run dev:api` | Ejecuta sólo la API. |
+| `npm run dev:fantasy` | Ejecuta sólo Fantasy. |
+| `npm run lint` | Lint de todos los workspaces. |
+| `npm run typecheck` | Typecheck de todos los workspaces. |
+| `npm test` | Tests unitarios y de aplicación. |
+| `npm run test:postgres` | Integración de repositorios contra PostgreSQL. |
+| `npm run prisma:validate` | Valida el schema conservado. |
+| `npm run check:boundaries` | Valida dependencias entre capas. |
+| `npm run check:api-parity` | Detecta cambios en la superficie HTTP heredada. |
+| `npm run build` | Compila las tres aplicaciones independientemente. |
+| `npm run check` | Ejecuta todas las verificaciones locales. |
 
-Ver [.env.example](.env.example) para el listado completo.
+## Testing y despliegue
 
-## Scripts
+La CI de PRs hacia `testing` instala con `npm ci`, genera y valida Prisma, verifica límites y paridad de API, ejecuta lint/typecheck/tests, compila las tres aplicaciones y prueba repositorios contra PostgreSQL 17 efímero.
 
-| Script | Descripcion |
+Los proyectos de testing previstos son:
+
+| Proyecto | Root Directory |
 | --- | --- |
-| `npm run dev` | Inicia Next.js en desarrollo con Turbopack. |
-| `npm run build` | Compila la app para produccion. |
-| `npm start` | Sirve la build de produccion. |
-| `npm run lint` | Ejecuta lint configurado en el proyecto. |
-| `npm run seed` | Ejecuta seed con `.env`. |
-| `npm run db:migrate-game-events` | Migra eventos de partidos. |
-| `npm run db:sync-test-from-prod` | Sincroniza base de test desde produccion. |
-| `npm run vercel:pull:testing` | Descarga env vars de Vercel Preview. |
-| `npm run vercel:pull:prod` | Descarga env vars de Vercel Production. |
-| `npm run deploy:testing` | Deploy manual a Vercel Preview. |
-| `npm run deploy:prod` | Deploy manual a Vercel Production. |
+| `lufa-api-testing` | `apps/api` |
+| `lufa-institutional-testing` | `apps/institutional` |
+| `lufa-fantasy-testing` | `apps/fantasy` |
 
-## Endpoints Principales
+El orden de promoción es API → Institutional → Fantasy. La rama de producción no se migra ni se despliega como parte de esta reestructuración.
 
-| Grupo | Rutas |
-| --- | --- |
-| Auth | `/api/auth/login`, `/api/auth/register`, `/api/auth/me`, `/api/auth/logout`, `/api/auth/verify-registration`, `/api/auth/password-reset/*` |
-| Torneos | `/api/tournaments`, `/api/tournaments/[id]` |
-| Divisiones | `/api/divisions` |
-| Equipos | `/api/teams`, `/api/teams/[id]`, `/api/teams/[id]/players` |
-| Jugadores | `/api/players`, `/api/players/[id]` |
-| Partidos | `/api/games`, `/api/games/[id]`, `/api/games/[id]/start`, `/api/games/[id]/complete`, `/api/games/[id]/walkover`, `/api/games/[id]/events` |
-| Estadisticas | `/api/dashboard`, `/api/standings`, `/api/rankings/players`, `/api/statistics/players`, `/api/statistics/teams` |
-| Admin | `/api/admin/*` |
-| Operativo | `/api/health`, `/api/media/upload`, `/api/cron/import-players`, `/api/cron/weekly-digest` |
+## Decisiones
 
-El detalle metodo por metodo esta en [docs/backend-architecture.md](docs/backend-architecture.md#rutas-api).
-
-## Deploy En Vercel
-
-El proyecto soporta entornos paralelos:
-
-- **Testing**: Vercel Preview, normalmente desde una rama `testing`.
-- **Produccion**: Vercel Production, normalmente desde `main`.
-
-Preparacion inicial:
-
-```bash
-npm i -g vercel
-vercel login
-vercel link
-```
-
-Configurar variables requeridas en Preview y Production:
-
-```bash
-vercel env add MONGODB_URI preview
-vercel env add MONGODB_URI production
-vercel env add JWT_SECRET preview
-vercel env add JWT_SECRET production
-```
-
-Deploy manual:
-
-```bash
-npm run deploy:testing
-npm run deploy:prod
-```
-
-Recomendacion operativa:
-
-- Usar `testing` para previews estables.
-- Usar `main` para produccion.
-- Revisar que `environment=production` solo este en el entorno productivo, porque decide la base Mongo `prod`.
-
-## Crons
-
-El backend espera estos procesos programados:
-
-| Ruta | Schedule | Funcion |
-| --- | --- | --- |
-| `/api/cron/import-players` | `0 6 * * *` | Importacion diaria de jugadores desde Google Sheets. |
-| `/api/cron/weekly-digest` | `0 8 * * 1` | Digest semanal. |
-
-Los endpoints cron deben recibir el secreto configurado en `CRON_SECRET`.
-
-## Modelo De Dominio
-
-Relaciones principales:
-
-```text
-Tournament (1) -> (N) Division
-Tournament (1) -> (N) Team participante
-Division (1) -> (N) Team
-Team (1) -> (N) Player
-Tournament + Division (1) -> (N) Game
-Game (1) -> (N) GameEvent
-Tournament + Division + Team (1) -> (1) Standing
-User (1) -> roles y permisos
-```
-
-Agregados principales:
-
-- `Tournament`: temporada, formato, criterios de playoff, divisiones y equipos participantes.
-- `Division`: categoria competitiva.
-- `Team`: equipo, coaches, colores, contacto e imagenes.
-- `Player`: datos personales, equipo, posicion, camiseta y estado.
-- `Game`: partido, estado, fase, jueces, score, eventos y jugadores presentes.
-- `Standing`: tabla de posiciones, record, puntos, racha y desempates.
-- `User`: identidad, roles, estado activo y permisos.
-
-## Desarrollo De Nuevas Features
-
-Checklist corto:
-
-1. Definir el comportamiento de negocio.
-2. Actualizar entidades/value objects si cambia el dominio.
-3. Agregar o extender contratos de repositorio si se necesita persistencia.
-4. Implementar queries Mongo en `src/repositories/mongodb`.
-5. Crear o extender un servicio backend.
-6. Definir DTOs y mappers.
-7. Agregar route handler.
-8. Validar auth/permisos.
-9. Usar `apiErrorResponse()` para errores.
-10. Invalidar cache y registrar auditoria cuando aplique.
-
-## Estado De Calidad
-
-- El proyecto compila con TypeScript estricto.
-- No hay suite de tests automatizados declarada en `package.json`.
-- Para cambios de backend sensibles, validar al menos con `npm run build`.
-- La documentacion profunda de arquitectura identifica deuda y zonas de riesgo en [docs/backend-architecture.md](docs/backend-architecture.md#estado-actual-y-deuda-arquitectonica).
-
-## Autor
-
-Proyecto personal para la gestion de LUFA Flag y practica de desarrollo full-stack con TypeScript.
+- [ADR 0001: monorepo e identidad Fantasy](docs/adr/0001-monorepo-and-fantasy-identity.md)
+- [Arquitectura del monorepo](docs/monorepo-architecture.md)
+- [Línea base y rollback de testing](docs/testing-migration-baseline.md)
+- [Arquitectura histórica del backend](docs/backend-architecture.md)

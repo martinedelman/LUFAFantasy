@@ -1,0 +1,73 @@
+import { IRepository } from "./IRepository";
+import { Game, GameEvent, GameStatus } from "@lufa/sports/entities/Game";
+import { GameScore } from "@lufa/sports/entities/valueObjects/Score";
+
+/**
+ * Interface para el repositorio de Games
+ */
+export interface IGameRepository extends IRepository<Game> {
+  /**
+   * Busca partidos por torneo
+   */
+  findByTournament(tournamentId: string): Promise<Game[]>;
+
+  /**
+   * Busca partidos por equipo
+   */
+  findByTeam(teamId: string): Promise<Game[]>;
+
+  /**
+   * Busca partidos por estado
+   */
+  findByStatus(status: GameStatus): Promise<Game[]>;
+
+  /**
+   * Busca partidos completados por equipo en un torneo
+   */
+  findCompletedByTeam(teamId: string, tournamentId: string): Promise<Game[]>;
+
+  /**
+   * Busca partidos por división
+   */
+  findByDivision(divisionId: string): Promise<Game[]>;
+
+  /**
+   * Actualiza el score de un partido
+   */
+  updateScore(id: string, score: GameScore): Promise<Game>;
+
+  /**
+   * Agrega un evento al partido y, opcionalmente, actualiza el score en la misma operación.
+   */
+  addEvent(id: string, event: GameEvent, score?: GameScore): Promise<Game>;
+
+  /**
+   * Actualiza un evento del partido y, opcionalmente, actualiza el score en la misma operación.
+   */
+  updateEvent(id: string, eventId: string, event: GameEvent, score?: GameScore): Promise<Game>;
+
+  /**
+   * Elimina un evento del partido y, opcionalmente, actualiza el score en la misma operación.
+   */
+  removeEvent(id: string, eventId: string, score?: GameScore): Promise<Game>;
+
+  /**
+   * Inicia un partido programado
+   */
+  startGame(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game>;
+
+  /**
+   * Actualiza los jugadores presentes de un partido en curso
+   */
+  updatePresentPlayers(id: string, presentPlayers: { home: string[]; away: string[] }): Promise<Game>;
+
+  /**
+   * Actualiza el estado de un partido
+   */
+  updateStatus(id: string, status: GameStatus): Promise<Game>;
+
+  /**
+   * Busca partidos programados para una fecha
+   */
+  findScheduledForDate(date: Date): Promise<Game[]>;
+}

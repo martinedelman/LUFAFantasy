@@ -1,0 +1,2 @@
+-- This migration was reserved without schema changes. Keeping the file allows
+-- Prisma to apply the migration history consistently across environments.

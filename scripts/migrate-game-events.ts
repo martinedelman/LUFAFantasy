@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import connectToDatabase from "../src/lib/mongodb";
-import { GameModel, GameEventModel } from "../src/models";
+import connectToDatabase from "../packages/database/src/mongodb";
+import { GameModel, GameEventModel } from "../packages/database/src/models";
 
 type LegacyGameEvent = {
   _id?: unknown;

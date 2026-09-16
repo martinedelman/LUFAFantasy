@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/app/DTOs": ["../contracts/src/index.ts"],
+      "@/entities/*": ["../sports/src/entities/*"],
+      "@/generated/*": ["src/generated/*"],
+      "@/lib/databaseProvider": ["src/databaseProvider.ts"],
+      "@/lib/mongodb": ["src/mongodb.ts"],
+      "@/lib/prisma": ["src/prisma.ts"],
+      "@/models": ["src/models/index.ts"],
+      "@/models/*": ["src/models/*"],
+      "@/repositories": ["src/repositories/index.ts"],
+      "@/repositories/*": ["src/repositories/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}

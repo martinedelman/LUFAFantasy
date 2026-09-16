@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/entities/*": ["src/entities/*"],
+      "@/lib/statistics": ["src/statistics.ts"],
+      "@/repositories": ["../database/src/repositories/index.ts"],
+      "@/repositories/*": ["../database/src/repositories/*"],
+      "@/types": ["../../apps/institutional/src/types/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}
