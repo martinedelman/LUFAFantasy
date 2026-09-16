@@ -307,20 +307,20 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link
-                  href="/auth/signin"
-                  onClick={() => trackNavigation("Iniciar Sesión", "/auth/signin", "desktop")}
+                <a
+                  href="/auth/login"
+                  onClick={() => trackNavigation("Iniciar Sesión", "/auth/login", "desktop")}
                   className="text-green-50/90 hover:text-white transition-colors text-sm"
                 >
                   Iniciar Sesión
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  onClick={() => trackNavigation("Registrarse", "/auth/signup", "desktop")}
+                </a>
+                <a
+                  href="/auth/login?screen_hint=signup"
+                  onClick={() => trackNavigation("Registrarse", "/auth/login?screen_hint=signup", "desktop")}
                   className="bg-white/12 hover:bg-white/18 border border-white/15 px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm"
                 >
                   Registrarse
-                </Link>
+                </a>
               </div>
             )}
 
@@ -410,26 +410,26 @@ export default function Navbar() {
               {!user && (
                 <div className="pt-4 pb-3 border-t border-white/10">
                   <div className="space-y-1">
-                    <Link
-                      href="/auth/signin"
+                    <a
+                      href="/auth/login"
                       className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                       onClick={() => {
-                        trackNavigation("Iniciar Sesión", "/auth/signin", "mobile");
+                        trackNavigation("Iniciar Sesión", "/auth/login", "mobile");
                         setIsMenuOpen(false);
                       }}
                     >
                       Iniciar Sesión
-                    </Link>
-                    <Link
-                      href="/auth/signup"
+                    </a>
+                    <a
+                      href="/auth/login?screen_hint=signup"
                       className="block px-3 py-2 rounded-xl text-base font-medium bg-white/12 border border-white/15 hover:bg-white/18"
                       onClick={() => {
-                        trackNavigation("Registrarse", "/auth/signup", "mobile");
+                        trackNavigation("Registrarse", "/auth/login?screen_hint=signup", "mobile");
                         setIsMenuOpen(false);
                       }}
                     >
                       Registrarse
-                    </Link>
+                    </a>
                   </div>
                 </div>
               )}
