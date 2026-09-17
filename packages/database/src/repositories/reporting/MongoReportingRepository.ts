@@ -98,7 +98,7 @@ export class MongoReportingRepository implements IReportingRepository {
     const events = games.length
       ? await GameEventModel.find({ game: { $in: games.map((game: any) => game._id) } })
           .populate({ path: "player", select: "firstName lastName", populate: { path: "team", select: "name" } })
-          .select("team player type points")
+          .select("team player type quarter points")
           .lean()
       : [];
     return buildAdminAnalytics(
@@ -112,6 +112,7 @@ export class MongoReportingRepository implements IReportingRepository {
       (events as any[]).map((event) => ({
         teamId: String(event.team),
         type: event.type,
+        quarter: Number(event.quarter || 0),
         points: event.points,
         player: event.player
           ? {

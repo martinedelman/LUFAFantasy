@@ -96,6 +96,7 @@ export class PrismaReportingRepository implements IReportingRepository {
       game.events.map((event) => ({
         teamId: event.teamId,
         type: event.type,
+        quarter: event.quarter,
         points: event.points,
         player: event.player
           ? {
