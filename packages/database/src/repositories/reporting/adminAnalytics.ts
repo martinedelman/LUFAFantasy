@@ -16,6 +16,7 @@ export interface AnalyticsEventRecord {
   teamId: string;
   player?: { id: string; name: string; teamName: string } | null;
   type: string;
+  quarter: number;
   points?: number | null;
 }
 
@@ -28,11 +29,11 @@ const top = <T extends { name: string }>(rows: T[], value: (row: T) => number) =
     .slice(0, 5);
 
 function teamRow(id: string, name: string): TeamRow {
-  return { id, name, games: 0, wins: 0, pointsFor: 0, pointsAgainst: 0, pointDifferential: 0, discipline: 0, penalties: 0, unsportsmanlike: 0 };
+  return { id, name, games: 0, wins: 0, pointsFor: 0, pointsAgainst: 0, pointDifferential: 0, latePoints: 0, defensiveDisruptions: 0, interceptions: 0, sacks: 0, discipline: 0, penalties: 0, unsportsmanlike: 0 };
 }
 
 function playerRow(id: string, name: string, teamName: string): PlayerRow {
-  return { id, name, teamName, points: 0, touchdowns: 0, discipline: 0, penalties: 0, unsportsmanlike: 0 };
+  return { id, name, teamName, points: 0, touchdowns: 0, latePoints: 0, defensiveDisruptions: 0, interceptions: 0, sacks: 0, discipline: 0, penalties: 0, unsportsmanlike: 0 };
 }
 
 export function buildAdminAnalytics(
@@ -73,11 +74,24 @@ export function buildAdminAnalytics(
       if (isPenalty) team.penalties += 1;
       if (isUnsportsmanlike) team.unsportsmanlike += 1;
     }
+    const isInterception = event.type === "interception" || event.type === "pick_six";
+    const isSack = event.type === "sack";
+    const points = Number(event.points || 0);
+    const isLateScore = event.quarter >= 4 && points > 0;
+    const team = getTeam(event.teamId);
+    if (isLateScore) team.latePoints += points;
+    if (isInterception) team.interceptions += 1;
+    if (isSack) team.sacks += 1;
+    if (isInterception || isSack) team.defensiveDisruptions += 1;
     if (!event.player) continue;
     const player = players.get(event.player.id) || playerRow(event.player.id, event.player.name, event.player.teamName);
     players.set(player.id, player);
-    player.points += Number(event.points || 0);
+    player.points += points;
     if (event.type === "touchdown") player.touchdowns += 1;
+    if (isLateScore) player.latePoints += points;
+    if (isInterception) player.interceptions += 1;
+    if (isSack) player.sacks += 1;
+    if (isInterception || isSack) player.defensiveDisruptions += 1;
     if (isPenalty || isUnsportsmanlike) {
       player.discipline += 1;
       if (isPenalty) player.penalties += 1;
@@ -99,13 +113,15 @@ export function buildAdminAnalytics(
         games: games.length,
         points: teamRows.reduce((sum, row) => sum + row.pointsFor, 0),
         touchdowns: 0,
+        latePoints: teamRows.reduce((sum, row) => sum + row.latePoints, 0),
+        defensiveDisruptions: teamRows.reduce((sum, row) => sum + row.defensiveDisruptions, 0),
+        interceptions: teamRows.reduce((sum, row) => sum + row.interceptions, 0),
+        sacks: teamRows.reduce((sum, row) => sum + row.sacks, 0),
         discipline: discipline(teamRows), penalties: penalties(teamRows), unsportsmanlike: unsportsmanlike(teamRows),
       },
       teams: {
-        performance: [...teamRows]
-          .sort((left, right) => right.wins - left.wins || right.pointDifferential - left.pointDifferential || left.name.localeCompare(right.name, "es"))
-          .slice(0, 5),
-        scoring: top(teamRows.filter((row) => row.pointsFor > 0), (row) => row.pointsFor),
+        lateScoring: top(teamRows.filter((row) => row.latePoints > 0), (row) => row.latePoints),
+        defense: top(teamRows.filter((row) => row.defensiveDisruptions > 0), (row) => row.defensiveDisruptions),
         discipline: top(teamRows.filter((row) => row.discipline > 0), (row) => row.discipline),
       },
       players: null,
@@ -119,12 +135,16 @@ export function buildAdminAnalytics(
       games: games.length,
       points: playerRows.reduce((sum, row) => sum + row.points, 0),
       touchdowns: playerRows.reduce((sum, row) => sum + row.touchdowns, 0),
+      latePoints: playerRows.reduce((sum, row) => sum + row.latePoints, 0),
+      defensiveDisruptions: playerRows.reduce((sum, row) => sum + row.defensiveDisruptions, 0),
+      interceptions: playerRows.reduce((sum, row) => sum + row.interceptions, 0),
+      sacks: playerRows.reduce((sum, row) => sum + row.sacks, 0),
       discipline: discipline(playerRows), penalties: penalties(playerRows), unsportsmanlike: unsportsmanlike(playerRows),
     },
     teams: null,
     players: {
-      points: top(playerRows.filter((row) => row.points > 0), (row) => row.points),
-      touchdowns: top(playerRows.filter((row) => row.touchdowns > 0), (row) => row.touchdowns),
+      lateScoring: top(playerRows.filter((row) => row.latePoints > 0), (row) => row.latePoints),
+      defense: top(playerRows.filter((row) => row.defensiveDisruptions > 0), (row) => row.defensiveDisruptions),
       discipline: top(playerRows.filter((row) => row.discipline > 0), (row) => row.discipline),
     },
   };

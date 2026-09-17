@@ -5,6 +5,10 @@ export interface AdminAnalyticsTotalsDto {
   games: number;
   points: number;
   touchdowns: number;
+  latePoints: number;
+  defensiveDisruptions: number;
+  interceptions: number;
+  sacks: number;
   discipline: number;
   penalties: number;
   unsportsmanlike: number;
@@ -18,6 +22,10 @@ export interface AdminTeamAnalyticsRowDto {
   pointsFor: number;
   pointsAgainst: number;
   pointDifferential: number;
+  latePoints: number;
+  defensiveDisruptions: number;
+  interceptions: number;
+  sacks: number;
   discipline: number;
   penalties: number;
   unsportsmanlike: number;
@@ -29,6 +37,10 @@ export interface AdminPlayerAnalyticsRowDto {
   teamName: string;
   points: number;
   touchdowns: number;
+  latePoints: number;
+  defensiveDisruptions: number;
+  interceptions: number;
+  sacks: number;
   discipline: number;
   penalties: number;
   unsportsmanlike: number;
@@ -38,13 +50,13 @@ export interface AdminAnalyticsResponseDto {
   subject: AdminAnalyticsSubject;
   totals: AdminAnalyticsTotalsDto;
   teams: {
-    performance: AdminTeamAnalyticsRowDto[];
-    scoring: AdminTeamAnalyticsRowDto[];
+    lateScoring: AdminTeamAnalyticsRowDto[];
+    defense: AdminTeamAnalyticsRowDto[];
     discipline: AdminTeamAnalyticsRowDto[];
   } | null;
   players: {
-    points: AdminPlayerAnalyticsRowDto[];
-    touchdowns: AdminPlayerAnalyticsRowDto[];
+    lateScoring: AdminPlayerAnalyticsRowDto[];
+    defense: AdminPlayerAnalyticsRowDto[];
     discipline: AdminPlayerAnalyticsRowDto[];
   } | null;
 }

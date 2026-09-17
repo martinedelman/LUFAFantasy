@@ -238,6 +238,10 @@ type AnalyticsChartRow = {
   games?: number;
   points?: number;
   touchdowns?: number;
+  latePoints?: number;
+  defensiveDisruptions?: number;
+  interceptions?: number;
+  sacks?: number;
   discipline: number;
   penalties: number;
   unsportsmanlike: number;
@@ -873,7 +877,7 @@ function AdminPanelContent() {
                     <div>
                       <h2 className="text-lg font-semibold text-slate-950">Estadísticas deportivas</h2>
                       <p className="mt-1 text-sm text-slate-600">
-                        Incluye partidos en curso y finalizados. Disciplina suma castigos y conducta antideportiva.
+                        Señales difíciles de ver en standings: cierres de partido, presión defensiva y disciplina.
                       </p>
                     </div>
                     <div className="inline-flex rounded-lg bg-slate-100 p-1" role="group" aria-label="Tipo de estadísticas">
@@ -940,27 +944,27 @@ function AdminPanelContent() {
                 ) : analytics ? (
                   <>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                      <StatCard label={analytics.subject === "teams" ? "Equipos con actividad" : "Jugadores con eventos"} value={analytics.totals.entities} />
-                      <StatCard label="Partidos contabilizados" value={analytics.totals.games} />
-                      <StatCard label={analytics.subject === "teams" ? "Puntos anotados" : "Puntos de jugadores"} value={analytics.totals.points} detail={analytics.subject === "players" ? `${analytics.totals.touchdowns} touchdowns` : undefined} />
+                      <StatCard label={analytics.subject === "teams" ? "Equipos con actividad" : "Jugadores con eventos"} value={analytics.totals.entities} detail={`${analytics.totals.games} partidos contabilizados`} />
+                      <StatCard label="Puntos en cierre" value={analytics.totals.latePoints} detail="4T y tiempo extra" />
+                      <StatCard label="Disrupciones defensivas" value={analytics.totals.defensiveDisruptions} detail={`${analytics.totals.interceptions} intercepciones · ${analytics.totals.sacks} sacks`} />
                       <StatCard label="Disciplina" value={analytics.totals.discipline} detail={`${analytics.totals.penalties} castigos · ${analytics.totals.unsportsmanlike} antideportivas`} />
                     </div>
 
                     {analytics.subject === "teams" && analytics.teams ? (
                       <div className="grid gap-4 xl:grid-cols-3">
                         <AnalyticsBars
-                          title="Mejor rendimiento"
-                          rows={analytics.teams.performance}
-                          value={(row) => row.wins || 0}
-                          detail={(row) => `${row.games || 0} partidos · diferencial ${row.pointDifferential || 0}`}
-                          emptyMessage="No hay equipos con partidos registrados en este alcance."
+                          title="Equipos que mejor cierran"
+                          rows={analytics.teams.lateScoring}
+                          value={(row) => row.latePoints || 0}
+                          detail={(row) => `${row.games || 0} partidos · puntos en 4T/ET`}
+                          emptyMessage="No hay puntos anotados en 4T o tiempo extra en este alcance."
                         />
                         <AnalyticsBars
-                          title="Puntos a favor vs. en contra"
-                          rows={analytics.teams.scoring}
-                          value={(row) => row.pointsFor || 0}
-                          detail={(row) => `${row.pointsFor || 0} a favor · ${row.pointsAgainst || 0} en contra`}
-                          emptyMessage="No hay puntos registrados en este alcance."
+                          title="Defensas más disruptivas"
+                          rows={analytics.teams.defense}
+                          value={(row) => row.defensiveDisruptions || 0}
+                          detail={(row) => `${row.interceptions || 0} intercepciones · ${row.sacks || 0} sacks`}
+                          emptyMessage="No hay intercepciones ni sacks registrados en este alcance."
                         />
                         <AnalyticsBars
                           title="Equipos con más disciplina"
@@ -975,18 +979,18 @@ function AdminPanelContent() {
                     {analytics.subject === "players" && analytics.players ? (
                       <div className="grid gap-4 xl:grid-cols-3">
                         <AnalyticsBars
-                          title="Top 5 por puntos"
-                          rows={analytics.players.points}
-                          value={(row) => row.points || 0}
-                          detail={(row) => `${row.touchdowns || 0} touchdowns`}
-                          emptyMessage="No hay puntos de jugadores registrados en este alcance."
+                          title="Jugadores decisivos"
+                          rows={analytics.players.lateScoring}
+                          value={(row) => row.latePoints || 0}
+                          detail={(row) => `${row.points || 0} puntos totales · 4T/ET`}
+                          emptyMessage="No hay puntos de jugadores en 4T o tiempo extra en este alcance."
                         />
                         <AnalyticsBars
-                          title="Top 5 por touchdowns"
-                          rows={analytics.players.touchdowns}
-                          value={(row) => row.touchdowns || 0}
-                          detail={(row) => `${row.points || 0} puntos`}
-                          emptyMessage="No hay touchdowns de jugadores registrados en este alcance."
+                          title="Impacto defensivo individual"
+                          rows={analytics.players.defense}
+                          value={(row) => row.defensiveDisruptions || 0}
+                          detail={(row) => `${row.interceptions || 0} intercepciones · ${row.sacks || 0} sacks`}
+                          emptyMessage="No hay intercepciones ni sacks de jugadores registrados en este alcance."
                         />
                         <AnalyticsBars
                           title="Top 5 jugadores con más castigos"
