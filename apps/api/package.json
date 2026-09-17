@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@lufa/api-client": "*",
+    "@lufa/commerce": "*",
     "@lufa/contracts": "*",
     "@lufa/database": "*",
     "@lufa/fantasy-core": "*",

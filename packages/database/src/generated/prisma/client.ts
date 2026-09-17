@@ -217,6 +217,46 @@ export type FantasyPlayerFavorite = Prisma.FantasyPlayerFavoriteModel
  */
 export type DigitalCredential = Prisma.DigitalCredentialModel
 /**
+ * Model CommerceSeller
+ * 
+ */
+export type CommerceSeller = Prisma.CommerceSellerModel
+/**
+ * Model CommerceSellerMember
+ * 
+ */
+export type CommerceSellerMember = Prisma.CommerceSellerMemberModel
+/**
+ * Model CommerceItem
+ * 
+ */
+export type CommerceItem = Prisma.CommerceItemModel
+/**
+ * Model CommerceOrder
+ * 
+ */
+export type CommerceOrder = Prisma.CommerceOrderModel
+/**
+ * Model CommerceOrderItem
+ * 
+ */
+export type CommerceOrderItem = Prisma.CommerceOrderItemModel
+/**
+ * Model CommerceWebhookEvent
+ * 
+ */
+export type CommerceWebhookEvent = Prisma.CommerceWebhookEventModel
+/**
+ * Model CommerceTournamentRegistration
+ * 
+ */
+export type CommerceTournamentRegistration = Prisma.CommerceTournamentRegistrationModel
+/**
+ * Model CommerceRefundRequest
+ * 
+ */
+export type CommerceRefundRequest = Prisma.CommerceRefundRequestModel
+/**
  * Model DigitalCredentialAudit
  * 
  */
