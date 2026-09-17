@@ -4,6 +4,7 @@ import { apiErrorResponse } from "@/lib/apiError";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 import { toGameResponseDto } from "@/app/DTOs";
+import { formatGameEventTime } from "@/lib/gameEventTime";
 import type { GameEventType } from "@lufa/sports/entities/Game";
 
 const gameService = serviceContainer.gameService;
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const body = (await request.json()) as CreateGameEventRequest;
     const eventInput = {
       quarter: Number(body.quarter),
+      time: formatGameEventTime(),
       type: body.type,
       team: body.team,
       player: body.player,

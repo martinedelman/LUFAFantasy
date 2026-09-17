@@ -10,6 +10,7 @@ import Tag from "@/components/Tag";
 import { useAuth } from "@/hooks/useAuth";
 import type { ApiResponse, GameApiResponse, GameEventType, PlayerApiResponse } from "@/types";
 import type { PlayerSummaryResponseDto, TeamSummaryResponseDto } from "@lufa/contracts";
+import { buildGameEventTimeline } from "./gameEventTimeline";
 
 type TeamSide = "home" | "away";
 type PlayerRef = PlayerSummaryResponseDto | string;
@@ -173,11 +174,25 @@ function getEventBadgeClass(type: GameEventType) {
   return classes[type] || "bg-gray-100 text-gray-700 ring-gray-200";
 }
 
-function getEventDetailText(details: unknown) {
-  if (!details || typeof details !== "object") return "";
+function getEventIcon(type: GameEventType, points?: number) {
+  const icons: Partial<Record<GameEventType, string>> = {
+    touchdown: "TD",
+    pick_six: "P6",
+    interception: "INT",
+    safety: "S",
+    sack: "SK",
+    penalty: "⚑",
+    unsportsmanlike: "⚑",
+    quarter_end: "⏱",
+    game_end: "✓",
+    injury: "+",
+    substitution: "↔",
+    first_down: "1°",
+    field_goal: "FG",
+  };
 
-  const description = (details as { description?: unknown }).description;
-  return typeof description === "string" ? description.trim() : "";
+  if (type === "extra_point") return points ? `+${points}` : "XP";
+  return icons[type] || "•";
 }
 
 function getOfficialRoleLabel(role: GameApiResponse["officials"][number]["role"]) {
@@ -400,12 +415,12 @@ export default function MatchPage() {
   }, [game?.events]);
 
   const eventSequence = useMemo(() => {
-    return (game?.events || []).map((event, index) => ({
-      ...event,
-      sequenceNumber: index + 1,
-      detailText: getEventDetailText(event.details),
-    }));
-  }, [game?.events]);
+    return buildGameEventTimeline(game?.events || [], {
+      homeTeamId: getTeamId(game?.homeTeam),
+      awayTeamId: getTeamId(game?.awayTeam),
+      playersById: rosterById,
+    });
+  }, [game?.awayTeam, game?.events, game?.homeTeam, rosterById]);
 
   if (loading) {
     return (
@@ -672,35 +687,65 @@ export default function MatchPage() {
             </div>
           </div>
 
-          <div className="divide-y divide-gray-100">
+          <div className="px-4 py-2 sm:px-6">
             {eventSequence.length > 0 ? (
-              eventSequence.map((event) => (
-                <article key={event._id || `event-${event.sequenceNumber}`} className="grid gap-3 p-4 sm:grid-cols-[72px_1fr]">
-                  <div className="flex items-center gap-2 sm:block">
-                    <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-full bg-gray-900 px-2 text-sm font-black text-white">
-                      #{event.sequenceNumber}
-                    </span>
-                    <span className="text-sm font-bold text-gray-500 sm:mt-2 sm:block">
-                      {event.quarter === 5 ? "ET" : `${event.quarter}T`}
-                    </span>
-                  </div>
+              eventSequence.map((event, index) => {
+                const isLast = index === eventSequence.length - 1;
 
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getEventBadgeClass(event.type)}`}>
-                        {getEventLabel(event.type, event.points, event.description)}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">{getTeamName(event.team, "Equipo")}</span>
+                return (
+                  <article
+                    key={event._id || `event-${event.sequenceNumber}`}
+                    className="grid grid-cols-[64px_48px_1fr] gap-2 py-4 sm:grid-cols-[92px_56px_1fr] sm:gap-4"
+                  >
+                    <div className="pt-1 text-right">
+                      <p className="text-xs font-black uppercase tracking-wide text-gray-500">
+                        {event.quarter === 5 ? "ET" : `${event.quarter}T`}
+                      </p>
+                      {event.time && <p className="mt-1 text-sm font-black tabular-nums text-gray-900">{event.time}</p>}
+                      <p className="mt-1 text-[11px] font-semibold text-gray-400">#{event.sequenceNumber}</p>
                     </div>
-                    <p className="mt-1 text-sm text-gray-600">
-                      {event.player ? getPlayerName(event.player) : "Sin jugador asignado"}
-                    </p>
-                    {event.detailText && <p className="mt-2 text-sm text-gray-700">{event.detailText}</p>}
-                  </div>
-                </article>
-              ))
+
+                    <div className="relative flex justify-center">
+                      {!isLast && <span className="absolute bottom-[-16px] top-11 w-px bg-gray-200" aria-hidden="true" />}
+                      <span
+                        className="relative z-10 inline-flex h-11 min-w-11 items-center justify-center rounded-full border-4 border-white bg-gray-900 px-1 text-[11px] font-black text-white shadow-sm ring-1 ring-gray-200"
+                        aria-hidden="true"
+                      >
+                        {getEventIcon(event.type, event.points)}
+                      </span>
+                    </div>
+
+                    <div className="min-w-0 rounded-xl border border-gray-100 bg-gray-50 p-3 sm:p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getEventBadgeClass(event.type)}`}>
+                              {getEventLabel(event.type, event.points, event.description)}
+                            </span>
+                            <span className="text-sm font-bold text-gray-900">{getTeamName(event.team, "Equipo")}</span>
+                          </div>
+                          {event.narrative && <p className="mt-2 text-sm font-semibold text-gray-800">{event.narrative}</p>}
+                          {!event.narrative && event.player && (
+                            <p className="mt-2 text-sm text-gray-600">{getPlayerName(event.player)}</p>
+                          )}
+                          {event.detailText && <p className="mt-2 text-sm text-gray-600">{event.detailText}</p>}
+                        </div>
+
+                        {event.scoreAfter && (
+                          <div className="shrink-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-center shadow-sm">
+                            <p className="text-[10px] font-black uppercase tracking-wide text-gray-400">Marcador</p>
+                            <p className="mt-0.5 whitespace-nowrap text-sm font-black text-gray-900">
+                              {homeName} {event.scoreAfter.home} — {event.scoreAfter.away} {awayName}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })
             ) : (
-              <div className="px-4 py-10 text-center text-sm text-gray-500">
+              <div className="py-10 text-center text-sm text-gray-500">
                 {isPending ? "El partido todavía está pendiente." : "Todavía no hay eventos registrados."}
               </div>
             )}

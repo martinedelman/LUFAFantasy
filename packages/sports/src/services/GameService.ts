@@ -13,6 +13,7 @@ type WalkOverWinner = "home" | "away";
 
 interface CreateGameEventInput {
   quarter: number;
+  time?: string;
   type: GameEventType;
   team: string;
   player?: string;
@@ -23,6 +24,7 @@ interface CreateGameEventInput {
 interface StoredGameEvent {
   _id?: string;
   quarter: number;
+  time?: string;
   type: GameEventType;
   team: string | { _id?: string };
   player?: string | { _id?: string };
@@ -230,7 +232,13 @@ export class GameService {
       throw new Error("Solo se pueden editar eventos de partidos en progreso o finalizados");
     }
 
-    const event = this.buildValidatedGameEvent(game, eventData);
+    const previousEvent = ((game as Game & { events?: StoredGameEvent[] }).events || []).find(
+      (event) => this.getReferenceId(event._id) === eventId,
+    );
+    const event = this.buildValidatedGameEvent(game, {
+      ...eventData,
+      time: previousEvent?.time,
+    });
 
     const updatedGame = await this.gameRepo.updateEvent(id, eventId, event);
 
@@ -268,9 +276,15 @@ export class GameService {
     }
 
     const safePoints = eventData.points === undefined ? undefined : Math.max(0, eventData.points);
+    const time = eventData.time?.trim();
+
+    if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+      throw new Error("La hora del evento debe tener formato HH:mm");
+    }
 
     return {
       quarter: eventData.quarter,
+      time: time || undefined,
       type: eventData.type,
       team: eventData.team,
       player: eventData.player || undefined,
