@@ -62,6 +62,8 @@ La autenticación institucional central está disponible en la aplicación LUFA 
 
 Vercel Flags se autentica mediante OIDC y no requiere una variable `FLAGS` manual. `FLAGS_SECRET` se conserva únicamente para overrides locales seguros con Flags Explorer. En producción, `lufa_session` se comparte entre `lufa.com.uy` y `flag.lufa.com.uy` mediante el dominio `.lufa.com.uy`; en desarrollo sigue siendo host-only. `NEXT_PUBLIC_LUFA_URL` es opcional: usa `http://localhost:3003` localmente y `https://lufa.com.uy` en producción.
 
+Las flags de las secciones públicas (`show-*-pages`) deben existir en el proyecto Vercel `lufa-flag`. Como esas pantallas ya están publicadas, su fallback en código es visible para evitar que una flag faltante o una caída del proveedor oculte equipos, partidos y el resto del sitio.
+
 ## Configuración
 
 Cada aplicación documenta únicamente sus variables en su propio `.env.example`:
