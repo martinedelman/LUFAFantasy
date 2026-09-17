@@ -2,6 +2,13 @@ export type { ApiResponseDto } from "./ApiResponseDto";
 export type { AdminAuditLogResponseDto } from "./AdminAuditLogResponseDto";
 export type { AdminPlayerImportDryRunResponseDto } from "./AdminPlayerImportDryRunResponseDto";
 export type { AdminSystemStatsResponseDto } from "./AdminSystemStatsResponseDto";
+export type {
+  AdminAnalyticsResponseDto,
+  AdminAnalyticsSubject,
+  AdminAnalyticsTotalsDto,
+  AdminPlayerAnalyticsRowDto,
+  AdminTeamAnalyticsRowDto,
+} from "./AdminAnalyticsResponseDto";
 export type { AdminSystemHealthResponseDto } from "./AdminSystemHealthResponseDto";
 export type { AdminUserResponseDto } from "./AdminUserResponseDto";
 export type { DashboardStatsResponseDto } from "./DashboardStatsResponseDto";

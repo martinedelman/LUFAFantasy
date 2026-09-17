@@ -7,6 +7,8 @@ import type {
   PlayerRankingRow,
   RankingEventType,
 } from "./IReportingRepository";
+import type { AdminAnalyticsQuery } from "./IReportingRepository";
+import { buildAdminAnalytics } from "./adminAnalytics";
 
 export class PrismaReportingRepository implements IReportingRepository {
   private get db() {
@@ -71,6 +73,52 @@ export class PrismaReportingRepository implements IReportingRepository {
       _count: { _all: true },
     });
     return Object.fromEntries(rows.map((row) => [row.teamId, row._count._all]));
+  }
+
+  async getAdminAnalytics(query: AdminAnalyticsQuery) {
+    const games = await this.db.game.findMany({
+      where: {
+        status: { in: ["in_progress", "completed"] },
+        ...(query.tournament ? { tournamentId: query.tournament } : {}),
+        ...(query.division ? { divisionId: query.division } : {}),
+      },
+      include: {
+        homeTeam: { select: { id: true, name: true } },
+        awayTeam: { select: { id: true, name: true } },
+        events: {
+          include: {
+            player: { include: { team: { select: { name: true } } } },
+          },
+        },
+      },
+    });
+    const events = games.flatMap((game) =>
+      game.events.map((event) => ({
+        teamId: event.teamId,
+        type: event.type,
+        points: event.points,
+        player: event.player
+          ? {
+              id: event.player.id,
+              name: `${event.player.firstName} ${event.player.lastName}`,
+              teamName: event.player.team.name,
+            }
+          : null,
+      })),
+    );
+    return buildAdminAnalytics(
+      query.subject,
+      games.map((game) => {
+        const score = game.score as { home?: { total?: number }; away?: { total?: number } };
+        return {
+          homeTeam: game.homeTeam,
+          awayTeam: game.awayTeam,
+          homeScore: Number(score?.home?.total || 0),
+          awayScore: Number(score?.away?.total || 0),
+        };
+      }),
+      events,
+    );
   }
 
   async getPlayerRankings(query: PlayerRankingQuery): Promise<PlayerRankingRow[]> {
