@@ -19,7 +19,8 @@
     "./repositories/auxiliary/*": "./src/repositories/auxiliary/*.ts",
     "./repositories/reporting": "./src/repositories/reporting/index.ts",
     "./repositories/reporting/*": "./src/repositories/reporting/*.ts",
-    "./repositories/fantasy": "./src/repositories/fantasy/index.ts"
+    "./repositories/fantasy": "./src/repositories/fantasy/index.ts",
+    "./repositories/commerce": "./src/repositories/commerce/index.ts"
   },
   "scripts": {
     "generate": "prisma generate --config=../../prisma.config.ts",
@@ -35,6 +36,7 @@
     "test:postgres": "vitest run src/repositories/prisma/provider.integration.test.ts"
   },
   "dependencies": {
+    "@lufa/commerce": "*",
     "@lufa/contracts": "*",
     "@lufa/fantasy-core": "*",
     "@lufa/identity-institutional": "*",

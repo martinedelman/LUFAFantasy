@@ -220,6 +220,9 @@ export type UserWhereInput = {
   auditLogs?: Prisma.AdminAuditLogListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
   analyticsReports?: Prisma.AnalyticsReportListRelationFilter
+  sellerMemberships?: Prisma.CommerceSellerMemberListRelationFilter
+  commerceOrders?: Prisma.CommerceOrderListRelationFilter
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -238,6 +241,9 @@ export type UserOrderByWithRelationInput = {
   auditLogs?: Prisma.AdminAuditLogOrderByRelationAggregateInput
   digitalCredentials?: Prisma.DigitalCredentialOrderByRelationAggregateInput
   analyticsReports?: Prisma.AnalyticsReportOrderByRelationAggregateInput
+  sellerMemberships?: Prisma.CommerceSellerMemberOrderByRelationAggregateInput
+  commerceOrders?: Prisma.CommerceOrderOrderByRelationAggregateInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -259,6 +265,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   auditLogs?: Prisma.AdminAuditLogListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
   analyticsReports?: Prisma.AnalyticsReportListRelationFilter
+  sellerMemberships?: Prisma.CommerceSellerMemberListRelationFilter
+  commerceOrders?: Prisma.CommerceOrderListRelationFilter
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -307,6 +316,9 @@ export type UserCreateInput = {
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -325,6 +337,9 @@ export type UserUncheckedCreateInput = {
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -343,6 +358,9 @@ export type UserUpdateInput = {
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -361,6 +379,9 @@ export type UserUncheckedUpdateInput = {
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -547,6 +568,48 @@ export type UserUpdateOneRequiredWithoutDigitalCredentialsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDigitalCredentialsInput, Prisma.UserUpdateWithoutDigitalCredentialsInput>, Prisma.UserUncheckedUpdateWithoutDigitalCredentialsInput>
 }
 
+export type UserCreateNestedOneWithoutSellerMembershipsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSellerMembershipsInput, Prisma.UserUncheckedCreateWithoutSellerMembershipsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSellerMembershipsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutSellerMembershipsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSellerMembershipsInput, Prisma.UserUncheckedCreateWithoutSellerMembershipsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSellerMembershipsInput
+  upsert?: Prisma.UserUpsertWithoutSellerMembershipsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSellerMembershipsInput, Prisma.UserUpdateWithoutSellerMembershipsInput>, Prisma.UserUncheckedUpdateWithoutSellerMembershipsInput>
+}
+
+export type UserCreateNestedOneWithoutCommerceOrdersInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCommerceOrdersInput, Prisma.UserUncheckedCreateWithoutCommerceOrdersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCommerceOrdersInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutCommerceOrdersNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCommerceOrdersInput, Prisma.UserUncheckedCreateWithoutCommerceOrdersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCommerceOrdersInput
+  upsert?: Prisma.UserUpsertWithoutCommerceOrdersInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCommerceOrdersInput, Prisma.UserUpdateWithoutCommerceOrdersInput>, Prisma.UserUncheckedUpdateWithoutCommerceOrdersInput>
+}
+
+export type UserCreateNestedOneWithoutTournamentRegistrationsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTournamentRegistrationsInput, Prisma.UserUncheckedCreateWithoutTournamentRegistrationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTournamentRegistrationsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutTournamentRegistrationsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTournamentRegistrationsInput, Prisma.UserUncheckedCreateWithoutTournamentRegistrationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTournamentRegistrationsInput
+  upsert?: Prisma.UserUpsertWithoutTournamentRegistrationsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutTournamentRegistrationsInput, Prisma.UserUpdateWithoutTournamentRegistrationsInput>, Prisma.UserUncheckedUpdateWithoutTournamentRegistrationsInput>
+}
+
 export type UserCreateWithoutAnalyticsReportsInput = {
   id?: string
   name: string
@@ -562,6 +625,9 @@ export type UserCreateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAnalyticsReportsInput = {
@@ -579,6 +645,9 @@ export type UserUncheckedCreateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAnalyticsReportsInput = {
@@ -612,6 +681,9 @@ export type UserUpdateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAnalyticsReportsInput = {
@@ -629,6 +701,9 @@ export type UserUncheckedUpdateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOtpVerificationsInput = {
@@ -646,6 +721,9 @@ export type UserCreateWithoutOtpVerificationsInput = {
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOtpVerificationsInput = {
@@ -663,6 +741,9 @@ export type UserUncheckedCreateWithoutOtpVerificationsInput = {
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOtpVerificationsInput = {
@@ -696,6 +777,9 @@ export type UserUpdateWithoutOtpVerificationsInput = {
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOtpVerificationsInput = {
@@ -713,6 +797,9 @@ export type UserUncheckedUpdateWithoutOtpVerificationsInput = {
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutRequestedCorrectionsInput = {
@@ -730,6 +817,9 @@ export type UserCreateWithoutRequestedCorrectionsInput = {
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutRequestedCorrectionsInput = {
@@ -747,6 +837,9 @@ export type UserUncheckedCreateWithoutRequestedCorrectionsInput = {
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutRequestedCorrectionsInput = {
@@ -769,6 +862,9 @@ export type UserCreateWithoutReviewedCorrectionsInput = {
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReviewedCorrectionsInput = {
@@ -786,6 +882,9 @@ export type UserUncheckedCreateWithoutReviewedCorrectionsInput = {
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReviewedCorrectionsInput = {
@@ -819,6 +918,9 @@ export type UserUpdateWithoutRequestedCorrectionsInput = {
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRequestedCorrectionsInput = {
@@ -836,6 +938,9 @@ export type UserUncheckedUpdateWithoutRequestedCorrectionsInput = {
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutReviewedCorrectionsInput = {
@@ -864,6 +969,9 @@ export type UserUpdateWithoutReviewedCorrectionsInput = {
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedCorrectionsInput = {
@@ -881,6 +989,9 @@ export type UserUncheckedUpdateWithoutReviewedCorrectionsInput = {
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -898,6 +1009,9 @@ export type UserCreateWithoutAuditLogsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -915,6 +1029,9 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -948,6 +1065,9 @@ export type UserUpdateWithoutAuditLogsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -965,6 +1085,9 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDigitalCredentialsInput = {
@@ -982,6 +1105,9 @@ export type UserCreateWithoutDigitalCredentialsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDigitalCredentialsInput = {
@@ -999,6 +1125,9 @@ export type UserUncheckedCreateWithoutDigitalCredentialsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDigitalCredentialsInput = {
@@ -1032,6 +1161,9 @@ export type UserUpdateWithoutDigitalCredentialsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDigitalCredentialsInput = {
@@ -1049,6 +1181,297 @@ export type UserUncheckedUpdateWithoutDigitalCredentialsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutSellerMembershipsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutSellerMembershipsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutSellerMembershipsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSellerMembershipsInput, Prisma.UserUncheckedCreateWithoutSellerMembershipsInput>
+}
+
+export type UserUpsertWithoutSellerMembershipsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSellerMembershipsInput, Prisma.UserUncheckedUpdateWithoutSellerMembershipsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSellerMembershipsInput, Prisma.UserUncheckedCreateWithoutSellerMembershipsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSellerMembershipsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSellerMembershipsInput, Prisma.UserUncheckedUpdateWithoutSellerMembershipsInput>
+}
+
+export type UserUpdateWithoutSellerMembershipsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSellerMembershipsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutCommerceOrdersInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCommerceOrdersInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCommerceOrdersInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCommerceOrdersInput, Prisma.UserUncheckedCreateWithoutCommerceOrdersInput>
+}
+
+export type UserUpsertWithoutCommerceOrdersInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCommerceOrdersInput, Prisma.UserUncheckedUpdateWithoutCommerceOrdersInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCommerceOrdersInput, Prisma.UserUncheckedCreateWithoutCommerceOrdersInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCommerceOrdersInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCommerceOrdersInput, Prisma.UserUncheckedUpdateWithoutCommerceOrdersInput>
+}
+
+export type UserUpdateWithoutCommerceOrdersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCommerceOrdersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutTournamentRegistrationsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+}
+
+export type UserUncheckedCreateWithoutTournamentRegistrationsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+}
+
+export type UserCreateOrConnectWithoutTournamentRegistrationsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutTournamentRegistrationsInput, Prisma.UserUncheckedCreateWithoutTournamentRegistrationsInput>
+}
+
+export type UserUpsertWithoutTournamentRegistrationsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutTournamentRegistrationsInput, Prisma.UserUncheckedUpdateWithoutTournamentRegistrationsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutTournamentRegistrationsInput, Prisma.UserUncheckedCreateWithoutTournamentRegistrationsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutTournamentRegistrationsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutTournamentRegistrationsInput, Prisma.UserUncheckedUpdateWithoutTournamentRegistrationsInput>
+}
+
+export type UserUpdateWithoutTournamentRegistrationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutTournamentRegistrationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
 }
 
 
@@ -1063,6 +1486,9 @@ export type UserCountOutputType = {
   auditLogs: number
   digitalCredentials: number
   analyticsReports: number
+  sellerMemberships: number
+  commerceOrders: number
+  tournamentRegistrations: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1072,6 +1498,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
   digitalCredentials?: boolean | UserCountOutputTypeCountDigitalCredentialsArgs
   analyticsReports?: boolean | UserCountOutputTypeCountAnalyticsReportsArgs
+  sellerMemberships?: boolean | UserCountOutputTypeCountSellerMembershipsArgs
+  commerceOrders?: boolean | UserCountOutputTypeCountCommerceOrdersArgs
+  tournamentRegistrations?: boolean | UserCountOutputTypeCountTournamentRegistrationsArgs
 }
 
 /**
@@ -1126,6 +1555,27 @@ export type UserCountOutputTypeCountAnalyticsReportsArgs<ExtArgs extends runtime
   where?: Prisma.AnalyticsReportWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountSellerMembershipsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CommerceSellerMemberWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCommerceOrdersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CommerceOrderWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountTournamentRegistrationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CommerceTournamentRegistrationWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1143,6 +1593,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.User$digitalCredentialsArgs<ExtArgs>
   analyticsReports?: boolean | Prisma.User$analyticsReportsArgs<ExtArgs>
+  sellerMemberships?: boolean | Prisma.User$sellerMembershipsArgs<ExtArgs>
+  commerceOrders?: boolean | Prisma.User$commerceOrdersArgs<ExtArgs>
+  tournamentRegistrations?: boolean | Prisma.User$tournamentRegistrationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1190,6 +1643,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.User$digitalCredentialsArgs<ExtArgs>
   analyticsReports?: boolean | Prisma.User$analyticsReportsArgs<ExtArgs>
+  sellerMemberships?: boolean | Prisma.User$sellerMembershipsArgs<ExtArgs>
+  commerceOrders?: boolean | Prisma.User$commerceOrdersArgs<ExtArgs>
+  tournamentRegistrations?: boolean | Prisma.User$tournamentRegistrationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1204,6 +1660,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     auditLogs: Prisma.$AdminAuditLogPayload<ExtArgs>[]
     digitalCredentials: Prisma.$DigitalCredentialPayload<ExtArgs>[]
     analyticsReports: Prisma.$AnalyticsReportPayload<ExtArgs>[]
+    sellerMemberships: Prisma.$CommerceSellerMemberPayload<ExtArgs>[]
+    commerceOrders: Prisma.$CommerceOrderPayload<ExtArgs>[]
+    tournamentRegistrations: Prisma.$CommerceTournamentRegistrationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1615,6 +2074,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   auditLogs<T extends Prisma.User$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   digitalCredentials<T extends Prisma.User$digitalCredentialsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$digitalCredentialsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DigitalCredentialPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   analyticsReports<T extends Prisma.User$analyticsReportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$analyticsReportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AnalyticsReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  sellerMemberships<T extends Prisma.User$sellerMembershipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sellerMembershipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceSellerMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  commerceOrders<T extends Prisma.User$commerceOrdersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$commerceOrdersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceOrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  tournamentRegistrations<T extends Prisma.User$tournamentRegistrationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$tournamentRegistrationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceTournamentRegistrationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2187,6 +2649,78 @@ export type User$analyticsReportsArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.AnalyticsReportScalarFieldEnum | Prisma.AnalyticsReportScalarFieldEnum[]
+}
+
+/**
+ * User.sellerMemberships
+ */
+export type User$sellerMembershipsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CommerceSellerMember
+   */
+  select?: Prisma.CommerceSellerMemberSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CommerceSellerMember
+   */
+  omit?: Prisma.CommerceSellerMemberOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CommerceSellerMemberInclude<ExtArgs> | null
+  where?: Prisma.CommerceSellerMemberWhereInput
+  orderBy?: Prisma.CommerceSellerMemberOrderByWithRelationInput | Prisma.CommerceSellerMemberOrderByWithRelationInput[]
+  cursor?: Prisma.CommerceSellerMemberWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CommerceSellerMemberScalarFieldEnum | Prisma.CommerceSellerMemberScalarFieldEnum[]
+}
+
+/**
+ * User.commerceOrders
+ */
+export type User$commerceOrdersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CommerceOrder
+   */
+  select?: Prisma.CommerceOrderSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CommerceOrder
+   */
+  omit?: Prisma.CommerceOrderOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CommerceOrderInclude<ExtArgs> | null
+  where?: Prisma.CommerceOrderWhereInput
+  orderBy?: Prisma.CommerceOrderOrderByWithRelationInput | Prisma.CommerceOrderOrderByWithRelationInput[]
+  cursor?: Prisma.CommerceOrderWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CommerceOrderScalarFieldEnum | Prisma.CommerceOrderScalarFieldEnum[]
+}
+
+/**
+ * User.tournamentRegistrations
+ */
+export type User$tournamentRegistrationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CommerceTournamentRegistration
+   */
+  select?: Prisma.CommerceTournamentRegistrationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CommerceTournamentRegistration
+   */
+  omit?: Prisma.CommerceTournamentRegistrationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CommerceTournamentRegistrationInclude<ExtArgs> | null
+  where?: Prisma.CommerceTournamentRegistrationWhereInput
+  orderBy?: Prisma.CommerceTournamentRegistrationOrderByWithRelationInput | Prisma.CommerceTournamentRegistrationOrderByWithRelationInput[]
+  cursor?: Prisma.CommerceTournamentRegistrationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CommerceTournamentRegistrationScalarFieldEnum | Prisma.CommerceTournamentRegistrationScalarFieldEnum[]
 }
 
 /**

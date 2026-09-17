@@ -14,7 +14,7 @@ export default function HomePage() {
           <Image src="/lufa_icon.png" alt="" width={78} height={78} priority />
           <span>Liga Uruguaya de Football Americano</span>
         </Link>
-        <SiteNav flagUrl={flagUrl} />
+<SiteNav flagUrl={flagUrl} />
       </header>
 
       <section className={`hero ${styles.hero}`} id="inicio" aria-labelledby="portal-title">

@@ -24,6 +24,9 @@ model User {
   auditLogs            AdminAuditLog[]
   digitalCredentials   DigitalCredential[]
   analyticsReports     AnalyticsReport[]
+  sellerMemberships    CommerceSellerMember[]
+  commerceOrders       CommerceOrder[]
+  tournamentRegistrations CommerceTournamentRegistration[]
 
   @@index([role])
   @@index([isActive])
@@ -75,6 +78,8 @@ model Tournament {
   standings       Standing[]
   playerStats     PlayerStatistics[]
   teamStats       TeamStatistics[]
+  commerceItems   CommerceItem[]
+  commerceRegistrations CommerceTournamentRegistration[]
 
   @@unique([name, year])
   @@index([status])
@@ -755,6 +760,175 @@ model DigitalCredential {
   @@index([judgeId])
   @@index([status, expiresAt])
   @@map("digital_credentials")
+}
+
+model CommerceSeller {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  kind        String   @default("partner")
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  members CommerceSellerMember[]
+  items   CommerceItem[]
+  orders  CommerceOrder[]
+
+  @@index([status, name])
+  @@map("commerce_sellers")
+}
+
+model CommerceSellerMember {
+  id        String   @id @default(cuid())
+  sellerId  String   @map("seller_id")
+  userId    String   @map("user_id")
+  role      String   @default("manager")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  seller CommerceSeller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sellerId, userId])
+  @@index([userId])
+  @@map("commerce_seller_members")
+}
+
+model CommerceItem {
+  id                    String   @id @default(cuid())
+  sellerId              String   @map("seller_id")
+  tournamentId          String?  @map("tournament_id")
+  slug                  String   @unique
+  kind                  String
+  title                 String
+  description           String
+  imageUrl              String?  @map("image_url")
+  priceMinor            Int      @map("price_minor")
+  currency              String   @default("UYU")
+  credentialDiscountBps Int      @default(0) @map("credential_discount_bps")
+  stockQuantity         Int?     @map("stock_quantity")
+  entitlementMonths     Int?     @map("entitlement_months")
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  seller      CommerceSeller @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  tournament  Tournament?    @relation(fields: [tournamentId], references: [id], onDelete: Restrict)
+  orderItems  CommerceOrderItem[]
+  registrations CommerceTournamentRegistration[]
+
+  @@index([sellerId, active])
+  @@index([kind, active])
+  @@map("commerce_items")
+}
+
+model CommerceOrder {
+  id                    String    @id @default(cuid())
+  buyerUserId           String    @map("buyer_user_id")
+  sellerId              String    @map("seller_id")
+  status                String    @default("creating")
+  fulfillmentStatus     String    @default("unfulfilled") @map("fulfillment_status")
+  currency              String    @default("UYU")
+  subtotalMinor         Int       @map("subtotal_minor")
+  discountMinor         Int       @default(0) @map("discount_minor")
+  totalMinor            Int       @map("total_minor")
+  idempotencyKey        String    @unique @map("idempotency_key")
+  payloadFingerprint    String    @map("payload_fingerprint")
+  providerOrderId       String?   @unique @map("provider_order_id")
+  providerStatus        String?   @map("provider_status")
+  checkoutUrl           String?   @map("checkout_url")
+  liveMode              Boolean   @map("live_mode")
+  reservationExpiresAt  DateTime  @map("reservation_expires_at")
+  paidAt                DateTime? @map("paid_at")
+  fulfilledAt           DateTime? @map("fulfilled_at")
+  cancelledAt           DateTime? @map("cancelled_at")
+  refundedMinor         Int       @default(0) @map("refunded_minor")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  buyer  User           @relation(fields: [buyerUserId], references: [id], onDelete: Restrict)
+  seller CommerceSeller @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  items   CommerceOrderItem[]
+  refundRequests CommerceRefundRequest[]
+  registrations CommerceTournamentRegistration[]
+
+  @@index([buyerUserId, createdAt])
+  @@index([sellerId, createdAt])
+  @@index([status, reservationExpiresAt])
+  @@map("commerce_orders")
+}
+
+model CommerceOrderItem {
+  id                    String @id @default(cuid())
+  orderId               String @map("order_id")
+  itemId                String @map("item_id")
+  title                 String
+  kind                  String
+  quantity              Int
+  unitPriceMinor        Int    @map("unit_price_minor")
+  unitDiscountMinor     Int    @default(0) @map("unit_discount_minor")
+  entitlementMonths     Int?   @map("entitlement_months")
+
+  order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  item  CommerceItem  @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, itemId])
+  @@index([itemId])
+  @@map("commerce_order_items")
+}
+
+model CommerceWebhookEvent {
+  id                 String    @id @default(cuid())
+  deliveryKey        String    @unique @map("delivery_key")
+  providerResourceId String    @map("provider_resource_id")
+  action             String
+  liveMode           Boolean   @map("live_mode")
+  status             String    @default("received")
+  attempts           Int       @default(0)
+  error              String?
+  receivedAt         DateTime  @default(now()) @map("received_at")
+  processedAt        DateTime? @map("processed_at")
+
+  @@index([status, receivedAt])
+  @@index([providerResourceId, receivedAt])
+  @@map("commerce_webhook_events")
+}
+
+model CommerceTournamentRegistration {
+  id           String   @id @default(cuid())
+  orderId      String   @map("order_id")
+  itemId       String   @map("item_id")
+  tournamentId String   @map("tournament_id")
+  userId       String   @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  order      CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  item       CommerceItem  @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  tournament Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Restrict)
+  user       User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([itemId, userId])
+  @@index([tournamentId, createdAt])
+  @@map("commerce_tournament_registrations")
+}
+
+model CommerceRefundRequest {
+  id             String    @id @default(cuid())
+  orderId        String    @map("order_id")
+  requestedById  String    @map("requested_by_id")
+  amountMinor    Int       @map("amount_minor")
+  reason         String
+  status         String    @default("requested")
+  providerRefundId String? @unique @map("provider_refund_id")
+  reviewedById   String?   @map("reviewed_by_id")
+  reviewedAt     DateTime? @map("reviewed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@index([status, createdAt])
+  @@map("commerce_refund_requests")
 }
 
 model DigitalCredentialAudit {

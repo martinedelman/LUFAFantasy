@@ -7,6 +7,12 @@ DELETE /api/games/:id/events/:eventId
 DELETE /api/players/:id
 DELETE /api/teams/:id
 DELETE /api/tournaments/:id
+GET /api/commerce/catalog
+GET /api/commerce/orders/:id
+GET /api/commerce/seller/items
+GET /api/commerce/seller/orders
+GET /api/commerce/seller/profile
+GET /api/cron/commerce-reconcile
 GET /api/admin/audit-logs
 GET /api/admin/flag-interests
 GET /api/admin/game-event-corrections
@@ -46,6 +52,10 @@ PATCH /api/games/:id/complete
 PATCH /api/games/:id/events/:eventId
 PATCH /api/games/:id/start
 PATCH /api/games/:id/walkover
+PATCH /api/commerce/seller/items/:id
+POST /api/admin/commerce/refunds/:id/execute
+POST /api/admin/commerce/sellers
+POST /api/admin/commerce/sellers/:id/members
 POST /api/admin/player-import/dry-run
 POST /api/auth/login
 POST /api/auth/logout
@@ -54,6 +64,9 @@ POST /api/auth/password-reset/request
 POST /api/auth/register
 POST /api/auth/verify-registration
 POST /api/divisions
+POST /api/commerce/checkouts
+POST /api/commerce/seller/items
+POST /api/commerce/seller/orders/:id/refund-requests
 POST /api/fantasy/v1/auth/login
 POST /api/fantasy/v1/auth/logout
 POST /api/fantasy/v1/auth/password-reset/confirm
@@ -69,11 +82,30 @@ POST /api/statistics/teams
 POST /api/teams
 POST /api/teams/:id/players
 POST /api/tournaments
+POST /api/webhooks/mercado-pago
 PUT /api/games
 PUT /api/games/:id
 PUT /api/players/:id
 PUT /api/teams/:id
 PUT /api/tournaments/:id
+PATCH /api/admin/digital-credentials/:id
+POST /api/admin/digital-credentials/issue-player
+GET /api/admin/digital-credentials
+POST /api/admin/digital-credentials
+GET /api/digital-credentials/me
+GET /api/digital-credentials/verify/:publicId
+POST /api/fantasy/v1/leagues/:id/draft/picks
+POST /api/fantasy/v1/leagues/:id/draft
+GET /api/fantasy/v1/leagues/:id
+POST /api/fantasy/v1/leagues/join
+GET /api/fantasy/v1/leagues
+POST /api/fantasy/v1/leagues
+POST /api/fantasy/v1/onboarding/restart
+GET /api/fantasy/v1/onboarding
+PATCH /api/fantasy/v1/onboarding
+POST /api/fantasy/v1/players/:id/favorite
+DELETE /api/fantasy/v1/players/:id/favorite
+GET /api/fantasy/v1/players
 `.trim().split("\n"));
 
 const apiRoot = path.join(process.cwd(), "apps/api/src/app/api");

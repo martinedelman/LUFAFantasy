@@ -6,7 +6,9 @@ import { getAnalyticsReportRepository, getReportingRepository } from "@lufa/data
 import { PrismaFantasyCompetitionRepository, PrismaFantasyIdentityRepository } from "@lufa/database/repositories/fantasy";
 import { FantasyCompetitionService, FantasyIdentityService } from "@lufa/fantasy-core";
 import { AuthService, OtpService } from "@lufa/identity-institutional";
-import { BlobStorageService, EmailService, PreApprovedPlayerNotificationService } from "@lufa/integrations";
+import { CommerceService } from "@lufa/commerce";
+import { PrismaCommerceRepository } from "@lufa/database/repositories/commerce";
+import { BlobStorageService, EmailService, MercadoPagoOrdersProvider, PreApprovedPlayerNotificationService } from "@lufa/integrations";
 import { AdminService, DashboardService, PlayerImportService, WeeklyDigestEmailService } from "@lufa/operations";
 import {
   AnalyticsReportService,
@@ -69,6 +71,21 @@ const playerImportService = new PlayerImportService(
   notificationService,
   auxiliaryRepository,
 );
+const commerceService = new CommerceService(
+  new PrismaCommerceRepository(),
+  new MercadoPagoOrdersProvider({
+    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
+    collectorId: process.env.MERCADOPAGO_COLLECTOR_ID || "",
+    applicationId: process.env.MERCADOPAGO_APPLICATION_ID || "",
+  }),
+  {
+    liveMode: process.env.MERCADOPAGO_EXPECTED_LIVE_MODE === "true",
+    returnBaseUrl: (process.env.LUFA_PUBLIC_APP_URL || "http://localhost:3003").replace(/\/$/, ""),
+    reservationMinutes: Number(process.env.COMMERCE_RESERVATION_MINUTES || 30),
+    enabled: process.env.COMMERCE_ENABLED === "true",
+    environmentConfigured: ["true", "false"].includes(process.env.MERCADOPAGO_EXPECTED_LIVE_MODE || ""),
+  },
+);
 
 /** Único composition root del transporte HTTP. */
 export const serviceContainer = {
@@ -79,6 +96,7 @@ export const serviceContainer = {
   authService,
   blobStorageService: new BlobStorageService(fileStorageRepository, getAppEnvironment),
   correctionService: new GameEventCorrectionService(gameService, auxiliaryRepository),
+  commerceService,
   dashboardService,
   divisionService,
   emailService,
