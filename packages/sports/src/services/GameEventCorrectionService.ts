@@ -5,6 +5,7 @@ import { GameService } from "./GameService";
 
 export interface GameEventCorrectionInput {
   quarter: number;
+  time?: string;
   type: GameEventType;
   team: string;
   player?: string;
@@ -127,6 +128,7 @@ export class GameEventCorrectionService {
   private toStoredPayload(event: GameEventCorrectionInput): GameEvent {
     return {
       quarter: Number(event.quarter),
+      time: event.time,
       type: event.type,
       team: this.getReferenceId(event.team),
       player: event.player ? this.getReferenceId(event.player) : undefined,
@@ -138,6 +140,7 @@ export class GameEventCorrectionService {
   private toGameEventInput(event: GameEventCorrectionInput): GameEventCorrectionInput {
     return {
       quarter: Number(event.quarter),
+      time: event.time,
       type: event.type,
       team: this.getReferenceId(event.team),
       player: event.player ? this.getReferenceId(event.player) : undefined,
