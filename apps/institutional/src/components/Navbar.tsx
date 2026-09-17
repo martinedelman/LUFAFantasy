@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { track } from "@vercel/analytics";
 import { useAuth } from "@/hooks/useAuth";
-import { currentFlagAuthUrl } from "@/lib/centralAuth";
 
 const navigation = [
   { name: "Torneos", href: "/tournaments" },
@@ -28,8 +27,6 @@ export default function Navbar() {
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const userMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const { user, signOut } = useAuth();
-  const loginUrl = currentFlagAuthUrl("login");
-  const signupUrl = currentFlagAuthUrl("signup");
   const canViewPlayerRegistrations = user?.role === "entrenador_juveniles" || user?.role === "admin";
 
   const trackNavigation = (label: string, href: string, location: "desktop" | "mobile") => {
@@ -310,20 +307,20 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <a
-                  href={loginUrl}
-                  onClick={() => trackNavigation("Iniciar Sesión", loginUrl, "desktop")}
+                <Link
+                  href="/auth/signin"
+                  onClick={() => trackNavigation("Iniciar Sesión", "/auth/signin", "desktop")}
                   className="text-green-50/90 hover:text-white transition-colors text-sm"
                 >
                   Iniciar Sesión
-                </a>
-                <a
-                  href={signupUrl}
-                  onClick={() => trackNavigation("Registrarse", signupUrl, "desktop")}
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  onClick={() => trackNavigation("Registrarse", "/auth/signup", "desktop")}
                   className="bg-white/12 hover:bg-white/18 border border-white/15 px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm"
                 >
                   Registrarse
-                </a>
+                </Link>
               </div>
             )}
 
@@ -413,26 +410,26 @@ export default function Navbar() {
               {!user && (
                 <div className="pt-4 pb-3 border-t border-white/10">
                   <div className="space-y-1">
-                    <a
-                      href={loginUrl}
+                    <Link
+                      href="/auth/signin"
                       className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
                       onClick={() => {
-                        trackNavigation("Iniciar Sesión", loginUrl, "mobile");
+                        trackNavigation("Iniciar Sesión", "/auth/signin", "mobile");
                         setIsMenuOpen(false);
                       }}
                     >
                       Iniciar Sesión
-                    </a>
-                    <a
-                      href={signupUrl}
+                    </Link>
+                    <Link
+                      href="/auth/signup"
                       className="block px-3 py-2 rounded-xl text-base font-medium bg-white/12 border border-white/15 hover:bg-white/18"
                       onClick={() => {
-                        trackNavigation("Registrarse", signupUrl, "mobile");
+                        trackNavigation("Registrarse", "/auth/signup", "mobile");
                         setIsMenuOpen(false);
                       }}
                     >
                       Registrarse
-                    </a>
+                    </Link>
                   </div>
                 </div>
               )}
