@@ -10,6 +10,8 @@ import Toast from "@/components/Toast";
 import { useAuth } from "@/hooks/useAuth";
 import type {
   AdminAuditLogResponseDto,
+  AdminAnalyticsResponseDto,
+  AdminAnalyticsSubject,
   AdminPlayerImportDryRunResponseDto,
   AdminSystemHealthResponseDto,
   AdminSystemStatsResponseDto,
@@ -20,12 +22,14 @@ import type {
   JudgeResponseDto,
   SiteSettingsResponseDto,
   SiteSponsorResponseDto,
+  DivisionResponseDto,
+  TournamentResponseDto,
   UpdateAdminUserRequestDto,
   UpdateSiteSettingsRequestDto,
 } from "@lufa/contracts";
 import type { UserRole } from "@lufa/contracts";
 
-type AdminTab = "overview" | "users" | "pending" | "content" | "credentials" | "system" | "audit";
+type AdminTab = "overview" | "analytics" | "users" | "pending" | "content" | "credentials" | "system" | "audit";
 
 type AdminToastState = {
   variant: "info" | "warning" | "error" | "success";
@@ -59,6 +63,7 @@ type CorrectionEventSummary = {
 
 const tabs: Array<{ id: AdminTab; label: string }> = [
   { id: "overview", label: "Resumen" },
+  { id: "analytics", label: "Estadísticas" },
   { id: "users", label: "Usuarios" },
   { id: "pending", label: "Pendientes" },
   { id: "content", label: "Contenido" },
@@ -222,6 +227,71 @@ function StatCard({ label, value, detail }: { label: string; value: number; deta
   );
 }
 
+type AnalyticsChartRow = {
+  id: string;
+  name: string;
+  teamName?: string;
+  pointsFor?: number;
+  pointsAgainst?: number;
+  pointDifferential?: number;
+  wins?: number;
+  games?: number;
+  points?: number;
+  touchdowns?: number;
+  discipline: number;
+  penalties: number;
+  unsportsmanlike: number;
+};
+
+function AnalyticsBars({
+  title,
+  rows,
+  value,
+  detail,
+  emptyMessage = "Todavía no hay eventos para este ranking.",
+}: {
+  title: string;
+  rows: AnalyticsChartRow[];
+  value: (row: AnalyticsChartRow) => number;
+  detail: (row: AnalyticsChartRow) => string;
+  emptyMessage?: string;
+}) {
+  const max = Math.max(...rows.map(value), 1);
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-5">
+      <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+      {rows.length === 0 ? (
+        <p className="mt-4 text-sm text-slate-500">{emptyMessage}</p>
+      ) : (
+        <ol className="mt-4 space-y-4">
+          {rows.map((row, index) => {
+            const numericValue = value(row);
+            return (
+              <li key={row.id} className="grid gap-1">
+                <div className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="min-w-0 truncate font-semibold text-slate-800">
+                    <span className="mr-2 text-slate-400">{index + 1}</span>
+                    {row.name}
+                  </span>
+                  <span className="shrink-0 font-bold text-slate-950">{numericValue}</span>
+                </div>
+                {row.teamName ? <p className="text-xs text-slate-500">{row.teamName}</p> : null}
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+                  <div
+                    className="h-full rounded-full bg-brand-600 transition-[width]"
+                    style={{ width: `${Math.max((numericValue / max) * 100, numericValue ? 4 : 0)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-slate-500">{detail(row)}</p>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </section>
+  );
+}
+
 function StatusPill({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span
@@ -283,6 +353,13 @@ function AdminPanelContent() {
   const [judgeForm, setJudgeForm] = useState<CreateJudgeRequestDto>({ firstName: "", lastName: "" });
   const [importResult, setImportResult] = useState<AdminPlayerImportDryRunResponseDto | null>(null);
   const [seenPendingSignature, setSeenPendingSignature] = useState("");
+  const [analyticsSubject, setAnalyticsSubject] = useState<AdminAnalyticsSubject>("teams");
+  const [analyticsFilters, setAnalyticsFilters] = useState({ tournament: "", division: "" });
+  const [analytics, setAnalytics] = useState<AdminAnalyticsResponseDto | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [analyticsTournaments, setAnalyticsTournaments] = useState<TournamentResponseDto[]>([]);
+  const [analyticsDivisions, setAnalyticsDivisions] = useState<DivisionResponseDto[]>([]);
 
   const fetchUsers = async (filters = userFilters) => {
     const params = new URLSearchParams();
@@ -381,6 +458,39 @@ function AdminPanelContent() {
     window.localStorage.setItem(storageKey, pendingSignature);
     setSeenPendingSignature(pendingSignature);
   }, [activeTab, pendingSignature, user?.email]);
+
+  useEffect(() => {
+    if (activeTab !== "analytics") return;
+    let current = true;
+    const loadAnalytics = async () => {
+      try {
+        setAnalyticsLoading(true);
+        setAnalyticsError(null);
+        const params = new URLSearchParams({ subject: analyticsSubject });
+        if (analyticsFilters.tournament) params.set("tournament", analyticsFilters.tournament);
+        if (analyticsFilters.division) params.set("division", analyticsFilters.division);
+        const divisionParams = new URLSearchParams({ limit: "100" });
+        if (analyticsFilters.tournament) divisionParams.set("tournament", analyticsFilters.tournament);
+        const [nextAnalytics, nextTournaments, nextDivisions] = await Promise.all([
+          apiFetch<AdminAnalyticsResponseDto>(`/api/admin/analytics?${params}`),
+          apiFetch<TournamentResponseDto[]>("/api/tournaments?limit=100"),
+          apiFetch<DivisionResponseDto[]>(`/api/divisions?${divisionParams}`),
+        ]);
+        if (!current) return;
+        setAnalytics(nextAnalytics);
+        setAnalyticsTournaments(nextTournaments);
+        setAnalyticsDivisions(nextDivisions);
+      } catch (loadError) {
+        if (current) setAnalyticsError(loadError instanceof Error ? loadError.message : "No se pudieron cargar las estadísticas");
+      } finally {
+        if (current) setAnalyticsLoading(false);
+      }
+    };
+    loadAnalytics();
+    return () => {
+      current = false;
+    };
+  }, [activeTab, analyticsFilters.division, analyticsFilters.tournament, analyticsSubject]);
 
   const setTab = (tab: AdminTab) => {
     setActiveTab(tab);
@@ -753,6 +863,142 @@ function AdminPanelContent() {
                     </div>
                   </section>
                 </div>
+              </section>
+            )}
+
+            {activeTab === "analytics" && (
+              <section className="space-y-6">
+                <div className="rounded-lg border border-slate-200 bg-white p-5">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-950">Estadísticas deportivas</h2>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Incluye partidos en curso y finalizados. Disciplina suma castigos y conducta antideportiva.
+                      </p>
+                    </div>
+                    <div className="inline-flex rounded-lg bg-slate-100 p-1" role="group" aria-label="Tipo de estadísticas">
+                      {(["teams", "players"] as const).map((subject) => (
+                        <button
+                          key={subject}
+                          type="button"
+                          aria-pressed={analyticsSubject === subject}
+                          onClick={() => setAnalyticsSubject(subject)}
+                          className={`rounded-md px-4 py-2 text-sm font-semibold transition ${
+                            analyticsSubject === subject
+                              ? "bg-white text-slate-950 shadow-sm"
+                              : "text-slate-600 hover:text-slate-950"
+                          }`}
+                        >
+                          {subject === "teams" ? "Equipos" : "Jugadores"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-5 grid gap-3 md:grid-cols-2">
+                    <label className="grid gap-1 text-sm font-medium text-slate-700">
+                      Torneo
+                      <select
+                        value={analyticsFilters.tournament}
+                        onChange={(event) =>
+                          setAnalyticsFilters({ tournament: event.target.value, division: "" })
+                        }
+                        className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="">Todos los torneos</option>
+                        {analyticsTournaments.map((tournament) => (
+                          <option key={tournament._id} value={tournament._id}>
+                            {tournament.name} {tournament.year ? `(${tournament.year})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="grid gap-1 text-sm font-medium text-slate-700">
+                      División
+                      <select
+                        value={analyticsFilters.division}
+                        onChange={(event) =>
+                          setAnalyticsFilters((current) => ({ ...current, division: event.target.value }))
+                        }
+                        className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="">Todas las divisiones</option>
+                        {analyticsDivisions.map((division) => (
+                          <option key={division._id} value={division._id}>
+                            {division.name} · {division.category}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+
+                {analyticsError ? <InlineFeedback variant="error" title="No pudimos cargar las estadísticas" message={analyticsError} /> : null}
+                {analyticsLoading ? (
+                  <div className="flex min-h-48 items-center justify-center rounded-lg border border-slate-200 bg-white">
+                    <LoadingSpinner />
+                  </div>
+                ) : analytics ? (
+                  <>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                      <StatCard label={analytics.subject === "teams" ? "Equipos con actividad" : "Jugadores con eventos"} value={analytics.totals.entities} />
+                      <StatCard label="Partidos contabilizados" value={analytics.totals.games} />
+                      <StatCard label={analytics.subject === "teams" ? "Puntos anotados" : "Puntos de jugadores"} value={analytics.totals.points} detail={analytics.subject === "players" ? `${analytics.totals.touchdowns} touchdowns` : undefined} />
+                      <StatCard label="Disciplina" value={analytics.totals.discipline} detail={`${analytics.totals.penalties} castigos · ${analytics.totals.unsportsmanlike} antideportivas`} />
+                    </div>
+
+                    {analytics.subject === "teams" && analytics.teams ? (
+                      <div className="grid gap-4 xl:grid-cols-3">
+                        <AnalyticsBars
+                          title="Mejor rendimiento"
+                          rows={analytics.teams.performance}
+                          value={(row) => row.wins || 0}
+                          detail={(row) => `${row.games || 0} partidos · diferencial ${row.pointDifferential || 0}`}
+                          emptyMessage="No hay equipos con partidos registrados en este alcance."
+                        />
+                        <AnalyticsBars
+                          title="Puntos a favor vs. en contra"
+                          rows={analytics.teams.scoring}
+                          value={(row) => row.pointsFor || 0}
+                          detail={(row) => `${row.pointsFor || 0} a favor · ${row.pointsAgainst || 0} en contra`}
+                          emptyMessage="No hay puntos registrados en este alcance."
+                        />
+                        <AnalyticsBars
+                          title="Equipos con más disciplina"
+                          rows={analytics.teams.discipline}
+                          value={(row) => row.discipline}
+                          detail={(row) => `${row.penalties} castigos · ${row.unsportsmanlike} antideportivas`}
+                          emptyMessage="No hay incidentes disciplinarios registrados en este alcance."
+                        />
+                      </div>
+                    ) : null}
+
+                    {analytics.subject === "players" && analytics.players ? (
+                      <div className="grid gap-4 xl:grid-cols-3">
+                        <AnalyticsBars
+                          title="Top 5 por puntos"
+                          rows={analytics.players.points}
+                          value={(row) => row.points || 0}
+                          detail={(row) => `${row.touchdowns || 0} touchdowns`}
+                          emptyMessage="No hay puntos de jugadores registrados en este alcance."
+                        />
+                        <AnalyticsBars
+                          title="Top 5 por touchdowns"
+                          rows={analytics.players.touchdowns}
+                          value={(row) => row.touchdowns || 0}
+                          detail={(row) => `${row.points || 0} puntos`}
+                          emptyMessage="No hay touchdowns de jugadores registrados en este alcance."
+                        />
+                        <AnalyticsBars
+                          title="Top 5 jugadores con más castigos"
+                          rows={analytics.players.discipline}
+                          value={(row) => row.discipline}
+                          detail={(row) => `${row.penalties} castigos · ${row.unsportsmanlike} antideportivas`}
+                          emptyMessage="No hay incidentes disciplinarios de jugadores registrados en este alcance."
+                        />
+                      </div>
+                    ) : null}
+                  </>
+                ) : null}
               </section>
             )}
 

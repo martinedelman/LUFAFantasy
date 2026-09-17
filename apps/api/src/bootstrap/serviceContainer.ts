@@ -10,6 +10,7 @@ import { BlobStorageService, EmailService, PreApprovedPlayerNotificationService 
 import { AdminService, DashboardService, PlayerImportService, WeeklyDigestEmailService } from "@lufa/operations";
 import {
   DivisionService,
+  AdminAnalyticsService,
   GameEventCorrectionService,
   GameService,
   JudgeService,
@@ -69,6 +70,7 @@ const playerImportService = new PlayerImportService(
 /** Único composition root del transporte HTTP. */
 export const serviceContainer = {
   adminService: new AdminService(playerImportService, auxiliaryRepository, getDatabaseProvider),
+  adminAnalyticsService: new AdminAnalyticsService(tournamentRepository, divisionRepository, reportingRepository),
   authService,
   blobStorageService: new BlobStorageService(fileStorageRepository, getAppEnvironment),
   correctionService: new GameEventCorrectionService(gameService, auxiliaryRepository),

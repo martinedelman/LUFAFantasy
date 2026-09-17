@@ -1,4 +1,4 @@
-import type { DashboardStatsResponseDto } from "@lufa/contracts";
+import type { AdminAnalyticsResponseDto, AdminAnalyticsSubject, DashboardStatsResponseDto } from "@lufa/contracts";
 
 export type RankingEventType = "touchdown" | "extra_point" | "safety" | "interception" | "pick_six";
 export type RankingStage = "all" | "regular" | "playoff" | "final" | "postseason";
@@ -13,6 +13,12 @@ export interface PlayerRankingQuery {
   stage: RankingStage;
   includePickSix: boolean;
   limit: number;
+}
+
+export interface AdminAnalyticsQuery {
+  subject: AdminAnalyticsSubject;
+  tournament?: string | null;
+  division?: string | null;
 }
 
 export interface PlayerRankingRow {
@@ -30,5 +36,6 @@ export interface IReportingRepository {
   getDashboardStats(nextGamesLimit: number, topPlayersLimit: number): Promise<DashboardStatsResponseDto>;
   getActivePlayerCounts(teamIds: string[]): Promise<Record<string, number>>;
   getPlayerRankings(query: PlayerRankingQuery): Promise<PlayerRankingRow[]>;
+  getAdminAnalytics(query: AdminAnalyticsQuery): Promise<AdminAnalyticsResponseDto>;
   checkDatabaseHealth(): Promise<{ latencyMs: number; databaseName: string }>;
 }

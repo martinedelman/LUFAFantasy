@@ -1,6 +1,7 @@
 export * from "./entities";
 export type * from "./ports";
 export * from "./services/DivisionService";
+export * from "./services/AdminAnalyticsService";
 export * from "./services/GameEventCorrectionService";
 export * from "./services/GameService";
 export * from "./services/JudgeService";

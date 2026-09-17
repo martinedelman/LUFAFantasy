@@ -9,6 +9,8 @@ import type {
   PlayerRankingRow,
   RankingEventType,
 } from "./IReportingRepository";
+import type { AdminAnalyticsQuery } from "./IReportingRepository";
+import { buildAdminAnalytics } from "./adminAnalytics";
 
 export class MongoReportingRepository implements IReportingRepository {
   async getDashboardStats(nextGamesLimit: number, topPlayersLimit: number): Promise<DashboardStatsResponseDto> {
@@ -80,6 +82,46 @@ export class MongoReportingRepository implements IReportingRepository {
       { $group: { _id: "$team", count: { $sum: 1 } } },
     ]);
     return Object.fromEntries(rows.map((row) => [String(row._id), row.count]));
+  }
+
+  async getAdminAnalytics(query: AdminAnalyticsQuery) {
+    await connectToDatabase();
+    const games = await GameModel.find({
+      status: { $in: ["in_progress", "completed"] },
+      ...(query.tournament ? { tournament: new mongoose.Types.ObjectId(query.tournament) } : {}),
+      ...(query.division ? { division: new mongoose.Types.ObjectId(query.division) } : {}),
+    })
+      .populate("homeTeam", "name")
+      .populate("awayTeam", "name")
+      .select("_id homeTeam awayTeam score")
+      .lean();
+    const events = games.length
+      ? await GameEventModel.find({ game: { $in: games.map((game: any) => game._id) } })
+          .populate({ path: "player", select: "firstName lastName", populate: { path: "team", select: "name" } })
+          .select("team player type points")
+          .lean()
+      : [];
+    return buildAdminAnalytics(
+      query.subject,
+      (games as any[]).map((game) => ({
+        homeTeam: game.homeTeam ? { id: String(game.homeTeam._id), name: game.homeTeam.name } : null,
+        awayTeam: game.awayTeam ? { id: String(game.awayTeam._id), name: game.awayTeam.name } : null,
+        homeScore: Number(game.score?.home?.total || 0),
+        awayScore: Number(game.score?.away?.total || 0),
+      })),
+      (events as any[]).map((event) => ({
+        teamId: String(event.team),
+        type: event.type,
+        points: event.points,
+        player: event.player
+          ? {
+              id: String(event.player._id),
+              name: `${event.player.firstName} ${event.player.lastName}`,
+              teamName: event.player.team?.name || "Sin equipo",
+            }
+          : null,
+      })),
+    );
   }
 
   async getPlayerRankings(query: PlayerRankingQuery): Promise<PlayerRankingRow[]> {
