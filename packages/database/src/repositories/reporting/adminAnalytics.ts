@@ -29,11 +29,11 @@ const top = <T extends { name: string }>(rows: T[], value: (row: T) => number) =
     .slice(0, 5);
 
 function teamRow(id: string, name: string): TeamRow {
-  return { id, name, games: 0, wins: 0, pointsFor: 0, pointsAgainst: 0, pointDifferential: 0, latePoints: 0, defensiveDisruptions: 0, interceptions: 0, sacks: 0, discipline: 0, penalties: 0, unsportsmanlike: 0 };
+  return { id, name, games: 0, wins: 0, pointsFor: 0, pointsAgainst: 0, pointDifferential: 0, firstHalfPoints: 0, secondHalfPoints: 0, firstHalfScores: 0, secondHalfScores: 0, topScorerShare: 0, topScorerName: "", discipline: 0, penalties: 0, unsportsmanlike: 0 };
 }
 
 function playerRow(id: string, name: string, teamName: string): PlayerRow {
-  return { id, name, teamName, points: 0, touchdowns: 0, latePoints: 0, defensiveDisruptions: 0, interceptions: 0, sacks: 0, discipline: 0, penalties: 0, unsportsmanlike: 0 };
+  return { id, name, teamName, points: 0, touchdowns: 0, firstHalfPoints: 0, secondHalfPoints: 0, firstHalfScores: 0, secondHalfScores: 0, eventVariety: 0, discipline: 0, penalties: 0, unsportsmanlike: 0 };
 }
 
 export function buildAdminAnalytics(
@@ -43,6 +43,8 @@ export function buildAdminAnalytics(
 ): AdminAnalyticsResponseDto {
   const teams = new Map<string, TeamRow>();
   const players = new Map<string, PlayerRow>();
+  const playerEventTypes = new Map<string, Set<string>>();
+  const teamScorerPoints = new Map<string, Map<string, number>>();
   const getTeam = (id: string, name = "Equipo sin nombre") => {
     const existing = teams.get(id);
     if (existing) return existing;
@@ -74,24 +76,41 @@ export function buildAdminAnalytics(
       if (isPenalty) team.penalties += 1;
       if (isUnsportsmanlike) team.unsportsmanlike += 1;
     }
-    const isInterception = event.type === "interception" || event.type === "pick_six";
-    const isSack = event.type === "sack";
     const points = Number(event.points || 0);
-    const isLateScore = event.quarter >= 4 && points > 0;
+    const isFirstHalfScore = event.quarter === 1 && points > 0;
+    const isSecondHalfScore = event.quarter === 2 && points > 0;
     const team = getTeam(event.teamId);
-    if (isLateScore) team.latePoints += points;
-    if (isInterception) team.interceptions += 1;
-    if (isSack) team.sacks += 1;
-    if (isInterception || isSack) team.defensiveDisruptions += 1;
+    if (isFirstHalfScore) {
+      team.firstHalfPoints += points;
+      team.firstHalfScores += 1;
+    }
+    if (isSecondHalfScore) {
+      team.secondHalfPoints += points;
+      team.secondHalfScores += 1;
+    }
     if (!event.player) continue;
     const player = players.get(event.player.id) || playerRow(event.player.id, event.player.name, event.player.teamName);
     players.set(player.id, player);
     player.points += points;
     if (event.type === "touchdown") player.touchdowns += 1;
-    if (isLateScore) player.latePoints += points;
-    if (isInterception) player.interceptions += 1;
-    if (isSack) player.sacks += 1;
-    if (isInterception || isSack) player.defensiveDisruptions += 1;
+    if (isFirstHalfScore) {
+      player.firstHalfPoints += points;
+      player.firstHalfScores += 1;
+    }
+    if (isSecondHalfScore) {
+      player.secondHalfPoints += points;
+      player.secondHalfScores += 1;
+    }
+    if (points > 0 || ["interception", "pick_six", "sack", "first_down"].includes(event.type)) {
+      const types = playerEventTypes.get(player.id) || new Set<string>();
+      types.add(event.type);
+      playerEventTypes.set(player.id, types);
+    }
+    if (points > 0) {
+      const scorers = teamScorerPoints.get(event.teamId) || new Map<string, number>();
+      scorers.set(player.id, (scorers.get(player.id) || 0) + points);
+      teamScorerPoints.set(event.teamId, scorers);
+    }
     if (isPenalty || isUnsportsmanlike) {
       player.discipline += 1;
       if (isPenalty) player.penalties += 1;
@@ -99,8 +118,19 @@ export function buildAdminAnalytics(
     }
   }
 
-  const teamRows = [...teams.values()].map((row) => ({ ...row, pointDifferential: row.pointsFor - row.pointsAgainst }));
-  const playerRows = [...players.values()];
+  const teamRows = [...teams.values()].map((row) => {
+    const scorers = teamScorerPoints.get(row.id);
+    const totalCreditedPoints = [...(scorers?.values() || [])].reduce((sum, points) => sum + points, 0);
+    const topScorer = [...(scorers?.entries() || [])].sort((left, right) => right[1] - left[1])[0];
+    const player = topScorer ? players.get(topScorer[0]) : undefined;
+    return {
+      ...row,
+      pointDifferential: row.pointsFor - row.pointsAgainst,
+      topScorerName: player?.name || "",
+      topScorerShare: topScorer && totalCreditedPoints ? Math.round((topScorer[1] / totalCreditedPoints) * 100) : 0,
+    };
+  });
+  const playerRows = [...players.values()].map((row) => ({ ...row, eventVariety: playerEventTypes.get(row.id)?.size || 0 }));
   const discipline = (rows: Array<TeamRow | PlayerRow>) => rows.reduce((sum, row) => sum + row.discipline, 0);
   const penalties = (rows: Array<TeamRow | PlayerRow>) => rows.reduce((sum, row) => sum + row.penalties, 0);
   const unsportsmanlike = (rows: Array<TeamRow | PlayerRow>) => rows.reduce((sum, row) => sum + row.unsportsmanlike, 0);
@@ -113,15 +143,16 @@ export function buildAdminAnalytics(
         games: games.length,
         points: teamRows.reduce((sum, row) => sum + row.pointsFor, 0),
         touchdowns: 0,
-        latePoints: teamRows.reduce((sum, row) => sum + row.latePoints, 0),
-        defensiveDisruptions: teamRows.reduce((sum, row) => sum + row.defensiveDisruptions, 0),
-        interceptions: teamRows.reduce((sum, row) => sum + row.interceptions, 0),
-        sacks: teamRows.reduce((sum, row) => sum + row.sacks, 0),
+        firstHalfPoints: teamRows.reduce((sum, row) => sum + row.firstHalfPoints, 0),
+        secondHalfPoints: teamRows.reduce((sum, row) => sum + row.secondHalfPoints, 0),
+        firstHalfScores: teamRows.reduce((sum, row) => sum + row.firstHalfScores, 0),
+        secondHalfScores: teamRows.reduce((sum, row) => sum + row.secondHalfScores, 0),
+        versatilePlayers: 0,
         discipline: discipline(teamRows), penalties: penalties(teamRows), unsportsmanlike: unsportsmanlike(teamRows),
       },
       teams: {
-        lateScoring: top(teamRows.filter((row) => row.latePoints > 0), (row) => row.latePoints),
-        defense: top(teamRows.filter((row) => row.defensiveDisruptions > 0), (row) => row.defensiveDisruptions),
+        secondHalfScoring: top(teamRows.filter((row) => row.secondHalfPoints > 0), (row) => row.secondHalfPoints),
+        offensiveDependence: top(teamRows.filter((row) => row.topScorerShare > 0), (row) => row.topScorerShare),
         discipline: top(teamRows.filter((row) => row.discipline > 0), (row) => row.discipline),
       },
       players: null,
@@ -135,16 +166,17 @@ export function buildAdminAnalytics(
       games: games.length,
       points: playerRows.reduce((sum, row) => sum + row.points, 0),
       touchdowns: playerRows.reduce((sum, row) => sum + row.touchdowns, 0),
-      latePoints: playerRows.reduce((sum, row) => sum + row.latePoints, 0),
-      defensiveDisruptions: playerRows.reduce((sum, row) => sum + row.defensiveDisruptions, 0),
-      interceptions: playerRows.reduce((sum, row) => sum + row.interceptions, 0),
-      sacks: playerRows.reduce((sum, row) => sum + row.sacks, 0),
+      firstHalfPoints: playerRows.reduce((sum, row) => sum + row.firstHalfPoints, 0),
+      secondHalfPoints: playerRows.reduce((sum, row) => sum + row.secondHalfPoints, 0),
+      firstHalfScores: playerRows.reduce((sum, row) => sum + row.firstHalfScores, 0),
+      secondHalfScores: playerRows.reduce((sum, row) => sum + row.secondHalfScores, 0),
+      versatilePlayers: playerRows.filter((row) => row.eventVariety >= 2).length,
       discipline: discipline(playerRows), penalties: penalties(playerRows), unsportsmanlike: unsportsmanlike(playerRows),
     },
     teams: null,
     players: {
-      lateScoring: top(playerRows.filter((row) => row.latePoints > 0), (row) => row.latePoints),
-      defense: top(playerRows.filter((row) => row.defensiveDisruptions > 0), (row) => row.defensiveDisruptions),
+      secondHalfScoring: top(playerRows.filter((row) => row.secondHalfPoints > 0), (row) => row.secondHalfPoints),
+      versatility: top(playerRows.filter((row) => row.eventVariety >= 2), (row) => row.eventVariety),
       discipline: top(playerRows.filter((row) => row.discipline > 0), (row) => row.discipline),
     },
   };

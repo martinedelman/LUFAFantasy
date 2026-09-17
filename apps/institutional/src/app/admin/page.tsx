@@ -238,10 +238,13 @@ type AnalyticsChartRow = {
   games?: number;
   points?: number;
   touchdowns?: number;
-  latePoints?: number;
-  defensiveDisruptions?: number;
-  interceptions?: number;
-  sacks?: number;
+  firstHalfPoints?: number;
+  secondHalfPoints?: number;
+  firstHalfScores?: number;
+  secondHalfScores?: number;
+  topScorerShare?: number;
+  topScorerName?: string;
+  eventVariety?: number;
   discipline: number;
   penalties: number;
   unsportsmanlike: number;
@@ -291,6 +294,51 @@ function AnalyticsBars({
             );
           })}
         </ol>
+      )}
+    </section>
+  );
+}
+
+function ScoringSplitPie({
+  firstHalfScores,
+  secondHalfScores,
+  firstHalfPoints,
+  secondHalfPoints,
+}: {
+  firstHalfScores: number;
+  secondHalfScores: number;
+  firstHalfPoints: number;
+  secondHalfPoints: number;
+}) {
+  const totalScores = firstHalfScores + secondHalfScores;
+  const firstHalfShare = totalScores ? (firstHalfScores / totalScores) * 100 : 0;
+  const secondHalfShare = totalScores ? 100 - firstHalfShare : 0;
+  const leadingHalf = firstHalfScores === secondHalfScores ? "Misma cantidad de anotaciones" : firstHalfScores > secondHalfScores ? "Más anotaciones en 1T" : "Más anotaciones en 2T";
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-5">
+      <h2 className="text-lg font-semibold text-slate-950">Distribución de anotaciones</h2>
+      <p className="mt-1 text-sm text-slate-600">¿En qué tiempo se concentró la contribución de puntos?</p>
+      {totalScores === 0 ? (
+        <p className="mt-4 text-sm text-slate-500">No hay anotaciones registradas en este alcance.</p>
+      ) : (
+        <div className="mt-4 flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+          <div className="relative h-36 w-36 shrink-0" role="img" aria-label={`${firstHalfScores} anotaciones en 1T y ${secondHalfScores} en 2T`}>
+            <svg viewBox="0 0 42 42" className="h-full w-full -rotate-90">
+              <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="#e2e8f0" strokeWidth="7" />
+              <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="#2563eb" strokeWidth="7" strokeDasharray={`${firstHalfShare} ${100 - firstHalfShare}`} />
+              <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="#f97316" strokeWidth="7" strokeDasharray={`${secondHalfShare} ${100 - secondHalfShare}`} strokeDashoffset={`${-firstHalfShare}`} />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span className="text-2xl font-bold text-slate-950">{totalScores}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">anotaciones</span>
+            </div>
+          </div>
+          <div className="w-full space-y-3 text-sm">
+            <p className="font-semibold text-brand-700">{leadingHalf}</p>
+            <p className="flex items-center justify-between gap-3"><span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-blue-600" />1T</span><span className="font-semibold">{firstHalfScores} anot. · {firstHalfPoints} pts</span></p>
+            <p className="flex items-center justify-between gap-3"><span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-orange-500" />2T</span><span className="font-semibold">{secondHalfScores} anot. · {secondHalfPoints} pts</span></p>
+          </div>
+        </div>
       )}
     </section>
   );
@@ -877,7 +925,7 @@ function AdminPanelContent() {
                     <div>
                       <h2 className="text-lg font-semibold text-slate-950">Estadísticas deportivas</h2>
                       <p className="mt-1 text-sm text-slate-600">
-                        Señales difíciles de ver en standings: cierres de partido, presión defensiva y disciplina.
+                        Señales de eventos que no aparecen en standings ni rankings: distribución, dependencia y disciplina.
                       </p>
                     </div>
                     <div className="inline-flex rounded-lg bg-slate-100 p-1" role="group" aria-label="Tipo de estadísticas">
@@ -945,26 +993,25 @@ function AdminPanelContent() {
                   <>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                       <StatCard label={analytics.subject === "teams" ? "Equipos con actividad" : "Jugadores con eventos"} value={analytics.totals.entities} detail={`${analytics.totals.games} partidos contabilizados`} />
-                      <StatCard label="Puntos en cierre" value={analytics.totals.latePoints} detail="4T y tiempo extra" />
-                      <StatCard label="Disrupciones defensivas" value={analytics.totals.defensiveDisruptions} detail={`${analytics.totals.interceptions} intercepciones · ${analytics.totals.sacks} sacks`} />
+                      <StatCard label={analytics.subject === "teams" ? "Puntos 1T" : "Puntos acreditados 1T"} value={analytics.totals.firstHalfPoints} />
+                      <StatCard label={analytics.subject === "teams" ? "Puntos 2T" : "Puntos acreditados 2T"} value={analytics.totals.secondHalfPoints} detail={analytics.subject === "players" ? `${analytics.totals.versatilePlayers} jugadores versátiles` : undefined} />
                       <StatCard label="Disciplina" value={analytics.totals.discipline} detail={`${analytics.totals.penalties} castigos · ${analytics.totals.unsportsmanlike} antideportivas`} />
                     </div>
 
                     {analytics.subject === "teams" && analytics.teams ? (
                       <div className="grid gap-4 xl:grid-cols-3">
-                        <AnalyticsBars
-                          title="Equipos que mejor cierran"
-                          rows={analytics.teams.lateScoring}
-                          value={(row) => row.latePoints || 0}
-                          detail={(row) => `${row.games || 0} partidos · puntos en 4T/ET`}
-                          emptyMessage="No hay puntos anotados en 4T o tiempo extra en este alcance."
+                        <ScoringSplitPie
+                          firstHalfScores={analytics.totals.firstHalfScores}
+                          secondHalfScores={analytics.totals.secondHalfScores}
+                          firstHalfPoints={analytics.totals.firstHalfPoints}
+                          secondHalfPoints={analytics.totals.secondHalfPoints}
                         />
                         <AnalyticsBars
-                          title="Defensas más disruptivas"
-                          rows={analytics.teams.defense}
-                          value={(row) => row.defensiveDisruptions || 0}
-                          detail={(row) => `${row.interceptions || 0} intercepciones · ${row.sacks || 0} sacks`}
-                          emptyMessage="No hay intercepciones ni sacks registrados en este alcance."
+                          title="Dependencia ofensiva"
+                          rows={analytics.teams.offensiveDependence}
+                          value={(row) => row.topScorerShare || 0}
+                          detail={(row) => `${row.topScorerName || "Sin anotador"}: ${row.topScorerShare || 0}% de los puntos acreditados`}
+                          emptyMessage="No hay puntos de jugadores acreditados en este alcance."
                         />
                         <AnalyticsBars
                           title="Equipos con más disciplina"
@@ -978,19 +1025,18 @@ function AdminPanelContent() {
 
                     {analytics.subject === "players" && analytics.players ? (
                       <div className="grid gap-4 xl:grid-cols-3">
-                        <AnalyticsBars
-                          title="Jugadores decisivos"
-                          rows={analytics.players.lateScoring}
-                          value={(row) => row.latePoints || 0}
-                          detail={(row) => `${row.points || 0} puntos totales · 4T/ET`}
-                          emptyMessage="No hay puntos de jugadores en 4T o tiempo extra en este alcance."
+                        <ScoringSplitPie
+                          firstHalfScores={analytics.totals.firstHalfScores}
+                          secondHalfScores={analytics.totals.secondHalfScores}
+                          firstHalfPoints={analytics.totals.firstHalfPoints}
+                          secondHalfPoints={analytics.totals.secondHalfPoints}
                         />
                         <AnalyticsBars
-                          title="Impacto defensivo individual"
-                          rows={analytics.players.defense}
-                          value={(row) => row.defensiveDisruptions || 0}
-                          detail={(row) => `${row.interceptions || 0} intercepciones · ${row.sacks || 0} sacks`}
-                          emptyMessage="No hay intercepciones ni sacks de jugadores registrados en este alcance."
+                          title="Jugadores más versátiles"
+                          rows={analytics.players.versatility}
+                          value={(row) => row.eventVariety || 0}
+                          detail={(row) => `${row.eventVariety || 0} tipos de jugada registrados`}
+                          emptyMessage="No hay jugadores con dos o más tipos de jugada registrados en este alcance."
                         />
                         <AnalyticsBars
                           title="Top 5 jugadores con más castigos"

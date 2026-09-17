@@ -5,10 +5,11 @@ export interface AdminAnalyticsTotalsDto {
   games: number;
   points: number;
   touchdowns: number;
-  latePoints: number;
-  defensiveDisruptions: number;
-  interceptions: number;
-  sacks: number;
+  firstHalfPoints: number;
+  secondHalfPoints: number;
+  firstHalfScores: number;
+  secondHalfScores: number;
+  versatilePlayers: number;
   discipline: number;
   penalties: number;
   unsportsmanlike: number;
@@ -22,10 +23,12 @@ export interface AdminTeamAnalyticsRowDto {
   pointsFor: number;
   pointsAgainst: number;
   pointDifferential: number;
-  latePoints: number;
-  defensiveDisruptions: number;
-  interceptions: number;
-  sacks: number;
+  firstHalfPoints: number;
+  secondHalfPoints: number;
+  firstHalfScores: number;
+  secondHalfScores: number;
+  topScorerShare: number;
+  topScorerName: string;
   discipline: number;
   penalties: number;
   unsportsmanlike: number;
@@ -37,10 +40,11 @@ export interface AdminPlayerAnalyticsRowDto {
   teamName: string;
   points: number;
   touchdowns: number;
-  latePoints: number;
-  defensiveDisruptions: number;
-  interceptions: number;
-  sacks: number;
+  firstHalfPoints: number;
+  secondHalfPoints: number;
+  firstHalfScores: number;
+  secondHalfScores: number;
+  eventVariety: number;
   discipline: number;
   penalties: number;
   unsportsmanlike: number;
@@ -50,13 +54,13 @@ export interface AdminAnalyticsResponseDto {
   subject: AdminAnalyticsSubject;
   totals: AdminAnalyticsTotalsDto;
   teams: {
-    lateScoring: AdminTeamAnalyticsRowDto[];
-    defense: AdminTeamAnalyticsRowDto[];
+    secondHalfScoring: AdminTeamAnalyticsRowDto[];
+    offensiveDependence: AdminTeamAnalyticsRowDto[];
     discipline: AdminTeamAnalyticsRowDto[];
   } | null;
   players: {
-    lateScoring: AdminPlayerAnalyticsRowDto[];
-    defense: AdminPlayerAnalyticsRowDto[];
+    secondHalfScoring: AdminPlayerAnalyticsRowDto[];
+    versatility: AdminPlayerAnalyticsRowDto[];
     discipline: AdminPlayerAnalyticsRowDto[];
   } | null;
 }
