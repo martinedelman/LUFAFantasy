@@ -60,6 +60,8 @@ Institutional continúa solicitando `/api/*`; su rewrite usa `API_URL` para diri
 
 La autenticación institucional se centraliza en la aplicación LUFA (`/auth/login`, `/auth/signup`, `/auth/verify` y `/auth/forgot-password`). En producción, `lufa_session` se comparte únicamente entre `lufa.com.uy` y `flag.lufa.com.uy` mediante el dominio `.lufa.com.uy`; en desarrollo sigue siendo host-only. `NEXT_PUBLIC_LUFA_URL` es opcional para personalizar el host central: por defecto usa `http://localhost:3003` localmente y `https://lufa.com.uy` en producción.
 
+Las flags de las secciones públicas (`show-*-pages`) deben existir en el proyecto Vercel `lufa-flag`. Como esas pantallas ya están publicadas, su fallback en código es visible para evitar que una flag faltante o una caída del proveedor oculte equipos, partidos y el resto del sitio.
+
 ## Configuración
 
 Cada aplicación documenta únicamente sus variables en su propio `.env.example`:

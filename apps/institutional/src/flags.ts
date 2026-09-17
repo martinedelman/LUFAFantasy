@@ -9,7 +9,9 @@ const booleanOptions = [
 function pageReleaseFlag(key: string, description: string) {
   const baseFlag = {
     key,
-    defaultValue: false,
+    // These sections are already public. If the provider is unavailable or a
+    // flag has not been promoted yet, keep the existing site accessible.
+    defaultValue: true,
     description,
     options: booleanOptions,
   };
