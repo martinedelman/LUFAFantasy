@@ -17,7 +17,6 @@
     "SMTP_*",
     "GOOGLE_*",
     "BLOB_READ_WRITE_TOKEN",
-    "FLAGS",
     "FLAGS_SECRET",
     "environment",
     "POSTGRES_DB",

@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import InlineFeedback from "@/components/InlineFeedback";
 import { useAuth } from "@/hooks/useAuth";
-import { currentFlagAuthUrl } from "@/lib/centralAuth";
 
 interface DivisionOption {
   _id: string;
@@ -164,12 +163,12 @@ export default function NewTournamentPage() {
               >
                 Ver Torneos
               </Link>
-              <a
-                href={currentFlagAuthUrl("login")}
+              <Link
+                href="/auth/signin"
                 className="block bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Iniciar Sesión
-              </a>
+              </Link>
             </div>
           </div>
         </div>

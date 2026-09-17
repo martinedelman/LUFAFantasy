@@ -45,13 +45,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear usuario a través del servicio (siempre como 'user')
+    const returnDestination = registrationReturnTo(returnTo);
+
+    // Crear usuario a través del servicio (siempre como 'user'). Los clientes
+    // legacy no envían returnTo y conservan el link de verificación de Flag.
     const user = await authService.register({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
       role: "user",
-      verificationUrlFactory: (token) => registrationVerificationUrl(token, registrationReturnTo(returnTo)),
+      verificationUrlFactory: returnDestination
+        ? (token) => registrationVerificationUrl(token, returnDestination)
+        : undefined,
     });
 
     await safeTrack("Registration requested", {

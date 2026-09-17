@@ -1,12 +1,39 @@
-import { authPageUrl, getFlagAppUrl } from "@lufa/api-client/authUrls";
+import {
+  authPageUrl,
+  getFlagAppUrl,
+  normalizeAuthReturnTo,
+} from "@lufa/api-client/authUrls";
+
+export type FlagAuthPage = "login" | "signup" | "forgot-password" | "verify";
+
+type AuthSearchParams = {
+  returnTo?: string | string[];
+  token?: string | string[];
+};
+
+function firstValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 export function flagAuthUrl(
-  page: "login" | "signup" | "forgot-password" | "verify",
+  page: FlagAuthPage,
   returnTo: string = getFlagAppUrl(),
 ) {
   return authPageUrl(page, returnTo);
 }
 
-export function currentFlagAuthUrl(page: "login" | "signup" | "forgot-password") {
-  return flagAuthUrl(page, typeof window === "undefined" ? getFlagAppUrl() : window.location.href);
+export function centralAuthDestination(
+  page: FlagAuthPage,
+  searchParams: AuthSearchParams = {},
+) {
+  const requestedReturnTo = firstValue(searchParams.returnTo);
+  const returnTo = normalizeAuthReturnTo(requestedReturnTo) || getFlagAppUrl();
+  const destination = new URL(flagAuthUrl(page, returnTo));
+
+  if (page === "verify") {
+    const token = firstValue(searchParams.token);
+    if (token) destination.searchParams.set("token", token);
+  }
+
+  return destination;
 }
