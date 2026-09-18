@@ -7,12 +7,14 @@ import {
   type FantasyLeagueStatus,
   type FantasyLeagueSummary,
   rosterTotal,
+  fantasyAwardsForEvent,
+  fantasyPointsForEvents,
 } from "@lufa/fantasy-core";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { Prisma, PrismaClient } from "@lufa/database/generated/prisma/client";
 import { randomBytes } from "node:crypto";
 
-type Db = Pick<PrismaClient, "fantasyLeague" | "fantasyDraft" | "fantasyDraftPick" | "fantasyAuditLog" | "player" | "team">;
+type Db = Pick<PrismaClient, "fantasyLeague" | "fantasyDraft" | "fantasyDraftPick" | "fantasyAuditLog" | "player" | "team" | "gameEvent">;
 const activeMembers = { where: { status: "active" }, orderBy: { joinedAt: "asc" as const }, include: { user: true, team: true } };
 type ActiveMember = Prisma.FantasyLeagueMemberGetPayload<{ include: { user: true; team: true } }>;
 type LeagueSummaryRecord = {
@@ -32,6 +34,17 @@ type LeagueDetailRecord = LeagueSummaryRecord & {
 
 function inviteCode() { return randomBytes(5).toString("hex").toUpperCase(); }
 function nameOf(player: { firstName: string; lastName: string }) { return `${player.firstName} ${player.lastName}`.trim(); }
+function membersForScoreboard(league: LeagueDetailRecord, picks: DraftPickRecord[], points: Map<string, number>) {
+  return league.members.map((member) => {
+    if (!member.team) throw new Error("El equipo del participante no está disponible");
+    const players = picks.filter((pick) => pick.team.id === member.team!.id && pick.player).map((pick) => ({
+      playerId: pick.player!.id,
+      playerName: nameOf(pick.player!),
+      points: points.get(pick.player!.id) || 0,
+    })).sort((left, right) => right.points - left.points || left.playerName.localeCompare(right.playerName, "es"));
+    return { teamId: member.team.id, teamName: member.team.name, points: players.reduce((total, player) => total + player.points, 0), players };
+  }).sort((left, right) => right.points - left.points || left.teamName.localeCompare(right.teamName, "es"));
+}
 
 export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRepository {
   private get db() { return getPrismaClient(); }
@@ -226,7 +239,8 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
         team: { id: member.team.id, name: member.team.name, avatar: member.team.avatar, pickCount: league.draft?.picks.filter((pick) => pick.team.id === member.team!.id).length || 0 },
       };
     });
-    if (!league.draft) return { ...summary, turnSeconds: league.turnSeconds, members, draft: null };
+    const scoreboard = await this.scoreboard(league);
+    if (!league.draft) return { ...summary, turnSeconds: league.turnSeconds, members, scoreboard, draft: null };
     const draft = league.draft;
     const current = draft.status === "active" ? this.currentMember(league.members, draft.currentPick) : null;
     const selectedPlayerIds = draft.picks.map((pick) => pick.playerId).filter((id): id is string => id !== null);
@@ -246,6 +260,7 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
       ...summary,
       turnSeconds: league.turnSeconds,
       members,
+      scoreboard,
       draft: {
         id: draft.id, status: draft.status as FantasyDraftStatus, currentPick: draft.currentPick, totalPicks: league.members.length * rosterTotal(league.rosterSize),
         pickDeadline: draft.pickDeadline?.toISOString() || null, currentMemberId: current?.id || null,
@@ -253,6 +268,34 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
         picks,
         availablePlayers: [...available.map((player) => ({ id: player.id, name: nameOf(player), position: player.position, teamName: player.team.name, kind: "player" as const })), ...availableDefenses.map((team) => ({ id: `team-defense:${team.id}`, name: `${team.name} Defensa`, position: "DEF EQUIPO", teamName: team.name, kind: "team_defense" as const }))],
       },
+    };
+  }
+
+  private async scoreboard(league: LeagueDetailRecord): Promise<FantasyLeagueDetail["scoreboard"]> {
+    const playerPicks = league.draft?.picks.filter((pick) => pick.player) || [];
+    const playerIds = playerPicks.flatMap((pick) => pick.playerId ? [pick.playerId] : []);
+    const events = playerIds.length ? await this.db.gameEvent.findMany({
+      where: { game: { status: { in: ["in_progress", "completed"] } } },
+      select: { playerId: true, type: true, points: true, details: true, createdAt: true, game: { select: { status: true } } },
+      orderBy: { createdAt: "asc" },
+    }) : [];
+    const scoringEvents = events.map((event) => ({
+      type: event.type,
+      playerId: event.playerId,
+      points: event.points,
+      details: event.details,
+    }));
+    const roster = new Set(playerIds);
+    const relevantIndexes = scoringEvents.flatMap((event, index) =>
+      fantasyAwardsForEvent(event).some((award) => roster.has(award.playerId)) ? [index] : [],
+    );
+    const relevantEvents = relevantIndexes.map((index) => events[index]);
+    const points = fantasyPointsForEvents(scoringEvents);
+    const hasLiveGame = relevantEvents.some((event) => event.game.status === "in_progress");
+    return {
+      status: hasLiveGame ? "live" : relevantEvents.length ? "final" : "preseason",
+      lastUpdatedAt: relevantEvents.at(-1)?.createdAt.toISOString() || null,
+      teams: membersForScoreboard(league, playerPicks, points),
     };
   }
 

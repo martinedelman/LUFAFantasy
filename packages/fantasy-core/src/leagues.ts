@@ -51,6 +51,16 @@ export interface FantasyLeagueDetail extends FantasyLeagueSummary {
     role: "commissioner" | "member";
     team: { id: string; name: string; avatar: string | null; pickCount: number };
   }>;
+  scoreboard: {
+    status: "preseason" | "live" | "final";
+    lastUpdatedAt: string | null;
+    teams: Array<{
+      teamId: string;
+      teamName: string;
+      points: number;
+      players: Array<{ playerId: string; playerName: string; points: number }>;
+    }>;
+  };
   draft: null | {
     id: string;
     status: FantasyDraftStatus;
