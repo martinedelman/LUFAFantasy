@@ -2,51 +2,34 @@ import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
-import {
-  type RankingEventType,
-  type RankingStage,
-} from "@lufa/sports/services/PlayerRankingService";
+import type { TeamDefenseRankingStage } from "@lufa/sports/services/TeamDefenseRankingService";
 
-const ALLOWED_EVENT_TYPES: RankingEventType[] = ["touchdown", "extra_point", "safety", "interception", "pick_six", "sack"];
-const ALLOWED_STAGES: RankingStage[] = ["all", "regular", "playoff", "final", "postseason"];
+const ALLOWED_STAGES: TeamDefenseRankingStage[] = ["all", "regular", "playoff", "final", "postseason"];
 const RANKINGS_CACHE_TTL_SECONDS = 1800;
-const rankingService = serviceContainer.rankingService;
+const rankingService = serviceContainer.teamDefenseRankingService;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const mode = searchParams.get("mode") === "points" ? "points" : "count";
-    const eventType = searchParams.get("eventType") as RankingEventType | null;
     const stageValue = searchParams.get("stage") || searchParams.get("scope");
-    const stage = ALLOWED_STAGES.includes(stageValue as RankingStage) ? (stageValue as RankingStage) : "regular";
-    const points = parseOptionalNumber(searchParams.get("points"));
+    const stage = ALLOWED_STAGES.includes(stageValue as TeamDefenseRankingStage)
+      ? (stageValue as TeamDefenseRankingStage)
+      : "regular";
     const year = parseOptionalNumber(searchParams.get("year"));
-
-    if (mode === "count" && (!eventType || !ALLOWED_EVENT_TYPES.includes(eventType))) {
-      return NextResponse.json({ success: false, message: "eventType inválido" }, { status: 400 });
-    }
-    if (points !== null && (!Number.isFinite(points) || points < 0)) {
-      return NextResponse.json({ success: false, message: "points inválido" }, { status: 400 });
-    }
     if (year !== null && (!Number.isInteger(year) || year < 2000 || year > 2100)) {
       return NextResponse.json({ success: false, message: "año inválido" }, { status: 400 });
     }
 
-    // v6 invalida resultados calculados antes de la migración de datos a PostgreSQL.
-    const cacheKey = buildRequestCacheKey("rankings:players:v6", searchParams);
+    const cacheKey = buildRequestCacheKey("rankings:teams:v1", searchParams);
     const rankings = await getCachedValue(
       cacheKey,
       RANKINGS_CACHE_TTL_SECONDS * 1000,
       () =>
         rankingService.getRankings({
-          mode,
-          eventType: eventType || undefined,
           tournament: searchParams.get("tournament"),
           division: searchParams.get("division"),
           year,
-          points,
           stage,
-          includePickSix: searchParams.get("includePickSix") === "true",
           limit: Math.max(1, Math.min(Number.parseInt(searchParams.get("limit") || "10", 10), 50)),
         }),
       { tags: ["rankings"] },
@@ -61,9 +44,9 @@ export async function GET(request: NextRequest) {
     return apiErrorResponse({
       request,
       error,
-      message: "Error al obtener rankings de jugadores",
+      message: "Error al obtener ranking de defensivas",
       status: 500,
-      route: "/api/rankings/players",
+      route: "/api/rankings/teams",
       exposeError: true,
     });
   }

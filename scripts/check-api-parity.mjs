@@ -29,6 +29,7 @@ GET /api/judges
 GET /api/players
 GET /api/players/:id
 GET /api/rankings/players
+GET /api/rankings/teams
 GET /api/site-settings
 GET /api/standings
 GET /api/statistics/players

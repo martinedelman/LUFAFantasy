@@ -9,5 +9,6 @@ export * from "./services/PlayerRankingService";
 export * from "./services/PlayerService";
 export * from "./services/StandingService";
 export * from "./services/StatisticsService";
+export * from "./services/TeamDefenseRankingService";
 export * from "./services/TeamService";
 export * from "./services/TournamentService";

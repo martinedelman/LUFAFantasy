@@ -45,6 +45,14 @@ type PlayerStatsRow = {
   value: number;
 };
 
+type TeamDefenseRow = {
+  team: { _id: string; name: string; shortName: string };
+  gamesPlayed: number;
+  pointsAgainst: number;
+  pickSixPointsExcluded: number;
+  adjustedPointsAgainst: number;
+};
+
 type ApiResponse<T> = {
   success: boolean;
   data: T;
@@ -55,7 +63,7 @@ type RankingMetric = {
   key: string;
   label: string;
   mode: "count" | "points";
-  eventType?: "touchdown" | "extra_point" | "safety" | "interception" | "pick_six";
+  eventType?: "touchdown" | "extra_point" | "safety" | "interception" | "pick_six" | "sack";
   points?: number;
   includePickSix?: boolean;
 };
@@ -117,6 +125,7 @@ const METRICS: RankingMetric[] = [
     includePickSix: true,
   },
   { key: "pickSix", label: "Top 10 PICK SIX", mode: "count", eventType: "pick_six", points: 6 },
+  { key: "sacks", label: "Top 10 Sacks", mode: "count", eventType: "sack" },
 ];
 
 function RankingSectionSkeleton() {
@@ -182,6 +191,54 @@ function getValueLabel(metric: RankingMetric) {
   return "total";
 }
 
+function TeamDefenseRankingSection({ rows }: { rows: TeamDefenseRow[] }) {
+  return (
+    <RevealOnScroll delayMs={0}>
+      <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-4">
+          <h2 className="text-base font-semibold text-gray-900">Top 10 Defensas menos abatidas</h2>
+          <p className="mt-1 text-xs font-medium text-gray-500">Puntos permitidos ajustados</p>
+        </div>
+        {rows.length === 0 ? (
+          <div className="p-5 text-sm text-gray-500">No hay datos disponibles para este ranking.</div>
+        ) : (
+          <div>
+            <div className="space-y-2 bg-slate-50/70 p-3 sm:hidden">
+              {rows.map((row, index) => (
+                <div key={row.team._id} className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg bg-white px-3 py-3 shadow-2xs">
+                  <span className={`inline-flex h-9 w-9 items-center justify-center rounded-full border text-sm font-bold ${getRankStyles(index + 1)}`}>{index + 1}</span>
+                  <div className="min-w-0">
+                    <Link href={`/teams/${row.team._id}`} className="block truncate text-sm font-semibold text-gray-900">{row.team.name}</Link>
+                    <p className="mt-1 text-xs font-medium text-gray-500">{row.gamesPlayed} partidos</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-base font-black leading-none text-slate-950">{row.adjustedPointsAgainst}</p>
+                    <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">pts</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden overflow-hidden sm:block">
+              <table className="min-w-full divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {rows.map((row, index) => (
+                    <tr key={row.team._id} className="group transition-colors duration-150 hover:bg-gray-50">
+                      <td className="px-4 py-3 align-middle"><span className={`inline-flex h-7 w-7 items-center justify-center rounded-full border text-sm font-bold ${getRankStyles(index + 1)}`}>{index + 1}</span></td>
+                      <td className="px-4 py-3 align-middle"><Link href={`/teams/${row.team._id}`} className="text-sm font-semibold text-gray-900 transition-colors duration-150 hover:text-green-600">{row.team.name}</Link></td>
+                      <td className="px-4 py-3 align-middle text-sm font-medium text-gray-600">{row.gamesPlayed} partidos</td>
+                      <td className="px-4 py-3 text-right align-middle"><span className="inline-flex min-w-16 justify-center rounded-full px-3 py-1.5 text-sm font-bold text-black">{row.adjustedPointsAgainst} pts</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
+    </RevealOnScroll>
+  );
+}
+
 function getTournamentId(tournament?: DivisionOption["tournament"]) {
   if (!tournament) return "";
   if (typeof tournament === "string") return tournament;
@@ -193,6 +250,7 @@ export default function RankingsPage() {
   const [divisions, setDivisions] = useState<DivisionOption[]>([]);
   const [filters, setFilters, , filtersHydrated] = useCachedState("filters:rankings:v3", INITIAL_RANKINGS_FILTERS);
   const [rankingsByMetric, setRankingsByMetric] = useState<Record<string, PlayerStatsRow[]>>({});
+  const [teamDefenseRankings, setTeamDefenseRankings] = useState<TeamDefenseRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [catalogLoaded, setCatalogLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -247,6 +305,22 @@ export default function RankingsPage() {
     setRankingsByMetric(Object.fromEntries(rankings));
   }, []);
 
+  const fetchTeamDefenseRankings = useCallback(async (rankingFilters: RankingsFilters) => {
+    const params = new URLSearchParams({
+      limit: "10",
+      scope: rankingFilters.stage,
+      ...(rankingFilters.tournament ? { tournament: rankingFilters.tournament } : {}),
+      ...(rankingFilters.year ? { year: rankingFilters.year } : {}),
+      ...(rankingFilters.division ? { division: rankingFilters.division } : {}),
+    });
+    const response = await fetch(`/api/rankings/teams?${params.toString()}`);
+    const data: ApiResponse<TeamDefenseRow[]> = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "No se pudo cargar el ranking de defensivas");
+    }
+    setTeamDefenseRankings(data.data || []);
+  }, []);
+
   useEffect(() => {
     if (!filtersHydrated) return;
 
@@ -255,8 +329,7 @@ export default function RankingsPage() {
         setLoading(true);
         setError(null);
 
-        await fetchCatalog();
-        await fetchRankings(filters);
+        await Promise.all([fetchCatalog(), fetchRankings(filters), fetchTeamDefenseRankings(filters)]);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : "Error al cargar rankings");
       } finally {
@@ -265,7 +338,7 @@ export default function RankingsPage() {
     };
 
     loadData();
-  }, [fetchCatalog, fetchRankings, filters, filtersHydrated]);
+  }, [fetchCatalog, fetchRankings, fetchTeamDefenseRankings, filters, filtersHydrated]);
 
   const tournamentById = useMemo(
     () => new Map(tournaments.map((tournament) => [tournament._id, tournament])),
@@ -571,6 +644,7 @@ export default function RankingsPage() {
                 </RevealOnScroll>
               );
             })}
+            <TeamDefenseRankingSection rows={teamDefenseRankings} />
           </div>
         )}
       </div>

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { IGameRepository, IPlayerRepository, ITeamRepository } from "@lufa/sports/ports";
+import { calculateTeamDefensePoints } from "./teamDefensePoints";
 
 interface StatisticsQuery {
   tournament?: string | null;
@@ -179,6 +180,8 @@ export class StatisticsService {
       ties: 0,
       pointsFor: 0,
       pointsAgainst: 0,
+      pickSixPointsExcluded: 0,
+      adjustedPointsAgainst: 0,
       pointsDifferential: 0,
       offensiveStats: {
         totalYards: 0, passingYards: 0, rushingYards: 0, touchdowns: 0, extraPointOne: 0,
@@ -226,7 +229,11 @@ export class StatisticsService {
         } else if (event.type === "touchdown") stats.defensiveStats.touchdownsAllowed += 1;
       }
     }
-    const gamesPlayed = games.length;
+    const defensePoints = calculateTeamDefensePoints(games, teamId);
+    stats.pointsAgainst = defensePoints.pointsAgainst;
+    stats.pickSixPointsExcluded = defensePoints.pickSixPointsExcluded;
+    stats.adjustedPointsAgainst = defensePoints.adjustedPointsAgainst;
+    const gamesPlayed = defensePoints.gamesPlayed;
     stats.pointsDifferential = stats.pointsFor - stats.pointsAgainst;
     stats.offensiveStats.averagePointsPerGame = gamesPlayed ? stats.pointsFor / gamesPlayed : 0;
     stats.defensiveStats.averagePointsAllowedPerGame = gamesPlayed ? stats.pointsAgainst / gamesPlayed : 0;

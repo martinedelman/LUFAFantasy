@@ -18,6 +18,7 @@ import {
   PlayerService,
   StandingService,
   StatisticsService,
+  TeamDefenseRankingService,
   TeamService,
   TournamentService,
 } from "@lufa/sports";
@@ -85,6 +86,12 @@ export const serviceContainer = {
   playerImportService,
   playerService,
   rankingService: new PlayerRankingService(tournamentRepository, divisionRepository, reportingRepository),
+  teamDefenseRankingService: new TeamDefenseRankingService(
+    gameRepository,
+    teamRepository,
+    tournamentRepository,
+    divisionRepository,
+  ),
   standingService,
   statisticsService: new StatisticsService(gameRepository, playerRepository, teamRepository, auxiliaryRepository),
   teamService,

@@ -1,6 +1,6 @@
 import type { AdminAnalyticsResponseDto, AdminAnalyticsSubject, DashboardStatsResponseDto } from "@lufa/contracts";
 
-export type RankingEventType = "touchdown" | "extra_point" | "safety" | "interception" | "pick_six";
+export type RankingEventType = "touchdown" | "extra_point" | "safety" | "interception" | "pick_six" | "sack";
 export type RankingStage = "all" | "regular" | "playoff" | "final" | "postseason";
 
 export interface PlayerRankingQuery {
