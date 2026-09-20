@@ -92,7 +92,7 @@ const METRICS: RankingMetric[] = [
     mode: "count",
     eventType: "touchdown",
     points: 6,
-    includePickSix: true,
+    includePickSix: false,
   },
   {
     key: "extraPoint1",
@@ -164,6 +164,7 @@ function getRankStyles(position: number) {
 
 function getMetricHelper(metric: RankingMetric) {
   if (metric.key === "globalPoints") return "Puntos acumulados";
+  if (metric.key === "touchdown") return "Anotaciones ofensivas";
   if (metric.mode === "points") return "Puntos";
   return "Eventos registrados";
 }
