@@ -222,6 +222,7 @@ export default function PlayerProfilePage() {
     playerStats && playerStats.gamesPlayed > 0 ? playerStats.totalPoints / playerStats.gamesPlayed : 0;
   const liveEventStats = playerStats
     ? [
+        { label: "Pases de TD", value: playerStats.passing.touchdowns },
         { label: "Punto extra", value: playerStats.extraPoints },
         { label: "Safety", value: playerStats.safeties },
         { label: "Intercepciones", value: playerStats.defensive.interceptions },
