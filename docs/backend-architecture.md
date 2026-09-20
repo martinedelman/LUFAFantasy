@@ -299,6 +299,7 @@ Para errores, usar `apiErrorResponse()` de `src/lib/apiError.ts` para log consis
 | `GET` | `/api/dashboard` | Estadisticas del dashboard. |
 | `GET` | `/api/standings` | Tabla de posiciones por torneo/division. |
 | `GET` | `/api/rankings/players` | Rankings de jugadores. |
+| `GET` | `/api/rankings/teams` | Ranking de defensivas por puntos permitidos ajustados. |
 | `GET` | `/api/statistics/players` | Estadisticas de jugadores. |
 | `GET`, `POST` | `/api/statistics/teams` | Estadisticas de equipos. |
 | `POST` | `/api/flag-interest` | Alta de interes desde formulario publico. |

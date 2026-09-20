@@ -105,6 +105,8 @@ interface TeamStats {
   ties: number;
   pointsFor: number;
   pointsAgainst: number;
+  pickSixPointsExcluded: number;
+  adjustedPointsAgainst: number;
   pointsDifferential: number;
   offensiveStats: {
     totalYards: number;
@@ -225,6 +227,8 @@ const emptyTeamStats = (team: Team): TeamStats => ({
   ties: 0,
   pointsFor: 0,
   pointsAgainst: 0,
+  pickSixPointsExcluded: 0,
+  adjustedPointsAgainst: 0,
   pointsDifferential: 0,
   offensiveStats: {
     totalYards: 0,
@@ -328,10 +332,15 @@ const deriveTeamStatsFromGames = (team: Team, games: TeamGame[]): TeamStats => {
       } else if (event.type === "touchdown") {
         stats.defensiveStats.touchdownsAllowed += 1;
       }
+
+      if (eventTeamId !== team._id && event.type === "pick_six") {
+        stats.pickSixPointsExcluded += Math.max(0, Number(event.points || 0));
+      }
     });
   });
 
   const gamesPlayed = stats.wins + stats.losses + stats.ties;
+  stats.adjustedPointsAgainst = Math.max(0, stats.pointsAgainst - stats.pickSixPointsExcluded);
   stats.pointsDifferential = stats.pointsFor - stats.pointsAgainst;
   stats.offensiveStats.averagePointsPerGame = gamesPlayed > 0 ? stats.pointsFor / gamesPlayed : 0;
   stats.defensiveStats.averagePointsAllowedPerGame = gamesPlayed > 0 ? stats.pointsAgainst / gamesPlayed : 0;
@@ -1362,8 +1371,16 @@ export default function TeamViewerPage() {
                             <span className="text-sm font-medium text-green-600">{teamStats.pointsFor}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Puntos en Contra</span>
+                            <span className="text-sm text-gray-600">Puntos en contra (marcador)</span>
                             <span className="text-sm font-medium text-red-600">{teamStats.pointsAgainst}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Pick six descontados</span>
+                            <span className="text-sm font-medium text-gray-900">{teamStats.pickSixPointsExcluded}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium text-gray-900">Puntos permitidos ajustados</span>
+                            <span className="text-sm font-bold text-gray-900">{teamStats.adjustedPointsAgainst}</span>
                           </div>
                           <div className="border-t pt-4">
                             <div className="flex justify-between">
