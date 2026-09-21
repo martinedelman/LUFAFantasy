@@ -46,4 +46,15 @@ describe("buildAdminAnalytics", () => {
     expect(result.players?.secondHalfScoring[0]).toMatchObject({ id: "p1", secondHalfPoints: 6 });
     expect(result.players?.versatility[0]).toMatchObject({ id: "p1", eventVariety: 3 });
   });
+
+  it("cuenta los puntos extra de 1 y 2 puntos como tipos distintos de jugada", () => {
+    const result = buildAdminAnalytics("players", [], [
+      { teamId: "a", type: "extra_point", quarter: 1, points: 1, player: { id: "p1", name: "Ana Alpha", teamName: "Alphas" } },
+      { teamId: "a", type: "extra_point", quarter: 2, points: 2, player: { id: "p1", name: "Ana Alpha", teamName: "Alphas" } },
+    ]);
+
+    expect(result.players?.versatility).toEqual([
+      expect.objectContaining({ id: "p1", eventVariety: 2 }),
+    ]);
+  });
 });
