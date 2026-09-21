@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { clearSessionCookie, getInstitutionalApiUrl, requestSessionHeader } from "@/lib/institutional-auth";
+import { clearSessionCookie, copySessionCookie, getInstitutionalApiUrl, requestSessionHeader } from "@/lib/institutional-auth";
 
 export async function POST(request: NextRequest) {
-  try { await fetch(`${getInstitutionalApiUrl()}/api/auth/logout`, { method: "POST", cache: "no-store", headers: { Accept: "application/json", ...requestSessionHeader(request) } }); } catch { /* clear the local session regardless */ }
+  let upstream: Response | undefined;
+  try {
+    upstream = await fetch(`${getInstitutionalApiUrl()}/api/auth/logout`, {
+      method: "POST",
+      cache: "no-store",
+      headers: { Accept: "application/json", ...requestSessionHeader(request) },
+    });
+  } catch {
+    // Clear the browser session even if the upstream application is unavailable.
+  }
   const response = NextResponse.json({ success: true });
-  clearSessionCookie(response);
+  if (!upstream || !copySessionCookie(upstream, response)) clearSessionCookie(response);
   return response;
 }

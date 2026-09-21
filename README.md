@@ -56,7 +56,13 @@ Puertos por defecto:
 - API: `http://localhost:3001`
 - Fantasy: `http://localhost:3002`
 
-Institutional continúa solicitando `/api/*`; su rewrite usa `API_URL` para dirigir esas llamadas a la API independiente. La cookie institucional continúa siendo `lufa_session`, HTTP-only y host-only. Fantasy consume `/api/fantasy/v1/*` mediante su propio rewrite y usa la cookie host-only `fantasy_session`; no comparte usuarios ni sesión con Institutional.
+Institutional continúa solicitando `/api/*`; su rewrite usa `API_URL` para dirigir esas llamadas a la API independiente. Fantasy consume `/api/fantasy/v1/*` mediante su propio rewrite y usa la cookie host-only `fantasy_session`; no comparte usuarios ni sesión con Institutional.
+
+La autenticación institucional central está disponible en la aplicación LUFA (`/auth/login`, `/auth/signup`, `/auth/verify` y `/auth/forgot-password`). Flag conserva sus formularios legacy mientras la Vercel Feature Flag `use-legacy-flag-auth` esté activa. La flag es `true` por defecto y también es el fallback ante errores del proveedor; al apagarla, las rutas `/auth/*` de Flag redirigen al flujo central y regresan a `flag.lufa.com.uy`. Cuando `lufa.com.uy` se publique en producción, hay que desactivar la flag en el entorno Production de `lufa-flag`.
+
+Vercel Flags se autentica mediante OIDC y no requiere una variable `FLAGS` manual. `FLAGS_SECRET` se conserva únicamente para overrides locales seguros con Flags Explorer. En producción, `lufa_session` se comparte entre `lufa.com.uy` y `flag.lufa.com.uy` mediante el dominio `.lufa.com.uy`; en desarrollo sigue siendo host-only. `NEXT_PUBLIC_LUFA_URL` es opcional: usa `http://localhost:3003` localmente y `https://lufa.com.uy` en producción.
+
+Las flags de las secciones públicas (`show-*-pages`) deben existir en el proyecto Vercel `lufa-flag`. Como esas pantallas ya están publicadas, su fallback en código es visible para evitar que una flag faltante o una caída del proveedor oculte equipos, partidos y el resto del sitio.
 
 ## Configuración
 

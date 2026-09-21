@@ -144,6 +144,7 @@
         { "name": "Públicos", "item": [
           { "name": "GET Posiciones", "request": { "method": "GET", "url": "{{base_url}}/api/standings?tournament={{tournament_id}}&division={{division_id}}" } },
           { "name": "GET Ranking de jugadores", "request": { "method": "GET", "url": "{{base_url}}/api/rankings/players?tournament={{tournament_id}}&division={{division_id}}&limit=20" } },
+          { "name": "GET Ranking de defensivas", "request": { "method": "GET", "url": "{{base_url}}/api/rankings/teams?tournament={{tournament_id}}&division={{division_id}}&limit=20" } },
           { "name": "GET Estadísticas de jugadores", "request": { "method": "GET", "url": "{{base_url}}/api/statistics/players?tournament={{tournament_id}}&sortBy=totalPoints&order=desc&page=1&limit=20" } },
           { "name": "GET Estadísticas de equipos", "request": { "method": "GET", "url": "{{base_url}}/api/statistics/teams?tournament={{tournament_id}}&sortBy=wins&order=desc&page=1&limit=20" } }
         ] },

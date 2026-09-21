@@ -23,12 +23,26 @@ export function UpcomingGames() {
 
   return (
     <ul className="games-list">
-      {state.games.map((game) => (
-        <li key={game.id}>
-          <div><strong>{game.homeTeam}</strong><span>vs</span><strong>{game.awayTeam}</strong></div>
-          <small>{game.division} · {new Intl.DateTimeFormat("es-UY", { dateStyle: "medium", timeStyle: "short" }).format(new Date(game.scheduledDate))}</small>
-        </li>
-      ))}
+      {state.games.map((game) => {
+        const modality = game.modality === "tackle" ? "tackle" : "flag";
+        const address = game.venueAddress?.trim();
+        const mapsUrl = address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${game.venue}, ${address}`)}` : null;
+        return (
+          <li key={game.id}>
+            <div className="game-meta">
+              <span className={`game-modality game-modality-${modality}`}>{modality === "tackle" ? "Tackle" : "Flag"}</span>
+              <small>{game.division}</small>
+            </div>
+            <div><strong>{game.homeTeam}</strong><span>vs</span><strong>{game.awayTeam}</strong></div>
+            <small className="game-date">{new Intl.DateTimeFormat("es-UY", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(game.scheduledDate))} hs</small>
+            <address className="game-venue">
+              <strong>{game.venue}</strong>
+              {address ? <small>{address}</small> : null}
+              {mapsUrl ? <a href={mapsUrl} target="_blank" rel="noreferrer">Cómo llegar ↗</a> : null}
+            </address>
+          </li>
+        );
+      })}
     </ul>
   );
 }

@@ -6,23 +6,19 @@ const booleanOptions = [
   { label: "Visible", value: true },
 ];
 
+const authenticationOptions = [
+  { label: "Login central de LUFA", value: false },
+  { label: "Login legacy de Flag", value: true },
+];
+
 function pageReleaseFlag(key: string, description: string) {
-  const baseFlag = {
+  return flag<boolean>({
     key,
-    defaultValue: false,
+    // These sections are already public. If the provider is unavailable or a
+    // flag has not been promoted yet, keep the existing site accessible.
+    defaultValue: true,
     description,
     options: booleanOptions,
-  };
-
-  if (!process.env.FLAGS) {
-    return flag<boolean>({
-      ...baseFlag,
-      decide: () => false,
-    });
-  }
-
-  return flag<boolean>({
-    ...baseFlag,
     adapter: vercelAdapter(),
   });
 }
@@ -58,3 +54,16 @@ export const showProfilePages = pageReleaseFlag(
   "show-profile-pages",
   "Muestra las pantallas de perfiles en LUFA Fantasy.",
 );
+
+const legacyFlagAuthenticationDefinition = {
+  key: "use-legacy-flag-auth",
+  defaultValue: true,
+  description:
+    "Mantiene login, registro, verificación y recuperación dentro de flag.lufa.com.uy. Apagar cuando lufa.com.uy esté habilitado en producción.",
+  options: authenticationOptions,
+};
+
+export const legacyFlagAuthentication = flag<boolean>({
+  ...legacyFlagAuthenticationDefinition,
+  adapter: vercelAdapter(),
+});

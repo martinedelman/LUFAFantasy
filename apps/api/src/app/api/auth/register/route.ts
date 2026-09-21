@@ -5,6 +5,7 @@ import { apiErrorResponse } from "@/lib/apiError";
 import { safeTrack } from "@/lib/serverAnalytics";
 import { toRegisteredUserResponseDto } from "@/app/DTOs";
 import type { UserRegistrationRequestDto } from "@/app/DTOs";
+import { registrationReturnTo, registrationVerificationUrl } from "@/lib/authReturnTo";
 
 const authService = serviceContainer.authService;
 
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { name, email, password } = (await request.json()) as UserRegistrationRequestDto;
+    const { name, email, password, returnTo } = (await request.json()) as UserRegistrationRequestDto & { returnTo?: unknown };
 
     // Validaciones básicas
     if (!name || !email || !password) {
@@ -44,12 +45,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear usuario a través del servicio (siempre como 'user')
+    const returnDestination = registrationReturnTo(returnTo);
+
+    // Crear usuario a través del servicio (siempre como 'user'). Los clientes
+    // legacy no envían returnTo y conservan el link de verificación de Flag.
     const user = await authService.register({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
       role: "user",
+      verificationUrlFactory: returnDestination
+        ? (token) => registrationVerificationUrl(token, returnDestination)
+        : undefined,
     });
 
     await safeTrack("Registration requested", {

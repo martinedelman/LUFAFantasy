@@ -7,7 +7,7 @@ import {
   type RankingStage,
 } from "@lufa/sports/services/PlayerRankingService";
 
-const ALLOWED_EVENT_TYPES: RankingEventType[] = ["touchdown", "extra_point", "safety", "interception", "pick_six"];
+const ALLOWED_EVENT_TYPES: RankingEventType[] = ["touchdown", "extra_point", "safety", "interception", "pick_six", "sack"];
 const ALLOWED_STAGES: RankingStage[] = ["all", "regular", "playoff", "final", "postseason"];
 const RANKINGS_CACHE_TTL_SECONDS = 1800;
 const rankingService = serviceContainer.rankingService;
