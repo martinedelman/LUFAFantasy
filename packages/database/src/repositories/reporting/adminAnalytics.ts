@@ -28,6 +28,13 @@ const top = <T extends { name: string }>(rows: T[], value: (row: T) => number) =
     .sort((left, right) => value(right) - value(left) || left.name.localeCompare(right.name, "es"))
     .slice(0, 5);
 
+function versatilityEventType(type: string, points: number) {
+  if (type !== "extra_point") return type;
+  if (points === 1) return "extra_point_1";
+  if (points === 2) return "extra_point_2";
+  return type;
+}
+
 function teamRow(id: string, name: string): TeamRow {
   return { id, name, games: 0, wins: 0, pointsFor: 0, pointsAgainst: 0, pointDifferential: 0, firstHalfPoints: 0, secondHalfPoints: 0, firstHalfScores: 0, secondHalfScores: 0, topScorerShare: 0, topScorerName: "", discipline: 0, penalties: 0, unsportsmanlike: 0 };
 }
@@ -103,7 +110,7 @@ export function buildAdminAnalytics(
     }
     if (points > 0 || ["interception", "pick_six", "sack", "first_down"].includes(event.type)) {
       const types = playerEventTypes.get(player.id) || new Set<string>();
-      types.add(event.type);
+      types.add(versatilityEventType(event.type, points));
       playerEventTypes.set(player.id, types);
     }
     if (points > 0) {
