@@ -16,7 +16,7 @@ import type {
   UpdateSiteSettingsRequestDto,
 } from "@lufa/contracts";
 
-const VALID_ROLES: UserRole[] = ["user", "admin", "juez", "entrenador_juveniles"];
+const VALID_ROLES: UserRole[] = ["user", "admin", "juez", "entrenador_juveniles", "redes"];
 const SETTINGS_KEY = "global";
 const DEFAULT_WHATSAPP_MESSAGE =
   "Hola {nombre}, te escribimos de LUFA Flag por tu inscripción para jugar. Queremos contarte los próximos pasos para sumarte a juveniles.";

@@ -219,6 +219,7 @@ export type UserWhereInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionListRelationFilter
   auditLogs?: Prisma.AdminAuditLogListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
+  analyticsReports?: Prisma.AnalyticsReportListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -236,6 +237,7 @@ export type UserOrderByWithRelationInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionOrderByRelationAggregateInput
   auditLogs?: Prisma.AdminAuditLogOrderByRelationAggregateInput
   digitalCredentials?: Prisma.DigitalCredentialOrderByRelationAggregateInput
+  analyticsReports?: Prisma.AnalyticsReportOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -256,6 +258,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   reviewedCorrections?: Prisma.GameEventCorrectionListRelationFilter
   auditLogs?: Prisma.AdminAuditLogListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
+  analyticsReports?: Prisma.AnalyticsReportListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -303,6 +306,7 @@ export type UserCreateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -320,6 +324,7 @@ export type UserUncheckedCreateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
 }
 
 export type UserUpdateInput = {
@@ -337,6 +342,7 @@ export type UserUpdateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -354,6 +360,7 @@ export type UserUncheckedUpdateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -454,6 +461,20 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
+export type UserCreateNestedOneWithoutAnalyticsReportsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAnalyticsReportsInput, Prisma.UserUncheckedCreateWithoutAnalyticsReportsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAnalyticsReportsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAnalyticsReportsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAnalyticsReportsInput, Prisma.UserUncheckedCreateWithoutAnalyticsReportsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAnalyticsReportsInput
+  upsert?: Prisma.UserUpsertWithoutAnalyticsReportsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAnalyticsReportsInput, Prisma.UserUpdateWithoutAnalyticsReportsInput>, Prisma.UserUncheckedUpdateWithoutAnalyticsReportsInput>
+}
+
 export type UserCreateNestedOneWithoutOtpVerificationsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutOtpVerificationsInput, Prisma.UserUncheckedCreateWithoutOtpVerificationsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutOtpVerificationsInput
@@ -526,6 +547,90 @@ export type UserUpdateOneRequiredWithoutDigitalCredentialsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDigitalCredentialsInput, Prisma.UserUpdateWithoutDigitalCredentialsInput>, Prisma.UserUncheckedUpdateWithoutDigitalCredentialsInput>
 }
 
+export type UserCreateWithoutAnalyticsReportsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutAnalyticsReportsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAnalyticsReportsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAnalyticsReportsInput, Prisma.UserUncheckedCreateWithoutAnalyticsReportsInput>
+}
+
+export type UserUpsertWithoutAnalyticsReportsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAnalyticsReportsInput, Prisma.UserUncheckedUpdateWithoutAnalyticsReportsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAnalyticsReportsInput, Prisma.UserUncheckedCreateWithoutAnalyticsReportsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAnalyticsReportsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAnalyticsReportsInput, Prisma.UserUncheckedUpdateWithoutAnalyticsReportsInput>
+}
+
+export type UserUpdateWithoutAnalyticsReportsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAnalyticsReportsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+}
+
 export type UserCreateWithoutOtpVerificationsInput = {
   id?: string
   name: string
@@ -540,6 +645,7 @@ export type UserCreateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
 }
 
 export type UserUncheckedCreateWithoutOtpVerificationsInput = {
@@ -556,6 +662,7 @@ export type UserUncheckedCreateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
 }
 
 export type UserCreateOrConnectWithoutOtpVerificationsInput = {
@@ -588,6 +695,7 @@ export type UserUpdateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOtpVerificationsInput = {
@@ -604,6 +712,7 @@ export type UserUncheckedUpdateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserCreateWithoutRequestedCorrectionsInput = {
@@ -620,6 +729,7 @@ export type UserCreateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
 }
 
 export type UserUncheckedCreateWithoutRequestedCorrectionsInput = {
@@ -636,6 +746,7 @@ export type UserUncheckedCreateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
 }
 
 export type UserCreateOrConnectWithoutRequestedCorrectionsInput = {
@@ -657,6 +768,7 @@ export type UserCreateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
 }
 
 export type UserUncheckedCreateWithoutReviewedCorrectionsInput = {
@@ -673,6 +785,7 @@ export type UserUncheckedCreateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
 }
 
 export type UserCreateOrConnectWithoutReviewedCorrectionsInput = {
@@ -705,6 +818,7 @@ export type UserUpdateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRequestedCorrectionsInput = {
@@ -721,6 +835,7 @@ export type UserUncheckedUpdateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserUpsertWithoutReviewedCorrectionsInput = {
@@ -748,6 +863,7 @@ export type UserUpdateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedCorrectionsInput = {
@@ -764,6 +880,7 @@ export type UserUncheckedUpdateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -780,6 +897,7 @@ export type UserCreateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -796,6 +914,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -828,6 +947,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -844,6 +964,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserCreateWithoutDigitalCredentialsInput = {
@@ -860,6 +981,7 @@ export type UserCreateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
 }
 
 export type UserUncheckedCreateWithoutDigitalCredentialsInput = {
@@ -876,6 +998,7 @@ export type UserUncheckedCreateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
 }
 
 export type UserCreateOrConnectWithoutDigitalCredentialsInput = {
@@ -908,6 +1031,7 @@ export type UserUpdateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDigitalCredentialsInput = {
@@ -924,6 +1048,7 @@ export type UserUncheckedUpdateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
 }
 
 
@@ -937,6 +1062,7 @@ export type UserCountOutputType = {
   reviewedCorrections: number
   auditLogs: number
   digitalCredentials: number
+  analyticsReports: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -945,6 +1071,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   reviewedCorrections?: boolean | UserCountOutputTypeCountReviewedCorrectionsArgs
   auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
   digitalCredentials?: boolean | UserCountOutputTypeCountDigitalCredentialsArgs
+  analyticsReports?: boolean | UserCountOutputTypeCountAnalyticsReportsArgs
 }
 
 /**
@@ -992,6 +1119,13 @@ export type UserCountOutputTypeCountDigitalCredentialsArgs<ExtArgs extends runti
   where?: Prisma.DigitalCredentialWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAnalyticsReportsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AnalyticsReportWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1008,6 +1142,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   reviewedCorrections?: boolean | Prisma.User$reviewedCorrectionsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.User$digitalCredentialsArgs<ExtArgs>
+  analyticsReports?: boolean | Prisma.User$analyticsReportsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1054,6 +1189,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   reviewedCorrections?: boolean | Prisma.User$reviewedCorrectionsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.User$digitalCredentialsArgs<ExtArgs>
+  analyticsReports?: boolean | Prisma.User$analyticsReportsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1067,6 +1203,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     reviewedCorrections: Prisma.$GameEventCorrectionPayload<ExtArgs>[]
     auditLogs: Prisma.$AdminAuditLogPayload<ExtArgs>[]
     digitalCredentials: Prisma.$DigitalCredentialPayload<ExtArgs>[]
+    analyticsReports: Prisma.$AnalyticsReportPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1477,6 +1614,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   reviewedCorrections<T extends Prisma.User$reviewedCorrectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedCorrectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GameEventCorrectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditLogs<T extends Prisma.User$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   digitalCredentials<T extends Prisma.User$digitalCredentialsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$digitalCredentialsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DigitalCredentialPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  analyticsReports<T extends Prisma.User$analyticsReportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$analyticsReportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AnalyticsReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2025,6 +2163,30 @@ export type User$digitalCredentialsArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.DigitalCredentialScalarFieldEnum | Prisma.DigitalCredentialScalarFieldEnum[]
+}
+
+/**
+ * User.analyticsReports
+ */
+export type User$analyticsReportsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AnalyticsReport
+   */
+  select?: Prisma.AnalyticsReportSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AnalyticsReport
+   */
+  omit?: Prisma.AnalyticsReportOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AnalyticsReportInclude<ExtArgs> | null
+  where?: Prisma.AnalyticsReportWhereInput
+  orderBy?: Prisma.AnalyticsReportOrderByWithRelationInput | Prisma.AnalyticsReportOrderByWithRelationInput[]
+  cursor?: Prisma.AnalyticsReportWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AnalyticsReportScalarFieldEnum | Prisma.AnalyticsReportScalarFieldEnum[]
 }
 
 /**

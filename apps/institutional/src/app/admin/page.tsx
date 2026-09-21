@@ -63,7 +63,6 @@ type CorrectionEventSummary = {
 
 const tabs: Array<{ id: AdminTab; label: string }> = [
   { id: "overview", label: "Resumen" },
-  { id: "analytics", label: "Estadísticas" },
   { id: "users", label: "Usuarios" },
   { id: "pending", label: "Pendientes" },
   { id: "content", label: "Contenido" },
@@ -77,6 +76,7 @@ const roleOptions: Array<{ value: UserRole; label: string }> = [
   { value: "admin", label: "Admin" },
   { value: "juez", label: "Juez" },
   { value: "entrenador_juveniles", label: "Entrenador juveniles" },
+  { value: "redes", label: "Redes" },
 ];
 
 const interestOptions = [

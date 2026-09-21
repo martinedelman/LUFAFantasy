@@ -47,6 +47,11 @@ export { Prisma }
  */
 export type User = Prisma.UserModel
 /**
+ * Model AnalyticsReport
+ * 
+ */
+export type AnalyticsReport = Prisma.AnalyticsReportModel
+/**
  * Model Tournament
  * 
  */

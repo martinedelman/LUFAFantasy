@@ -23,10 +23,31 @@ model User {
   reviewedCorrections  GameEventCorrection[] @relation("CorrectionReviewer")
   auditLogs            AdminAuditLog[]
   digitalCredentials   DigitalCredential[]
+  analyticsReports     AnalyticsReport[]
 
   @@index([role])
   @@index([isActive])
   @@map("users")
+}
+
+model AnalyticsReport {
+  id          String   @id @default(cuid())
+  ownerId     String   @map("owner_id")
+  name        String
+  description String   @default("")
+  scope       String   @default("personal")
+  filters     Json
+  widgets     Json
+  layouts     Json
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, scope])
+  @@index([scope, updatedAt])
+  @@map("analytics_reports")
 }
 
 model Tournament {

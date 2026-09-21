@@ -11,6 +11,8 @@ import type {
 } from "./IReportingRepository";
 import type { AdminAnalyticsQuery } from "./IReportingRepository";
 import { buildAdminAnalytics } from "./adminAnalytics";
+import type { AnalyticsFactsQuery } from "./IReportingRepository";
+import type { AnalyticsEventFact } from "./analyticsBuilder";
 
 export class MongoReportingRepository implements IReportingRepository {
   async getDashboardStats(nextGamesLimit: number, topPlayersLimit: number): Promise<DashboardStatsResponseDto> {
@@ -123,6 +125,55 @@ export class MongoReportingRepository implements IReportingRepository {
           : null,
       })),
     );
+  }
+
+  async getAnalyticsFacts(query: AnalyticsFactsQuery): Promise<AnalyticsEventFact[]> {
+    await connectToDatabase();
+    const filters = query.filters || {};
+    const gameMatch: Record<string, unknown> = {
+      status: { $in: ["in_progress", "completed"] },
+      ...(filters.tournamentIds?.length ? { tournament: { $in: filters.tournamentIds.map((id) => new mongoose.Types.ObjectId(id)) } } : {}),
+      ...(filters.divisionIds?.length ? { division: { $in: filters.divisionIds.map((id) => new mongoose.Types.ObjectId(id)) } } : {}),
+      ...(filters.phases?.length ? { phase: { $in: filters.phases } } : {}),
+      ...(filters.from || filters.to ? { scheduledDate: { ...(filters.from ? { $gte: new Date(filters.from) } : {}), ...(filters.to ? { $lte: new Date(`${filters.to}T23:59:59.999Z`) } : {}) } } : {}),
+    };
+    const games = await GameModel.find(gameMatch).populate("tournament", "name").populate("division", "name").lean() as any[];
+    const events = games.length ? await GameEventModel.find({ game: { $in: games.map((game) => game._id) } })
+      .populate("team", "name")
+      .populate("player", "firstName lastName")
+      .lean() as any[] : [];
+    const gameById = new Map(games.map((game) => [String(game._id), game]));
+    const qbIds = [...new Set(events.map((event) => event.details?.qb).filter((id): id is string => typeof id === "string"))];
+    const quarterbacks = qbIds.length ? await PlayerModel.find({ _id: { $in: qbIds.map((id) => new mongoose.Types.ObjectId(id)) } }).select("firstName lastName").lean() : [];
+    const quarterbackById = new Map((quarterbacks as any[]).map((player) => [String(player._id), player]));
+    return events.flatMap((event) => {
+      const game = gameById.get(String(event.game));
+      if (!game) return [];
+      const qbId = typeof event.details?.qb === "string" ? event.details.qb : undefined;
+      const qb = qbId ? quarterbackById.get(qbId) : undefined;
+      return [{
+        eventId: String(event._id),
+        gameId: String(game._id),
+        tournamentId: String(game.tournament?._id || game.tournament),
+        tournamentName: game.tournament?.name || "Torneo",
+        divisionId: String(game.division?._id || game.division),
+        divisionName: game.division?.name || "División",
+        teamId: String(event.team?._id || event.team),
+        teamName: event.team?.name || "Equipo",
+        eventType: event.type,
+        phase: game.phase || "regular",
+        week: game.week || null,
+        quarter: Number(event.quarter),
+        date: new Date(game.scheduledDate).toISOString(),
+        status: game.status,
+        points: Number(event.points || 0),
+        yards: Number(event.yards || 0),
+        participants: [
+          ...(event.player ? [{ id: String(event.player._id), name: `${event.player.firstName} ${event.player.lastName}`, role: "primary" as const, attributedPoints: Number(event.points || 0) }] : []),
+          ...(qb ? [{ id: String(qb._id), name: `${qb.firstName} ${qb.lastName}`, role: "quarterback" as const, attributedPoints: Number(event.details?.qbStatValue || 0) }] : []),
+        ],
+      }];
+    });
   }
 
   async getPlayerRankings(query: PlayerRankingQuery): Promise<PlayerRankingRow[]> {

@@ -18,3 +18,4 @@ export { JudgeModel } from "./Judge";
 export { FlagInterestModel } from "./FlagInterest";
 export { AdminAuditLogModel } from "./AdminAuditLog";
 export { SiteSettingsModel } from "./SiteSettings";
+export { AnalyticsReportModel } from "./AnalyticsReport";

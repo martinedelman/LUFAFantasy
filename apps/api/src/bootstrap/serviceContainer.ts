@@ -2,13 +2,15 @@ import RepositoryContainer from "@lufa/database/repositories";
 import { getAppEnvironment } from "@lufa/database/appEnvironment";
 import { getDatabaseProvider } from "@lufa/database/databaseProvider";
 import { getAuxiliaryRepository } from "@lufa/database/repositories/auxiliary";
-import { getReportingRepository } from "@lufa/database/repositories/reporting";
+import { getAnalyticsReportRepository, getReportingRepository } from "@lufa/database/repositories/reporting";
 import { PrismaFantasyCompetitionRepository, PrismaFantasyIdentityRepository } from "@lufa/database/repositories/fantasy";
 import { FantasyCompetitionService, FantasyIdentityService } from "@lufa/fantasy-core";
 import { AuthService, OtpService } from "@lufa/identity-institutional";
 import { BlobStorageService, EmailService, PreApprovedPlayerNotificationService } from "@lufa/integrations";
 import { AdminService, DashboardService, PlayerImportService, WeeklyDigestEmailService } from "@lufa/operations";
 import {
+  AnalyticsReportService,
+  AnalyticsService,
   DivisionService,
   AdminAnalyticsService,
   GameEventCorrectionService,
@@ -71,6 +73,8 @@ const playerImportService = new PlayerImportService(
 /** Único composition root del transporte HTTP. */
 export const serviceContainer = {
   adminService: new AdminService(playerImportService, auxiliaryRepository, getDatabaseProvider),
+  analyticsService: new AnalyticsService(reportingRepository),
+  analyticsReportService: new AnalyticsReportService(getAnalyticsReportRepository()),
   adminAnalyticsService: new AdminAnalyticsService(tournamentRepository, divisionRepository, reportingRepository),
   authService,
   blobStorageService: new BlobStorageService(fileStorageRepository, getAppEnvironment),
