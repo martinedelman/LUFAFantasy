@@ -5,7 +5,7 @@ export interface User {
   _id?: string;
   email: string;
   name: string;
-  role: "admin" | "user" | "juez";
+  role: "admin" | "user" | "juez" | "entrenador_juveniles" | "redes";
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;

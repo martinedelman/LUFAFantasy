@@ -134,8 +134,10 @@ export default function ProfilePage() {
                         ? "bg-green-100 text-green-800"
                         : user.role === "juez"
                           ? "bg-amber-100 text-amber-800"
-                          : user.role === "entrenador_juveniles"
+                        : user.role === "entrenador_juveniles"
                             ? "bg-blue-100 text-blue-800"
+                            : user.role === "redes"
+                              ? "bg-fuchsia-100 text-fuchsia-800"
                           : "bg-blue-100 text-blue-800"
                     }`}
                   >
@@ -145,6 +147,8 @@ export default function ProfilePage() {
                         ? "Juez"
                         : user.role === "entrenador_juveniles"
                           ? "Entrenador juveniles"
+                          : user.role === "redes"
+                            ? "Redes"
                           : "Usuario"}
                   </span>
                 </div>

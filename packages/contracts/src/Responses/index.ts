@@ -1,5 +1,22 @@
 export type { ApiResponseDto } from "./ApiResponseDto";
 export type { AdminAuditLogResponseDto } from "./AdminAuditLogResponseDto";
+export type {
+  AnalyticsCatalogDto,
+  AnalyticsDimension,
+  AnalyticsFiltersDto,
+  AnalyticsLayoutItemDto,
+  AnalyticsMetric,
+  AnalyticsParticipationRole,
+  AnalyticsQueryDto,
+  AnalyticsQueryResponseDto,
+  AnalyticsReportDto,
+  AnalyticsReportScope,
+  AnalyticsResultRowDto,
+  AnalyticsSource,
+  AnalyticsVisualization,
+  AnalyticsWidgetDto,
+  AnalyticsWidgetResultDto,
+} from "./AnalyticsResponseDto";
 export type { AdminPlayerImportDryRunResponseDto } from "./AdminPlayerImportDryRunResponseDto";
 export type { AdminSystemStatsResponseDto } from "./AdminSystemStatsResponseDto";
 export type {

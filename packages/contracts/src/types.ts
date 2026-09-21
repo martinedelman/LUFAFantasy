@@ -1,5 +1,5 @@
 export type DivisionCategory = "masculino" | "femenino" | "mixto";
-export type UserRole = "user" | "admin" | "juez" | "entrenador_juveniles";
+export type UserRole = "user" | "admin" | "juez" | "entrenador_juveniles" | "redes";
 export type TeamStatus = "active" | "inactive" | "suspended";
 export type PlayerStatus = "active" | "inactive" | "injured" | "suspended" | "pre_approved";
 export type PlayerPosition = "QB" | "WR" | "RB" | "C" | "RS" | "LB" | "CB" | "FS" | "SS";

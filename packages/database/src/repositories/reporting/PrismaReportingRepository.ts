@@ -9,6 +9,8 @@ import type {
 } from "./IReportingRepository";
 import type { AdminAnalyticsQuery } from "./IReportingRepository";
 import { buildAdminAnalytics } from "./adminAnalytics";
+import type { AnalyticsFactsQuery } from "./IReportingRepository";
+import type { AnalyticsEventFact } from "./analyticsBuilder";
 
 export class PrismaReportingRepository implements IReportingRepository {
   private get db() {
@@ -120,6 +122,60 @@ export class PrismaReportingRepository implements IReportingRepository {
       }),
       events,
     );
+  }
+
+  async getAnalyticsFacts(query: AnalyticsFactsQuery): Promise<AnalyticsEventFact[]> {
+    const filters = query.filters || {};
+    const games = await this.db.game.findMany({
+      where: {
+        status: { in: ["in_progress", "completed"] },
+        ...(filters.tournamentIds?.length ? { tournamentId: { in: filters.tournamentIds } } : {}),
+        ...(filters.divisionIds?.length ? { divisionId: { in: filters.divisionIds } } : {}),
+        ...(filters.phases?.length ? { phase: { in: filters.phases } } : {}),
+        ...(filters.from || filters.to ? { scheduledDate: { ...(filters.from ? { gte: new Date(filters.from) } : {}), ...(filters.to ? { lte: new Date(`${filters.to}T23:59:59.999Z`) } : {}) } } : {}),
+      },
+      include: {
+        tournament: { select: { id: true, name: true } },
+        division: { select: { id: true, name: true } },
+        events: { include: { player: { include: { team: { select: { name: true } } } }, team: { select: { id: true, name: true } } } },
+      },
+    });
+    const qbIds = new Set<string>();
+    for (const game of games) for (const event of game.events) {
+      const qb = event.details && typeof event.details === "object" ? (event.details as { qb?: unknown }).qb : undefined;
+      if (typeof qb === "string") qbIds.add(qb);
+    }
+    const quarterbacks = qbIds.size
+      ? await this.db.player.findMany({ where: { id: { in: [...qbIds] } }, select: { id: true, firstName: true, lastName: true } })
+      : [];
+    const quarterbackById = new Map(quarterbacks.map((player) => [player.id, player]));
+    return games.flatMap((game) => game.events.map((event) => {
+      const details = event.details && typeof event.details === "object" ? event.details as { qb?: unknown; qbStatValue?: unknown } : {};
+      const qbId = typeof details.qb === "string" ? details.qb : undefined;
+      const qb = qbId ? quarterbackById.get(qbId) : undefined;
+      return {
+        eventId: event.id,
+        gameId: game.id,
+        tournamentId: game.tournament.id,
+        tournamentName: game.tournament.name,
+        divisionId: game.division.id,
+        divisionName: game.division.name,
+        teamId: event.team.id,
+        teamName: event.team.name,
+        eventType: event.type,
+        phase: game.phase,
+        week: game.week,
+        quarter: event.quarter,
+        date: game.scheduledDate.toISOString(),
+        status: game.status as "in_progress" | "completed",
+        points: Number(event.points || 0),
+        yards: Number(event.yards || 0),
+        participants: [
+          ...(event.player ? [{ id: event.player.id, name: `${event.player.firstName} ${event.player.lastName}`, role: "primary" as const, attributedPoints: Number(event.points || 0) }] : []),
+          ...(qb ? [{ id: qb.id, name: `${qb.firstName} ${qb.lastName}`, role: "quarterback" as const, attributedPoints: Number(details.qbStatValue || 0) }] : []),
+        ],
+      };
+    }));
   }
 
   async getPlayerRankings(query: PlayerRankingQuery): Promise<PlayerRankingRow[]> {

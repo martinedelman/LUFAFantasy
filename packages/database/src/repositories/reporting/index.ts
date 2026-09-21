@@ -17,3 +17,5 @@ export function getReportingRepository(): IReportingRepository {
 }
 
 export type { IReportingRepository } from "./IReportingRepository";
+export { getAnalyticsReportRepository } from "./analyticsReports";
+export type { AnalyticsReportRepository } from "./AnalyticsReportRepository";

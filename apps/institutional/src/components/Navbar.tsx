@@ -28,6 +28,7 @@ export default function Navbar() {
   const userMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const { user, signOut } = useAuth();
   const canViewPlayerRegistrations = user?.role === "entrenador_juveniles" || user?.role === "admin";
+  const canViewAnalytics = user?.role === "admin" || user?.role === "entrenador_juveniles" || user?.role === "redes";
 
   const trackNavigation = (label: string, href: string, location: "desktop" | "mobile") => {
     if (user?.role === "admin") return;
@@ -243,6 +244,11 @@ export default function Navbar() {
                           Entrenador juveniles
                         </span>
                       )}
+                      {user.role === "redes" && (
+                        <span className="mt-1 inline-flex items-center rounded bg-fuchsia-100 px-2 py-0.5 text-xs font-medium text-fuchsia-800">
+                          Redes
+                        </span>
+                      )}
                     </div>{" "}
                     <Link
                       href="/profile"
@@ -258,6 +264,11 @@ export default function Navbar() {
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100"
                       >
                         Jugadores Inscriptos
+                      </Link>
+                    )}
+                    {canViewAnalytics && (
+                      <Link href="/analytics" onClick={() => trackNavigation("Estadísticas explorables", "/analytics", "desktop")} className="block px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-slate-100">
+                        Estadísticas explorables
                       </Link>
                     )}
                     {user.role === "admin" && (
@@ -481,6 +492,18 @@ export default function Navbar() {
                         }}
                       >
                         Jugadores Inscriptos
+                      </Link>
+                    )}
+                    {canViewAnalytics && (
+                      <Link
+                        href="/analytics"
+                        className="block px-3 py-2 rounded-xl text-base font-medium text-green-50/90 hover:text-white hover:bg-white/10"
+                        onClick={() => {
+                          trackNavigation("Estadísticas explorables", "/analytics", "mobile");
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        Estadísticas explorables
                       </Link>
                     )}
                     <button
