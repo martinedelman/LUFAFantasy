@@ -4,7 +4,7 @@ import { runAnalyticsQuery, type AnalyticsEventFact } from "./AnalyticsService";
 const fact = (patch: Partial<AnalyticsEventFact>): AnalyticsEventFact => ({
   eventId: "e1", gameId: "g1", tournamentId: "t1", tournamentName: "Torneo", divisionId: "d1", divisionName: "División",
   teamId: "team", teamName: "Equipo", eventType: "touchdown", phase: "regular", week: 1, quarter: 1,
-  date: "2026-09-21T12:00:00.000Z", status: "completed", points: 6, yards: 0, participants: [], ...patch,
+  date: "2026-09-21T12:00:00.000Z", status: "completed", playType: null, points: 6, yards: 0, participants: [], ...patch,
 });
 
 describe("runAnalyticsQuery", () => {
@@ -24,6 +24,21 @@ describe("runAnalyticsQuery", () => {
     });
     expect(data.results[0].rows).toEqual(expect.arrayContaining([
       expect.objectContaining({ label: "Receptor", value: 6 }), expect.objectContaining({ label: "QB", value: 4 }),
+    ]));
+  });
+
+  it("separa el pase del QB de sus puntos por recepción o corrida", () => {
+    const data = runAnalyticsQuery([
+      fact({ eventId: "pass", playType: "pass", participants: [{ id: "receiver", name: "Receptor", role: "primary", attributedPoints: 6 }, { id: "qb", name: "QB", role: "quarterback", attributedPoints: 6 }] }),
+      fact({ eventId: "run", playType: "run", participants: [{ id: "qb", name: "QB", role: "primary", attributedPoints: 6 }] }),
+    ], {
+      widgets: [{ id: "players", title: "Puntos por aporte", source: "players", metric: "points", dimension: "player", series: "contribution_type", visualization: "bar", limit: 10 }],
+    });
+
+    expect(data.results[0].rows).toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: "QB", series: "Pase", value: 6 }),
+      expect.objectContaining({ label: "QB", series: "Corrida", value: 6 }),
+      expect.objectContaining({ label: "Receptor", series: "Recepción", value: 6 }),
     ]));
   });
 

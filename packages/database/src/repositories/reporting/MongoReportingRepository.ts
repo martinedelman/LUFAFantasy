@@ -166,6 +166,7 @@ export class MongoReportingRepository implements IReportingRepository {
         quarter: Number(event.quarter),
         date: new Date(game.scheduledDate).toISOString(),
         status: game.status,
+        playType: event.details?.playType === "pass" || event.details?.playType === "run" ? event.details.playType : null,
         points: Number(event.points || 0),
         yards: Number(event.yards || 0),
         participants: [

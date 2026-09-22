@@ -28,6 +28,7 @@ export interface AnalyticsEventFact {
   quarter: number;
   date: string;
   status: "in_progress" | "completed";
+  playType: "pass" | "run" | null;
   points: number;
   yards: number;
   participants: AnalyticsParticipant[];
@@ -55,6 +56,13 @@ const eventTypes = [
 type AnalyticsRecord = AnalyticsEventFact & { participant?: AnalyticsParticipant; attributedPoints: number };
 const eventKey = (fact: AnalyticsEventFact) => fact.eventType === "extra_point" && (fact.points === 1 || fact.points === 2) ? `extra_point_${fact.points}` : fact.eventType;
 const pretty = (value: string) => value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+const contribution = (record: AnalyticsRecord) => {
+  if (record.participant?.role === "quarterback") return "passing" as const;
+  if (record.participant?.role === "primary" && record.playType === "pass") return "receiving" as const;
+  if (record.participant?.role === "primary" && record.playType === "run") return "rushing" as const;
+  return "other" as const;
+};
+const contributionLabel = (value: ReturnType<typeof contribution>) => ({ passing: "Pase", receiving: "Recepción", rushing: "Corrida", other: "Otros" })[value];
 
 function mergeFilters(global: AnalyticsQueryDto["filters"] = {}, local: AnalyticsQueryDto["filters"] = {}) {
   const intersection = <T,>(left?: T[], right?: T[]) => left?.length && right?.length ? left.filter((value) => right.includes(value)) : left || right;
@@ -70,6 +78,7 @@ function mergeFilters(global: AnalyticsQueryDto["filters"] = {}, local: Analytic
     quarters: intersection(global.quarters, local.quarters),
     halves: intersection(global.halves, local.halves),
     participationRoles: intersection(global.participationRoles, local.participationRoles),
+    contributionTypes: intersection(global.contributionTypes, local.contributionTypes),
     from: global.from && local.from ? (global.from > local.from ? global.from : local.from) : global.from || local.from,
     to: global.to && local.to ? (global.to < local.to ? global.to : local.to) : global.to || local.to,
   };
@@ -92,13 +101,15 @@ function recordsFor(widget: AnalyticsWidgetDto, facts: AnalyticsEventFact[], fil
   return selected.flatMap((fact) => fact.participants
     .filter((participant) => !allFilters.playerIds?.length || allFilters.playerIds.includes(participant.id))
     .filter((participant) => !allFilters.participationRoles?.length || allFilters.participationRoles.includes(participant.role))
-    .map((participant) => ({ ...fact, participant, attributedPoints: participant.attributedPoints })));
+    .map((participant) => ({ ...fact, participant, attributedPoints: participant.attributedPoints }))
+    .filter((record) => !allFilters.contributionTypes?.length || allFilters.contributionTypes.includes(contribution(record))));
 }
 
 function dimension(record: AnalyticsRecord, value: AnalyticsWidgetDto["dimension"]) {
   if (value === "player") return record.participant ? [record.participant.id, record.participant.name] as const : null;
   if (value === "team") return [record.teamId, record.teamName] as const;
   if (value === "participation_role") return [record.participant?.role || "unassigned", record.participant?.role === "quarterback" ? "Quarterback" : record.participant?.role === "primary" ? "Jugador principal" : "Sin jugador"] as const;
+  if (value === "contribution_type") return [contribution(record), contributionLabel(contribution(record))] as const;
   if (value === "event_type") return [eventKey(record), pretty(eventKey(record))] as const;
   if (value === "tournament") return [record.tournamentId, record.tournamentName] as const;
   if (value === "division") return [record.divisionId, record.divisionName] as const;
@@ -155,7 +166,7 @@ export const systemAnalyticsReport: AnalyticsReportDto = {
     { id: "points", title: "Puntos acreditados", source: "events", metric: "points", visualization: "card" },
     { id: "distribution", title: "Distribución por evento", source: "events", metric: "event_count", dimension: "event_type", visualization: "donut", limit: 10 },
     { id: "period", title: "Puntos por período", source: "teams", metric: "points", dimension: "half", visualization: "bar" },
-    { id: "players", title: "Líderes de jugadores", source: "players", metric: "points", dimension: "player", visualization: "bar", limit: 10 },
+    { id: "players", title: "Líderes por tipo de contribución", source: "players", metric: "points", dimension: "player", series: "contribution_type", visualization: "bar", limit: 10 },
     { id: "teams", title: "Comparación de equipos", source: "teams", metric: "points", dimension: "team", visualization: "bar", limit: 10 },
     { id: "discipline", title: "Disciplina", source: "teams", metric: "event_count", dimension: "team", visualization: "table", filters: { eventTypes: ["penalty", "unsportsmanlike"] }, limit: 20 },
   ],
@@ -178,7 +189,7 @@ export class AnalyticsService {
         ["participants", "Participantes distintos"], ["events_per_game", "Eventos por partido"], ["points_per_game", "Puntos por partido"], ["event_variety", "Variedad de eventos"],
       ].map(([value, label]) => ({ value: value as AnalyticsCatalogDto["metrics"][number]["value"], label })),
       dimensions: [
-        ["player", "Jugador"], ["team", "Equipo"], ["participation_role", "Rol de participación"], ["event_type", "Tipo de evento"],
+        ["player", "Jugador"], ["team", "Equipo"], ["participation_role", "Rol de participación"], ["contribution_type", "Tipo de contribución"], ["event_type", "Tipo de evento"],
         ["tournament", "Torneo"], ["division", "División"], ["phase", "Fase"], ["week", "Semana"], ["date", "Fecha"], ["quarter", "Cuarto"], ["half", "Mitad"],
       ].map(([value, label]) => ({ value: value as AnalyticsCatalogDto["dimensions"][number]["value"], label })),
       eventTypes: eventTypes.map(([value, label]) => ({ value, label })),

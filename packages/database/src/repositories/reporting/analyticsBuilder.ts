@@ -31,6 +31,7 @@ export interface AnalyticsEventFact {
   quarter: number;
   date: string;
   status: "in_progress" | "completed";
+  playType: "pass" | "run" | null;
   points: number;
   yards: number;
   participants: AnalyticsParticipant[];
@@ -50,6 +51,15 @@ const labelFor = (value: string) =>
   value
     .replaceAll("_", " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const contribution = (record: AnalyticsRecord) => {
+  if (record.participant?.role === "quarterback") return "passing" as const;
+  if (record.participant?.role === "primary" && record.playType === "pass") return "receiving" as const;
+  if (record.participant?.role === "primary" && record.playType === "run") return "rushing" as const;
+  return "other" as const;
+};
+
+const contributionLabel = (value: ReturnType<typeof contribution>) => ({ passing: "Pase", receiving: "Recepción", rushing: "Corrida", other: "Otros" })[value];
 
 function matchesFilters(fact: AnalyticsEventFact, filters: AnalyticsFiltersDto = {}) {
   const type = normalizedEventType(fact);
@@ -75,7 +85,8 @@ function recordsFor(source: AnalyticsSource, facts: AnalyticsEventFact[], filter
     fact.participants
       .filter((participant) => !filters.playerIds?.length || filters.playerIds.includes(participant.id))
       .filter((participant) => !filters.participationRoles?.length || filters.participationRoles.includes(participant.role))
-      .map((participant) => ({ ...fact, participant, attributedPoints: participant.attributedPoints })),
+      .map((participant) => ({ ...fact, participant, attributedPoints: participant.attributedPoints }))
+      .filter((record) => !filters.contributionTypes?.length || filters.contributionTypes.includes(contribution(record))),
   );
 }
 
@@ -85,6 +96,7 @@ function dimensionValue(record: AnalyticsRecord, dimension: AnalyticsDimension |
       return record.participant ? { key: record.participant.id, label: record.participant.name } : null;
     case "team": return { key: record.teamId, label: record.teamName };
     case "participation_role": return { key: record.participant?.role || "unassigned", label: record.participant?.role === "quarterback" ? "Quarterback" : record.participant?.role === "primary" ? "Jugador principal" : "Sin jugador" };
+    case "contribution_type": return { key: contribution(record), label: contributionLabel(contribution(record)) };
     case "event_type": return { key: normalizedEventType(record), label: labelFor(normalizedEventType(record)) };
     case "tournament": return { key: record.tournamentId, label: record.tournamentName };
     case "division": return { key: record.divisionId, label: record.divisionName };

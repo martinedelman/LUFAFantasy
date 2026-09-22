@@ -12,6 +12,7 @@ export type AnalyticsDimension =
   | "player"
   | "team"
   | "participation_role"
+  | "contribution_type"
   | "event_type"
   | "tournament"
   | "division"
@@ -22,6 +23,7 @@ export type AnalyticsDimension =
   | "half";
 export type AnalyticsVisualization = "card" | "bar" | "line" | "donut" | "table";
 export type AnalyticsParticipationRole = "primary" | "quarterback" | "unassigned";
+export type AnalyticsContributionType = "passing" | "receiving" | "rushing" | "other";
 export type AnalyticsReportScope = "personal" | "template" | "system";
 
 export interface AnalyticsFiltersDto {
@@ -34,6 +36,7 @@ export interface AnalyticsFiltersDto {
   quarters?: number[];
   halves?: Array<"first" | "second">;
   participationRoles?: AnalyticsParticipationRole[];
+  contributionTypes?: AnalyticsContributionType[];
   from?: string;
   to?: string;
 }

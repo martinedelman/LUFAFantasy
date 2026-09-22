@@ -150,7 +150,7 @@ export class PrismaReportingRepository implements IReportingRepository {
       : [];
     const quarterbackById = new Map(quarterbacks.map((player) => [player.id, player]));
     return games.flatMap((game) => game.events.map((event) => {
-      const details = event.details && typeof event.details === "object" ? event.details as { qb?: unknown; qbStatValue?: unknown } : {};
+      const details = event.details && typeof event.details === "object" ? event.details as { qb?: unknown; qbStatValue?: unknown; playType?: unknown } : {};
       const qbId = typeof details.qb === "string" ? details.qb : undefined;
       const qb = qbId ? quarterbackById.get(qbId) : undefined;
       return {
@@ -168,6 +168,7 @@ export class PrismaReportingRepository implements IReportingRepository {
         quarter: event.quarter,
         date: game.scheduledDate.toISOString(),
         status: game.status as "in_progress" | "completed",
+        playType: details.playType === "pass" || details.playType === "run" ? details.playType : null,
         points: Number(event.points || 0),
         yards: Number(event.yards || 0),
         participants: [
