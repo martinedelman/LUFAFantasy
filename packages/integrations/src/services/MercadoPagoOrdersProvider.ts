@@ -111,8 +111,6 @@ export class MercadoPagoOrdersProvider implements PaymentProvider {
           title: item.title.slice(0, 120),
           quantity: item.quantity,
           unit_price: minorToDecimal(item.unitAmountMinor),
-          unit_measure: "unit",
-          total_amount: minorToDecimal(item.unitAmountMinor * item.quantity),
         })),
         config: {
           online: {
