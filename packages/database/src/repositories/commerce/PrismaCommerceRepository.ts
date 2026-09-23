@@ -108,6 +108,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
   async cancelCreation(orderId: string, reason: string) { void reason; await this.releaseInventory(orderId, "cancelled"); }
   async expireOrder(orderId: string) { await this.releaseInventory(orderId, "cancelled"); }
 
+  async listBuyerOrders(buyerId: string) { return (await this.database.commerceOrder.findMany({ where: { buyerUserId: buyerId }, include: { items: true }, orderBy: { createdAt: "desc" } })).map(orderDto); }
   async getOrderForBuyer(orderId: string, buyerId: string) { const order = await this.database.commerceOrder.findFirst({ where: { id: orderId, buyerUserId: buyerId }, include: { items: true } }); return order ? orderDto(order) : null; }
   async getOrderForReconciliation(orderId: string) { const order = await this.database.commerceOrder.findUnique({ where: { id: orderId }, include: { buyer: { select: { email: true } }, items: true } }); return order ? { ...orderDto(order), buyerEmail: order.buyer.email, idempotencyKey: order.idempotencyKey, providerOrderId: order.providerOrderId, payloadFingerprint: order.payloadFingerprint } : null; }
   async getOrderByProviderId(providerOrderId: string) { const order = await this.database.commerceOrder.findUnique({ where: { providerOrderId }, include: { buyer: { select: { email: true } }, items: true } }); return order ? { ...orderDto(order), buyerEmail: order.buyer.email, idempotencyKey: order.idempotencyKey, providerOrderId: order.providerOrderId, payloadFingerprint: order.payloadFingerprint } : null; }
