@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AuthControl } from "./AuthControl";
+import { StoreNavLinks } from "./StoreNavLinks";
 import "./SiteNav.css";
 
 /** `tackleUrl` stays unset until the tackle site is live, showing it as upcoming. */
-type Props = { flagUrl: string; tackleUrl?: string };
+type Props = { flagUrl: string; tackleUrl?: string; store?: boolean };
 
-export function SiteNav({ flagUrl, tackleUrl }: Props) {
+export function SiteNav({ flagUrl, tackleUrl, store = false }: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -38,10 +39,12 @@ export function SiteNav({ flagUrl, tackleUrl }: Props) {
         <span aria-hidden="true" />
       </button>
       <nav id="site-nav-menu" className="site-nav-menu" aria-label="Navegación principal">
-        <Link href="#inicio" onClick={closeMenu}>Inicio</Link>
-        <Link href="#acerca" onClick={closeMenu}>Acerca de LUFA</Link>
-        <Link href="#proximos-partidos" onClick={closeMenu}>Próximos partidos</Link>
-        <Link href="#sumate" onClick={closeMenu}>Sumate</Link>
+        <Link href={store ? "/#inicio" : "#inicio"} onClick={closeMenu}>Inicio</Link>
+        <Link href={store ? "/#acerca" : "#acerca"} onClick={closeMenu}>Acerca de LUFA</Link>
+        <Link href={store ? "/#proximos-partidos" : "#proximos-partidos"} onClick={closeMenu}>Próximos partidos</Link>
+        <Link href={store ? "/#sumate" : "#sumate"} onClick={closeMenu}>Sumate</Link>
+        <Link href="/tienda" onClick={closeMenu}>Tienda</Link>
+        {store ? <StoreNavLinks closeMenu={closeMenu} /> : null}
         <a href={flagUrl}>Flag Football</a>
         {tackleUrl ? (
           <a href={tackleUrl}>Tackle Football</a>

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-export function StoreNav() {
+export function StoreNavLinks({ closeMenu }: { closeMenu: () => void }) {
   const [signedIn, setSignedIn] = useState(false);
   const [canSell, setCanSell] = useState(false);
   useEffect(() => {
@@ -21,5 +21,5 @@ export function StoreNav() {
     }).catch(() => undefined);
     return () => { active = false; };
   }, []);
-  return <nav aria-label="Navegación principal"><Link href="/">Inicio</Link><Link href="/#acerca">Acerca de LUFA</Link><Link href="/#proximos-partidos">Próximos partidos</Link><Link href="/tienda">Tienda</Link>{signedIn ? <Link href="/tienda/mis-compras">Mis compras</Link> : null}{canSell ? <Link href="/vender">Vendedores</Link> : null}</nav>;
+  return <>{signedIn ? <Link href="/tienda/mis-compras" onClick={closeMenu}>Mis compras</Link> : null}{canSell ? <Link href="/vender" onClick={closeMenu}>Vendedores</Link> : null}</>;
 }
