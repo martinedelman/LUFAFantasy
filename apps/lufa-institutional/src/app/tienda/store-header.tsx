@@ -1,8 +1,10 @@
-import { AuthControl } from "@/components/AuthControl";
+import { SiteNav } from "@/components/SiteNav";
 import Image from "next/image";
 import Link from "next/link";
 import homeStyles from "../page.module.css";
-import { StoreNav } from "./store-nav";
+
+
+const flagUrl = process.env.NEXT_PUBLIC_FLAG_URL || "https://flag.lufa.com.uy";
 
 export function StoreHeader() {
   return <div className={`${homeStyles.portal} page-shell`}>
@@ -11,8 +13,7 @@ export function StoreHeader() {
         <Image src="/lufa_icon.png" alt="" width={78} height={78} priority />
         <span>Liga Uruguaya de Football Americano</span>
       </Link>
-      <StoreNav />
-      <div className="header-session"><AuthControl /></div>
+      <SiteNav flagUrl={flagUrl} store />
     </header>
   </div>;
 }
