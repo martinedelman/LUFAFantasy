@@ -4,12 +4,26 @@ export const API_PREFIX = "/api";
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 const trimLeadingSlash = (value: string) => value.replace(/^\/+/, "");
 
+const normalizeApiUrl = (value: string): string => {
+  const trimmed = value.trim();
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^(localhost|127(?:\.\d{1,3}){3})(:\d+)?$/i.test(trimmed)) {
+    return `http://${trimmed}`;
+  }
+
+  return `https://${trimmed}`;
+};
+
 /**
  * Base URL of the standalone API (`API_URL`), without trailing slash.
  * Server-side only: `API_URL` is not exposed to the browser.
  */
 export function getApiUrl(fallback: string = DEFAULT_API_URL): string {
-  return trimTrailingSlash(process.env.API_URL || fallback);
+  return trimTrailingSlash(normalizeApiUrl(process.env.API_URL || fallback));
 }
 
 /**
