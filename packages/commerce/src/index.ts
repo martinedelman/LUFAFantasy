@@ -61,6 +61,7 @@ export interface CommerceRepository {
   attachProviderOrder(orderId: string, provider: VerifiedProviderOrder): Promise<CommerceOrderDto>;
   cancelCreation(orderId: string, reason: string): Promise<void>;
   getOrderForBuyer(orderId: string, buyerId: string): Promise<CommerceOrderDto | null>;
+  listBuyerOrders(buyerId: string): Promise<CommerceOrderDto[]>;
   getOrderForReconciliation(orderId: string): Promise<ReservedOrder | null>;
   getOrderByProviderId(providerOrderId: string): Promise<ReservedOrder | null>;
   reconcileOrder(localOrderId: string, provider: VerifiedProviderOrder): Promise<CommerceOrderDto>;
@@ -151,6 +152,8 @@ export class CommerceService {
   getBuyerOrder(orderId: string, buyerId: string) {
     return this.repository.getOrderForBuyer(orderId, buyerId);
   }
+
+  listBuyerOrders(buyerId: string) { return this.repository.listBuyerOrders(buyerId); }
 
   async refreshBuyerOrder(orderId: string, buyerId: string) {
     const owned = await this.repository.getOrderForBuyer(orderId, buyerId);
