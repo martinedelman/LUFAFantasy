@@ -15,6 +15,7 @@ describe("MercadoPagoOrdersProvider", () => {
     expect((init.headers as Record<string, string>)["X-Idempotency-Key"]).toBe("idem");
     const payload = JSON.parse(String(init.body));
     expect(payload.total_amount).toBe("1500.00");
+    expect(payload.items).toEqual([{ title: "Pelota", quantity: 1, unit_price: "1500.00" }]);
     expect(payload.config.online.success_url).toBe("https://lufa/s");
     expect(payload.config.payment_method.not_allowed_types).toEqual(["ticket"]);
   });
