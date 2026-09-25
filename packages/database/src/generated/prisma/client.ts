@@ -249,6 +249,11 @@ export type CommerceOrder = Prisma.CommerceOrderModel
  */
 export type CommerceOrderItem = Prisma.CommerceOrderItemModel
 /**
+ * Model CommerceItemVariant
+ * 
+ */
+export type CommerceItemVariant = Prisma.CommerceItemVariantModel
+/**
  * Model CommerceWebhookEvent
  * 
  */

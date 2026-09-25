@@ -46,6 +46,7 @@ export type CommerceOrderMinAggregateOutputType = {
   sellerId: string | null
   status: string | null
   fulfillmentStatus: string | null
+  pickupInstructions: string | null
   currency: string | null
   subtotalMinor: number | null
   discountMinor: number | null
@@ -71,6 +72,7 @@ export type CommerceOrderMaxAggregateOutputType = {
   sellerId: string | null
   status: string | null
   fulfillmentStatus: string | null
+  pickupInstructions: string | null
   currency: string | null
   subtotalMinor: number | null
   discountMinor: number | null
@@ -96,6 +98,7 @@ export type CommerceOrderCountAggregateOutputType = {
   sellerId: number
   status: number
   fulfillmentStatus: number
+  pickupInstructions: number
   currency: number
   subtotalMinor: number
   discountMinor: number
@@ -137,6 +140,7 @@ export type CommerceOrderMinAggregateInputType = {
   sellerId?: true
   status?: true
   fulfillmentStatus?: true
+  pickupInstructions?: true
   currency?: true
   subtotalMinor?: true
   discountMinor?: true
@@ -162,6 +166,7 @@ export type CommerceOrderMaxAggregateInputType = {
   sellerId?: true
   status?: true
   fulfillmentStatus?: true
+  pickupInstructions?: true
   currency?: true
   subtotalMinor?: true
   discountMinor?: true
@@ -187,6 +192,7 @@ export type CommerceOrderCountAggregateInputType = {
   sellerId?: true
   status?: true
   fulfillmentStatus?: true
+  pickupInstructions?: true
   currency?: true
   subtotalMinor?: true
   discountMinor?: true
@@ -299,6 +305,7 @@ export type CommerceOrderGroupByOutputType = {
   sellerId: string
   status: string
   fulfillmentStatus: string
+  pickupInstructions: string | null
   currency: string
   subtotalMinor: number
   discountMinor: number
@@ -347,6 +354,7 @@ export type CommerceOrderWhereInput = {
   sellerId?: Prisma.StringFilter<"CommerceOrder"> | string
   status?: Prisma.StringFilter<"CommerceOrder"> | string
   fulfillmentStatus?: Prisma.StringFilter<"CommerceOrder"> | string
+  pickupInstructions?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
   currency?: Prisma.StringFilter<"CommerceOrder"> | string
   subtotalMinor?: Prisma.IntFilter<"CommerceOrder"> | number
   discountMinor?: Prisma.IntFilter<"CommerceOrder"> | number
@@ -377,6 +385,7 @@ export type CommerceOrderOrderByWithRelationInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
@@ -412,6 +421,7 @@ export type CommerceOrderWhereUniqueInput = Prisma.AtLeast<{
   sellerId?: Prisma.StringFilter<"CommerceOrder"> | string
   status?: Prisma.StringFilter<"CommerceOrder"> | string
   fulfillmentStatus?: Prisma.StringFilter<"CommerceOrder"> | string
+  pickupInstructions?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
   currency?: Prisma.StringFilter<"CommerceOrder"> | string
   subtotalMinor?: Prisma.IntFilter<"CommerceOrder"> | number
   discountMinor?: Prisma.IntFilter<"CommerceOrder"> | number
@@ -440,6 +450,7 @@ export type CommerceOrderOrderByWithAggregationInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
@@ -473,6 +484,7 @@ export type CommerceOrderScalarWhereWithAggregatesInput = {
   sellerId?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
   status?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
   fulfillmentStatus?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
+  pickupInstructions?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrder"> | string | null
   currency?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
   subtotalMinor?: Prisma.IntWithAggregatesFilter<"CommerceOrder"> | number
   discountMinor?: Prisma.IntWithAggregatesFilter<"CommerceOrder"> | number
@@ -496,6 +508,7 @@ export type CommerceOrderCreateInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -526,6 +539,7 @@ export type CommerceOrderUncheckedCreateInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -552,6 +566,7 @@ export type CommerceOrderUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -582,6 +597,7 @@ export type CommerceOrderUncheckedUpdateInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -610,6 +626,7 @@ export type CommerceOrderCreateManyInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -633,6 +650,7 @@ export type CommerceOrderUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -658,6 +676,7 @@ export type CommerceOrderUncheckedUpdateManyInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -693,6 +712,7 @@ export type CommerceOrderCountOrderByAggregateInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
@@ -725,6 +745,7 @@ export type CommerceOrderMaxOrderByAggregateInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
@@ -750,6 +771,7 @@ export type CommerceOrderMinOrderByAggregateInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
@@ -911,6 +933,7 @@ export type CommerceOrderCreateWithoutBuyerInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -939,6 +962,7 @@ export type CommerceOrderUncheckedCreateWithoutBuyerInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -996,6 +1020,7 @@ export type CommerceOrderScalarWhereInput = {
   sellerId?: Prisma.StringFilter<"CommerceOrder"> | string
   status?: Prisma.StringFilter<"CommerceOrder"> | string
   fulfillmentStatus?: Prisma.StringFilter<"CommerceOrder"> | string
+  pickupInstructions?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
   currency?: Prisma.StringFilter<"CommerceOrder"> | string
   subtotalMinor?: Prisma.IntFilter<"CommerceOrder"> | number
   discountMinor?: Prisma.IntFilter<"CommerceOrder"> | number
@@ -1019,6 +1044,7 @@ export type CommerceOrderCreateWithoutSellerInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1047,6 +1073,7 @@ export type CommerceOrderUncheckedCreateWithoutSellerInput = {
   buyerUserId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1099,6 +1126,7 @@ export type CommerceOrderCreateWithoutItemsInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1128,6 +1156,7 @@ export type CommerceOrderUncheckedCreateWithoutItemsInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1169,6 +1198,7 @@ export type CommerceOrderUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1198,6 +1228,7 @@ export type CommerceOrderUncheckedUpdateWithoutItemsInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1223,6 +1254,7 @@ export type CommerceOrderCreateWithoutRegistrationsInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1252,6 +1284,7 @@ export type CommerceOrderUncheckedCreateWithoutRegistrationsInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1293,6 +1326,7 @@ export type CommerceOrderUpdateWithoutRegistrationsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1322,6 +1356,7 @@ export type CommerceOrderUncheckedUpdateWithoutRegistrationsInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1347,6 +1382,7 @@ export type CommerceOrderCreateWithoutRefundRequestsInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1376,6 +1412,7 @@ export type CommerceOrderUncheckedCreateWithoutRefundRequestsInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1417,6 +1454,7 @@ export type CommerceOrderUpdateWithoutRefundRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1446,6 +1484,7 @@ export type CommerceOrderUncheckedUpdateWithoutRefundRequestsInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1472,6 +1511,7 @@ export type CommerceOrderCreateManyBuyerInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1495,6 +1535,7 @@ export type CommerceOrderUpdateWithoutBuyerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1523,6 +1564,7 @@ export type CommerceOrderUncheckedUpdateWithoutBuyerInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1550,6 +1592,7 @@ export type CommerceOrderUncheckedUpdateManyWithoutBuyerInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1574,6 +1617,7 @@ export type CommerceOrderCreateManySellerInput = {
   buyerUserId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
@@ -1597,6 +1641,7 @@ export type CommerceOrderUpdateWithoutSellerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1625,6 +1670,7 @@ export type CommerceOrderUncheckedUpdateWithoutSellerInput = {
   buyerUserId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1652,6 +1698,7 @@ export type CommerceOrderUncheckedUpdateManyWithoutSellerInput = {
   buyerUserId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1726,6 +1773,7 @@ export type CommerceOrderSelect<ExtArgs extends runtime.Types.Extensions.Interna
   sellerId?: boolean
   status?: boolean
   fulfillmentStatus?: boolean
+  pickupInstructions?: boolean
   currency?: boolean
   subtotalMinor?: boolean
   discountMinor?: boolean
@@ -1757,6 +1805,7 @@ export type CommerceOrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   sellerId?: boolean
   status?: boolean
   fulfillmentStatus?: boolean
+  pickupInstructions?: boolean
   currency?: boolean
   subtotalMinor?: boolean
   discountMinor?: boolean
@@ -1784,6 +1833,7 @@ export type CommerceOrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   sellerId?: boolean
   status?: boolean
   fulfillmentStatus?: boolean
+  pickupInstructions?: boolean
   currency?: boolean
   subtotalMinor?: boolean
   discountMinor?: boolean
@@ -1811,6 +1861,7 @@ export type CommerceOrderSelectScalar = {
   sellerId?: boolean
   status?: boolean
   fulfillmentStatus?: boolean
+  pickupInstructions?: boolean
   currency?: boolean
   subtotalMinor?: boolean
   discountMinor?: boolean
@@ -1830,7 +1881,7 @@ export type CommerceOrderSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CommerceOrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "buyerUserId" | "sellerId" | "status" | "fulfillmentStatus" | "currency" | "subtotalMinor" | "discountMinor" | "totalMinor" | "idempotencyKey" | "payloadFingerprint" | "providerOrderId" | "providerStatus" | "checkoutUrl" | "liveMode" | "reservationExpiresAt" | "paidAt" | "fulfilledAt" | "cancelledAt" | "refundedMinor" | "createdAt" | "updatedAt", ExtArgs["result"]["commerceOrder"]>
+export type CommerceOrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "buyerUserId" | "sellerId" | "status" | "fulfillmentStatus" | "pickupInstructions" | "currency" | "subtotalMinor" | "discountMinor" | "totalMinor" | "idempotencyKey" | "payloadFingerprint" | "providerOrderId" | "providerStatus" | "checkoutUrl" | "liveMode" | "reservationExpiresAt" | "paidAt" | "fulfilledAt" | "cancelledAt" | "refundedMinor" | "createdAt" | "updatedAt", ExtArgs["result"]["commerceOrder"]>
 export type CommerceOrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   buyer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   seller?: boolean | Prisma.CommerceSellerDefaultArgs<ExtArgs>
@@ -1863,6 +1914,7 @@ export type $CommerceOrderPayload<ExtArgs extends runtime.Types.Extensions.Inter
     sellerId: string
     status: string
     fulfillmentStatus: string
+    pickupInstructions: string | null
     currency: string
     subtotalMinor: number
     discountMinor: number
@@ -2313,6 +2365,7 @@ export interface CommerceOrderFieldRefs {
   readonly sellerId: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly status: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly fulfillmentStatus: Prisma.FieldRef<"CommerceOrder", 'String'>
+  readonly pickupInstructions: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly currency: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly subtotalMinor: Prisma.FieldRef<"CommerceOrder", 'Int'>
   readonly discountMinor: Prisma.FieldRef<"CommerceOrder", 'Int'>

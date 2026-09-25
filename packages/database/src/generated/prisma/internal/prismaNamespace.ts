@@ -438,6 +438,7 @@ export const ModelName = {
   CommerceItem: 'CommerceItem',
   CommerceOrder: 'CommerceOrder',
   CommerceOrderItem: 'CommerceOrderItem',
+  CommerceItemVariant: 'CommerceItemVariant',
   CommerceWebhookEvent: 'CommerceWebhookEvent',
   CommerceTournamentRegistration: 'CommerceTournamentRegistration',
   CommerceRefundRequest: 'CommerceRefundRequest',
@@ -457,7 +458,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "analyticsReport" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "playerModalityProfile" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite" | "digitalCredential" | "commerceSeller" | "commerceSellerMember" | "commerceItem" | "commerceOrder" | "commerceOrderItem" | "commerceWebhookEvent" | "commerceTournamentRegistration" | "commerceRefundRequest" | "digitalCredentialAudit"
+    modelProps: "user" | "analyticsReport" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "playerModalityProfile" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite" | "digitalCredential" | "commerceSeller" | "commerceSellerMember" | "commerceItem" | "commerceOrder" | "commerceOrderItem" | "commerceItemVariant" | "commerceWebhookEvent" | "commerceTournamentRegistration" | "commerceRefundRequest" | "digitalCredentialAudit"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3495,6 +3496,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CommerceItemVariant: {
+      payload: Prisma.$CommerceItemVariantPayload<ExtArgs>
+      fields: Prisma.CommerceItemVariantFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CommerceItemVariantFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CommerceItemVariantFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload>
+        }
+        findFirst: {
+          args: Prisma.CommerceItemVariantFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CommerceItemVariantFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload>
+        }
+        findMany: {
+          args: Prisma.CommerceItemVariantFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload>[]
+        }
+        create: {
+          args: Prisma.CommerceItemVariantCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload>
+        }
+        createMany: {
+          args: Prisma.CommerceItemVariantCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CommerceItemVariantCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload>[]
+        }
+        delete: {
+          args: Prisma.CommerceItemVariantDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload>
+        }
+        update: {
+          args: Prisma.CommerceItemVariantUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload>
+        }
+        deleteMany: {
+          args: Prisma.CommerceItemVariantDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CommerceItemVariantUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CommerceItemVariantUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload>[]
+        }
+        upsert: {
+          args: Prisma.CommerceItemVariantUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommerceItemVariantPayload>
+        }
+        aggregate: {
+          args: Prisma.CommerceItemVariantAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCommerceItemVariant>
+        }
+        groupBy: {
+          args: Prisma.CommerceItemVariantGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CommerceItemVariantGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CommerceItemVariantCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CommerceItemVariantCountAggregateOutputType> | number
+        }
+      }
+    }
     CommerceWebhookEvent: {
       payload: Prisma.$CommerceWebhookEventPayload<ExtArgs>
       fields: Prisma.CommerceWebhookEventFieldRefs
@@ -4429,6 +4504,10 @@ export const CommerceItemScalarFieldEnum = {
   title: 'title',
   description: 'description',
   imageUrl: 'imageUrl',
+  imageUrls: 'imageUrls',
+  sku: 'sku',
+  details: 'details',
+  pickupInstructions: 'pickupInstructions',
   priceMinor: 'priceMinor',
   currency: 'currency',
   credentialDiscountBps: 'credentialDiscountBps',
@@ -4448,6 +4527,7 @@ export const CommerceOrderScalarFieldEnum = {
   sellerId: 'sellerId',
   status: 'status',
   fulfillmentStatus: 'fulfillmentStatus',
+  pickupInstructions: 'pickupInstructions',
   currency: 'currency',
   subtotalMinor: 'subtotalMinor',
   discountMinor: 'discountMinor',
@@ -4474,15 +4554,35 @@ export const CommerceOrderItemScalarFieldEnum = {
   id: 'id',
   orderId: 'orderId',
   itemId: 'itemId',
+  variantId: 'variantId',
   title: 'title',
   kind: 'kind',
   quantity: 'quantity',
   unitPriceMinor: 'unitPriceMinor',
   unitDiscountMinor: 'unitDiscountMinor',
-  entitlementMonths: 'entitlementMonths'
+  entitlementMonths: 'entitlementMonths',
+  variantSku: 'variantSku',
+  variantLabel: 'variantLabel'
 } as const
 
 export type CommerceOrderItemScalarFieldEnum = (typeof CommerceOrderItemScalarFieldEnum)[keyof typeof CommerceOrderItemScalarFieldEnum]
+
+
+export const CommerceItemVariantScalarFieldEnum = {
+  id: 'id',
+  itemId: 'itemId',
+  sku: 'sku',
+  label: 'label',
+  optionName: 'optionName',
+  optionValue: 'optionValue',
+  priceMinor: 'priceMinor',
+  stockQuantity: 'stockQuantity',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommerceItemVariantScalarFieldEnum = (typeof CommerceItemVariantScalarFieldEnum)[keyof typeof CommerceItemVariantScalarFieldEnum]
 
 
 export const CommerceWebhookEventScalarFieldEnum = {
@@ -4861,6 +4961,7 @@ export type GlobalOmitConfig = {
   commerceItem?: Prisma.CommerceItemOmit
   commerceOrder?: Prisma.CommerceOrderOmit
   commerceOrderItem?: Prisma.CommerceOrderItemOmit
+  commerceItemVariant?: Prisma.CommerceItemVariantOmit
   commerceWebhookEvent?: Prisma.CommerceWebhookEventOmit
   commerceTournamentRegistration?: Prisma.CommerceTournamentRegistrationOmit
   commerceRefundRequest?: Prisma.CommerceRefundRequestOmit
