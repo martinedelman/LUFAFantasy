@@ -26,4 +26,14 @@ describe("CommerceService", () => {
     })).rejects.toThrow("stop");
     expect(vi.mocked(repository.reserveOrder).mock.calls[0]?.[0].request.items.map((item) => item.itemId)).toEqual(["a", "b"]);
   });
+
+  it("preserva la variante elegida al reservar el checkout", async () => {
+    const { repository, subject } = service();
+    vi.mocked(repository.reserveOrder).mockRejectedValue(new Error("stop"));
+    await expect(subject.createCheckout({ id: "u1", name: "Ana", email: "ana@example.com", role: "user" }, {
+      idempotencyKey: "1234567890123456",
+      items: [{ itemId: "guantes", variantId: "talle-m", quantity: 1 }],
+    })).rejects.toThrow("stop");
+    expect(vi.mocked(repository.reserveOrder).mock.calls[0]?.[0].request.items).toEqual([{ itemId: "guantes", variantId: "talle-m", quantity: 1 }]);
+  });
 });

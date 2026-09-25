@@ -44,36 +44,45 @@ export type CommerceOrderItemMinAggregateOutputType = {
   id: string | null
   orderId: string | null
   itemId: string | null
+  variantId: string | null
   title: string | null
   kind: string | null
   quantity: number | null
   unitPriceMinor: number | null
   unitDiscountMinor: number | null
   entitlementMonths: number | null
+  variantSku: string | null
+  variantLabel: string | null
 }
 
 export type CommerceOrderItemMaxAggregateOutputType = {
   id: string | null
   orderId: string | null
   itemId: string | null
+  variantId: string | null
   title: string | null
   kind: string | null
   quantity: number | null
   unitPriceMinor: number | null
   unitDiscountMinor: number | null
   entitlementMonths: number | null
+  variantSku: string | null
+  variantLabel: string | null
 }
 
 export type CommerceOrderItemCountAggregateOutputType = {
   id: number
   orderId: number
   itemId: number
+  variantId: number
   title: number
   kind: number
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor: number
   entitlementMonths: number
+  variantSku: number
+  variantLabel: number
   _all: number
 }
 
@@ -96,36 +105,45 @@ export type CommerceOrderItemMinAggregateInputType = {
   id?: true
   orderId?: true
   itemId?: true
+  variantId?: true
   title?: true
   kind?: true
   quantity?: true
   unitPriceMinor?: true
   unitDiscountMinor?: true
   entitlementMonths?: true
+  variantSku?: true
+  variantLabel?: true
 }
 
 export type CommerceOrderItemMaxAggregateInputType = {
   id?: true
   orderId?: true
   itemId?: true
+  variantId?: true
   title?: true
   kind?: true
   quantity?: true
   unitPriceMinor?: true
   unitDiscountMinor?: true
   entitlementMonths?: true
+  variantSku?: true
+  variantLabel?: true
 }
 
 export type CommerceOrderItemCountAggregateInputType = {
   id?: true
   orderId?: true
   itemId?: true
+  variantId?: true
   title?: true
   kind?: true
   quantity?: true
   unitPriceMinor?: true
   unitDiscountMinor?: true
   entitlementMonths?: true
+  variantSku?: true
+  variantLabel?: true
   _all?: true
 }
 
@@ -219,12 +237,15 @@ export type CommerceOrderItemGroupByOutputType = {
   id: string
   orderId: string
   itemId: string
+  variantId: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor: number
   entitlementMonths: number | null
+  variantSku: string | null
+  variantLabel: string | null
   _count: CommerceOrderItemCountAggregateOutputType | null
   _avg: CommerceOrderItemAvgAggregateOutputType | null
   _sum: CommerceOrderItemSumAggregateOutputType | null
@@ -254,12 +275,15 @@ export type CommerceOrderItemWhereInput = {
   id?: Prisma.StringFilter<"CommerceOrderItem"> | string
   orderId?: Prisma.StringFilter<"CommerceOrderItem"> | string
   itemId?: Prisma.StringFilter<"CommerceOrderItem"> | string
+  variantId?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
   title?: Prisma.StringFilter<"CommerceOrderItem"> | string
   kind?: Prisma.StringFilter<"CommerceOrderItem"> | string
   quantity?: Prisma.IntFilter<"CommerceOrderItem"> | number
   unitPriceMinor?: Prisma.IntFilter<"CommerceOrderItem"> | number
   unitDiscountMinor?: Prisma.IntFilter<"CommerceOrderItem"> | number
   entitlementMonths?: Prisma.IntNullableFilter<"CommerceOrderItem"> | number | null
+  variantSku?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
+  variantLabel?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
   order?: Prisma.XOR<Prisma.CommerceOrderScalarRelationFilter, Prisma.CommerceOrderWhereInput>
   item?: Prisma.XOR<Prisma.CommerceItemScalarRelationFilter, Prisma.CommerceItemWhereInput>
 }
@@ -268,44 +292,52 @@ export type CommerceOrderItemOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   orderId?: Prisma.SortOrder
   itemId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   unitPriceMinor?: Prisma.SortOrder
   unitDiscountMinor?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrderInput | Prisma.SortOrder
+  variantSku?: Prisma.SortOrderInput | Prisma.SortOrder
+  variantLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   order?: Prisma.CommerceOrderOrderByWithRelationInput
   item?: Prisma.CommerceItemOrderByWithRelationInput
 }
 
 export type CommerceOrderItemWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  orderId_itemId?: Prisma.CommerceOrderItemOrderIdItemIdCompoundUniqueInput
   AND?: Prisma.CommerceOrderItemWhereInput | Prisma.CommerceOrderItemWhereInput[]
   OR?: Prisma.CommerceOrderItemWhereInput[]
   NOT?: Prisma.CommerceOrderItemWhereInput | Prisma.CommerceOrderItemWhereInput[]
   orderId?: Prisma.StringFilter<"CommerceOrderItem"> | string
   itemId?: Prisma.StringFilter<"CommerceOrderItem"> | string
+  variantId?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
   title?: Prisma.StringFilter<"CommerceOrderItem"> | string
   kind?: Prisma.StringFilter<"CommerceOrderItem"> | string
   quantity?: Prisma.IntFilter<"CommerceOrderItem"> | number
   unitPriceMinor?: Prisma.IntFilter<"CommerceOrderItem"> | number
   unitDiscountMinor?: Prisma.IntFilter<"CommerceOrderItem"> | number
   entitlementMonths?: Prisma.IntNullableFilter<"CommerceOrderItem"> | number | null
+  variantSku?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
+  variantLabel?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
   order?: Prisma.XOR<Prisma.CommerceOrderScalarRelationFilter, Prisma.CommerceOrderWhereInput>
   item?: Prisma.XOR<Prisma.CommerceItemScalarRelationFilter, Prisma.CommerceItemWhereInput>
-}, "id" | "orderId_itemId">
+}, "id">
 
 export type CommerceOrderItemOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   orderId?: Prisma.SortOrder
   itemId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   unitPriceMinor?: Prisma.SortOrder
   unitDiscountMinor?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrderInput | Prisma.SortOrder
+  variantSku?: Prisma.SortOrderInput | Prisma.SortOrder
+  variantLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.CommerceOrderItemCountOrderByAggregateInput
   _avg?: Prisma.CommerceOrderItemAvgOrderByAggregateInput
   _max?: Prisma.CommerceOrderItemMaxOrderByAggregateInput
@@ -320,22 +352,28 @@ export type CommerceOrderItemScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"CommerceOrderItem"> | string
   orderId?: Prisma.StringWithAggregatesFilter<"CommerceOrderItem"> | string
   itemId?: Prisma.StringWithAggregatesFilter<"CommerceOrderItem"> | string
+  variantId?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrderItem"> | string | null
   title?: Prisma.StringWithAggregatesFilter<"CommerceOrderItem"> | string
   kind?: Prisma.StringWithAggregatesFilter<"CommerceOrderItem"> | string
   quantity?: Prisma.IntWithAggregatesFilter<"CommerceOrderItem"> | number
   unitPriceMinor?: Prisma.IntWithAggregatesFilter<"CommerceOrderItem"> | number
   unitDiscountMinor?: Prisma.IntWithAggregatesFilter<"CommerceOrderItem"> | number
   entitlementMonths?: Prisma.IntNullableWithAggregatesFilter<"CommerceOrderItem"> | number | null
+  variantSku?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrderItem"> | string | null
+  variantLabel?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrderItem"> | string | null
 }
 
 export type CommerceOrderItemCreateInput = {
   id?: string
+  variantId?: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor?: number
   entitlementMonths?: number | null
+  variantSku?: string | null
+  variantLabel?: string | null
   order: Prisma.CommerceOrderCreateNestedOneWithoutItemsInput
   item: Prisma.CommerceItemCreateNestedOneWithoutOrderItemsInput
 }
@@ -344,22 +382,28 @@ export type CommerceOrderItemUncheckedCreateInput = {
   id?: string
   orderId: string
   itemId: string
+  variantId?: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor?: number
   entitlementMonths?: number | null
+  variantSku?: string | null
+  variantLabel?: string | null
 }
 
 export type CommerceOrderItemUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.CommerceOrderUpdateOneRequiredWithoutItemsNestedInput
   item?: Prisma.CommerceItemUpdateOneRequiredWithoutOrderItemsNestedInput
 }
@@ -368,46 +412,58 @@ export type CommerceOrderItemUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type CommerceOrderItemCreateManyInput = {
   id?: string
   orderId: string
   itemId: string
+  variantId?: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor?: number
   entitlementMonths?: number | null
+  variantSku?: string | null
+  variantLabel?: string | null
 }
 
 export type CommerceOrderItemUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type CommerceOrderItemUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type CommerceOrderItemListRelationFilter = {
@@ -420,21 +476,19 @@ export type CommerceOrderItemOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type CommerceOrderItemOrderIdItemIdCompoundUniqueInput = {
-  orderId: string
-  itemId: string
-}
-
 export type CommerceOrderItemCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   orderId?: Prisma.SortOrder
   itemId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrder
   title?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   unitPriceMinor?: Prisma.SortOrder
   unitDiscountMinor?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
+  variantSku?: Prisma.SortOrder
+  variantLabel?: Prisma.SortOrder
 }
 
 export type CommerceOrderItemAvgOrderByAggregateInput = {
@@ -448,24 +502,30 @@ export type CommerceOrderItemMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   orderId?: Prisma.SortOrder
   itemId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrder
   title?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   unitPriceMinor?: Prisma.SortOrder
   unitDiscountMinor?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
+  variantSku?: Prisma.SortOrder
+  variantLabel?: Prisma.SortOrder
 }
 
 export type CommerceOrderItemMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   orderId?: Prisma.SortOrder
   itemId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrder
   title?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   unitPriceMinor?: Prisma.SortOrder
   unitDiscountMinor?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
+  variantSku?: Prisma.SortOrder
+  variantLabel?: Prisma.SortOrder
 }
 
 export type CommerceOrderItemSumOrderByAggregateInput = {
@@ -561,24 +621,30 @@ export type CommerceOrderItemUncheckedUpdateManyWithoutOrderNestedInput = {
 
 export type CommerceOrderItemCreateWithoutItemInput = {
   id?: string
+  variantId?: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor?: number
   entitlementMonths?: number | null
+  variantSku?: string | null
+  variantLabel?: string | null
   order: Prisma.CommerceOrderCreateNestedOneWithoutItemsInput
 }
 
 export type CommerceOrderItemUncheckedCreateWithoutItemInput = {
   id?: string
   orderId: string
+  variantId?: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor?: number
   entitlementMonths?: number | null
+  variantSku?: string | null
+  variantLabel?: string | null
 }
 
 export type CommerceOrderItemCreateOrConnectWithoutItemInput = {
@@ -614,34 +680,43 @@ export type CommerceOrderItemScalarWhereInput = {
   id?: Prisma.StringFilter<"CommerceOrderItem"> | string
   orderId?: Prisma.StringFilter<"CommerceOrderItem"> | string
   itemId?: Prisma.StringFilter<"CommerceOrderItem"> | string
+  variantId?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
   title?: Prisma.StringFilter<"CommerceOrderItem"> | string
   kind?: Prisma.StringFilter<"CommerceOrderItem"> | string
   quantity?: Prisma.IntFilter<"CommerceOrderItem"> | number
   unitPriceMinor?: Prisma.IntFilter<"CommerceOrderItem"> | number
   unitDiscountMinor?: Prisma.IntFilter<"CommerceOrderItem"> | number
   entitlementMonths?: Prisma.IntNullableFilter<"CommerceOrderItem"> | number | null
+  variantSku?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
+  variantLabel?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
 }
 
 export type CommerceOrderItemCreateWithoutOrderInput = {
   id?: string
+  variantId?: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor?: number
   entitlementMonths?: number | null
+  variantSku?: string | null
+  variantLabel?: string | null
   item: Prisma.CommerceItemCreateNestedOneWithoutOrderItemsInput
 }
 
 export type CommerceOrderItemUncheckedCreateWithoutOrderInput = {
   id?: string
   itemId: string
+  variantId?: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor?: number
   entitlementMonths?: number | null
+  variantSku?: string | null
+  variantLabel?: string | null
 }
 
 export type CommerceOrderItemCreateOrConnectWithoutOrderInput = {
@@ -673,89 +748,113 @@ export type CommerceOrderItemUpdateManyWithWhereWithoutOrderInput = {
 export type CommerceOrderItemCreateManyItemInput = {
   id?: string
   orderId: string
+  variantId?: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor?: number
   entitlementMonths?: number | null
+  variantSku?: string | null
+  variantLabel?: string | null
 }
 
 export type CommerceOrderItemUpdateWithoutItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   order?: Prisma.CommerceOrderUpdateOneRequiredWithoutItemsNestedInput
 }
 
 export type CommerceOrderItemUncheckedUpdateWithoutItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type CommerceOrderItemUncheckedUpdateManyWithoutItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type CommerceOrderItemCreateManyOrderInput = {
   id?: string
   itemId: string
+  variantId?: string | null
   title: string
   kind: string
   quantity: number
   unitPriceMinor: number
   unitDiscountMinor?: number
   entitlementMonths?: number | null
+  variantSku?: string | null
+  variantLabel?: string | null
 }
 
 export type CommerceOrderItemUpdateWithoutOrderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   item?: Prisma.CommerceItemUpdateOneRequiredWithoutOrderItemsNestedInput
 }
 
 export type CommerceOrderItemUncheckedUpdateWithoutOrderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type CommerceOrderItemUncheckedUpdateManyWithoutOrderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unitPriceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   unitDiscountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -764,12 +863,15 @@ export type CommerceOrderItemSelect<ExtArgs extends runtime.Types.Extensions.Int
   id?: boolean
   orderId?: boolean
   itemId?: boolean
+  variantId?: boolean
   title?: boolean
   kind?: boolean
   quantity?: boolean
   unitPriceMinor?: boolean
   unitDiscountMinor?: boolean
   entitlementMonths?: boolean
+  variantSku?: boolean
+  variantLabel?: boolean
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["commerceOrderItem"]>
@@ -778,12 +880,15 @@ export type CommerceOrderItemSelectCreateManyAndReturn<ExtArgs extends runtime.T
   id?: boolean
   orderId?: boolean
   itemId?: boolean
+  variantId?: boolean
   title?: boolean
   kind?: boolean
   quantity?: boolean
   unitPriceMinor?: boolean
   unitDiscountMinor?: boolean
   entitlementMonths?: boolean
+  variantSku?: boolean
+  variantLabel?: boolean
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["commerceOrderItem"]>
@@ -792,12 +897,15 @@ export type CommerceOrderItemSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   id?: boolean
   orderId?: boolean
   itemId?: boolean
+  variantId?: boolean
   title?: boolean
   kind?: boolean
   quantity?: boolean
   unitPriceMinor?: boolean
   unitDiscountMinor?: boolean
   entitlementMonths?: boolean
+  variantSku?: boolean
+  variantLabel?: boolean
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["commerceOrderItem"]>
@@ -806,15 +914,18 @@ export type CommerceOrderItemSelectScalar = {
   id?: boolean
   orderId?: boolean
   itemId?: boolean
+  variantId?: boolean
   title?: boolean
   kind?: boolean
   quantity?: boolean
   unitPriceMinor?: boolean
   unitDiscountMinor?: boolean
   entitlementMonths?: boolean
+  variantSku?: boolean
+  variantLabel?: boolean
 }
 
-export type CommerceOrderItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "itemId" | "title" | "kind" | "quantity" | "unitPriceMinor" | "unitDiscountMinor" | "entitlementMonths", ExtArgs["result"]["commerceOrderItem"]>
+export type CommerceOrderItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "itemId" | "variantId" | "title" | "kind" | "quantity" | "unitPriceMinor" | "unitDiscountMinor" | "entitlementMonths" | "variantSku" | "variantLabel", ExtArgs["result"]["commerceOrderItem"]>
 export type CommerceOrderItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
@@ -838,12 +949,15 @@ export type $CommerceOrderItemPayload<ExtArgs extends runtime.Types.Extensions.I
     id: string
     orderId: string
     itemId: string
+    variantId: string | null
     title: string
     kind: string
     quantity: number
     unitPriceMinor: number
     unitDiscountMinor: number
     entitlementMonths: number | null
+    variantSku: string | null
+    variantLabel: string | null
   }, ExtArgs["result"]["commerceOrderItem"]>
   composites: {}
 }
@@ -1272,12 +1386,15 @@ export interface CommerceOrderItemFieldRefs {
   readonly id: Prisma.FieldRef<"CommerceOrderItem", 'String'>
   readonly orderId: Prisma.FieldRef<"CommerceOrderItem", 'String'>
   readonly itemId: Prisma.FieldRef<"CommerceOrderItem", 'String'>
+  readonly variantId: Prisma.FieldRef<"CommerceOrderItem", 'String'>
   readonly title: Prisma.FieldRef<"CommerceOrderItem", 'String'>
   readonly kind: Prisma.FieldRef<"CommerceOrderItem", 'String'>
   readonly quantity: Prisma.FieldRef<"CommerceOrderItem", 'Int'>
   readonly unitPriceMinor: Prisma.FieldRef<"CommerceOrderItem", 'Int'>
   readonly unitDiscountMinor: Prisma.FieldRef<"CommerceOrderItem", 'Int'>
   readonly entitlementMonths: Prisma.FieldRef<"CommerceOrderItem", 'Int'>
+  readonly variantSku: Prisma.FieldRef<"CommerceOrderItem", 'String'>
+  readonly variantLabel: Prisma.FieldRef<"CommerceOrderItem", 'String'>
 }
     
 

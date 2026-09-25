@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
 import type {
   CommerceCatalogDto,
+  CommerceAdminDashboardDto,
+  CommerceFulfillmentStatus,
   CommerceItemDto,
+  CommerceOrderFiltersDto,
   CommerceOrderDto,
   CreateCommerceCheckoutDto,
   CreateCommerceItemDto,
@@ -76,6 +79,11 @@ export interface CommerceRepository {
   createSeller(actor: CommerceActor, input: CreateCommerceSellerDto): Promise<{ id: string; slug: string; name: string }>;
   addSellerMember(actor: CommerceActor, sellerId: string, userId: string): Promise<void>;
   listSellerOrders(actor: CommerceActor): Promise<CommerceOrderDto[]>;
+  listAdminDashboard(actor: CommerceActor): Promise<CommerceAdminDashboardDto>;
+  listAdminOrders(actor: CommerceActor, filters: CommerceOrderFiltersDto): Promise<CommerceOrderDto[]>;
+  updateFulfillment(actor: CommerceActor, orderId: string, status: CommerceFulfillmentStatus): Promise<CommerceOrderDto>;
+  listCommerceSellers(actor: CommerceActor): Promise<Array<{ id: string; slug: string; name: string; status: string; kind: string }>>;
+  updateSellerStatus(actor: CommerceActor, sellerId: string, status: "active" | "inactive"): Promise<{ id: string; slug: string; name: string; status: string; kind: string }>;
   requestRefund(actor: CommerceActor, orderId: string, input: CreateCommerceRefundRequestDto): Promise<{ id: string; status: string }>;
   getRefundForExecution(actor: CommerceActor, refundId: string): Promise<{ id: string; orderId: string; providerOrderId: string; amountMinor: number }>;
   completeRefund(refundId: string, providerRefundId: string, reviewedById: string): Promise<void>;
@@ -109,11 +117,11 @@ export class CommerceService {
     if (!Array.isArray(request.items) || request.items.length < 1 || request.items.length > 10) {
       throw new CommerceError("El carrito debe tener entre 1 y 10 productos.", "INVALID_CART", 400);
     }
-    const normalized = request.items.map(({ itemId, quantity }) => ({ itemId: String(itemId), quantity: Number(quantity) }));
+    const normalized = request.items.map(({ itemId, variantId, quantity }) => ({ itemId: String(itemId), variantId: variantId ? String(variantId) : null, quantity: Number(quantity) }));
     if (normalized.some((item) => !item.itemId || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10)) {
       throw new CommerceError("Las cantidades del carrito no son válidas.", "INVALID_CART", 400);
     }
-    normalized.sort((a, b) => a.itemId.localeCompare(b.itemId));
+    normalized.sort((a, b) => a.itemId.localeCompare(b.itemId) || String(a.variantId || "").localeCompare(String(b.variantId || "")));
     const fingerprint = createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
     const reserved = await this.repository.reserveOrder({
       buyer,
@@ -218,6 +226,11 @@ export class CommerceService {
     return this.repository.addSellerMember(actor, sellerId, userId);
   }
   listSellerOrders(actor: CommerceActor) { return this.repository.listSellerOrders(actor); }
+  listAdminDashboard(actor: CommerceActor) { return this.repository.listAdminDashboard(actor); }
+  listAdminOrders(actor: CommerceActor, filters: CommerceOrderFiltersDto) { return this.repository.listAdminOrders(actor, filters); }
+  updateFulfillment(actor: CommerceActor, orderId: string, status: CommerceFulfillmentStatus) { return this.repository.updateFulfillment(actor, orderId, status); }
+  listCommerceSellers(actor: CommerceActor) { return this.repository.listCommerceSellers(actor); }
+  updateSellerStatus(actor: CommerceActor, sellerId: string, status: "active" | "inactive") { return this.repository.updateSellerStatus(actor, sellerId, status); }
   requestRefund(actor: CommerceActor, orderId: string, input: CreateCommerceRefundRequestDto) { return this.repository.requestRefund(actor, orderId, input); }
 
   async executeRefund(actor: CommerceActor, refundId: string) {

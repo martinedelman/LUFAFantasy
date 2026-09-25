@@ -803,6 +803,10 @@ model CommerceItem {
   title                 String
   description           String
   imageUrl              String?  @map("image_url")
+  imageUrls             Json?    @map("image_urls")
+  sku                   String?
+  details               Json?
+  pickupInstructions    String?  @map("pickup_instructions")
   priceMinor            Int      @map("price_minor")
   currency              String   @default("UYU")
   credentialDiscountBps Int      @default(0) @map("credential_discount_bps")
@@ -816,6 +820,7 @@ model CommerceItem {
   tournament  Tournament?    @relation(fields: [tournamentId], references: [id], onDelete: Restrict)
   orderItems  CommerceOrderItem[]
   registrations CommerceTournamentRegistration[]
+  variants    CommerceItemVariant[]
 
   @@index([sellerId, active])
   @@index([kind, active])
@@ -827,7 +832,8 @@ model CommerceOrder {
   buyerUserId           String    @map("buyer_user_id")
   sellerId              String    @map("seller_id")
   status                String    @default("creating")
-  fulfillmentStatus     String    @default("unfulfilled") @map("fulfillment_status")
+  fulfillmentStatus     String    @default("pending_fulfillment") @map("fulfillment_status")
+  pickupInstructions    String?   @map("pickup_instructions")
   currency              String    @default("UYU")
   subtotalMinor         Int       @map("subtotal_minor")
   discountMinor         Int       @default(0) @map("discount_minor")
@@ -862,19 +868,42 @@ model CommerceOrderItem {
   id                    String @id @default(cuid())
   orderId               String @map("order_id")
   itemId                String @map("item_id")
+  variantId             String? @map("variant_id")
   title                 String
   kind                  String
   quantity              Int
   unitPriceMinor        Int    @map("unit_price_minor")
   unitDiscountMinor     Int    @default(0) @map("unit_discount_minor")
   entitlementMonths     Int?   @map("entitlement_months")
+  variantSku            String? @map("variant_sku")
+  variantLabel          String? @map("variant_label")
 
   order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
   item  CommerceItem  @relation(fields: [itemId], references: [id], onDelete: Restrict)
 
-  @@unique([orderId, itemId])
   @@index([itemId])
+  @@index([variantId])
   @@map("commerce_order_items")
+}
+
+model CommerceItemVariant {
+  id            String   @id @default(cuid())
+  itemId        String   @map("item_id")
+  sku           String
+  label         String
+  optionName    String   @map("option_name")
+  optionValue   String   @map("option_value")
+  priceMinor    Int?     @map("price_minor")
+  stockQuantity Int?     @map("stock_quantity")
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  item CommerceItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, sku])
+  @@index([itemId, active])
+  @@map("commerce_item_variants")
 }
 
 model CommerceWebhookEvent {

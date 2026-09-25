@@ -49,6 +49,8 @@ export type CommerceItemMinAggregateOutputType = {
   title: string | null
   description: string | null
   imageUrl: string | null
+  sku: string | null
+  pickupInstructions: string | null
   priceMinor: number | null
   currency: string | null
   credentialDiscountBps: number | null
@@ -68,6 +70,8 @@ export type CommerceItemMaxAggregateOutputType = {
   title: string | null
   description: string | null
   imageUrl: string | null
+  sku: string | null
+  pickupInstructions: string | null
   priceMinor: number | null
   currency: string | null
   credentialDiscountBps: number | null
@@ -87,6 +91,10 @@ export type CommerceItemCountAggregateOutputType = {
   title: number
   description: number
   imageUrl: number
+  imageUrls: number
+  sku: number
+  details: number
+  pickupInstructions: number
   priceMinor: number
   currency: number
   credentialDiscountBps: number
@@ -122,6 +130,8 @@ export type CommerceItemMinAggregateInputType = {
   title?: true
   description?: true
   imageUrl?: true
+  sku?: true
+  pickupInstructions?: true
   priceMinor?: true
   currency?: true
   credentialDiscountBps?: true
@@ -141,6 +151,8 @@ export type CommerceItemMaxAggregateInputType = {
   title?: true
   description?: true
   imageUrl?: true
+  sku?: true
+  pickupInstructions?: true
   priceMinor?: true
   currency?: true
   credentialDiscountBps?: true
@@ -160,6 +172,10 @@ export type CommerceItemCountAggregateInputType = {
   title?: true
   description?: true
   imageUrl?: true
+  imageUrls?: true
+  sku?: true
+  details?: true
+  pickupInstructions?: true
   priceMinor?: true
   currency?: true
   credentialDiscountBps?: true
@@ -266,6 +282,10 @@ export type CommerceItemGroupByOutputType = {
   title: string
   description: string
   imageUrl: string | null
+  imageUrls: runtime.JsonValue | null
+  sku: string | null
+  details: runtime.JsonValue | null
+  pickupInstructions: string | null
   priceMinor: number
   currency: string
   credentialDiscountBps: number
@@ -308,6 +328,10 @@ export type CommerceItemWhereInput = {
   title?: Prisma.StringFilter<"CommerceItem"> | string
   description?: Prisma.StringFilter<"CommerceItem"> | string
   imageUrl?: Prisma.StringNullableFilter<"CommerceItem"> | string | null
+  imageUrls?: Prisma.JsonNullableFilter<"CommerceItem">
+  sku?: Prisma.StringNullableFilter<"CommerceItem"> | string | null
+  details?: Prisma.JsonNullableFilter<"CommerceItem">
+  pickupInstructions?: Prisma.StringNullableFilter<"CommerceItem"> | string | null
   priceMinor?: Prisma.IntFilter<"CommerceItem"> | number
   currency?: Prisma.StringFilter<"CommerceItem"> | string
   credentialDiscountBps?: Prisma.IntFilter<"CommerceItem"> | number
@@ -320,6 +344,7 @@ export type CommerceItemWhereInput = {
   tournament?: Prisma.XOR<Prisma.TournamentNullableScalarRelationFilter, Prisma.TournamentWhereInput> | null
   orderItems?: Prisma.CommerceOrderItemListRelationFilter
   registrations?: Prisma.CommerceTournamentRegistrationListRelationFilter
+  variants?: Prisma.CommerceItemVariantListRelationFilter
 }
 
 export type CommerceItemOrderByWithRelationInput = {
@@ -331,6 +356,10 @@ export type CommerceItemOrderByWithRelationInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  imageUrls?: Prisma.SortOrderInput | Prisma.SortOrder
+  sku?: Prisma.SortOrderInput | Prisma.SortOrder
+  details?: Prisma.SortOrderInput | Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
@@ -343,6 +372,7 @@ export type CommerceItemOrderByWithRelationInput = {
   tournament?: Prisma.TournamentOrderByWithRelationInput
   orderItems?: Prisma.CommerceOrderItemOrderByRelationAggregateInput
   registrations?: Prisma.CommerceTournamentRegistrationOrderByRelationAggregateInput
+  variants?: Prisma.CommerceItemVariantOrderByRelationAggregateInput
 }
 
 export type CommerceItemWhereUniqueInput = Prisma.AtLeast<{
@@ -357,6 +387,10 @@ export type CommerceItemWhereUniqueInput = Prisma.AtLeast<{
   title?: Prisma.StringFilter<"CommerceItem"> | string
   description?: Prisma.StringFilter<"CommerceItem"> | string
   imageUrl?: Prisma.StringNullableFilter<"CommerceItem"> | string | null
+  imageUrls?: Prisma.JsonNullableFilter<"CommerceItem">
+  sku?: Prisma.StringNullableFilter<"CommerceItem"> | string | null
+  details?: Prisma.JsonNullableFilter<"CommerceItem">
+  pickupInstructions?: Prisma.StringNullableFilter<"CommerceItem"> | string | null
   priceMinor?: Prisma.IntFilter<"CommerceItem"> | number
   currency?: Prisma.StringFilter<"CommerceItem"> | string
   credentialDiscountBps?: Prisma.IntFilter<"CommerceItem"> | number
@@ -369,6 +403,7 @@ export type CommerceItemWhereUniqueInput = Prisma.AtLeast<{
   tournament?: Prisma.XOR<Prisma.TournamentNullableScalarRelationFilter, Prisma.TournamentWhereInput> | null
   orderItems?: Prisma.CommerceOrderItemListRelationFilter
   registrations?: Prisma.CommerceTournamentRegistrationListRelationFilter
+  variants?: Prisma.CommerceItemVariantListRelationFilter
 }, "id" | "slug">
 
 export type CommerceItemOrderByWithAggregationInput = {
@@ -380,6 +415,10 @@ export type CommerceItemOrderByWithAggregationInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  imageUrls?: Prisma.SortOrderInput | Prisma.SortOrder
+  sku?: Prisma.SortOrderInput | Prisma.SortOrder
+  details?: Prisma.SortOrderInput | Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
@@ -407,6 +446,10 @@ export type CommerceItemScalarWhereWithAggregatesInput = {
   title?: Prisma.StringWithAggregatesFilter<"CommerceItem"> | string
   description?: Prisma.StringWithAggregatesFilter<"CommerceItem"> | string
   imageUrl?: Prisma.StringNullableWithAggregatesFilter<"CommerceItem"> | string | null
+  imageUrls?: Prisma.JsonNullableWithAggregatesFilter<"CommerceItem">
+  sku?: Prisma.StringNullableWithAggregatesFilter<"CommerceItem"> | string | null
+  details?: Prisma.JsonNullableWithAggregatesFilter<"CommerceItem">
+  pickupInstructions?: Prisma.StringNullableWithAggregatesFilter<"CommerceItem"> | string | null
   priceMinor?: Prisma.IntWithAggregatesFilter<"CommerceItem"> | number
   currency?: Prisma.StringWithAggregatesFilter<"CommerceItem"> | string
   credentialDiscountBps?: Prisma.IntWithAggregatesFilter<"CommerceItem"> | number
@@ -424,6 +467,10 @@ export type CommerceItemCreateInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -436,6 +483,7 @@ export type CommerceItemCreateInput = {
   tournament?: Prisma.TournamentCreateNestedOneWithoutCommerceItemsInput
   orderItems?: Prisma.CommerceOrderItemCreateNestedManyWithoutItemInput
   registrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemUncheckedCreateInput = {
@@ -447,6 +495,10 @@ export type CommerceItemUncheckedCreateInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -457,6 +509,7 @@ export type CommerceItemUncheckedCreateInput = {
   updatedAt?: Date | string
   orderItems?: Prisma.CommerceOrderItemUncheckedCreateNestedManyWithoutItemInput
   registrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantUncheckedCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemUpdateInput = {
@@ -466,6 +519,10 @@ export type CommerceItemUpdateInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -478,6 +535,7 @@ export type CommerceItemUpdateInput = {
   tournament?: Prisma.TournamentUpdateOneWithoutCommerceItemsNestedInput
   orderItems?: Prisma.CommerceOrderItemUpdateManyWithoutItemNestedInput
   registrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUpdateManyWithoutItemNestedInput
 }
 
 export type CommerceItemUncheckedUpdateInput = {
@@ -489,6 +547,10 @@ export type CommerceItemUncheckedUpdateInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -499,6 +561,7 @@ export type CommerceItemUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderItems?: Prisma.CommerceOrderItemUncheckedUpdateManyWithoutItemNestedInput
   registrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUncheckedUpdateManyWithoutItemNestedInput
 }
 
 export type CommerceItemCreateManyInput = {
@@ -510,6 +573,10 @@ export type CommerceItemCreateManyInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -527,6 +594,10 @@ export type CommerceItemUpdateManyMutationInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -546,6 +617,10 @@ export type CommerceItemUncheckedUpdateManyInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -575,6 +650,10 @@ export type CommerceItemCountOrderByAggregateInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrder
+  imageUrls?: Prisma.SortOrder
+  sku?: Prisma.SortOrder
+  details?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrder
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
@@ -601,6 +680,8 @@ export type CommerceItemMaxOrderByAggregateInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrder
+  sku?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrder
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
@@ -620,6 +701,8 @@ export type CommerceItemMinOrderByAggregateInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrder
+  sku?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrder
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
@@ -740,6 +823,20 @@ export type CommerceItemUpdateOneRequiredWithoutOrderItemsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.CommerceItemUpdateToOneWithWhereWithoutOrderItemsInput, Prisma.CommerceItemUpdateWithoutOrderItemsInput>, Prisma.CommerceItemUncheckedUpdateWithoutOrderItemsInput>
 }
 
+export type CommerceItemCreateNestedOneWithoutVariantsInput = {
+  create?: Prisma.XOR<Prisma.CommerceItemCreateWithoutVariantsInput, Prisma.CommerceItemUncheckedCreateWithoutVariantsInput>
+  connectOrCreate?: Prisma.CommerceItemCreateOrConnectWithoutVariantsInput
+  connect?: Prisma.CommerceItemWhereUniqueInput
+}
+
+export type CommerceItemUpdateOneRequiredWithoutVariantsNestedInput = {
+  create?: Prisma.XOR<Prisma.CommerceItemCreateWithoutVariantsInput, Prisma.CommerceItemUncheckedCreateWithoutVariantsInput>
+  connectOrCreate?: Prisma.CommerceItemCreateOrConnectWithoutVariantsInput
+  upsert?: Prisma.CommerceItemUpsertWithoutVariantsInput
+  connect?: Prisma.CommerceItemWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CommerceItemUpdateToOneWithWhereWithoutVariantsInput, Prisma.CommerceItemUpdateWithoutVariantsInput>, Prisma.CommerceItemUncheckedUpdateWithoutVariantsInput>
+}
+
 export type CommerceItemCreateNestedOneWithoutRegistrationsInput = {
   create?: Prisma.XOR<Prisma.CommerceItemCreateWithoutRegistrationsInput, Prisma.CommerceItemUncheckedCreateWithoutRegistrationsInput>
   connectOrCreate?: Prisma.CommerceItemCreateOrConnectWithoutRegistrationsInput
@@ -761,6 +858,10 @@ export type CommerceItemCreateWithoutTournamentInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -772,6 +873,7 @@ export type CommerceItemCreateWithoutTournamentInput = {
   seller: Prisma.CommerceSellerCreateNestedOneWithoutItemsInput
   orderItems?: Prisma.CommerceOrderItemCreateNestedManyWithoutItemInput
   registrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemUncheckedCreateWithoutTournamentInput = {
@@ -782,6 +884,10 @@ export type CommerceItemUncheckedCreateWithoutTournamentInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -792,6 +898,7 @@ export type CommerceItemUncheckedCreateWithoutTournamentInput = {
   updatedAt?: Date | string
   orderItems?: Prisma.CommerceOrderItemUncheckedCreateNestedManyWithoutItemInput
   registrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantUncheckedCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemCreateOrConnectWithoutTournamentInput = {
@@ -832,6 +939,10 @@ export type CommerceItemScalarWhereInput = {
   title?: Prisma.StringFilter<"CommerceItem"> | string
   description?: Prisma.StringFilter<"CommerceItem"> | string
   imageUrl?: Prisma.StringNullableFilter<"CommerceItem"> | string | null
+  imageUrls?: Prisma.JsonNullableFilter<"CommerceItem">
+  sku?: Prisma.StringNullableFilter<"CommerceItem"> | string | null
+  details?: Prisma.JsonNullableFilter<"CommerceItem">
+  pickupInstructions?: Prisma.StringNullableFilter<"CommerceItem"> | string | null
   priceMinor?: Prisma.IntFilter<"CommerceItem"> | number
   currency?: Prisma.StringFilter<"CommerceItem"> | string
   credentialDiscountBps?: Prisma.IntFilter<"CommerceItem"> | number
@@ -849,6 +960,10 @@ export type CommerceItemCreateWithoutSellerInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -860,6 +975,7 @@ export type CommerceItemCreateWithoutSellerInput = {
   tournament?: Prisma.TournamentCreateNestedOneWithoutCommerceItemsInput
   orderItems?: Prisma.CommerceOrderItemCreateNestedManyWithoutItemInput
   registrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemUncheckedCreateWithoutSellerInput = {
@@ -870,6 +986,10 @@ export type CommerceItemUncheckedCreateWithoutSellerInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -880,6 +1000,7 @@ export type CommerceItemUncheckedCreateWithoutSellerInput = {
   updatedAt?: Date | string
   orderItems?: Prisma.CommerceOrderItemUncheckedCreateNestedManyWithoutItemInput
   registrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantUncheckedCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemCreateOrConnectWithoutSellerInput = {
@@ -915,6 +1036,10 @@ export type CommerceItemCreateWithoutOrderItemsInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -926,6 +1051,7 @@ export type CommerceItemCreateWithoutOrderItemsInput = {
   seller: Prisma.CommerceSellerCreateNestedOneWithoutItemsInput
   tournament?: Prisma.TournamentCreateNestedOneWithoutCommerceItemsInput
   registrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemUncheckedCreateWithoutOrderItemsInput = {
@@ -937,6 +1063,10 @@ export type CommerceItemUncheckedCreateWithoutOrderItemsInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -946,6 +1076,7 @@ export type CommerceItemUncheckedCreateWithoutOrderItemsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   registrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantUncheckedCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemCreateOrConnectWithoutOrderItemsInput = {
@@ -971,6 +1102,10 @@ export type CommerceItemUpdateWithoutOrderItemsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -982,6 +1117,7 @@ export type CommerceItemUpdateWithoutOrderItemsInput = {
   seller?: Prisma.CommerceSellerUpdateOneRequiredWithoutItemsNestedInput
   tournament?: Prisma.TournamentUpdateOneWithoutCommerceItemsNestedInput
   registrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUpdateManyWithoutItemNestedInput
 }
 
 export type CommerceItemUncheckedUpdateWithoutOrderItemsInput = {
@@ -993,6 +1129,10 @@ export type CommerceItemUncheckedUpdateWithoutOrderItemsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1002,15 +1142,20 @@ export type CommerceItemUncheckedUpdateWithoutOrderItemsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   registrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUncheckedUpdateManyWithoutItemNestedInput
 }
 
-export type CommerceItemCreateWithoutRegistrationsInput = {
+export type CommerceItemCreateWithoutVariantsInput = {
   id?: string
   slug: string
   kind: string
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -1022,6 +1167,123 @@ export type CommerceItemCreateWithoutRegistrationsInput = {
   seller: Prisma.CommerceSellerCreateNestedOneWithoutItemsInput
   tournament?: Prisma.TournamentCreateNestedOneWithoutCommerceItemsInput
   orderItems?: Prisma.CommerceOrderItemCreateNestedManyWithoutItemInput
+  registrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutItemInput
+}
+
+export type CommerceItemUncheckedCreateWithoutVariantsInput = {
+  id?: string
+  sellerId: string
+  tournamentId?: string | null
+  slug: string
+  kind: string
+  title: string
+  description: string
+  imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
+  priceMinor: number
+  currency?: string
+  credentialDiscountBps?: number
+  stockQuantity?: number | null
+  entitlementMonths?: number | null
+  active?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orderItems?: Prisma.CommerceOrderItemUncheckedCreateNestedManyWithoutItemInput
+  registrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutItemInput
+}
+
+export type CommerceItemCreateOrConnectWithoutVariantsInput = {
+  where: Prisma.CommerceItemWhereUniqueInput
+  create: Prisma.XOR<Prisma.CommerceItemCreateWithoutVariantsInput, Prisma.CommerceItemUncheckedCreateWithoutVariantsInput>
+}
+
+export type CommerceItemUpsertWithoutVariantsInput = {
+  update: Prisma.XOR<Prisma.CommerceItemUpdateWithoutVariantsInput, Prisma.CommerceItemUncheckedUpdateWithoutVariantsInput>
+  create: Prisma.XOR<Prisma.CommerceItemCreateWithoutVariantsInput, Prisma.CommerceItemUncheckedCreateWithoutVariantsInput>
+  where?: Prisma.CommerceItemWhereInput
+}
+
+export type CommerceItemUpdateToOneWithWhereWithoutVariantsInput = {
+  where?: Prisma.CommerceItemWhereInput
+  data: Prisma.XOR<Prisma.CommerceItemUpdateWithoutVariantsInput, Prisma.CommerceItemUncheckedUpdateWithoutVariantsInput>
+}
+
+export type CommerceItemUpdateWithoutVariantsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  seller?: Prisma.CommerceSellerUpdateOneRequiredWithoutItemsNestedInput
+  tournament?: Prisma.TournamentUpdateOneWithoutCommerceItemsNestedInput
+  orderItems?: Prisma.CommerceOrderItemUpdateManyWithoutItemNestedInput
+  registrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutItemNestedInput
+}
+
+export type CommerceItemUncheckedUpdateWithoutVariantsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  sellerId?: Prisma.StringFieldUpdateOperationsInput | string
+  tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orderItems?: Prisma.CommerceOrderItemUncheckedUpdateManyWithoutItemNestedInput
+  registrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutItemNestedInput
+}
+
+export type CommerceItemCreateWithoutRegistrationsInput = {
+  id?: string
+  slug: string
+  kind: string
+  title: string
+  description: string
+  imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
+  priceMinor: number
+  currency?: string
+  credentialDiscountBps?: number
+  stockQuantity?: number | null
+  entitlementMonths?: number | null
+  active?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  seller: Prisma.CommerceSellerCreateNestedOneWithoutItemsInput
+  tournament?: Prisma.TournamentCreateNestedOneWithoutCommerceItemsInput
+  orderItems?: Prisma.CommerceOrderItemCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemUncheckedCreateWithoutRegistrationsInput = {
@@ -1033,6 +1295,10 @@ export type CommerceItemUncheckedCreateWithoutRegistrationsInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -1042,6 +1308,7 @@ export type CommerceItemUncheckedCreateWithoutRegistrationsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   orderItems?: Prisma.CommerceOrderItemUncheckedCreateNestedManyWithoutItemInput
+  variants?: Prisma.CommerceItemVariantUncheckedCreateNestedManyWithoutItemInput
 }
 
 export type CommerceItemCreateOrConnectWithoutRegistrationsInput = {
@@ -1067,6 +1334,10 @@ export type CommerceItemUpdateWithoutRegistrationsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1078,6 +1349,7 @@ export type CommerceItemUpdateWithoutRegistrationsInput = {
   seller?: Prisma.CommerceSellerUpdateOneRequiredWithoutItemsNestedInput
   tournament?: Prisma.TournamentUpdateOneWithoutCommerceItemsNestedInput
   orderItems?: Prisma.CommerceOrderItemUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUpdateManyWithoutItemNestedInput
 }
 
 export type CommerceItemUncheckedUpdateWithoutRegistrationsInput = {
@@ -1089,6 +1361,10 @@ export type CommerceItemUncheckedUpdateWithoutRegistrationsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1098,6 +1374,7 @@ export type CommerceItemUncheckedUpdateWithoutRegistrationsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderItems?: Prisma.CommerceOrderItemUncheckedUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUncheckedUpdateManyWithoutItemNestedInput
 }
 
 export type CommerceItemCreateManyTournamentInput = {
@@ -1108,6 +1385,10 @@ export type CommerceItemCreateManyTournamentInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -1125,6 +1406,10 @@ export type CommerceItemUpdateWithoutTournamentInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1136,6 +1421,7 @@ export type CommerceItemUpdateWithoutTournamentInput = {
   seller?: Prisma.CommerceSellerUpdateOneRequiredWithoutItemsNestedInput
   orderItems?: Prisma.CommerceOrderItemUpdateManyWithoutItemNestedInput
   registrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUpdateManyWithoutItemNestedInput
 }
 
 export type CommerceItemUncheckedUpdateWithoutTournamentInput = {
@@ -1146,6 +1432,10 @@ export type CommerceItemUncheckedUpdateWithoutTournamentInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1156,6 +1446,7 @@ export type CommerceItemUncheckedUpdateWithoutTournamentInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderItems?: Prisma.CommerceOrderItemUncheckedUpdateManyWithoutItemNestedInput
   registrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUncheckedUpdateManyWithoutItemNestedInput
 }
 
 export type CommerceItemUncheckedUpdateManyWithoutTournamentInput = {
@@ -1166,6 +1457,10 @@ export type CommerceItemUncheckedUpdateManyWithoutTournamentInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1184,6 +1479,10 @@ export type CommerceItemCreateManySellerInput = {
   title: string
   description: string
   imageUrl?: string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: string | null
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
@@ -1201,6 +1500,10 @@ export type CommerceItemUpdateWithoutSellerInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1212,6 +1515,7 @@ export type CommerceItemUpdateWithoutSellerInput = {
   tournament?: Prisma.TournamentUpdateOneWithoutCommerceItemsNestedInput
   orderItems?: Prisma.CommerceOrderItemUpdateManyWithoutItemNestedInput
   registrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUpdateManyWithoutItemNestedInput
 }
 
 export type CommerceItemUncheckedUpdateWithoutSellerInput = {
@@ -1222,6 +1526,10 @@ export type CommerceItemUncheckedUpdateWithoutSellerInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1232,6 +1540,7 @@ export type CommerceItemUncheckedUpdateWithoutSellerInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderItems?: Prisma.CommerceOrderItemUncheckedUpdateManyWithoutItemNestedInput
   registrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutItemNestedInput
+  variants?: Prisma.CommerceItemVariantUncheckedUpdateManyWithoutItemNestedInput
 }
 
 export type CommerceItemUncheckedUpdateManyWithoutSellerInput = {
@@ -1242,6 +1551,10 @@ export type CommerceItemUncheckedUpdateManyWithoutSellerInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageUrls?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  sku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  details?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1260,11 +1573,13 @@ export type CommerceItemUncheckedUpdateManyWithoutSellerInput = {
 export type CommerceItemCountOutputType = {
   orderItems: number
   registrations: number
+  variants: number
 }
 
 export type CommerceItemCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   orderItems?: boolean | CommerceItemCountOutputTypeCountOrderItemsArgs
   registrations?: boolean | CommerceItemCountOutputTypeCountRegistrationsArgs
+  variants?: boolean | CommerceItemCountOutputTypeCountVariantsArgs
 }
 
 /**
@@ -1291,6 +1606,13 @@ export type CommerceItemCountOutputTypeCountRegistrationsArgs<ExtArgs extends ru
   where?: Prisma.CommerceTournamentRegistrationWhereInput
 }
 
+/**
+ * CommerceItemCountOutputType without action
+ */
+export type CommerceItemCountOutputTypeCountVariantsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CommerceItemVariantWhereInput
+}
+
 
 export type CommerceItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1301,6 +1623,10 @@ export type CommerceItemSelect<ExtArgs extends runtime.Types.Extensions.Internal
   title?: boolean
   description?: boolean
   imageUrl?: boolean
+  imageUrls?: boolean
+  sku?: boolean
+  details?: boolean
+  pickupInstructions?: boolean
   priceMinor?: boolean
   currency?: boolean
   credentialDiscountBps?: boolean
@@ -1313,6 +1639,7 @@ export type CommerceItemSelect<ExtArgs extends runtime.Types.Extensions.Internal
   tournament?: boolean | Prisma.CommerceItem$tournamentArgs<ExtArgs>
   orderItems?: boolean | Prisma.CommerceItem$orderItemsArgs<ExtArgs>
   registrations?: boolean | Prisma.CommerceItem$registrationsArgs<ExtArgs>
+  variants?: boolean | Prisma.CommerceItem$variantsArgs<ExtArgs>
   _count?: boolean | Prisma.CommerceItemCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["commerceItem"]>
 
@@ -1325,6 +1652,10 @@ export type CommerceItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   title?: boolean
   description?: boolean
   imageUrl?: boolean
+  imageUrls?: boolean
+  sku?: boolean
+  details?: boolean
+  pickupInstructions?: boolean
   priceMinor?: boolean
   currency?: boolean
   credentialDiscountBps?: boolean
@@ -1346,6 +1677,10 @@ export type CommerceItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   title?: boolean
   description?: boolean
   imageUrl?: boolean
+  imageUrls?: boolean
+  sku?: boolean
+  details?: boolean
+  pickupInstructions?: boolean
   priceMinor?: boolean
   currency?: boolean
   credentialDiscountBps?: boolean
@@ -1367,6 +1702,10 @@ export type CommerceItemSelectScalar = {
   title?: boolean
   description?: boolean
   imageUrl?: boolean
+  imageUrls?: boolean
+  sku?: boolean
+  details?: boolean
+  pickupInstructions?: boolean
   priceMinor?: boolean
   currency?: boolean
   credentialDiscountBps?: boolean
@@ -1377,12 +1716,13 @@ export type CommerceItemSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CommerceItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sellerId" | "tournamentId" | "slug" | "kind" | "title" | "description" | "imageUrl" | "priceMinor" | "currency" | "credentialDiscountBps" | "stockQuantity" | "entitlementMonths" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["commerceItem"]>
+export type CommerceItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sellerId" | "tournamentId" | "slug" | "kind" | "title" | "description" | "imageUrl" | "imageUrls" | "sku" | "details" | "pickupInstructions" | "priceMinor" | "currency" | "credentialDiscountBps" | "stockQuantity" | "entitlementMonths" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["commerceItem"]>
 export type CommerceItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   seller?: boolean | Prisma.CommerceSellerDefaultArgs<ExtArgs>
   tournament?: boolean | Prisma.CommerceItem$tournamentArgs<ExtArgs>
   orderItems?: boolean | Prisma.CommerceItem$orderItemsArgs<ExtArgs>
   registrations?: boolean | Prisma.CommerceItem$registrationsArgs<ExtArgs>
+  variants?: boolean | Prisma.CommerceItem$variantsArgs<ExtArgs>
   _count?: boolean | Prisma.CommerceItemCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type CommerceItemIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1401,6 +1741,7 @@ export type $CommerceItemPayload<ExtArgs extends runtime.Types.Extensions.Intern
     tournament: Prisma.$TournamentPayload<ExtArgs> | null
     orderItems: Prisma.$CommerceOrderItemPayload<ExtArgs>[]
     registrations: Prisma.$CommerceTournamentRegistrationPayload<ExtArgs>[]
+    variants: Prisma.$CommerceItemVariantPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1411,6 +1752,10 @@ export type $CommerceItemPayload<ExtArgs extends runtime.Types.Extensions.Intern
     title: string
     description: string
     imageUrl: string | null
+    imageUrls: runtime.JsonValue | null
+    sku: string | null
+    details: runtime.JsonValue | null
+    pickupInstructions: string | null
     priceMinor: number
     currency: string
     credentialDiscountBps: number
@@ -1817,6 +2162,7 @@ export interface Prisma__CommerceItemClient<T, Null = never, ExtArgs extends run
   tournament<T extends Prisma.CommerceItem$tournamentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CommerceItem$tournamentArgs<ExtArgs>>): Prisma.Prisma__TournamentClient<runtime.Types.Result.GetResult<Prisma.$TournamentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   orderItems<T extends Prisma.CommerceItem$orderItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CommerceItem$orderItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceOrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   registrations<T extends Prisma.CommerceItem$registrationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CommerceItem$registrationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceTournamentRegistrationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  variants<T extends Prisma.CommerceItem$variantsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CommerceItem$variantsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceItemVariantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1854,6 +2200,10 @@ export interface CommerceItemFieldRefs {
   readonly title: Prisma.FieldRef<"CommerceItem", 'String'>
   readonly description: Prisma.FieldRef<"CommerceItem", 'String'>
   readonly imageUrl: Prisma.FieldRef<"CommerceItem", 'String'>
+  readonly imageUrls: Prisma.FieldRef<"CommerceItem", 'Json'>
+  readonly sku: Prisma.FieldRef<"CommerceItem", 'String'>
+  readonly details: Prisma.FieldRef<"CommerceItem", 'Json'>
+  readonly pickupInstructions: Prisma.FieldRef<"CommerceItem", 'String'>
   readonly priceMinor: Prisma.FieldRef<"CommerceItem", 'Int'>
   readonly currency: Prisma.FieldRef<"CommerceItem", 'String'>
   readonly credentialDiscountBps: Prisma.FieldRef<"CommerceItem", 'Int'>
@@ -2327,6 +2677,30 @@ export type CommerceItem$registrationsArgs<ExtArgs extends runtime.Types.Extensi
   take?: number
   skip?: number
   distinct?: Prisma.CommerceTournamentRegistrationScalarFieldEnum | Prisma.CommerceTournamentRegistrationScalarFieldEnum[]
+}
+
+/**
+ * CommerceItem.variants
+ */
+export type CommerceItem$variantsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CommerceItemVariant
+   */
+  select?: Prisma.CommerceItemVariantSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CommerceItemVariant
+   */
+  omit?: Prisma.CommerceItemVariantOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CommerceItemVariantInclude<ExtArgs> | null
+  where?: Prisma.CommerceItemVariantWhereInput
+  orderBy?: Prisma.CommerceItemVariantOrderByWithRelationInput | Prisma.CommerceItemVariantOrderByWithRelationInput[]
+  cursor?: Prisma.CommerceItemVariantWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CommerceItemVariantScalarFieldEnum | Prisma.CommerceItemVariantScalarFieldEnum[]
 }
 
 /**

@@ -91,6 +91,7 @@ export const ModelName = {
   CommerceItem: 'CommerceItem',
   CommerceOrder: 'CommerceOrder',
   CommerceOrderItem: 'CommerceOrderItem',
+  CommerceItemVariant: 'CommerceItemVariant',
   CommerceWebhookEvent: 'CommerceWebhookEvent',
   CommerceTournamentRegistration: 'CommerceTournamentRegistration',
   CommerceRefundRequest: 'CommerceRefundRequest',
@@ -696,6 +697,10 @@ export const CommerceItemScalarFieldEnum = {
   title: 'title',
   description: 'description',
   imageUrl: 'imageUrl',
+  imageUrls: 'imageUrls',
+  sku: 'sku',
+  details: 'details',
+  pickupInstructions: 'pickupInstructions',
   priceMinor: 'priceMinor',
   currency: 'currency',
   credentialDiscountBps: 'credentialDiscountBps',
@@ -715,6 +720,7 @@ export const CommerceOrderScalarFieldEnum = {
   sellerId: 'sellerId',
   status: 'status',
   fulfillmentStatus: 'fulfillmentStatus',
+  pickupInstructions: 'pickupInstructions',
   currency: 'currency',
   subtotalMinor: 'subtotalMinor',
   discountMinor: 'discountMinor',
@@ -741,15 +747,35 @@ export const CommerceOrderItemScalarFieldEnum = {
   id: 'id',
   orderId: 'orderId',
   itemId: 'itemId',
+  variantId: 'variantId',
   title: 'title',
   kind: 'kind',
   quantity: 'quantity',
   unitPriceMinor: 'unitPriceMinor',
   unitDiscountMinor: 'unitDiscountMinor',
-  entitlementMonths: 'entitlementMonths'
+  entitlementMonths: 'entitlementMonths',
+  variantSku: 'variantSku',
+  variantLabel: 'variantLabel'
 } as const
 
 export type CommerceOrderItemScalarFieldEnum = (typeof CommerceOrderItemScalarFieldEnum)[keyof typeof CommerceOrderItemScalarFieldEnum]
+
+
+export const CommerceItemVariantScalarFieldEnum = {
+  id: 'id',
+  itemId: 'itemId',
+  sku: 'sku',
+  label: 'label',
+  optionName: 'optionName',
+  optionValue: 'optionValue',
+  priceMinor: 'priceMinor',
+  stockQuantity: 'stockQuantity',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommerceItemVariantScalarFieldEnum = (typeof CommerceItemVariantScalarFieldEnum)[keyof typeof CommerceItemVariantScalarFieldEnum]
 
 
 export const CommerceWebhookEventScalarFieldEnum = {
