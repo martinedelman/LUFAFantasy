@@ -53,40 +53,57 @@ export class PrismaCommerceRepository implements CommerceRepository {
     return { hasActiveCredential, items: items.map((item) => itemDto(item, hasActiveCredential)) };
   }
 
-  async reserveOrder(input: { buyer: CommerceActor; request: CreateCommerceCheckoutDto; fingerprint: string; liveMode: boolean; reservationMinutes: number }): Promise<ReservedOrder> {
-    const existing = await this.database.commerceOrder.findUnique({ where: { idempotencyKey: input.request.idempotencyKey }, include: orderInclude });
-    if (existing) {
-      if (existing.buyerUserId !== input.buyer.id || existing.payloadFingerprint !== input.fingerprint) throw new CommerceError("La clave de idempotencia ya fue usada para otra compra.", "IDEMPOTENCY_CONFLICT", 409);
-      return { ...orderDto(existing), buyerEmail: existing.buyer.email, idempotencyKey: existing.idempotencyKey, providerOrderId: existing.providerOrderId, payloadFingerprint: existing.payloadFingerprint };
+  private async inCommerceUnitOfWork<T>(work: (tx: any) => Promise<T>): Promise<T> {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        return await (this.database as any).$transaction(work, { isolationLevel: "Serializable", maxWait: 5_000, timeout: 12_000 });
+      } catch (error: any) {
+        const retryable = error?.code === "P2034" || error?.code === "40001" || error?.code === "40P01";
+        if (!retryable || attempt === 2) throw error;
+      }
     }
+    throw new CommerceError("No se pudo confirmar la operación local.", "TRANSACTION_RETRY_EXHAUSTED", 503);
+  }
+  private reserved(order: any): ReservedOrder { return { ...orderDto(order), buyerEmail: order.buyer.email, idempotencyKey: order.idempotencyKey, providerOrderId: order.providerOrderId, payloadFingerprint: order.payloadFingerprint }; }
+
+  async reserveOrder(input: { buyer: CommerceActor; request: CreateCommerceCheckoutDto; fingerprint: string; liveMode: boolean; reservationMinutes: number }): Promise<ReservedOrder> {
     const keys = new Set(input.request.items.map((line) => `${line.itemId}:${line.variantId || ""}`));
     if (keys.size !== input.request.items.length) throw new CommerceError("No repitas la misma variante en el carrito.", "INVALID_CART", 400);
-    const hasActiveCredential = await this.hasCredential(input.buyer.id);
-    const itemIds = [...new Set(input.request.items.map((item) => item.itemId))];
-    const items = await this.database.commerceItem.findMany({ where: { id: { in: itemIds }, active: true }, include: { seller: true, tournament: true, variants: { where: { active: true } } } });
-    if (items.length !== itemIds.length) throw new CommerceError("Uno de los productos ya no está disponible.", "ITEM_UNAVAILABLE", 409);
-    if (new Set(items.map((item) => item.sellerId)).size !== 1) throw new CommerceError("Cada compra debe contener productos de un único vendedor.", "MULTIPLE_SELLERS", 409);
-    const byId = new Map(items.map((item) => [item.id, item]));
-    if (items.some((item) => item.kind === "tournament")) {
-      const player = await this.database.player.findFirst({ where: { email: { equals: input.buyer.email, mode: "insensitive" } }, select: { id: true } });
-      if (!player) throw new CommerceError("Para inscribirte, primero vinculá tu perfil de jugador con tu cuenta LUFA.", "PLAYER_PROFILE_REQUIRED", 409);
-    }
-    const lines = input.request.items.map((request) => {
-      const item = byId.get(request.itemId)!;
-      const variant = request.variantId ? item.variants.find((candidate) => candidate.id === request.variantId) : null;
-      if (request.variantId && !variant) throw new CommerceError("La variante seleccionada no está disponible.", "VARIANT_UNAVAILABLE", 409);
-      if (item.kind === "product" && item.variants.length && !variant) throw new CommerceError("Elegí una variante para este producto.", "VARIANT_REQUIRED", 409);
-      if (item.kind !== "product" && variant) throw new CommerceError("Esta publicación no admite variantes.", "INVALID_VARIANT", 400);
-      if (item.kind === "tournament" && (!item.tournamentId || !item.entitlementMonths)) throw new CommerceError("La inscripción no está configurada correctamente.", "ITEM_UNAVAILABLE", 409);
-      this.inventoryStatus(item, variant, request.quantity);
-      const unitPriceMinor = variant?.priceMinor ?? item.priceMinor;
-      return { item, variant, quantity: request.quantity, unitPriceMinor, discount: hasActiveCredential ? Math.floor(unitPriceMinor * item.credentialDiscountBps / 10_000) : 0 };
-    });
-    const subtotalMinor = lines.reduce((sum, line) => sum + line.unitPriceMinor * line.quantity, 0);
-    const discountMinor = lines.reduce((sum, line) => sum + line.discount * line.quantity, 0);
-    const totalMinor = subtotalMinor - discountMinor;
-    if (!Number.isSafeInteger(totalMinor) || totalMinor <= 0) throw new CommerceError("El total de la compra no es válido.", "INVALID_TOTAL", 409);
-    const created = await this.database.$transaction(async (tx) => {
+    const reserve = async (tx: any): Promise<ReservedOrder> => {
+      const existing = await tx.commerceOrder.findUnique({ where: { idempotencyKey: input.request.idempotencyKey }, include: orderInclude });
+      if (existing) {
+        if (existing.buyerUserId !== input.buyer.id || existing.payloadFingerprint !== input.fingerprint) throw new CommerceError("La clave de idempotencia ya fue usada para otra compra.", "IDEMPOTENCY_CONFLICT", 409);
+        return this.reserved(existing);
+      }
+      const [hasActiveCredential, items]: [any, any[]] = await Promise.all([
+        tx.digitalCredential.findFirst({ where: { userId: input.buyer.id, status: "active", expiresAt: { gt: new Date() } }, select: { id: true } }),
+        tx.commerceItem.findMany({ where: { id: { in: [...new Set(input.request.items.map((item) => item.itemId))] }, active: true }, include: { seller: true, tournament: true, variants: { where: { active: true } } } }),
+      ]);
+      if (items.length !== new Set(input.request.items.map((item) => item.itemId)).size) throw new CommerceError("Uno de los productos ya no está disponible.", "ITEM_UNAVAILABLE", 409);
+      if (new Set(items.map((item: any) => item.sellerId)).size !== 1) throw new CommerceError("Cada compra debe contener productos de un único vendedor.", "MULTIPLE_SELLERS", 409);
+      const byId = new Map(items.map((item: any) => [item.id, item]));
+      if (items.some((item: any) => item.kind === "tournament")) {
+        const player = await tx.player.findFirst({ where: { email: { equals: input.buyer.email, mode: "insensitive" } }, select: { id: true } });
+        if (!player) throw new CommerceError("Para inscribirte, primero vinculá tu perfil de jugador con tu cuenta LUFA.", "PLAYER_PROFILE_REQUIRED", 409);
+      }
+      const lines = input.request.items.map((request) => {
+        const item = byId.get(request.itemId)!; const variant = request.variantId ? item.variants.find((candidate: any) => candidate.id === request.variantId) : null;
+        if (request.variantId && !variant) throw new CommerceError("La variante seleccionada no está disponible.", "VARIANT_UNAVAILABLE", 409);
+        if (item.kind === "product" && item.variants.length && !variant) throw new CommerceError("Elegí una variante para este producto.", "VARIANT_REQUIRED", 409);
+        if (item.kind !== "product" && variant) throw new CommerceError("Esta publicación no admite variantes.", "INVALID_VARIANT", 400);
+        if (item.kind === "tournament" && (!item.tournamentId || !item.entitlementMonths)) throw new CommerceError("La inscripción no está configurada correctamente.", "ITEM_UNAVAILABLE", 409);
+        this.inventoryStatus(item, variant, request.quantity);
+        const unitPriceMinor = variant?.priceMinor ?? item.priceMinor;
+        return { item, variant, quantity: request.quantity, unitPriceMinor, discount: hasActiveCredential ? Math.floor(unitPriceMinor * item.credentialDiscountBps / 10_000) : 0 };
+      });
+      for (const line of lines.filter((line: any) => line.item.kind === "tournament")) {
+        const registration = await tx.commerceTournamentRegistration.findUnique({ where: { itemId_userId: { itemId: line.item.id, userId: input.buyer.id } }, select: { status: true } });
+        if (registration && registration.status !== "cancelled") throw new CommerceError("Ya tenés una inscripción reservada o activa para este torneo.", "TOURNAMENT_ALREADY_RESERVED", 409);
+      }
+      const subtotalMinor = lines.reduce((sum, line) => sum + line.unitPriceMinor * line.quantity, 0);
+      const discountMinor = lines.reduce((sum, line) => sum + line.discount * line.quantity, 0);
+      const totalMinor = subtotalMinor - discountMinor;
+      if (!Number.isSafeInteger(totalMinor) || totalMinor <= 0) throw new CommerceError("El total de la compra no es válido.", "INVALID_TOTAL", 409);
       for (const line of lines) {
         if (line.variant) {
           const updated = await tx.commerceItemVariant.updateMany({ where: { id: line.variant.id, active: true, ...(line.variant.stockQuantity === null ? {} : { stockQuantity: { gte: line.quantity } }) }, data: line.variant.stockQuantity === null ? {} : { stockQuantity: { decrement: line.quantity } } });
@@ -97,9 +114,17 @@ export class PrismaCommerceRepository implements CommerceRepository {
         }
       }
       const physical = lines.some((line) => line.item.kind === "product");
-      return tx.commerceOrder.create({ data: { buyerUserId: input.buyer.id, sellerId: lines[0]!.item.sellerId, currency: "UYU", subtotalMinor, discountMinor, totalMinor, idempotencyKey: input.request.idempotencyKey, payloadFingerprint: input.fingerprint, liveMode: input.liveMode, reservationExpiresAt: new Date(Date.now() + input.reservationMinutes * 60_000), fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", pickupInstructions: physical ? lines.map((line) => line.item.pickupInstructions).filter(Boolean).join("\n") || null : null, items: { create: lines.map((line) => ({ itemId: line.item.id, variantId: line.variant?.id || null, title: line.item.title, kind: line.item.kind, quantity: line.quantity, unitPriceMinor: line.unitPriceMinor, unitDiscountMinor: line.discount, entitlementMonths: line.item.entitlementMonths, variantSku: line.variant?.sku || null, variantLabel: line.variant?.label || null })) } }, include: orderInclude });
-    });
-    return { ...orderDto(created), buyerEmail: created.buyer.email, idempotencyKey: created.idempotencyKey, providerOrderId: null, payloadFingerprint: created.payloadFingerprint };
+      const created = await tx.commerceOrder.create({ data: { buyerUserId: input.buyer.id, sellerId: lines[0]!.item.sellerId, currency: "UYU", subtotalMinor, discountMinor, totalMinor, idempotencyKey: input.request.idempotencyKey, payloadFingerprint: input.fingerprint, liveMode: input.liveMode, reservationExpiresAt: new Date(Date.now() + input.reservationMinutes * 60_000), fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", pickupInstructions: physical ? lines.map((line) => line.item.pickupInstructions).filter(Boolean).join("\n") || null : null, items: { create: lines.map((line) => ({ itemId: line.item.id, variantId: line.variant?.id || null, title: line.item.title, kind: line.item.kind, quantity: line.quantity, unitPriceMinor: line.unitPriceMinor, unitDiscountMinor: line.discount, entitlementMonths: line.item.entitlementMonths, variantSku: line.variant?.sku || null, variantLabel: line.variant?.label || null })) } }, include: orderInclude });
+      for (const line of lines.filter((line) => line.item.kind === "tournament")) await tx.commerceTournamentRegistration.upsert({ where: { itemId_userId: { itemId: line.item.id, userId: input.buyer.id } }, create: { orderId: created.id, itemId: line.item.id, tournamentId: line.item.tournamentId, userId: input.buyer.id, status: "reserved" }, update: { orderId: created.id, status: "reserved", cancelledAt: null } });
+      return this.reserved(created);
+    };
+    try { return await this.inCommerceUnitOfWork(reserve); }
+    catch (error: any) {
+      if (error?.code !== "P2002") throw error;
+      const existing = await this.database.commerceOrder.findUnique({ where: { idempotencyKey: input.request.idempotencyKey }, include: orderInclude });
+      if (!existing || existing.buyerUserId !== input.buyer.id || existing.payloadFingerprint !== input.fingerprint) throw error;
+      return this.reserved(existing);
+    }
   }
 
   async attachProviderOrder(orderId: string, provider: VerifiedProviderOrder) {
@@ -109,15 +134,17 @@ export class PrismaCommerceRepository implements CommerceRepository {
     return orderDto(await this.database.commerceOrder.update({ where: { id: orderId }, data: { providerOrderId: provider.id, providerStatus: provider.status, checkoutUrl: provider.checkoutUrl, status: "payment_pending" }, include: orderInclude }));
   }
   private async releaseInventory(orderId: string, status: string) {
-    await this.database.$transaction(async (tx) => {
-      const order = await tx.commerceOrder.findUnique({ where: { id: orderId }, include: { items: { include: { item: true } } } });
-      if (!order || !["creating", "payment_pending"].includes(order.status)) return;
-      for (const line of order.items) {
-        if (line.variantId) await tx.commerceItemVariant.updateMany({ where: { id: line.variantId, stockQuantity: { not: null } }, data: { stockQuantity: { increment: line.quantity } } });
-        else if (line.item.stockQuantity !== null) await tx.commerceItem.update({ where: { id: line.itemId }, data: { stockQuantity: { increment: line.quantity } } });
-      }
-      await tx.commerceOrder.update({ where: { id: orderId }, data: { status, cancelledAt: new Date() } });
-    });
+    await this.inCommerceUnitOfWork(async (tx) => this.releaseInventoryInUnitOfWork(tx, orderId, status));
+  }
+  private async releaseInventoryInUnitOfWork(tx: any, orderId: string, status: string) {
+    const order = await tx.commerceOrder.findUnique({ where: { id: orderId }, include: { items: { include: { item: true } } } });
+    if (!order || !["creating", "payment_pending"].includes(order.status)) return;
+    for (const line of order.items) {
+      if (line.variantId) await tx.commerceItemVariant.updateMany({ where: { id: line.variantId, stockQuantity: { not: null } }, data: { stockQuantity: { increment: line.quantity } } });
+      else if (line.item.stockQuantity !== null) await tx.commerceItem.update({ where: { id: line.itemId }, data: { stockQuantity: { increment: line.quantity } } });
+    }
+    await tx.commerceTournamentRegistration.updateMany({ where: { orderId, status: "reserved" }, data: { status: "cancelled", cancelledAt: new Date() } });
+    await tx.commerceOrder.update({ where: { id: orderId }, data: { status, cancelledAt: new Date() } });
   }
   async cancelCreation(orderId: string, reason: string) { void reason; await this.releaseInventory(orderId, "cancelled"); }
   async expireOrder(orderId: string) { await this.releaseInventory(orderId, "cancelled"); }
@@ -127,14 +154,14 @@ export class PrismaCommerceRepository implements CommerceRepository {
   async getOrderByProviderId(providerOrderId: string) { const order = await this.database.commerceOrder.findUnique({ where: { providerOrderId }, include: orderInclude }); return order ? { ...orderDto(order), buyerEmail: order.buyer.email, idempotencyKey: order.idempotencyKey, providerOrderId: order.providerOrderId, payloadFingerprint: order.payloadFingerprint } : null; }
 
   async reconcileOrder(localOrderId: string, provider: VerifiedProviderOrder) {
-    return this.database.$transaction(async (tx) => {
+    return this.inCommerceUnitOfWork(async (tx) => {
       const order = await tx.commerceOrder.findUnique({ where: { id: localOrderId }, include: { buyer: true, seller: { select: { id: true, slug: true, name: true } }, items: { include: { item: true } } } });
       if (!order) throw new CommerceError("Orden local inexistente.", "ORDER_NOT_FOUND", 404);
       if (provider.externalReference !== order.id || provider.currency !== order.currency || provider.totalMinor !== order.totalMinor || provider.id !== order.providerOrderId) throw new CommerceError("El pago verificado no coincide con la compra local.", "PAYMENT_MISMATCH", 409);
       const status = provider.status.toLowerCase();
       if (PAID.has(status) && !order.paidAt) {
         for (const line of order.items) {
-          if (line.item.kind === "tournament" && line.item.tournamentId) await tx.commerceTournamentRegistration.upsert({ where: { itemId_userId: { itemId: line.itemId, userId: order.buyerUserId } }, create: { orderId: order.id, itemId: line.itemId, tournamentId: line.item.tournamentId, userId: order.buyerUserId }, update: {} });
+          if (line.item.kind === "tournament" && line.item.tournamentId) await tx.commerceTournamentRegistration.upsert({ where: { itemId_userId: { itemId: line.itemId, userId: order.buyerUserId } }, create: { orderId: order.id, itemId: line.itemId, tournamentId: line.item.tournamentId, userId: order.buyerUserId, status: "active" }, update: { status: "active", cancelledAt: null } });
           if (line.entitlementMonths) {
             const current = await tx.digitalCredential.findFirst({ where: { userId: order.buyerUserId }, orderBy: { expiresAt: "desc" } });
             const expiresAt = new Date(current && current.expiresAt > new Date() ? current.expiresAt : new Date()); expiresAt.setUTCMonth(expiresAt.getUTCMonth() + line.entitlementMonths);
@@ -147,15 +174,15 @@ export class PrismaCommerceRepository implements CommerceRepository {
             }
           }
         }
-        const physical = order.items.some((line) => line.kind === "product");
+        const physical = order.items.some((line: { kind: string }) => line.kind === "product");
         return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: "paid", fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", providerStatus: provider.status, paidAt: provider.paidAt || new Date(), fulfilledAt: physical ? null : new Date() }, include: orderInclude }));
       }
-      if (CANCELLED.has(status) && ["creating", "payment_pending"].includes(order.status)) { await this.releaseInventory(order.id, "cancelled"); return orderDto(await tx.commerceOrder.findUniqueOrThrow({ where: { id: order.id }, include: orderInclude })); }
+      if (CANCELLED.has(status) && ["creating", "payment_pending"].includes(order.status)) { await this.releaseInventoryInUnitOfWork(tx, order.id, "cancelled"); return orderDto(await tx.commerceOrder.findUniqueOrThrow({ where: { id: order.id }, include: orderInclude })); }
       const mapped = status.includes("charged_back") ? "charged_back" : status.includes("refund") ? "refunded" : order.status;
       return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: mapped, providerStatus: provider.status }, include: orderInclude }));
     });
   }
-  async recordWebhook(input: { deliveryKey: string; providerResourceId: string; action: string; liveMode: boolean }) { const existing = await this.database.commerceWebhookEvent.findUnique({ where: { deliveryKey: input.deliveryKey } }); if (existing) return { id: existing.id, alreadyProcessed: existing.status === "processed" }; const created = await this.database.commerceWebhookEvent.create({ data: input }); return { id: created.id, alreadyProcessed: false }; }
+  async recordWebhook(input: { deliveryKey: string; providerResourceId: string; action: string; liveMode: boolean }) { const event = await this.database.commerceWebhookEvent.upsert({ where: { deliveryKey: input.deliveryKey }, create: input, update: {} }); return { id: event.id, alreadyProcessed: event.status === "processed" }; }
   async completeWebhook(id: string, error?: string) { await this.database.commerceWebhookEvent.update({ where: { id }, data: error ? { status: "failed", error, attempts: { increment: 1 } } : { status: "processed", error: null, processedAt: new Date(), attempts: { increment: 1 } } }); }
   listReconciliationCandidates(limit: number) { return this.database.commerceOrder.findMany({ where: { status: { in: ["creating", "payment_pending", "payment_review"] } }, orderBy: { createdAt: "asc" }, take: limit, select: { id: true, providerOrderId: true } }); }
 
