@@ -34,3 +34,8 @@ ALTER TABLE "commerce_order_items"
   ADD COLUMN "variant_label" TEXT;
 DROP INDEX IF EXISTS "commerce_order_items_order_id_item_id_key";
 CREATE INDEX "commerce_order_items_variant_id_idx" ON "commerce_order_items"("variant_id");
+
+ALTER TABLE "commerce_tournament_registrations"
+  ADD COLUMN "status" TEXT NOT NULL DEFAULT 'active',
+  ADD COLUMN "cancelled_at" TIMESTAMP(3);
+CREATE INDEX "commerce_tournament_registrations_order_id_status_idx" ON "commerce_tournament_registrations"("order_id", "status");

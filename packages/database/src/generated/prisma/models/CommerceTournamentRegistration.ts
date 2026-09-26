@@ -30,6 +30,8 @@ export type CommerceTournamentRegistrationMinAggregateOutputType = {
   itemId: string | null
   tournamentId: string | null
   userId: string | null
+  status: string | null
+  cancelledAt: Date | null
   createdAt: Date | null
 }
 
@@ -39,6 +41,8 @@ export type CommerceTournamentRegistrationMaxAggregateOutputType = {
   itemId: string | null
   tournamentId: string | null
   userId: string | null
+  status: string | null
+  cancelledAt: Date | null
   createdAt: Date | null
 }
 
@@ -48,6 +52,8 @@ export type CommerceTournamentRegistrationCountAggregateOutputType = {
   itemId: number
   tournamentId: number
   userId: number
+  status: number
+  cancelledAt: number
   createdAt: number
   _all: number
 }
@@ -59,6 +65,8 @@ export type CommerceTournamentRegistrationMinAggregateInputType = {
   itemId?: true
   tournamentId?: true
   userId?: true
+  status?: true
+  cancelledAt?: true
   createdAt?: true
 }
 
@@ -68,6 +76,8 @@ export type CommerceTournamentRegistrationMaxAggregateInputType = {
   itemId?: true
   tournamentId?: true
   userId?: true
+  status?: true
+  cancelledAt?: true
   createdAt?: true
 }
 
@@ -77,6 +87,8 @@ export type CommerceTournamentRegistrationCountAggregateInputType = {
   itemId?: true
   tournamentId?: true
   userId?: true
+  status?: true
+  cancelledAt?: true
   createdAt?: true
   _all?: true
 }
@@ -159,6 +171,8 @@ export type CommerceTournamentRegistrationGroupByOutputType = {
   itemId: string
   tournamentId: string
   userId: string
+  status: string
+  cancelledAt: Date | null
   createdAt: Date
   _count: CommerceTournamentRegistrationCountAggregateOutputType | null
   _min: CommerceTournamentRegistrationMinAggregateOutputType | null
@@ -189,6 +203,8 @@ export type CommerceTournamentRegistrationWhereInput = {
   itemId?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
   tournamentId?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
   userId?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
+  status?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
+  cancelledAt?: Prisma.DateTimeNullableFilter<"CommerceTournamentRegistration"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CommerceTournamentRegistration"> | Date | string
   order?: Prisma.XOR<Prisma.CommerceOrderScalarRelationFilter, Prisma.CommerceOrderWhereInput>
   item?: Prisma.XOR<Prisma.CommerceItemScalarRelationFilter, Prisma.CommerceItemWhereInput>
@@ -202,6 +218,8 @@ export type CommerceTournamentRegistrationOrderByWithRelationInput = {
   itemId?: Prisma.SortOrder
   tournamentId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   order?: Prisma.CommerceOrderOrderByWithRelationInput
   item?: Prisma.CommerceItemOrderByWithRelationInput
@@ -219,6 +237,8 @@ export type CommerceTournamentRegistrationWhereUniqueInput = Prisma.AtLeast<{
   itemId?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
   tournamentId?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
   userId?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
+  status?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
+  cancelledAt?: Prisma.DateTimeNullableFilter<"CommerceTournamentRegistration"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CommerceTournamentRegistration"> | Date | string
   order?: Prisma.XOR<Prisma.CommerceOrderScalarRelationFilter, Prisma.CommerceOrderWhereInput>
   item?: Prisma.XOR<Prisma.CommerceItemScalarRelationFilter, Prisma.CommerceItemWhereInput>
@@ -232,6 +252,8 @@ export type CommerceTournamentRegistrationOrderByWithAggregationInput = {
   itemId?: Prisma.SortOrder
   tournamentId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.CommerceTournamentRegistrationCountOrderByAggregateInput
   _max?: Prisma.CommerceTournamentRegistrationMaxOrderByAggregateInput
@@ -247,11 +269,15 @@ export type CommerceTournamentRegistrationScalarWhereWithAggregatesInput = {
   itemId?: Prisma.StringWithAggregatesFilter<"CommerceTournamentRegistration"> | string
   tournamentId?: Prisma.StringWithAggregatesFilter<"CommerceTournamentRegistration"> | string
   userId?: Prisma.StringWithAggregatesFilter<"CommerceTournamentRegistration"> | string
+  status?: Prisma.StringWithAggregatesFilter<"CommerceTournamentRegistration"> | string
+  cancelledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"CommerceTournamentRegistration"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"CommerceTournamentRegistration"> | Date | string
 }
 
 export type CommerceTournamentRegistrationCreateInput = {
   id?: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
   order: Prisma.CommerceOrderCreateNestedOneWithoutRegistrationsInput
   item: Prisma.CommerceItemCreateNestedOneWithoutRegistrationsInput
@@ -265,11 +291,15 @@ export type CommerceTournamentRegistrationUncheckedCreateInput = {
   itemId: string
   tournamentId: string
   userId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type CommerceTournamentRegistrationUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.CommerceOrderUpdateOneRequiredWithoutRegistrationsNestedInput
   item?: Prisma.CommerceItemUpdateOneRequiredWithoutRegistrationsNestedInput
@@ -283,6 +313,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateInput = {
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
   tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -292,11 +324,15 @@ export type CommerceTournamentRegistrationCreateManyInput = {
   itemId: string
   tournamentId: string
   userId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type CommerceTournamentRegistrationUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -306,6 +342,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateManyInput = {
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
   tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -330,6 +368,8 @@ export type CommerceTournamentRegistrationCountOrderByAggregateInput = {
   itemId?: Prisma.SortOrder
   tournamentId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -339,6 +379,8 @@ export type CommerceTournamentRegistrationMaxOrderByAggregateInput = {
   itemId?: Prisma.SortOrder
   tournamentId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -348,6 +390,8 @@ export type CommerceTournamentRegistrationMinOrderByAggregateInput = {
   itemId?: Prisma.SortOrder
   tournamentId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -521,6 +565,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateManyWithoutOrderNestedI
 
 export type CommerceTournamentRegistrationCreateWithoutUserInput = {
   id?: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
   order: Prisma.CommerceOrderCreateNestedOneWithoutRegistrationsInput
   item: Prisma.CommerceItemCreateNestedOneWithoutRegistrationsInput
@@ -532,6 +578,8 @@ export type CommerceTournamentRegistrationUncheckedCreateWithoutUserInput = {
   orderId: string
   itemId: string
   tournamentId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -570,11 +618,15 @@ export type CommerceTournamentRegistrationScalarWhereInput = {
   itemId?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
   tournamentId?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
   userId?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
+  status?: Prisma.StringFilter<"CommerceTournamentRegistration"> | string
+  cancelledAt?: Prisma.DateTimeNullableFilter<"CommerceTournamentRegistration"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CommerceTournamentRegistration"> | Date | string
 }
 
 export type CommerceTournamentRegistrationCreateWithoutTournamentInput = {
   id?: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
   order: Prisma.CommerceOrderCreateNestedOneWithoutRegistrationsInput
   item: Prisma.CommerceItemCreateNestedOneWithoutRegistrationsInput
@@ -586,6 +638,8 @@ export type CommerceTournamentRegistrationUncheckedCreateWithoutTournamentInput 
   orderId: string
   itemId: string
   userId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -617,6 +671,8 @@ export type CommerceTournamentRegistrationUpdateManyWithWhereWithoutTournamentIn
 
 export type CommerceTournamentRegistrationCreateWithoutItemInput = {
   id?: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
   order: Prisma.CommerceOrderCreateNestedOneWithoutRegistrationsInput
   tournament: Prisma.TournamentCreateNestedOneWithoutCommerceRegistrationsInput
@@ -628,6 +684,8 @@ export type CommerceTournamentRegistrationUncheckedCreateWithoutItemInput = {
   orderId: string
   tournamentId: string
   userId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -659,6 +717,8 @@ export type CommerceTournamentRegistrationUpdateManyWithWhereWithoutItemInput = 
 
 export type CommerceTournamentRegistrationCreateWithoutOrderInput = {
   id?: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
   item: Prisma.CommerceItemCreateNestedOneWithoutRegistrationsInput
   tournament: Prisma.TournamentCreateNestedOneWithoutCommerceRegistrationsInput
@@ -670,6 +730,8 @@ export type CommerceTournamentRegistrationUncheckedCreateWithoutOrderInput = {
   itemId: string
   tournamentId: string
   userId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -704,11 +766,15 @@ export type CommerceTournamentRegistrationCreateManyUserInput = {
   orderId: string
   itemId: string
   tournamentId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type CommerceTournamentRegistrationUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.CommerceOrderUpdateOneRequiredWithoutRegistrationsNestedInput
   item?: Prisma.CommerceItemUpdateOneRequiredWithoutRegistrationsNestedInput
@@ -720,6 +786,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateWithoutUserInput = {
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
   tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -728,6 +796,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserInput = 
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
   tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -736,11 +806,15 @@ export type CommerceTournamentRegistrationCreateManyTournamentInput = {
   orderId: string
   itemId: string
   userId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type CommerceTournamentRegistrationUpdateWithoutTournamentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.CommerceOrderUpdateOneRequiredWithoutRegistrationsNestedInput
   item?: Prisma.CommerceItemUpdateOneRequiredWithoutRegistrationsNestedInput
@@ -752,6 +826,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateWithoutTournamentInput 
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -760,6 +836,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateManyWithoutTournamentIn
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -768,11 +846,15 @@ export type CommerceTournamentRegistrationCreateManyItemInput = {
   orderId: string
   tournamentId: string
   userId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type CommerceTournamentRegistrationUpdateWithoutItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.CommerceOrderUpdateOneRequiredWithoutRegistrationsNestedInput
   tournament?: Prisma.TournamentUpdateOneRequiredWithoutCommerceRegistrationsNestedInput
@@ -784,6 +866,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateWithoutItemInput = {
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -792,6 +876,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateManyWithoutItemInput = 
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -800,11 +886,15 @@ export type CommerceTournamentRegistrationCreateManyOrderInput = {
   itemId: string
   tournamentId: string
   userId: string
+  status?: string
+  cancelledAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type CommerceTournamentRegistrationUpdateWithoutOrderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   item?: Prisma.CommerceItemUpdateOneRequiredWithoutRegistrationsNestedInput
   tournament?: Prisma.TournamentUpdateOneRequiredWithoutCommerceRegistrationsNestedInput
@@ -816,6 +906,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateWithoutOrderInput = {
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
   tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -824,6 +916,8 @@ export type CommerceTournamentRegistrationUncheckedUpdateManyWithoutOrderInput =
   itemId?: Prisma.StringFieldUpdateOperationsInput | string
   tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -835,6 +929,8 @@ export type CommerceTournamentRegistrationSelect<ExtArgs extends runtime.Types.E
   itemId?: boolean
   tournamentId?: boolean
   userId?: boolean
+  status?: boolean
+  cancelledAt?: boolean
   createdAt?: boolean
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
@@ -848,6 +944,8 @@ export type CommerceTournamentRegistrationSelectCreateManyAndReturn<ExtArgs exte
   itemId?: boolean
   tournamentId?: boolean
   userId?: boolean
+  status?: boolean
+  cancelledAt?: boolean
   createdAt?: boolean
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
@@ -861,6 +959,8 @@ export type CommerceTournamentRegistrationSelectUpdateManyAndReturn<ExtArgs exte
   itemId?: boolean
   tournamentId?: boolean
   userId?: boolean
+  status?: boolean
+  cancelledAt?: boolean
   createdAt?: boolean
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
@@ -874,10 +974,12 @@ export type CommerceTournamentRegistrationSelectScalar = {
   itemId?: boolean
   tournamentId?: boolean
   userId?: boolean
+  status?: boolean
+  cancelledAt?: boolean
   createdAt?: boolean
 }
 
-export type CommerceTournamentRegistrationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "itemId" | "tournamentId" | "userId" | "createdAt", ExtArgs["result"]["commerceTournamentRegistration"]>
+export type CommerceTournamentRegistrationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "itemId" | "tournamentId" | "userId" | "status" | "cancelledAt" | "createdAt", ExtArgs["result"]["commerceTournamentRegistration"]>
 export type CommerceTournamentRegistrationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
@@ -911,6 +1013,8 @@ export type $CommerceTournamentRegistrationPayload<ExtArgs extends runtime.Types
     itemId: string
     tournamentId: string
     userId: string
+    status: string
+    cancelledAt: Date | null
     createdAt: Date
   }, ExtArgs["result"]["commerceTournamentRegistration"]>
   composites: {}
@@ -1344,6 +1448,8 @@ export interface CommerceTournamentRegistrationFieldRefs {
   readonly itemId: Prisma.FieldRef<"CommerceTournamentRegistration", 'String'>
   readonly tournamentId: Prisma.FieldRef<"CommerceTournamentRegistration", 'String'>
   readonly userId: Prisma.FieldRef<"CommerceTournamentRegistration", 'String'>
+  readonly status: Prisma.FieldRef<"CommerceTournamentRegistration", 'String'>
+  readonly cancelledAt: Prisma.FieldRef<"CommerceTournamentRegistration", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"CommerceTournamentRegistration", 'DateTime'>
 }
     

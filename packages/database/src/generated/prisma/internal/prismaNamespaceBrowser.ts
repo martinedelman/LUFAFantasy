@@ -800,6 +800,8 @@ export const CommerceTournamentRegistrationScalarFieldEnum = {
   itemId: 'itemId',
   tournamentId: 'tournamentId',
   userId: 'userId',
+  status: 'status',
+  cancelledAt: 'cancelledAt',
   createdAt: 'createdAt'
 } as const
 

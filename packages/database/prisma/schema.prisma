@@ -929,6 +929,8 @@ model CommerceTournamentRegistration {
   itemId       String   @map("item_id")
   tournamentId String   @map("tournament_id")
   userId       String   @map("user_id")
+  status       String   @default("reserved")
+  cancelledAt  DateTime? @map("cancelled_at")
   createdAt    DateTime @default(now()) @map("created_at")
 
   order      CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
@@ -937,6 +939,7 @@ model CommerceTournamentRegistration {
   user       User          @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@unique([itemId, userId])
+  @@index([orderId, status])
   @@index([tournamentId, createdAt])
   @@map("commerce_tournament_registrations")
 }
