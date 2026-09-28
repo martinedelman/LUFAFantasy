@@ -83,6 +83,7 @@ POST /api/auth/register
 POST /api/auth/verify-registration
 POST /api/divisions
 POST /api/commerce/checkouts
+POST /api/commerce/checkouts/quote
 POST /api/commerce/seller/items
 POST /api/commerce/seller/orders/:id/refund-requests
 POST /api/fantasy/v1/auth/login

@@ -1,4 +1,4 @@
-import type { CommerceAdminDashboardDto, CommerceFulfillmentStatus, CommerceItemDetailsDto, CommerceItemDto, CommerceOrderDto, CommerceOrderFiltersDto, CreateCommerceCheckoutDto, CreateCommerceItemDto, CreateCommerceRefundRequestDto, CreateCommerceSellerDto, UpdateCommerceItemDto } from "@lufa/contracts";
+import type { CommerceAdminDashboardDto, CommerceCheckoutQuoteDto, CommerceFulfillmentStatus, CommerceItemDetailsDto, CommerceItemDto, CommerceOrderDto, CommerceOrderFiltersDto, CreateCommerceCheckoutDto, CreateCommerceItemDto, CreateCommerceRefundRequestDto, CreateCommerceSellerDto, UpdateCommerceItemDto } from "@lufa/contracts";
 import { CommerceError, type CommerceActor, type CommerceRepository, type ReservedOrder, type VerifiedProviderOrder } from "@lufa/commerce";
 import { getPrismaClient } from "../../prisma";
 
@@ -29,7 +29,10 @@ function itemDto(item: ItemRow, hasCredential = false): CommerceItemDto {
 function orderDto(order: OrderRow): CommerceOrderDto {
   return {
     id: order.id, status: order.status, fulfillmentStatus: order.fulfillmentStatus, currency: "UYU", subtotalMinor: order.subtotalMinor,
-    discountMinor: order.discountMinor, totalMinor: order.totalMinor, checkoutUrl: order.checkoutUrl, createdAt: order.createdAt.toISOString(),
+    discountMinor: order.discountMinor, totalMinor: order.totalMinor, paymentMode: order.paymentMode || "cash", maxInstallments: order.maxInstallments || 1,
+    paymentMethodId: order.paymentMethodId || null, paymentMethodType: order.paymentMethodType || null,
+    paymentInstallments: order.paymentInstallments ?? null, paymentInstallmentAmountMinor: order.paymentInstallmentAmountMinor ?? null,
+    checkoutUrl: order.checkoutUrl, createdAt: order.createdAt.toISOString(),
     seller: order.seller || { id: order.sellerId, slug: "", name: "Vendedor" }, buyer: order.buyer ? { name: order.buyer.name, email: order.buyer.email } : undefined,
     pickupInstructions: order.pickupInstructions || null,
     items: order.items.map((item: any) => ({ itemId: item.itemId, title: item.title, kind: item.kind, quantity: item.quantity, unitPriceMinor: item.unitPriceMinor, unitDiscountMinor: item.unitDiscountMinor, entitlementMonths: item.entitlementMonths, variantId: item.variantId, variantSku: item.variantSku, variantLabel: item.variantLabel })),
@@ -48,9 +51,55 @@ export class PrismaCommerceRepository implements CommerceRepository {
     if (available !== null && available < quantity) throw new CommerceError(`No queda stock suficiente de ${item.title}.`, "OUT_OF_STOCK", 409);
   }
 
+  private async resolveCheckoutLines(tx: any, buyer: CommerceActor, requested: CreateCommerceCheckoutDto["items"]) {
+    const keys = new Set(requested.map((line) => `${line.itemId}:${line.variantId || ""}`));
+    if (keys.size !== requested.length) throw new CommerceError("No repitas la misma variante en el carrito.", "INVALID_CART", 400);
+    const [hasActiveCredential, items]: [any, any[]] = await Promise.all([
+      tx.digitalCredential.findFirst({ where: { userId: buyer.id, status: "active", expiresAt: { gt: new Date() } }, select: { id: true } }),
+      tx.commerceItem.findMany({ where: { id: { in: [...new Set(requested.map((item) => item.itemId))] }, active: true }, include: { seller: true, tournament: true, variants: { where: { active: true } } } }),
+    ]);
+    if (items.length !== new Set(requested.map((item) => item.itemId)).size) throw new CommerceError("Uno de los productos ya no está disponible.", "ITEM_UNAVAILABLE", 409);
+    if (new Set(items.map((item: any) => item.sellerId)).size !== 1) throw new CommerceError("Cada compra debe contener productos de un único vendedor.", "MULTIPLE_SELLERS", 409);
+    const byId = new Map(items.map((item: any) => [item.id, item]));
+    if (items.some((item: any) => item.kind === "tournament")) {
+      const player = await tx.player.findFirst({ where: { email: { equals: buyer.email, mode: "insensitive" } }, select: { id: true } });
+      if (!player) throw new CommerceError("Para inscribirte, primero vinculá tu perfil de jugador con tu cuenta LUFA.", "PLAYER_PROFILE_REQUIRED", 409);
+    }
+    const lines = requested.map((request) => {
+      const item = byId.get(request.itemId)!; const variant = request.variantId ? item.variants.find((candidate: any) => candidate.id === request.variantId) : null;
+      if (request.variantId && !variant) throw new CommerceError("La variante seleccionada no está disponible.", "VARIANT_UNAVAILABLE", 409);
+      if (item.kind === "product" && item.variants.length && !variant) throw new CommerceError("Elegí una variante para este producto.", "VARIANT_REQUIRED", 409);
+      if (item.kind !== "product" && variant) throw new CommerceError("Esta publicación no admite variantes.", "INVALID_VARIANT", 400);
+      if (item.kind === "tournament" && (!item.tournamentId || !item.entitlementMonths)) throw new CommerceError("La inscripción no está configurada correctamente.", "ITEM_UNAVAILABLE", 409);
+      this.inventoryStatus(item, variant, request.quantity);
+      const unitPriceMinor = variant?.priceMinor ?? item.priceMinor;
+      return { item, variant, quantity: request.quantity, unitPriceMinor, discount: hasActiveCredential ? Math.floor(unitPriceMinor * item.credentialDiscountBps / 10_000) : 0 };
+    });
+    for (const line of lines.filter((line: any) => line.item.kind === "tournament")) {
+      const registration = await tx.commerceTournamentRegistration.findUnique({ where: { itemId_userId: { itemId: line.item.id, userId: buyer.id } }, select: { status: true } });
+      if (registration && registration.status !== "cancelled") throw new CommerceError("Ya tenés una inscripción reservada o activa para este torneo.", "TOURNAMENT_ALREADY_RESERVED", 409);
+    }
+    return lines;
+  }
+
+  private checkoutQuote(lines: any[]): CommerceCheckoutQuoteDto {
+    const subtotalMinor = lines.reduce((sum, line) => sum + line.unitPriceMinor * line.quantity, 0);
+    const discountMinor = lines.reduce((sum, line) => sum + line.discount * line.quantity, 0);
+    const totalMinor = subtotalMinor - discountMinor;
+    if (!Number.isSafeInteger(totalMinor) || totalMinor <= 0) throw new CommerceError("El total de la compra no es válido.", "INVALID_TOTAL", 409);
+    return {
+      currency: "UYU", seller: { id: lines[0]!.item.seller.id, slug: lines[0]!.item.seller.slug, name: lines[0]!.item.seller.name }, subtotalMinor, discountMinor, totalMinor,
+      items: lines.map((line) => ({ itemId: line.item.id, title: line.item.title, kind: line.item.kind, quantity: line.quantity, unitPriceMinor: line.unitPriceMinor, unitDiscountMinor: line.discount, entitlementMonths: line.item.entitlementMonths, variantId: line.variant?.id || null, variantSku: line.variant?.sku || null, variantLabel: line.variant?.label || null })),
+    };
+  }
+
   async listCatalog(userId?: string) {
     const [hasActiveCredential, items] = await Promise.all([this.hasCredential(userId), this.database.commerceItem.findMany({ where: { active: true, seller: { status: "active" } }, include: { seller: { select: { id: true, slug: true, name: true } }, variants: { where: { active: true }, orderBy: { label: "asc" } } }, orderBy: [{ kind: "asc" }, { title: "asc" }] })]);
     return { hasActiveCredential, items: items.map((item) => itemDto(item, hasActiveCredential)) };
+  }
+
+  async quoteCheckout(input: { buyer: CommerceActor; request: { items: CreateCommerceCheckoutDto["items"] } }) {
+    return this.checkoutQuote(await this.resolveCheckoutLines(this.database, input.buyer, input.request.items));
   }
 
   private async inCommerceUnitOfWork<T>(work: (tx: any) => Promise<T>): Promise<T> {
@@ -66,7 +115,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
   }
   private reserved(order: any): ReservedOrder { return { ...orderDto(order), buyerEmail: order.buyer.email, idempotencyKey: order.idempotencyKey, providerOrderId: order.providerOrderId, payloadFingerprint: order.payloadFingerprint }; }
 
-  async reserveOrder(input: { buyer: CommerceActor; request: CreateCommerceCheckoutDto; fingerprint: string; liveMode: boolean; reservationMinutes: number }): Promise<ReservedOrder> {
+  async reserveOrder(input: { buyer: CommerceActor; request: CreateCommerceCheckoutDto; fingerprint: string; liveMode: boolean; reservationMinutes: number; maxInstallments: number }): Promise<ReservedOrder> {
     const keys = new Set(input.request.items.map((line) => `${line.itemId}:${line.variantId || ""}`));
     if (keys.size !== input.request.items.length) throw new CommerceError("No repitas la misma variante en el carrito.", "INVALID_CART", 400);
     const reserve = async (tx: any): Promise<ReservedOrder> => {
@@ -100,10 +149,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
         const registration = await tx.commerceTournamentRegistration.findUnique({ where: { itemId_userId: { itemId: line.item.id, userId: input.buyer.id } }, select: { status: true } });
         if (registration && registration.status !== "cancelled") throw new CommerceError("Ya tenés una inscripción reservada o activa para este torneo.", "TOURNAMENT_ALREADY_RESERVED", 409);
       }
-      const subtotalMinor = lines.reduce((sum, line) => sum + line.unitPriceMinor * line.quantity, 0);
-      const discountMinor = lines.reduce((sum, line) => sum + line.discount * line.quantity, 0);
-      const totalMinor = subtotalMinor - discountMinor;
-      if (!Number.isSafeInteger(totalMinor) || totalMinor <= 0) throw new CommerceError("El total de la compra no es válido.", "INVALID_TOTAL", 409);
+      const { subtotalMinor, discountMinor, totalMinor } = this.checkoutQuote(lines);
       for (const line of lines) {
         if (line.variant) {
           const updated = await tx.commerceItemVariant.updateMany({ where: { id: line.variant.id, active: true, ...(line.variant.stockQuantity === null ? {} : { stockQuantity: { gte: line.quantity } }) }, data: line.variant.stockQuantity === null ? {} : { stockQuantity: { decrement: line.quantity } } });
@@ -114,7 +160,8 @@ export class PrismaCommerceRepository implements CommerceRepository {
         }
       }
       const physical = lines.some((line) => line.item.kind === "product");
-      const created = await tx.commerceOrder.create({ data: { buyerUserId: input.buyer.id, sellerId: lines[0]!.item.sellerId, currency: "UYU", subtotalMinor, discountMinor, totalMinor, idempotencyKey: input.request.idempotencyKey, payloadFingerprint: input.fingerprint, liveMode: input.liveMode, reservationExpiresAt: new Date(Date.now() + input.reservationMinutes * 60_000), fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", pickupInstructions: physical ? lines.map((line) => line.item.pickupInstructions).filter(Boolean).join("\n") || null : null, items: { create: lines.map((line) => ({ itemId: line.item.id, variantId: line.variant?.id || null, title: line.item.title, kind: line.item.kind, quantity: line.quantity, unitPriceMinor: line.unitPriceMinor, unitDiscountMinor: line.discount, entitlementMonths: line.item.entitlementMonths, variantSku: line.variant?.sku || null, variantLabel: line.variant?.label || null })) } }, include: orderInclude });
+      const paymentMode = input.request.paymentMode || "cash";
+      const created = await tx.commerceOrder.create({ data: { buyerUserId: input.buyer.id, sellerId: lines[0]!.item.sellerId, currency: "UYU", subtotalMinor, discountMinor, totalMinor, paymentMode, maxInstallments: paymentMode === "cash" ? 1 : input.maxInstallments, idempotencyKey: input.request.idempotencyKey, payloadFingerprint: input.fingerprint, liveMode: input.liveMode, reservationExpiresAt: new Date(Date.now() + input.reservationMinutes * 60_000), fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", pickupInstructions: physical ? lines.map((line) => line.item.pickupInstructions).filter(Boolean).join("\n") || null : null, items: { create: lines.map((line) => ({ itemId: line.item.id, variantId: line.variant?.id || null, title: line.item.title, kind: line.item.kind, quantity: line.quantity, unitPriceMinor: line.unitPriceMinor, unitDiscountMinor: line.discount, entitlementMonths: line.item.entitlementMonths, variantSku: line.variant?.sku || null, variantLabel: line.variant?.label || null })) } }, include: orderInclude });
       for (const line of lines.filter((line) => line.item.kind === "tournament")) await tx.commerceTournamentRegistration.upsert({ where: { itemId_userId: { itemId: line.item.id, userId: input.buyer.id } }, create: { orderId: created.id, itemId: line.item.id, tournamentId: line.item.tournamentId, userId: input.buyer.id, status: "reserved" }, update: { orderId: created.id, status: "reserved", cancelledAt: null } });
       return this.reserved(created);
     };
@@ -175,7 +222,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
           }
         }
         const physical = order.items.some((line: { kind: string }) => line.kind === "product");
-        return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: "paid", fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", providerStatus: provider.status, paidAt: provider.paidAt || new Date(), fulfilledAt: physical ? null : new Date() }, include: orderInclude }));
+        return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: "paid", fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", providerStatus: provider.status, paidAt: provider.paidAt || new Date(), fulfilledAt: physical ? null : new Date(), paymentMethodId: provider.paymentMethodId, paymentMethodType: provider.paymentMethodType, paymentInstallments: provider.paymentInstallments, paymentInstallmentAmountMinor: provider.paymentInstallmentAmountMinor }, include: orderInclude }));
       }
       if (CANCELLED.has(status) && ["creating", "payment_pending"].includes(order.status)) { await this.releaseInventoryInUnitOfWork(tx, order.id, "cancelled"); return orderDto(await tx.commerceOrder.findUniqueOrThrow({ where: { id: order.id }, include: orderInclude })); }
       const mapped = status.includes("charged_back") ? "charged_back" : status.includes("refund") ? "refunded" : order.status;

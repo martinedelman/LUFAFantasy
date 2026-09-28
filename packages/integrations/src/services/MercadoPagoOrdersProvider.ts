@@ -14,7 +14,7 @@ interface MercadoPagoOrder {
   collector_id?: string | number;
   created_date?: string;
   last_updated_date?: string;
-  transactions?: Array<{ id?: string; amount?: string | number; status?: string }>;
+  transactions?: { payments?: Array<{ id?: string; amount?: string | number; paid_amount?: string | number; status?: string; status_detail?: string; installment_amount?: string | number; payment_method?: { id?: string; type?: string; installments?: number } }> };
   integration_data?: { application_id?: string | number };
 }
 
@@ -36,6 +36,10 @@ function decimalToMinor(value: string | number | undefined) {
   }
   const [whole, fraction = ""] = String(value).split(".");
   return Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+}
+
+function optionalDecimalToMinor(value: string | number | undefined) {
+  return value === undefined || value === null ? null : decimalToMinor(value);
 }
 
 export class MercadoPagoOrdersProvider implements PaymentProvider {
@@ -81,6 +85,7 @@ export class MercadoPagoOrdersProvider implements PaymentProvider {
     if (collectorId !== this.config.collectorId || applicationId !== this.config.applicationId) {
       throw new CommerceError("La orden no pertenece a la cuenta configurada de LUFA.", "MERCHANT_MISMATCH", 502);
     }
+    const payment = order.transactions?.payments?.[0];
     return {
       id: order.id,
       externalReference: order.external_reference,
@@ -91,6 +96,10 @@ export class MercadoPagoOrdersProvider implements PaymentProvider {
       applicationId,
       checkoutUrl: order.checkout_url || null,
       paidAt: order.status === "processed" ? new Date(order.last_updated_date || order.created_date || Date.now()) : null,
+      paymentMethodId: payment?.payment_method?.id || null,
+      paymentMethodType: payment?.payment_method?.type || null,
+      paymentInstallments: Number.isInteger(payment?.payment_method?.installments) ? payment!.payment_method!.installments! : null,
+      paymentInstallmentAmountMinor: optionalDecimalToMinor(payment?.installment_amount),
     };
   }
 
@@ -119,7 +128,10 @@ export class MercadoPagoOrdersProvider implements PaymentProvider {
             failure_url: input.failureUrl,
             auto_return: "all",
           },
-          payment_method: { not_allowed_types: ["ticket"] },
+          payment_method: {
+            max_installments: input.maxInstallments,
+            not_allowed_types: ["ticket"],
+          },
         },
       }),
     });
@@ -146,8 +158,9 @@ export class MercadoPagoOrdersProvider implements PaymentProvider {
   async refundOrder(providerOrderId: string, amountMinor: number, idempotencyKey: string) {
     const current = await this.request<MercadoPagoOrder>(`/v1/orders/${encodeURIComponent(providerOrderId)}`);
     const totalMinor = decimalToMinor(current.total_amount);
-    const transactionId = current.transactions?.find((transaction) => transaction.status === "processed" || transaction.status === "approved")?.id
-      || current.transactions?.[0]?.id;
+    const payments = current.transactions?.payments || [];
+    const transactionId = payments.find((transaction) => transaction.status === "processed" || transaction.status === "approved")?.id
+      || payments[0]?.id;
     const partial = amountMinor < totalMinor;
     if (partial && !transactionId) throw new CommerceError("No se encontró la transacción para el reembolso parcial.", "INVALID_PROVIDER_RESPONSE", 502);
     const body = partial ? { transactions: [{ id: transactionId, amount: minorToDecimal(amountMinor) }] } : undefined;

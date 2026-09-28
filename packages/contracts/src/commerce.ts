@@ -1,6 +1,7 @@
 export type CommerceItemKind = "product" | "service" | "tournament";
 export type CommerceOrderStatus = "creating" | "payment_pending" | "paid" | "cancelled" | "refunded" | "charged_back" | "payment_review";
 export type CommerceFulfillmentStatus = "pending_fulfillment" | "ready_for_pickup" | "delivered" | "not_required";
+export type CommercePaymentMode = "cash" | "installments";
 
 export interface CommerceSellerDto { id: string; slug: string; name: string; }
 export interface CommerceItemVariantDto {
@@ -22,13 +23,29 @@ export interface CommerceItemDto {
   entitlementMonths: 6 | 12 | null; active: boolean; variants: CommerceItemVariantDto[];
 }
 export interface CommerceCatalogDto { items: CommerceItemDto[]; hasActiveCredential: boolean; }
-export interface CreateCommerceCheckoutDto { items: Array<{ itemId: string; variantId?: string | null; quantity: number }>; idempotencyKey: string; }
+export interface CommerceCheckoutLineDto {
+  itemId: string; title: string; kind: CommerceItemKind; quantity: number;
+  unitPriceMinor: number; unitDiscountMinor: number; entitlementMonths: number | null;
+  variantId: string | null; variantSku: string | null; variantLabel: string | null;
+}
+export interface CreateCommerceCheckoutQuoteDto { items: Array<{ itemId: string; variantId?: string | null; quantity: number }>; }
+export interface CommerceCheckoutQuoteDto {
+  currency: "UYU"; seller: CommerceSellerDto; subtotalMinor: number; discountMinor: number; totalMinor: number;
+  items: CommerceCheckoutLineDto[];
+}
+export interface CreateCommerceCheckoutDto extends CreateCommerceCheckoutQuoteDto {
+  idempotencyKey: string;
+  /** Omitted requests are treated as cash during the rollout. */
+  paymentMode?: CommercePaymentMode;
+}
 export interface CommerceOrderDto {
   id: string; status: CommerceOrderStatus; fulfillmentStatus: CommerceFulfillmentStatus;
   currency: "UYU"; subtotalMinor: number; discountMinor: number; totalMinor: number;
+  paymentMode: CommercePaymentMode; maxInstallments: number;
+  paymentMethodId: string | null; paymentMethodType: string | null; paymentInstallments: number | null; paymentInstallmentAmountMinor: number | null;
   checkoutUrl: string | null; createdAt: string; seller: CommerceSellerDto;
   buyer?: { name: string; email: string }; pickupInstructions: string | null;
-  items: Array<{ itemId: string; title: string; kind: CommerceItemKind; quantity: number; unitPriceMinor: number; unitDiscountMinor: number; entitlementMonths: number | null; variantId: string | null; variantSku: string | null; variantLabel: string | null; }>;
+  items: CommerceCheckoutLineDto[];
 }
 export interface CreateCommerceItemDto {
   sellerId: string; tournamentId?: string | null; slug: string; kind: CommerceItemKind;
