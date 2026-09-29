@@ -36,13 +36,18 @@ export class PrismaPlayerRepository implements IPlayerRepository {
 
   async findAll(filters: Record<string, unknown> = {}): Promise<Player[]> {
     const where: Record<string, unknown> = {};
-    if (typeof filters.team === "string") where.teamId = filters.team;
+    const and: Record<string, unknown>[] = [];
+    // A roster is the primary team plus any secondary membership (players are shared across modalities).
+    if (typeof filters.team === "string") {
+      and.push({ OR: [{ teamId: filters.team }, { teamMemberships: { some: { teamId: filters.team } } }] });
+    }
     if (typeof filters.position === "string") {
       where.OR = [{ position: filters.position }, { secondaryPosition: filters.position }];
     }
     if (typeof filters.status === "string") where.status = filters.status;
     const modality = modalityFilter(filters);
-    if (modality) where.AND = [playsInModality(modality)];
+    if (modality) and.push(playsInModality(modality));
+    if (and.length) where.AND = and;
     return (await this.db.player.findMany({ where, include: PLAYER_WITH_TEAM }))
       .map((record) => this.toPlayerWithTeam(record))
       .filter((item): item is Player => Boolean(item));
