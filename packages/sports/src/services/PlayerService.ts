@@ -185,6 +185,22 @@ export class PlayerService {
 
     const { search, team, position, status, modality } = filters;
 
+    if (search && team) {
+      // Resolve the roster (primary team + memberships) first, then match the name.
+      const needle = search.trim().toLowerCase();
+      const roster = await this.playerRepo.findAll({
+        team,
+        ...(position ? { position } : {}),
+        ...(status ? { status } : {}),
+        ...(modality ? { modality } : {}),
+      });
+      return this.sortPlayers(
+        roster.filter((player) =>
+          [player.firstName, player.lastName].some((name) => name?.toLowerCase().includes(needle)),
+        ),
+      );
+    }
+
     if (search) {
       const searchResults = await this.playerRepo.searchByName(search, modality);
       const filteredPlayers = searchResults.filter((player) => {

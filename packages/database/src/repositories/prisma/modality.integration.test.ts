@@ -200,6 +200,15 @@ describe("modality separation (PostgreSQL)", () => {
     expect(dashboard.nextGames.map((game) => [game.id, game.modality])).toEqual([[id(modality, "game"), modality]]);
   });
 
+  it("includes secondary memberships in a team roster", async () => {
+    // The flag player also plays on the tackle team (secondary membership).
+    const db = getPrismaClient();
+    await db.teamPlayer.create({ data: { teamId: id("tackle", "team"), playerId: id("flag", "player") } });
+    const roster = (await players.findAll({ team: id("tackle", "team"), modality: "tackle" })).map((player) => player.id).sort();
+    expect(roster).toEqual([id("flag", "player"), id("tackle", "player")]);
+    await db.teamPlayer.deleteMany({ where: { teamId: id("tackle", "team"), playerId: id("flag", "player") } });
+  });
+
   it("stores site settings and sign-ups per modality", async () => {
     await auxiliary.upsertSiteSettings({ contactEmail: "flag@example.com" }, "global");
     await auxiliary.upsertSiteSettings({ contactEmail: "tackle@example.com" }, "tackle");
