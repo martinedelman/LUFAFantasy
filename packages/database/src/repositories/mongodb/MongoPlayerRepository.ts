@@ -2,6 +2,8 @@ import { IPlayerRepository } from "../contracts/IPlayerRepository";
 import { Player } from "@lufa/sports/entities/Player";
 import { PlayerModel } from "../../models/Player";
 import connectToDatabase from "../../mongodb";
+import { withoutModality } from "./modality";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 export class MongoPlayerRepository implements IPlayerRepository {
   async findById(id: string): Promise<Player | null> {
@@ -20,7 +22,9 @@ export class MongoPlayerRepository implements IPlayerRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Player[]> {
     await connectToDatabase();
-    const query: Record<string, unknown> = { ...(filters || {}) };
+    const withoutModalityQuery = withoutModality(filters);
+    if (!withoutModalityQuery) return [];
+    const query: Record<string, unknown> = { ...withoutModalityQuery };
     if (typeof query.position === "string") {
       const position = query.position;
       delete query.position;
@@ -110,8 +114,9 @@ export class MongoPlayerRepository implements IPlayerRepository {
     return doc ? doc : null;
   }
 
-  async searchByName(query: string): Promise<Player[]> {
+  async searchByName(query: string, modality?: Modality): Promise<Player[]> {
     await connectToDatabase();
+    if (!withoutModality({ modality })) return [];
     const regex = new RegExp(query, "i");
     const docs = await PlayerModel.find({
       $or: [{ firstName: regex }, { lastName: regex }],

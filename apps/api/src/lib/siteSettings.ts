@@ -1,5 +1,7 @@
 import sponsorData from "@/data/sponsors.json";
 import { getAuxiliaryRepository } from "@lufa/database/repositories/auxiliary";
+import { siteSettingsKey } from "@lufa/operations";
+import type { Modality } from "@lufa/sports/entities/Modality";
 import type { PublicSiteSettingsResponseDto, SiteSettingsResponseDto, SiteSponsorResponseDto } from "@/app/DTOs";
 
 interface PublicSiteSettingsDocument {
@@ -78,22 +80,35 @@ function toPublicSettings(settings: SiteSettingsResponseDto): PublicSiteSettings
   };
 }
 
-async function getSiteSettingsForPublicSurface(): Promise<SiteSettingsResponseDto> {
+/** Tackle starts without flag's contact channels; sponsors are LUFA-wide. */
+const defaultTackleSiteSettings: SiteSettingsResponseDto = {
+  ...defaultSiteSettings,
+  whatsappMessageTemplate:
+    "Hola {nombre}, te escribimos de LUFA Tackle por tu inscripción para jugar. Queremos contarte los próximos pasos.",
+  contactEmail: "",
+  instagramUrl: "",
+  whatsappChannelUrl: "",
+};
+
+async function getSiteSettingsForPublicSurface(modality: Modality): Promise<SiteSettingsResponseDto> {
+  const defaults = modality === "flag" ? defaultSiteSettings : defaultTackleSiteSettings;
   try {
-    const settings = (await getAuxiliaryRepository().getSiteSettings()) as PublicSiteSettingsDocument | null;
+    const settings = (await getAuxiliaryRepository().getSiteSettings(
+      siteSettingsKey(modality),
+    )) as PublicSiteSettingsDocument | null;
 
     if (!settings) {
-      return defaultSiteSettings;
+      return defaults;
     }
 
     return {
-      ...defaultSiteSettings,
-      whatsappMessageTemplate: settings.whatsappMessageTemplate || defaultSiteSettings.whatsappMessageTemplate,
-      contactEmail: settings.contactEmail || defaultSiteSettings.contactEmail,
+      ...defaults,
+      whatsappMessageTemplate: settings.whatsappMessageTemplate || defaults.whatsappMessageTemplate,
+      contactEmail: settings.contactEmail || defaults.contactEmail,
       contactWhatsapp: settings.contactWhatsapp || "",
-      instagramUrl: settings.instagramUrl || defaultSiteSettings.instagramUrl,
-      whatsappChannelUrl: settings.whatsappChannelUrl || defaultSiteSettings.whatsappChannelUrl,
-      sponsors: (settings.sponsors?.length ? settings.sponsors : defaultSiteSettings.sponsors)
+      instagramUrl: settings.instagramUrl || defaults.instagramUrl,
+      whatsappChannelUrl: settings.whatsappChannelUrl || defaults.whatsappChannelUrl,
+      sponsors: (settings.sponsors?.length ? settings.sponsors : defaults.sponsors)
         .map((sponsor, index) => normalizeSponsor(sponsor, index))
         .sort((left, right) => left.order - right.order),
       homepageAnnouncement: {
@@ -110,17 +125,17 @@ async function getSiteSettingsForPublicSurface(): Promise<SiteSettingsResponseDt
       },
     };
   } catch {
-    return defaultSiteSettings;
+    return defaults;
   }
 }
 
-export async function getPublicSiteSettings(): Promise<PublicSiteSettingsResponseDto> {
-  const settings = await getSiteSettingsForPublicSurface();
+export async function getPublicSiteSettings(modality: Modality = "flag"): Promise<PublicSiteSettingsResponseDto> {
+  const settings = await getSiteSettingsForPublicSurface(modality);
   return toPublicSettings(settings);
 }
 
-export async function getPublicSponsors() {
-  const settings = await getPublicSiteSettings();
+export async function getPublicSponsors(modality: Modality = "flag") {
+  const settings = await getPublicSiteSettings(modality);
 
   if (!settings.featureVisibility.sponsorsVisible) {
     return [];

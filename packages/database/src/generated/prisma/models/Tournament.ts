@@ -46,6 +46,7 @@ export type TournamentMinAggregateOutputType = {
   status: string | null
   format: string | null
   playoffCriteria: string | null
+  modality: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -62,6 +63,7 @@ export type TournamentMaxAggregateOutputType = {
   status: string | null
   format: string | null
   playoffCriteria: string | null
+  modality: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -80,6 +82,7 @@ export type TournamentCountAggregateOutputType = {
   playoffCriteria: number
   rules: number
   prizes: number
+  modality: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -106,6 +109,7 @@ export type TournamentMinAggregateInputType = {
   status?: true
   format?: true
   playoffCriteria?: true
+  modality?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -122,6 +126,7 @@ export type TournamentMaxAggregateInputType = {
   status?: true
   format?: true
   playoffCriteria?: true
+  modality?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -140,6 +145,7 @@ export type TournamentCountAggregateInputType = {
   playoffCriteria?: true
   rules?: true
   prizes?: true
+  modality?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -245,6 +251,7 @@ export type TournamentGroupByOutputType = {
   playoffCriteria: string | null
   rules: runtime.JsonValue | null
   prizes: runtime.JsonValue | null
+  modality: string
   createdAt: Date
   updatedAt: Date
   _count: TournamentCountAggregateOutputType | null
@@ -286,6 +293,7 @@ export type TournamentWhereInput = {
   playoffCriteria?: Prisma.StringNullableFilter<"Tournament"> | string | null
   rules?: Prisma.JsonNullableFilter<"Tournament">
   prizes?: Prisma.JsonNullableFilter<"Tournament">
+  modality?: Prisma.StringFilter<"Tournament"> | string
   createdAt?: Prisma.DateTimeFilter<"Tournament"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Tournament"> | Date | string
   legacyDivisions?: Prisma.DivisionListRelationFilter
@@ -312,6 +320,7 @@ export type TournamentOrderByWithRelationInput = {
   playoffCriteria?: Prisma.SortOrderInput | Prisma.SortOrder
   rules?: Prisma.SortOrderInput | Prisma.SortOrder
   prizes?: Prisma.SortOrderInput | Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   legacyDivisions?: Prisma.DivisionOrderByRelationAggregateInput
@@ -326,7 +335,7 @@ export type TournamentOrderByWithRelationInput = {
 
 export type TournamentWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  name_year?: Prisma.TournamentNameYearCompoundUniqueInput
+  name_year_modality?: Prisma.TournamentNameYearModalityCompoundUniqueInput
   AND?: Prisma.TournamentWhereInput | Prisma.TournamentWhereInput[]
   OR?: Prisma.TournamentWhereInput[]
   NOT?: Prisma.TournamentWhereInput | Prisma.TournamentWhereInput[]
@@ -342,6 +351,7 @@ export type TournamentWhereUniqueInput = Prisma.AtLeast<{
   playoffCriteria?: Prisma.StringNullableFilter<"Tournament"> | string | null
   rules?: Prisma.JsonNullableFilter<"Tournament">
   prizes?: Prisma.JsonNullableFilter<"Tournament">
+  modality?: Prisma.StringFilter<"Tournament"> | string
   createdAt?: Prisma.DateTimeFilter<"Tournament"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Tournament"> | Date | string
   legacyDivisions?: Prisma.DivisionListRelationFilter
@@ -352,7 +362,7 @@ export type TournamentWhereUniqueInput = Prisma.AtLeast<{
   standings?: Prisma.StandingListRelationFilter
   playerStats?: Prisma.PlayerStatisticsListRelationFilter
   teamStats?: Prisma.TeamStatisticsListRelationFilter
-}, "id" | "name_year">
+}, "id" | "name_year_modality">
 
 export type TournamentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -368,6 +378,7 @@ export type TournamentOrderByWithAggregationInput = {
   playoffCriteria?: Prisma.SortOrderInput | Prisma.SortOrder
   rules?: Prisma.SortOrderInput | Prisma.SortOrder
   prizes?: Prisma.SortOrderInput | Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.TournamentCountOrderByAggregateInput
@@ -394,6 +405,7 @@ export type TournamentScalarWhereWithAggregatesInput = {
   playoffCriteria?: Prisma.StringNullableWithAggregatesFilter<"Tournament"> | string | null
   rules?: Prisma.JsonNullableWithAggregatesFilter<"Tournament">
   prizes?: Prisma.JsonNullableWithAggregatesFilter<"Tournament">
+  modality?: Prisma.StringWithAggregatesFilter<"Tournament"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Tournament"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Tournament"> | Date | string
 }
@@ -412,6 +424,7 @@ export type TournamentCreateInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionCreateNestedManyWithoutLegacyTournamentInput
@@ -438,6 +451,7 @@ export type TournamentUncheckedCreateInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionUncheckedCreateNestedManyWithoutLegacyTournamentInput
@@ -464,6 +478,7 @@ export type TournamentUpdateInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUpdateManyWithoutLegacyTournamentNestedInput
@@ -490,6 +505,7 @@ export type TournamentUncheckedUpdateInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUncheckedUpdateManyWithoutLegacyTournamentNestedInput
@@ -516,6 +532,7 @@ export type TournamentCreateManyInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -534,6 +551,7 @@ export type TournamentUpdateManyMutationInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -552,13 +570,15 @@ export type TournamentUncheckedUpdateManyInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type TournamentNameYearCompoundUniqueInput = {
+export type TournamentNameYearModalityCompoundUniqueInput = {
   name: string
   year: number
+  modality: string
 }
 
 export type TournamentCountOrderByAggregateInput = {
@@ -575,6 +595,7 @@ export type TournamentCountOrderByAggregateInput = {
   playoffCriteria?: Prisma.SortOrder
   rules?: Prisma.SortOrder
   prizes?: Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -595,6 +616,7 @@ export type TournamentMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   format?: Prisma.SortOrder
   playoffCriteria?: Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -611,6 +633,7 @@ export type TournamentMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   format?: Prisma.SortOrder
   playoffCriteria?: Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -763,6 +786,7 @@ export type TournamentCreateWithoutLegacyDivisionsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTeams?: Prisma.TeamCreateNestedManyWithoutLegacyTournamentInput
@@ -788,6 +812,7 @@ export type TournamentUncheckedCreateWithoutLegacyDivisionsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutLegacyTournamentInput
@@ -829,6 +854,7 @@ export type TournamentUpdateWithoutLegacyDivisionsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTeams?: Prisma.TeamUpdateManyWithoutLegacyTournamentNestedInput
@@ -854,6 +880,7 @@ export type TournamentUncheckedUpdateWithoutLegacyDivisionsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTeams?: Prisma.TeamUncheckedUpdateManyWithoutLegacyTournamentNestedInput
@@ -879,6 +906,7 @@ export type TournamentCreateWithoutLegacyTeamsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionCreateNestedManyWithoutLegacyTournamentInput
@@ -904,6 +932,7 @@ export type TournamentUncheckedCreateWithoutLegacyTeamsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionUncheckedCreateNestedManyWithoutLegacyTournamentInput
@@ -945,6 +974,7 @@ export type TournamentUpdateWithoutLegacyTeamsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUpdateManyWithoutLegacyTournamentNestedInput
@@ -970,6 +1000,7 @@ export type TournamentUncheckedUpdateWithoutLegacyTeamsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUncheckedUpdateManyWithoutLegacyTournamentNestedInput
@@ -995,6 +1026,7 @@ export type TournamentCreateWithoutGamesInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionCreateNestedManyWithoutLegacyTournamentInput
@@ -1020,6 +1052,7 @@ export type TournamentUncheckedCreateWithoutGamesInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionUncheckedCreateNestedManyWithoutLegacyTournamentInput
@@ -1061,6 +1094,7 @@ export type TournamentUpdateWithoutGamesInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUpdateManyWithoutLegacyTournamentNestedInput
@@ -1086,6 +1120,7 @@ export type TournamentUncheckedUpdateWithoutGamesInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUncheckedUpdateManyWithoutLegacyTournamentNestedInput
@@ -1111,6 +1146,7 @@ export type TournamentCreateWithoutStandingsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionCreateNestedManyWithoutLegacyTournamentInput
@@ -1136,6 +1172,7 @@ export type TournamentUncheckedCreateWithoutStandingsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionUncheckedCreateNestedManyWithoutLegacyTournamentInput
@@ -1177,6 +1214,7 @@ export type TournamentUpdateWithoutStandingsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUpdateManyWithoutLegacyTournamentNestedInput
@@ -1202,6 +1240,7 @@ export type TournamentUncheckedUpdateWithoutStandingsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUncheckedUpdateManyWithoutLegacyTournamentNestedInput
@@ -1227,6 +1266,7 @@ export type TournamentCreateWithoutPlayerStatsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionCreateNestedManyWithoutLegacyTournamentInput
@@ -1252,6 +1292,7 @@ export type TournamentUncheckedCreateWithoutPlayerStatsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionUncheckedCreateNestedManyWithoutLegacyTournamentInput
@@ -1293,6 +1334,7 @@ export type TournamentUpdateWithoutPlayerStatsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUpdateManyWithoutLegacyTournamentNestedInput
@@ -1318,6 +1360,7 @@ export type TournamentUncheckedUpdateWithoutPlayerStatsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUncheckedUpdateManyWithoutLegacyTournamentNestedInput
@@ -1343,6 +1386,7 @@ export type TournamentCreateWithoutTeamStatsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionCreateNestedManyWithoutLegacyTournamentInput
@@ -1368,6 +1412,7 @@ export type TournamentUncheckedCreateWithoutTeamStatsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionUncheckedCreateNestedManyWithoutLegacyTournamentInput
@@ -1409,6 +1454,7 @@ export type TournamentUpdateWithoutTeamStatsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUpdateManyWithoutLegacyTournamentNestedInput
@@ -1434,6 +1480,7 @@ export type TournamentUncheckedUpdateWithoutTeamStatsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUncheckedUpdateManyWithoutLegacyTournamentNestedInput
@@ -1459,6 +1506,7 @@ export type TournamentCreateWithoutDivisionsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionCreateNestedManyWithoutLegacyTournamentInput
@@ -1484,6 +1532,7 @@ export type TournamentUncheckedCreateWithoutDivisionsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionUncheckedCreateNestedManyWithoutLegacyTournamentInput
@@ -1525,6 +1574,7 @@ export type TournamentUpdateWithoutDivisionsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUpdateManyWithoutLegacyTournamentNestedInput
@@ -1550,6 +1600,7 @@ export type TournamentUncheckedUpdateWithoutDivisionsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUncheckedUpdateManyWithoutLegacyTournamentNestedInput
@@ -1575,6 +1626,7 @@ export type TournamentCreateWithoutTeamsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionCreateNestedManyWithoutLegacyTournamentInput
@@ -1600,6 +1652,7 @@ export type TournamentUncheckedCreateWithoutTeamsInput = {
   playoffCriteria?: string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyDivisions?: Prisma.DivisionUncheckedCreateNestedManyWithoutLegacyTournamentInput
@@ -1641,6 +1694,7 @@ export type TournamentUpdateWithoutTeamsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUpdateManyWithoutLegacyTournamentNestedInput
@@ -1666,6 +1720,7 @@ export type TournamentUncheckedUpdateWithoutTeamsInput = {
   playoffCriteria?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   prizes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyDivisions?: Prisma.DivisionUncheckedUpdateManyWithoutLegacyTournamentNestedInput
@@ -1785,6 +1840,7 @@ export type TournamentSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   playoffCriteria?: boolean
   rules?: boolean
   prizes?: boolean
+  modality?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   legacyDivisions?: boolean | Prisma.Tournament$legacyDivisionsArgs<ExtArgs>
@@ -1812,6 +1868,7 @@ export type TournamentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   playoffCriteria?: boolean
   rules?: boolean
   prizes?: boolean
+  modality?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["tournament"]>
@@ -1830,6 +1887,7 @@ export type TournamentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   playoffCriteria?: boolean
   rules?: boolean
   prizes?: boolean
+  modality?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["tournament"]>
@@ -1848,11 +1906,12 @@ export type TournamentSelectScalar = {
   playoffCriteria?: boolean
   rules?: boolean
   prizes?: boolean
+  modality?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type TournamentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "description" | "season" | "year" | "startDate" | "endDate" | "registrationDeadline" | "status" | "format" | "playoffCriteria" | "rules" | "prizes" | "createdAt" | "updatedAt", ExtArgs["result"]["tournament"]>
+export type TournamentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "description" | "season" | "year" | "startDate" | "endDate" | "registrationDeadline" | "status" | "format" | "playoffCriteria" | "rules" | "prizes" | "modality" | "createdAt" | "updatedAt", ExtArgs["result"]["tournament"]>
 export type TournamentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   legacyDivisions?: boolean | Prisma.Tournament$legacyDivisionsArgs<ExtArgs>
   legacyTeams?: boolean | Prisma.Tournament$legacyTeamsArgs<ExtArgs>
@@ -1893,6 +1952,10 @@ export type $TournamentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     playoffCriteria: string | null
     rules: runtime.JsonValue | null
     prizes: runtime.JsonValue | null
+    /**
+     * "flag" | "tackle". Games, standings and stats inherit it via tournament_id.
+     */
+    modality: string
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["tournament"]>
@@ -2339,6 +2402,7 @@ export interface TournamentFieldRefs {
   readonly playoffCriteria: Prisma.FieldRef<"Tournament", 'String'>
   readonly rules: Prisma.FieldRef<"Tournament", 'Json'>
   readonly prizes: Prisma.FieldRef<"Tournament", 'Json'>
+  readonly modality: Prisma.FieldRef<"Tournament", 'String'>
   readonly createdAt: Prisma.FieldRef<"Tournament", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Tournament", 'DateTime'>
 }

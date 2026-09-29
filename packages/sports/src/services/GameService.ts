@@ -3,6 +3,7 @@ import { GameScore, QuarterScore } from "@lufa/sports/entities/valueObjects/Scor
 import { Venue } from "@lufa/sports/entities/valueObjects/Venue";
 import type { IGameRepository, ITeamRepository } from "@lufa/sports/ports";
 import { StandingService } from "./StandingService";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 interface ScoreUpdate {
   home: { q1: number; q2: number; q3: number; q4: number; overtime?: number };
@@ -529,6 +530,7 @@ export class GameService {
     status?: GameStatus;
     phase?: GamePhase;
     playoffSlot?: string;
+    modality?: Modality;
   }): Promise<Game[]> {
     if (filters.team) {
       const gamesByTeam = await this.gameRepo.findByTeam(filters.team);
@@ -563,6 +565,7 @@ export class GameService {
       status?: GameStatus;
       phase?: GamePhase;
       playoffSlot?: string;
+      modality?: Modality;
     } = {};
 
     if (filters.tournament) queryFilters.tournament = filters.tournament;
@@ -570,6 +573,7 @@ export class GameService {
     if (filters.status) queryFilters.status = filters.status;
     if (filters.playoffSlot) queryFilters.playoffSlot = filters.playoffSlot;
     if (filters.phase) queryFilters.phase = filters.phase;
+    if (filters.modality) queryFilters.modality = filters.modality;
 
     return await this.gameRepo.findAll(queryFilters);
   }

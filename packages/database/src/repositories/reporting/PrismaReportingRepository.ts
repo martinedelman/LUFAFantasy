@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getPrismaClient } from "@lufa/database/prisma";
-import type { DashboardStatsResponseDto, NextGameResponseDto } from "@lufa/contracts";
+import type { DashboardStatsResponseDto, Modality, NextGameResponseDto } from "@lufa/contracts";
 import type {
   IReportingRepository,
   PlayerRankingQuery,
@@ -17,15 +17,28 @@ export class PrismaReportingRepository implements IReportingRepository {
     return getPrismaClient();
   }
 
-  async getDashboardStats(nextGamesLimit: number, topPlayersLimit: number): Promise<DashboardStatsResponseDto> {
+  async getDashboardStats(
+    nextGamesLimit: number,
+    topPlayersLimit: number,
+    modality: Modality = "flag",
+  ): Promise<DashboardStatsResponseDto> {
+    const inModality = { tournament: { modality } };
     const [activeTournaments, totalTeams, totalPlayers, completedGames, games, groupedPlayers] = await Promise.all([
-      this.db.tournament.count({ where: { status: { in: ["active", "upcoming"] } } }),
-      this.db.team.count({ where: { status: "active" } }),
-      this.db.player.count({ where: { status: "active" } }),
-      this.db.game.count({ where: { status: "completed" } }),
+      this.db.tournament.count({ where: { status: { in: ["active", "upcoming"] }, modality } }),
+      this.db.team.count({ where: { status: "active", division: { modality } } }),
+      this.db.player.count({
+        where: {
+          status: "active",
+          OR: [
+            { team: { division: { modality } } },
+            { teamMemberships: { some: { team: { division: { modality } } } } },
+          ],
+        },
+      }),
+      this.db.game.count({ where: { status: "completed", ...inModality } }),
       this.db.game.findMany({
-        where: { status: { in: ["scheduled", "in_progress"] } },
-        include: { homeTeam: true, awayTeam: true, division: true },
+        where: { status: { in: ["scheduled", "in_progress"] }, ...inModality },
+        include: { homeTeam: true, awayTeam: true, division: true, tournament: { select: { modality: true } } },
         orderBy: { scheduledDate: "asc" },
         take: nextGamesLimit,
       }),
@@ -34,7 +47,7 @@ export class PrismaReportingRepository implements IReportingRepository {
         where: {
           playerId: { not: null },
           points: { gt: 0 },
-          game: { status: { in: ["in_progress", "completed"] } },
+          game: { status: { in: ["in_progress", "completed"] }, ...inModality },
         },
         _sum: { points: true },
         orderBy: { _sum: { points: "desc" } },
@@ -185,7 +198,7 @@ export class PrismaReportingRepository implements IReportingRepository {
       status: { in: ["in_progress", "completed"] },
       ...(query.tournament ? { tournamentId: query.tournament } : {}),
       ...(query.division ? { divisionId: query.division } : {}),
-      ...(query.year ? { tournament: { year: query.year } } : {}),
+      tournament: { modality: query.modality ?? "flag", ...(query.year ? { year: query.year } : {}) },
       ...(query.stage === "all"
         ? {}
         : query.stage === "postseason"
@@ -250,7 +263,7 @@ export class PrismaReportingRepository implements IReportingRepository {
       homeTeam: game.homeTeam?.name || "N/A",
       awayTeam: game.awayTeam?.name || "N/A",
       division: game.division?.name || "N/A",
-      modality: "flag",
+      modality: game.tournament?.modality === "tackle" ? "tackle" : "flag",
       venue: venue?.name || "N/A",
       venueAddress: venue?.address || undefined,
       scheduledDate: game.scheduledDate.toISOString(),

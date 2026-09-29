@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Division } from "@lufa/sports/entities/Division";
+import { DEFAULT_MODALITY, isModality, type Modality } from "@lufa/sports/entities/Modality";
 import { Game, type GameEvent, type GameOfficial, type GameStatistics, type GameStatus } from "@lufa/sports/entities/Game";
 import { Player, type EmergencyContact, type PlayerPosition, type PlayerStatus } from "@lufa/sports/entities/Player";
 import { Standing } from "@lufa/sports/entities/Standing";
@@ -29,6 +30,15 @@ export function referenceId(value: unknown): string {
     return String(record.id ?? record._id ?? "");
   }
   return String(value);
+}
+
+/** The modality a list query asks for, if any. Unknown values are ignored. */
+export function modalityFilter(filters: Record<string, unknown>): Modality | undefined {
+  return isModality(filters.modality) ? filters.modality : undefined;
+}
+
+function toModality(value: unknown): Modality {
+  return isModality(value) ? value : DEFAULT_MODALITY;
 }
 
 function jsonValue<T>(value: unknown, fallback: T): T {
@@ -74,6 +84,7 @@ export function toTournament(record: AnyRecord | null): Tournament | null {
     record.id,
     record.createdAt,
     record.updatedAt,
+    toModality(record.modality),
   );
 }
 
@@ -92,6 +103,7 @@ export function toDivision(record: AnyRecord | null): Division | null {
     record.id,
     record.createdAt,
     record.updatedAt,
+    toModality(record.modality),
   );
 }
 

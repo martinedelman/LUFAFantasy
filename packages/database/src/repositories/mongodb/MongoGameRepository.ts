@@ -5,6 +5,7 @@ import { GameModel } from "../../models/Game";
 import { GameEventModel, GameEventDocument } from "../../models/GameEvent";
 import connectToDatabase from "../../mongodb";
 import mongoose, { ClientSession } from "mongoose";
+import { withoutModality } from "./modality";
 
 export class MongoGameRepository implements IGameRepository {
   async findById(id: string): Promise<Game | null> {
@@ -22,7 +23,9 @@ export class MongoGameRepository implements IGameRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Game[]> {
     await connectToDatabase();
-    const docs = await GameModel.find(filters || {})
+    const query = withoutModality(filters);
+    if (!query) return [];
+    const docs = await GameModel.find(query)
       .populate("homeTeam")
       .populate("awayTeam")
       .populate("tournament")

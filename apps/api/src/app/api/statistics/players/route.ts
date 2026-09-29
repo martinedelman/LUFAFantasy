@@ -1,6 +1,7 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 
 const statisticsService = serviceContainer.statisticsService;
 const ALLOWED_SORT_FIELDS = new Set([
@@ -20,7 +21,10 @@ export async function GET(request: NextRequest) {
     if (!ALLOWED_SORT_FIELDS.has(sortBy)) {
       return NextResponse.json({ success: false, message: "sortBy inválido" }, { status: 400 });
     }
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
     const result = await statisticsService.getPlayerStatistics({
+      modality,
       tournament: searchParams.get("tournament"),
       division: searchParams.get("division"),
       player: searchParams.get("player"),

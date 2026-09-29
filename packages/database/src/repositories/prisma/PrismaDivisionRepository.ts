@@ -2,7 +2,7 @@
 import { Division } from "@lufa/sports/entities/Division";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { IDivisionRepository } from "../contracts";
-import { referenceId, toDivision } from "./mappers";
+import { modalityFilter, referenceId, toDivision } from "./mappers";
 
 const divisionInclude = { membershipTeams: true } as const;
 
@@ -18,6 +18,8 @@ export class PrismaDivisionRepository implements IDivisionRepository {
   async findAll(filters: Record<string, unknown> = {}): Promise<Division[]> {
     const where: Record<string, unknown> = {};
     if (typeof filters.category === "string") where.category = filters.category;
+    const modality = modalityFilter(filters);
+    if (modality) where.modality = modality;
     if (typeof filters.tournament === "string") {
       where.OR = [{ tournamentId: filters.tournament }, { tournaments: { some: { tournamentId: filters.tournament } } }];
     }
@@ -37,6 +39,7 @@ export class PrismaDivisionRepository implements IDivisionRepository {
           ageGroup: value.ageGroup,
           tournamentId: value.tournament ? referenceId(value.tournament) : null,
           maxTeams: value.maxTeams,
+          modality: value.modality,
           ...(value.createdAt ? { createdAt: value.createdAt } : {}),
           ...(value.updatedAt ? { updatedAt: value.updatedAt } : {}),
         },

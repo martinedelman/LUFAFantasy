@@ -1,3 +1,6 @@
+/** LUFA discipline. Omitted query params and legacy data mean "flag". */
+export type Modality = "flag" | "tackle";
+
 export type DivisionCategory = "masculino" | "femenino" | "mixto";
 export type UserRole = "user" | "admin" | "juez" | "entrenador_juveniles" | "redes";
 export type TeamStatus = "active" | "inactive" | "suspended";

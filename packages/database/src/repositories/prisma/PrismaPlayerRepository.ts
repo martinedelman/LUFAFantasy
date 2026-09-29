@@ -2,7 +2,8 @@
 import { Player } from "@lufa/sports/entities/Player";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { IPlayerRepository } from "../contracts";
-import { plainJson, referenceId, toPlayer } from "./mappers";
+import { modalityFilter, plainJson, referenceId, toPlayer } from "./mappers";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 const PLAYER_WITH_TEAM = {
   team: {
@@ -11,6 +12,16 @@ const PLAYER_WITH_TEAM = {
     },
   },
 } as const;
+
+/** Players are shared across modalities: they play one if any of their teams does. */
+function playsInModality(modality: Modality) {
+  return {
+    OR: [
+      { team: { division: { modality } } },
+      { teamMemberships: { some: { team: { division: { modality } } } } },
+    ],
+  };
+}
 
 export class PrismaPlayerRepository implements IPlayerRepository {
   private get db() {
@@ -30,6 +41,8 @@ export class PrismaPlayerRepository implements IPlayerRepository {
       where.OR = [{ position: filters.position }, { secondaryPosition: filters.position }];
     }
     if (typeof filters.status === "string") where.status = filters.status;
+    const modality = modalityFilter(filters);
+    if (modality) where.AND = [playsInModality(modality)];
     return (await this.db.player.findMany({ where, include: PLAYER_WITH_TEAM }))
       .map((record) => this.toPlayerWithTeam(record))
       .filter((item): item is Player => Boolean(item));
@@ -85,13 +98,14 @@ export class PrismaPlayerRepository implements IPlayerRepository {
     );
   }
 
-  async searchByName(query: string): Promise<Player[]> {
+  async searchByName(query: string, modality?: Modality): Promise<Player[]> {
     const rows = await this.db.player.findMany({
       where: {
         OR: [
           { firstName: { contains: query.trim(), mode: "insensitive" } },
           { lastName: { contains: query.trim(), mode: "insensitive" } },
         ],
+        ...(modality ? { AND: [playsInModality(modality)] } : {}),
       },
       include: PLAYER_WITH_TEAM,
     });

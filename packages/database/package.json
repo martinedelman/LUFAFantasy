@@ -26,13 +26,13 @@
     "build": "tsc --noEmit",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests --exclude src/repositories/prisma/provider.integration.test.ts",
+    "test": "vitest run --passWithNoTests --exclude src/repositories/prisma/provider.integration.test.ts --exclude src/repositories/prisma/modality.integration.test.ts",
     "prisma:generate": "prisma generate --config=../../prisma.config.ts",
     "prisma:validate": "prisma validate --config=../../prisma.config.ts",
     "prisma:status": "prisma migrate status --config=../../prisma.config.ts",
     "db:postgres:migrate": "prisma migrate deploy --config=../../prisma.config.ts",
     "db:postgres:test:prepare": "prisma migrate deploy --config=../../prisma.config.ts",
-    "test:postgres": "vitest run src/repositories/prisma/provider.integration.test.ts"
+    "test:postgres": "vitest run src/repositories/prisma/provider.integration.test.ts src/repositories/prisma/modality.integration.test.ts"
   },
   "dependencies": {
     "@lufa/contracts": "*",

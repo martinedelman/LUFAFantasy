@@ -3,6 +3,7 @@ import { Team } from "@lufa/sports/entities/Team";
 import { TeamModel } from "../../models/Team";
 import connectToDatabase from "../../mongodb";
 import { TournamentModel } from "@lufa/database/models";
+import { withoutModality } from "./modality";
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -17,7 +18,9 @@ export class MongoTeamRepository implements ITeamRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Team[]> {
     await connectToDatabase();
-    const docs = await TeamModel.find(filters || {})
+    const query = withoutModality(filters);
+    if (!query) return [];
+    const docs = await TeamModel.find(query)
       .populate("division")
       .exec();
     return docs;

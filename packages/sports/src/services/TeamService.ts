@@ -2,6 +2,7 @@ import { Coach, Team, TeamStatus } from "@lufa/sports/entities/Team";
 import { Colors } from "@lufa/sports/entities/valueObjects/Colors";
 import { ContactInfo } from "@lufa/sports/entities/valueObjects/ContactInfo";
 import type { ITeamRepository } from "@lufa/sports/ports";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 /**
  * Servicio de gestión de equipos
@@ -92,7 +93,12 @@ export class TeamService {
   /**
    * Lista equipos con filtros
    */
-  async listTeams(filters?: { tournament?: string; division?: string; status?: TeamStatus }): Promise<Team[]> {
+  async listTeams(filters?: {
+    tournament?: string;
+    division?: string;
+    status?: TeamStatus;
+    modality?: Modality;
+  }): Promise<Team[]> {
     if (!filters) {
       return await this.teamRepo.findAll();
     }
@@ -118,9 +124,10 @@ export class TeamService {
       });
     }
 
-    const queryFilters: { division?: string; status?: TeamStatus } = {};
+    const queryFilters: { division?: string; status?: TeamStatus; modality?: Modality } = {};
     if (filters.division) queryFilters.division = filters.division;
     if (filters.status) queryFilters.status = filters.status;
+    if (filters.modality) queryFilters.modality = filters.modality;
 
     return await this.teamRepo.findAll(queryFilters);
   }

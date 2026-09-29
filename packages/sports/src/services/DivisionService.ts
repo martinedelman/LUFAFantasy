@@ -1,4 +1,5 @@
 import { Division, DivisionCategory } from "@lufa/sports/entities/Division";
+import type { Modality } from "@lufa/sports/entities/Modality";
 import type { IDivisionRepository } from "@lufa/sports/ports";
 
 /**
@@ -17,6 +18,7 @@ export class DivisionService {
     tournament?: string;
     maxTeams?: number;
     teams?: string[];
+    modality?: Modality;
   }): Promise<Division> {
     const division = new Division(
       data.name,
@@ -25,6 +27,10 @@ export class DivisionService {
       data.ageGroup,
       data.tournament,
       data.maxTeams,
+      undefined,
+      undefined,
+      undefined,
+      data.modality,
     );
 
     // Validar
@@ -46,7 +52,7 @@ export class DivisionService {
   /**
    * Lista divisiones con filtros
    */
-  async listDivisions(filters?: { tournament?: string; category?: DivisionCategory }): Promise<Division[]> {
+  async listDivisions(filters?: { tournament?: string; category?: DivisionCategory; modality?: Modality }): Promise<Division[]> {
     return await this.divisionRepo.findAll(filters);
   }
 
@@ -79,6 +85,7 @@ export class DivisionService {
       existingDivision.id,
       existingDivision.createdAt,
       existingDivision.updatedAt,
+      existingDivision.modality,
     );
 
     // Validar
@@ -118,6 +125,7 @@ export class DivisionService {
       division.id,
       division.createdAt,
       division.updatedAt,
+      division.modality,
     );
 
     return await this.divisionRepo.update(divisionId, updatedDivision);
@@ -147,6 +155,7 @@ export class DivisionService {
       division.id,
       division.createdAt,
       division.updatedAt,
+      division.modality,
     );
 
     return await this.divisionRepo.update(divisionId, updatedDivision);

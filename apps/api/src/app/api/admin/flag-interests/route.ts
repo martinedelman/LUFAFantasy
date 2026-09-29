@@ -2,6 +2,7 @@ import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 
 const adminService = serviceContainer.adminService;
 const authService = serviceContainer.authService;
@@ -20,8 +21,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
     const interests = await adminService.listFlagInterests({
       interestType: searchParams.get("interestType") || undefined,
+      modality,
     });
 
     return NextResponse.json({ success: true, data: interests });

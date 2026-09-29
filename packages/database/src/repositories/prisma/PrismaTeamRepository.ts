@@ -2,7 +2,7 @@
 import { Team } from "@lufa/sports/entities/Team";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { ITeamRepository } from "../contracts";
-import { plainJson, referenceId, toTeam } from "./mappers";
+import { modalityFilter, plainJson, referenceId, toTeam } from "./mappers";
 
 const teamInclude = { playerMemberships: true } as const;
 
@@ -22,6 +22,8 @@ export class PrismaTeamRepository implements ITeamRepository {
       where.OR = [{ tournamentId: filters.tournament }, { tournaments: { some: { tournamentId: filters.tournament } } }];
     }
     if (typeof filters.status === "string") where.status = filters.status;
+    const modality = modalityFilter(filters);
+    if (modality) where.division = { modality };
     return (await this.db.team.findMany({ where, include: teamInclude }))
       .map(toTeam)
       .filter((item): item is Team => Boolean(item));

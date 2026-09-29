@@ -1,3 +1,4 @@
+import type { Modality } from "@lufa/sports/entities/Modality";
 import type { IDivisionRepository, ITournamentRepository } from "@lufa/sports/ports";
 
 export type RankingEventType = "touchdown" | "extra_point" | "safety" | "interception" | "pick_six" | "sack";
@@ -13,6 +14,7 @@ export interface PlayerRankingQuery {
   stage: RankingStage;
   includePickSix: boolean;
   limit: number;
+  modality?: Modality;
 }
 
 export interface PlayerRankingPort {

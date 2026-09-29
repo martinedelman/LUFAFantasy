@@ -1,5 +1,6 @@
 import { IRepository } from "./IRepository";
 import { Player } from "@lufa/sports/entities/Player";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 /**
  * Interface para el repositorio de Players
@@ -33,5 +34,5 @@ export interface IPlayerRepository extends IRepository<Player> {
   /**
    * Busca jugadores por nombre (búsqueda parcial)
    */
-  searchByName(query: string): Promise<Player[]>;
+  searchByName(query: string, modality?: Modality): Promise<Player[]>;
 }

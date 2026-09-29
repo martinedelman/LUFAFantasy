@@ -2,6 +2,7 @@ import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue, invalidateCacheByPrefix } from "@/lib/serverCache";
 import { TeamStatus } from "@lufa/sports/entities/Team";
 import { getReportingRepository } from "@lufa/database/repositories/reporting";
@@ -48,6 +49,8 @@ function sanitizeContactForService(contact: CreateTeamRequestDto["contact"]) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
     // v2 invalida respuestas que exponían la división solamente como ID.
     const cacheKey = buildRequestCacheKey("teams:list:v2", searchParams);
     const payload = await getCachedValue(
@@ -61,7 +64,9 @@ export async function GET(request: NextRequest) {
         const limit = parseInt(searchParams.get("limit") || "10");
 
         // Construir filtros
-        const filters: { tournament?: string; division?: string; status?: TeamStatus } = {};
+        const filters: { tournament?: string; division?: string; status?: TeamStatus; modality: typeof modality } = {
+          modality,
+        };
         if (tournament) filters.tournament = tournament;
         if (division) filters.division = division;
         if (status) filters.status = status;

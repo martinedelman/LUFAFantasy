@@ -3,6 +3,7 @@ import { Division } from "@lufa/sports/entities/Division";
 import { DivisionModel } from "../../models/Division";
 import connectToDatabase from "../../mongodb";
 import { TournamentModel } from "@lufa/database/models";
+import { withoutModality } from "./modality";
 
 export class MongoDivisionRepository implements IDivisionRepository {
   async findById(id: string): Promise<Division | null> {
@@ -13,7 +14,9 @@ export class MongoDivisionRepository implements IDivisionRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Division[]> {
     await connectToDatabase();
-    const docs = await DivisionModel.find(filters || {})
+    const query = withoutModality(filters);
+    if (!query) return [];
+    const docs = await DivisionModel.find(query)
       .populate("teams")
       .exec();
     return docs;

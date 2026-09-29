@@ -8,6 +8,7 @@ import type {
   OtpRecord,
 } from "./IAuxiliaryRepository";
 import { plainJson, referenceId } from "../prisma/mappers";
+import { DEFAULT_MODALITY, isModality, type Modality } from "@lufa/sports/entities/Modality";
 
 function otpRecord(row: any): OtpRecord | null {
   if (!row) return null;
@@ -240,12 +241,12 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
     return result.count > 0;
   }
 
-  async getSiteSettings(): Promise<Record<string, unknown> | null> {
-    const row = await this.db.siteSettings.findUnique({ where: { key: "global" } });
+  async getSiteSettings(key = "global"): Promise<Record<string, unknown> | null> {
+    const row = await this.db.siteSettings.findUnique({ where: { key } });
     return row ? { ...row, _id: row.key } : null;
   }
 
-  async upsertSiteSettings(data: Record<string, unknown>): Promise<Record<string, unknown>> {
+  async upsertSiteSettings(data: Record<string, unknown>, key = "global"): Promise<Record<string, unknown>> {
     const value = {
       whatsappMessageTemplate: String(data.whatsappMessageTemplate || ""),
       contactEmail: String(data.contactEmail || ""),
@@ -257,8 +258,8 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
       featureVisibility: plainJson(data.featureVisibility || {}),
     };
     const row = await this.db.siteSettings.upsert({
-      where: { key: "global" },
-      create: { key: "global", ...value },
+      where: { key },
+      create: { key, ...value },
       update: value,
     });
     return { ...row, _id: row.key };
@@ -310,27 +311,31 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
         experience: data.experience ? String(data.experience) : "",
         company: data.company ? String(data.company) : "",
         sponsorInterest: data.sponsorInterest ? String(data.sponsorInterest) : "",
+        modality: isModality(data.modality) ? data.modality : DEFAULT_MODALITY,
       },
     });
     return this.withMongoId(row);
   }
 
   async listFlagInterests(
-    filters: { interestType?: string; playerRegistrationsOnly?: boolean } = {},
+    filters: { interestType?: string; playerRegistrationsOnly?: boolean; modality?: Modality } = {},
   ): Promise<Record<string, unknown>[]> {
     const rows = await this.db.flagInterest.findMany({
-      where: filters.playerRegistrationsOnly
-        ? { interestType: { in: ["play", "child"] } }
-        : filters.interestType
-          ? { interestType: filters.interestType }
-          : {},
+      where: {
+        ...(filters.modality ? { modality: filters.modality } : {}),
+        ...(filters.playerRegistrationsOnly
+          ? { interestType: { in: ["play", "child"] } }
+          : filters.interestType
+            ? { interestType: filters.interestType }
+            : {}),
+      },
       orderBy: { createdAt: "desc" },
     });
     return rows.map((row) => this.withMongoId(row));
   }
 
   async listPlayerStatistics(
-    filters: { tournament?: string; division?: string; player?: string },
+    filters: { tournament?: string; division?: string; player?: string; modality?: Modality },
     sortBy: string,
     order: 1 | -1,
     page: number,
@@ -340,6 +345,7 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
       ...(filters.tournament ? { tournamentId: filters.tournament } : {}),
       ...(filters.division ? { divisionId: filters.division } : {}),
       ...(filters.player ? { playerId: filters.player } : {}),
+      ...(filters.modality ? { tournament: { modality: filters.modality } } : {}),
     };
     const { safeLimit, offset } = this.pagination(page, limit);
     const direction = order === 1 ? Prisma.sql`ASC` : Prisma.sql`DESC`;
@@ -347,6 +353,7 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
     if (filters.tournament) clauses.push(Prisma.sql`"tournament_id" = ${filters.tournament}`);
     if (filters.division) clauses.push(Prisma.sql`"division_id" = ${filters.division}`);
     if (filters.player) clauses.push(Prisma.sql`"player_id" = ${filters.player}`);
+    if (filters.modality) clauses.push(this.tournamentModalityClause(filters.modality));
     const [ids, total] = await Promise.all([
       this.db.$queryRaw<Array<{ id: string }>>(Prisma.sql`
         SELECT "id"
@@ -376,7 +383,7 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
   }
 
   async listTeamStatistics(
-    filters: { tournament?: string; division?: string; team?: string },
+    filters: { tournament?: string; division?: string; team?: string; modality?: Modality },
     sortBy: string,
     order: 1 | -1,
     page: number,
@@ -386,6 +393,7 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
       ...(filters.tournament ? { tournamentId: filters.tournament } : {}),
       ...(filters.division ? { divisionId: filters.division } : {}),
       ...(filters.team ? { teamId: filters.team } : {}),
+      ...(filters.modality ? { tournament: { modality: filters.modality } } : {}),
     };
     const { safeLimit, offset } = this.pagination(page, limit);
     const direction = order === 1 ? Prisma.sql`ASC` : Prisma.sql`DESC`;
@@ -393,6 +401,7 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
     if (filters.tournament) clauses.push(Prisma.sql`"tournament_id" = ${filters.tournament}`);
     if (filters.division) clauses.push(Prisma.sql`"division_id" = ${filters.division}`);
     if (filters.team) clauses.push(Prisma.sql`"team_id" = ${filters.team}`);
+    if (filters.modality) clauses.push(this.tournamentModalityClause(filters.modality));
     const [ids, total] = await Promise.all([
       this.db.$queryRaw<Array<{ id: string }>>(Prisma.sql`
         SELECT "id"
@@ -495,7 +504,11 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
     return { safeLimit, offset: (safePage - 1) * safeLimit };
   }
 
-  private statisticsTable(table: "player_statistics" | "team_statistics") {
+  private tournamentModalityClause(modality: Modality) {
+    return Prisma.sql`"tournament_id" IN (SELECT "id" FROM ${this.statisticsTable("tournaments")} WHERE "modality" = ${modality})`;
+  }
+
+  private statisticsTable(table: "player_statistics" | "team_statistics" | "tournaments") {
     const databaseUrl = process.env.DATABASE_URL;
     const schema = databaseUrl ? new URL(databaseUrl).searchParams.get("schema") || "public" : "public";
     if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(schema)) {

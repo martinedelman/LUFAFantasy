@@ -64,6 +64,8 @@ model Tournament {
   playoffCriteria      String?   @map("playoff_criteria")
   rules                Json?
   prizes               Json?
+  /// "flag" | "tackle". Games, standings and stats inherit it via tournament_id.
+  modality             String    @default("flag")
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
@@ -76,7 +78,8 @@ model Tournament {
   playerStats     PlayerStatistics[]
   teamStats       TeamStatistics[]
 
-  @@unique([name, year])
+  @@unique([name, year, modality])
+  @@index([modality])
   @@index([status])
   @@index([playoffCriteria])
   @@index([startDate])
@@ -90,6 +93,8 @@ model Division {
   ageGroup     String?  @map("age_group")
   tournamentId String?  @map("tournament_id")
   maxTeams     Int?     @map("max_teams")
+  /// "flag" | "tackle". Teams inherit it via division_id.
+  modality     String   @default("flag")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -104,6 +109,7 @@ model Division {
 
   @@index([name, category])
   @@index([category])
+  @@index([modality])
   @@index([tournamentId])
   @@map("divisions")
 }
@@ -384,8 +390,10 @@ model FlagInterest {
   experience      String?  @default("")
   company         String?  @default("")
   sponsorInterest String?  @default("") @map("sponsor_interest")
+  modality        String   @default("flag")
   createdAt       DateTime @default(now()) @map("created_at")
 
+  @@index([modality, createdAt])
   @@index([interestType, createdAt])
   @@index([whatsappDigits, createdAt])
   @@map("flag_interests")

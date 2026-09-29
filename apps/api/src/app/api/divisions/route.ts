@@ -1,6 +1,7 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality, resolveModality } from "@/lib/modality";
 import { DivisionCategory } from "@lufa/sports/entities/Division";
 import { toDivisionResponseDto } from "@/app/DTOs";
 import type { CreateDivisionRequestDto } from "@/app/DTOs";
@@ -17,9 +18,11 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category") as DivisionCategory | null;
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
 
     // Construir filtros
-    const filters: { tournament?: string; category?: DivisionCategory } = {};
+    const filters: { tournament?: string; category?: DivisionCategory; modality: typeof modality } = { modality };
     if (tournament) filters.tournament = tournament;
     if (category) filters.category = category;
 
@@ -58,6 +61,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as CreateDivisionRequestDto;
+    const modality = resolveModality(body.modality, request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
 
     // Validación básica
     if (!body.name || !body.category) {
@@ -77,6 +82,7 @@ export async function POST(request: NextRequest) {
       tournament: body.tournament,
       maxTeams: body.maxTeams,
       teams: body.teams,
+      modality,
     });
 
     return NextResponse.json(
