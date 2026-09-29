@@ -26,11 +26,13 @@ async function forbid(directory, patterns, reason) {
   }
 }
 
-await forbid(
-  "apps/institutional/src",
-  [/@lufa\/(?:database|identity-institutional|integrations|operations|sports)/, /@\/repositories/, /@\/models/, /@\/services\/backend/],
-  "el frontend institucional no puede importar backend o persistencia",
-);
+for (const app of ["apps/institutional/src", "apps/tackle-institucional/src"]) {
+  await forbid(
+    app,
+    [/@lufa\/(?:database|identity-institutional|integrations|operations|sports)/, /@\/repositories/, /@\/models/, /@\/services\/backend/],
+    "el frontend institucional no puede importar backend o persistencia",
+  );
+}
 await forbid(
   "packages/institutional-web/src",
   [/@lufa\/(?:database|identity-institutional|integrations|operations|sports)/, /DATABASE_URL|MONGODB_URI/, /from ["']@\//],

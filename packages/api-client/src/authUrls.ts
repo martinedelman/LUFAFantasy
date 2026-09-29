@@ -3,7 +3,7 @@ const PRODUCTION_FLAG_URL = "https://flag.lufa.com.uy";
 const PRODUCTION_TACKLE_URL = "https://tackle.lufa.com.uy";
 const LOCAL_LUFA_URL = "http://localhost:3003";
 const LOCAL_FLAG_URL = "http://localhost:3000";
-const LOCAL_TACKLE_URL = "http://localhost:3002";
+const LOCAL_TACKLE_URL = "http://localhost:3004";
 
 function trimTrailingSlash(value: string) {
   return value.replace(/\/+$/, "");

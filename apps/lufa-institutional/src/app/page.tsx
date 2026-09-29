@@ -5,6 +5,8 @@ import Link from "next/link";
 import styles from "./page.module.css";
 
 const flagUrl = process.env.NEXT_PUBLIC_FLAG_URL || "https://flag.lufa.com.uy";
+// Opt-in: the tackle card links out only once its URL is configured.
+const tackleUrl = process.env.NEXT_PUBLIC_TACKLE_URL;
 
 export default function HomePage() {
   return (
@@ -14,7 +16,7 @@ export default function HomePage() {
           <Image src="/lufa_icon.png" alt="" width={78} height={78} priority />
           <span>Liga Uruguaya de Football Americano</span>
         </Link>
-        <SiteNav flagUrl={flagUrl} />
+        <SiteNav flagUrl={flagUrl} tackleUrl={tackleUrl} />
       </header>
 
       <section className={`hero ${styles.hero}`} id="inicio" aria-labelledby="portal-title">
@@ -53,11 +55,20 @@ export default function HomePage() {
             <small>Ver competencia y novedades</small>
             <i aria-hidden="true">↗</i>
           </a>
-          <div className="discipline-card tackle-card" aria-disabled="true">
-            <span>02</span>
-            <strong>Tackle Football</strong>
-            <small>Próximamente</small>
-          </div>
+          {tackleUrl ? (
+            <a className="discipline-card tackle-card" href={tackleUrl}>
+              <span>02</span>
+              <strong>Tackle Football</strong>
+              <small>Ver competencia y novedades</small>
+              <i aria-hidden="true">↗</i>
+            </a>
+          ) : (
+            <div className="discipline-card tackle-card" aria-disabled="true">
+              <span>02</span>
+              <strong>Tackle Football</strong>
+              <small>Próximamente</small>
+            </div>
+          )}
         </div>
       </section>
 

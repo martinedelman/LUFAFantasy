@@ -5,9 +5,10 @@ import Link from "next/link";
 import { AuthControl } from "./AuthControl";
 import "./SiteNav.css";
 
-type Props = { flagUrl: string };
+/** `tackleUrl` stays unset until the tackle site is live, showing it as upcoming. */
+type Props = { flagUrl: string; tackleUrl?: string };
 
-export function SiteNav({ flagUrl }: Props) {
+export function SiteNav({ flagUrl, tackleUrl }: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -42,7 +43,11 @@ export function SiteNav({ flagUrl }: Props) {
         <Link href="#proximos-partidos" onClick={closeMenu}>Próximos partidos</Link>
         <Link href="#sumate" onClick={closeMenu}>Sumate</Link>
         <a href={flagUrl}>Flag Football</a>
-        <span aria-disabled="true">Tackle <small>Próximamente</small></span>
+        {tackleUrl ? (
+          <a href={tackleUrl}>Tackle Football</a>
+        ) : (
+          <span aria-disabled="true">Tackle <small>Próximamente</small></span>
+        )}
         <div className="site-nav-session">
           <AuthControl />
         </div>
