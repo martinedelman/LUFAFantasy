@@ -282,6 +282,19 @@ describe("modality separation (PostgreSQL)", () => {
       ["flag", 11],
       ["tackle", 40],
     ]);
+
+    // Position filters use the modality's profile (RS in tackle, C in flag).
+    const idsWith = async (position: string, modality: Modality) =>
+      (await players.findAll({ team: id("tackle", "team"), position, modality })).map((row) => row.id);
+    expect(await idsWith("RS", "tackle")).toContain(shared);
+    expect(await idsWith("C", "tackle")).not.toContain(shared);
+
+    // Moving the primary team to tackle: base columns now mirror the tackle profile; flag's is kept.
+    await playerService.updatePlayer(shared, { team: id("tackle", "team") }, "tackle");
+    expect(await db.player.findUniqueOrThrow({ where: { id: shared } })).toMatchObject({ jerseyNumber: 40, position: "RS" });
+    expect((await playerService.getPlayerById(shared, "flag"))?.jerseyNumber).toBe(11);
+    await playerService.updatePlayer(shared, { team: id("flag", "team") }, "flag");
+    expect(await db.player.findUniqueOrThrow({ where: { id: shared } })).toMatchObject({ jerseyNumber: 11, position: "C" });
     await db.teamPlayer.deleteMany({ where: { teamId: id("tackle", "team"), playerId: shared } });
   });
 

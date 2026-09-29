@@ -154,3 +154,32 @@ describe("GameService event rules by modality", () => {
     expect(() => service.buildValidatedGameEvent(tackleGame(), safety)).toThrow("El jugador es requerido");
   });
 });
+
+describe("GameService server-side scoring details", () => {
+  const tackleGame = () => {
+    const game = makeGame();
+    Object.assign(game, { tournament: { _id: "tournament", name: "Tackle", modality: "tackle" } });
+    return game;
+  };
+
+  it("los eventos de control no suman puntos en tackle", () => {
+    const { service } = makeService(tackleGame());
+    expect(service.buildValidatedGameEvent(tackleGame(), { quarter: 2, type: "quarter_end", team: "home", points: 100 }).points).toBe(0);
+    expect(
+      service.buildValidatedGameEvent(tackleGame(), { quarter: 2, type: "penalty", team: "home", player: "p1", points: 5 }).points,
+    ).toBe(0);
+  });
+
+  it("el crédito del QB se calcula con los puntos del servidor", () => {
+    const { service } = makeService(tackleGame());
+    const touchdown = service.buildValidatedGameEvent(tackleGame(), {
+      quarter: 1, type: "touchdown", team: "home", player: "wr", points: 7, details: { playType: "pass", qb: "qb", qbStatValue: 7 },
+    });
+    expect([touchdown.points, (touchdown.details as { qbStatValue: number }).qbStatValue]).toEqual([6, 6]);
+
+    const pickSix = service.buildValidatedGameEvent(tackleGame(), {
+      quarter: 1, type: "pick_six", team: "home", player: "cb", details: { qb: "qb", qbStatValue: 0 },
+    });
+    expect((pickSix.details as { qbStatValue: number }).qbStatValue).toBe(-6);
+  });
+});

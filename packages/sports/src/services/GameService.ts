@@ -4,7 +4,7 @@ import { Venue } from "@lufa/sports/entities/valueObjects/Venue";
 import type { IGameRepository, ITeamRepository } from "@lufa/sports/ports";
 import { StandingService } from "./StandingService";
 import { DEFAULT_MODALITY, isModality, type Modality } from "@lufa/sports/entities/Modality";
-import { GAME_EVENT_LABELS, eventRule, resolveEventPoints } from "@lufa/contracts/game-events";
+import { GAME_EVENT_LABELS, eventRule, qbStatValue, resolveEventPoints } from "@lufa/contracts/game-events";
 
 interface ScoreUpdate {
   home: { q1: number; q2: number; q3: number; q4: number; overtime?: number };
@@ -300,8 +300,19 @@ export class GameService {
       player: eventData.player || undefined,
       points: safePoints,
       description: this.getEventDescription(modality, eventData.type, safePoints),
-      details: eventData.details,
+      details: this.withServerQbStatValue(rule, eventData.type, safePoints, eventData.details),
     };
+  }
+
+  /** The QB's credit follows the stored points, never the client's value. */
+  private withServerQbStatValue(
+    rule: ReturnType<typeof eventRule>,
+    type: GameEventType,
+    points: number | undefined,
+    details: unknown,
+  ): unknown {
+    if (!rule?.qb || !this.hasEventQuarterback(details)) return details;
+    return { ...(details as Record<string, unknown>), qbStatValue: qbStatValue(rule, type, points) };
   }
 
   /**

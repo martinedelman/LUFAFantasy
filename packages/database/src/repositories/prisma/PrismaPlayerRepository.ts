@@ -14,6 +14,25 @@ const PLAYER_WITH_TEAM = {
   },
 } as const;
 
+type Tx = Parameters<Parameters<ReturnType<typeof getPrismaClient>["$transaction"]>[0]>[0];
+
+async function homeModalityOf(tx: Tx, playerId: string): Promise<Modality> {
+  const row = await tx.player.findUnique({
+    where: { id: playerId },
+    select: { team: { select: { division: { select: { modality: true } } } } },
+  });
+  const modality = row?.team?.division?.modality;
+  return isModality(modality) ? modality : DEFAULT_MODALITY;
+}
+
+function profileColumns(profile: { jerseyNumber?: number | null; position: string; secondaryPosition?: string | null }) {
+  return {
+    jerseyNumber: profile.jerseyNumber ?? null,
+    position: profile.position,
+    secondaryPosition: profile.secondaryPosition ?? null,
+  };
+}
+
 /** With a modality, also load that modality's profile so jersey and positions reflect it. */
 function playerInclude(modality?: Modality) {
   return modality ? { ...PLAYER_WITH_TEAM, modalityProfiles: { where: { modality } } } : PLAYER_WITH_TEAM;
@@ -59,17 +78,39 @@ export class PrismaPlayerRepository implements IPlayerRepository {
     }));
   }
 
-  async upsertModalityProfile(playerId: string, profile: PlayerModalityProfile): Promise<void> {
-    const data = {
-      jerseyNumber: profile.jerseyNumber,
-      position: profile.position,
-      secondaryPosition: profile.secondaryPosition ?? null,
-    };
-    await this.db.playerModalityProfile.upsert({
-      where: { playerId_modality: { playerId, modality: profile.modality } },
-      create: { playerId, modality: profile.modality, ...data },
-      update: data,
+  async createWithProfile(data: Player, profile: PlayerModalityProfile): Promise<Player> {
+    const playerId = await this.db.$transaction(async (tx) => {
+      const created = await tx.player.create({ data: this.toData(data, true) });
+      const home = await homeModalityOf(tx, created.id);
+      for (const modality of new Set([home, profile.modality])) {
+        await tx.playerModalityProfile.create({ data: { playerId: created.id, modality, ...profileColumns(profile) } });
+      }
+      return created.id;
     });
+    return (await this.findById(playerId, profile.modality))!;
+  }
+
+  async updateWithProfile(id: string, data: Player, profile: PlayerModalityProfile): Promise<Player> {
+    await this.db.$transaction(async (tx) => {
+      await tx.player.update({ where: { id }, data: this.toData(data, false) });
+      await tx.playerModalityProfile.upsert({
+        where: { playerId_modality: { playerId: id, modality: profile.modality } },
+        create: { playerId: id, modality: profile.modality, ...profileColumns(profile) },
+        update: profileColumns(profile),
+      });
+      // The primary team may have changed modality: base columns always mirror its profile.
+      const home = await homeModalityOf(tx, id);
+      const homeProfile = await tx.playerModalityProfile.findUnique({
+        where: { playerId_modality: { playerId: id, modality: home } },
+      });
+      if (homeProfile) {
+        await tx.player.update({ where: { id }, data: profileColumns(homeProfile) });
+      } else {
+        const base = await tx.player.findUniqueOrThrow({ where: { id } });
+        await tx.playerModalityProfile.create({ data: { playerId: id, modality: home, ...profileColumns(base) } });
+      }
+    });
+    return (await this.findById(id, profile.modality))!;
   }
 
   async isJerseyTaken(
@@ -107,11 +148,22 @@ export class PrismaPlayerRepository implements IPlayerRepository {
     if (typeof filters.team === "string") {
       and.push({ OR: [{ teamId: filters.team }, { teamMemberships: { some: { teamId: filters.team } } }] });
     }
+    const modality = modalityFilter(filters);
     if (typeof filters.position === "string") {
-      where.OR = [{ position: filters.position }, { secondaryPosition: filters.position }];
+      const byPosition = [{ position: filters.position }, { secondaryPosition: filters.position }];
+      // Match the modality's profile; the base columns only count for players without one.
+      and.push(
+        modality
+          ? {
+              OR: [
+                { modalityProfiles: { some: { modality, OR: byPosition } } },
+                { AND: [{ modalityProfiles: { none: { modality } } }, { OR: byPosition }] },
+              ],
+            }
+          : { OR: byPosition },
+      );
     }
     if (typeof filters.status === "string") where.status = filters.status;
-    const modality = modalityFilter(filters);
     if (modality) and.push(playsInModality(modality));
     if (and.length) where.AND = and;
     return (await this.db.player.findMany({ where, include: playerInclude(modality) }))
