@@ -22,10 +22,14 @@ export interface AdminAnalyticsQuery {
   subject: AdminAnalyticsSubject;
   tournament?: string | null;
   division?: string | null;
+  /** Defaults to flag. */
+  modality?: Modality;
 }
 
 export interface AnalyticsFactsQuery {
   filters?: AnalyticsFiltersDto;
+  /** Defaults to flag. */
+  modality?: Modality;
 }
 
 export interface PlayerRankingRow {

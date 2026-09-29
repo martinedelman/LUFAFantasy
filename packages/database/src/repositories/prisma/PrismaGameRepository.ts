@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Game, type GameEvent, type GameStatus } from "@lufa/sports/entities/Game";
 import { GameScore } from "@lufa/sports/entities/valueObjects/Score";
+import type { Modality } from "@lufa/sports/entities/Modality";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { IGameRepository } from "../contracts";
 import { modalityFilter, plainJson, referenceId, toGame } from "./mappers";
@@ -72,9 +73,9 @@ export class PrismaGameRepository implements IGameRepository {
     return this.findAll({ tournament: tournamentId });
   }
 
-  async findByTeam(teamId: string): Promise<Game[]> {
+  async findByTeam(teamId: string, modality?: Modality): Promise<Game[]> {
     const rows = await this.db.game.findMany({
-      where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] },
+      where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }], ...(modality ? { tournament: { modality } } : {}) },
       include: gameInclude,
     });
     return rows.map(toGame).filter((item): item is Game => Boolean(item));

@@ -1,12 +1,15 @@
 import { Division, DivisionCategory } from "@lufa/sports/entities/Division";
-import type { Modality } from "@lufa/sports/entities/Modality";
-import type { IDivisionRepository } from "@lufa/sports/ports";
+import { DEFAULT_MODALITY, type Modality } from "@lufa/sports/entities/Modality";
+import type { IDivisionRepository, ITournamentRepository } from "@lufa/sports/ports";
 
 /**
  * Servicio de gestión de divisiones
  */
 export class DivisionService {
-  constructor(private readonly divisionRepo: IDivisionRepository) {}
+  constructor(
+    private readonly divisionRepo: IDivisionRepository,
+    private readonly tournamentRepo: ITournamentRepository,
+  ) {}
 
   /**
    * Crea una nueva división
@@ -37,6 +40,17 @@ export class DivisionService {
     const validation = division.validate();
     if (!validation.isValid) {
       throw new Error(validation.errors.join(", "));
+    }
+
+    if (data.tournament) {
+      const tournament = await this.tournamentRepo.findById(data.tournament);
+      if (!tournament) {
+        throw new Error("Torneo no encontrado");
+      }
+      const modality = data.modality || DEFAULT_MODALITY;
+      if ((tournament.modality || DEFAULT_MODALITY) !== modality) {
+        throw new Error(`El torneo ${tournament.name} no pertenece a la modalidad ${modality}`);
+      }
     }
 
     return await this.divisionRepo.create(division);

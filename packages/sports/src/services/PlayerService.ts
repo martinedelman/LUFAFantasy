@@ -308,8 +308,8 @@ export class PlayerService {
     return await this.playerRepo.update(id, updatedPlayer);
   }
 
-  async getPlayerByEmail(email: string): Promise<Player | null> {
-    return await this.playerRepo.findByEmail(email);
+  async getPlayerByEmail(email: string, modality?: Modality): Promise<Player | null> {
+    return await this.playerRepo.findByEmail(email, modality);
   }
 
   /**

@@ -107,7 +107,8 @@ export class MongoPlayerRepository implements IPlayerRepository {
     return count > 0;
   }
 
-  async findByEmail(email: string): Promise<Player | null> {
+  async findByEmail(email: string, modality?: Modality): Promise<Player | null> {
+    if (!withoutModality({ modality })) return null;
     await connectToDatabase();
     const normalizedEmail = email.trim().toLowerCase();
     const doc = await PlayerModel.findOne({ email: normalizedEmail }).exec();

@@ -1,3 +1,4 @@
+import type { Modality } from "@lufa/sports/entities/Modality";
 import type {
   AnalyticsCatalogDto,
   AnalyticsQueryDto,
@@ -35,7 +36,7 @@ export interface AnalyticsEventFact {
 }
 
 export interface AnalyticsReportingPort {
-  getAnalyticsFacts(query: { filters?: AnalyticsQueryDto["filters"] }): Promise<AnalyticsEventFact[]>;
+  getAnalyticsFacts(query: { filters?: AnalyticsQueryDto["filters"]; modality?: Modality }): Promise<AnalyticsEventFact[]>;
 }
 
 export interface AnalyticsReportPort {
@@ -196,8 +197,8 @@ export class AnalyticsService {
     };
   }
 
-  async getCatalogWithFilterOptions(): Promise<AnalyticsCatalogDto> {
-    const facts = await this.reportingRepo.getAnalyticsFacts({});
+  async getCatalogWithFilterOptions(modality?: Modality): Promise<AnalyticsCatalogDto> {
+    const facts = await this.reportingRepo.getAnalyticsFacts({ modality });
     const options = <T extends string | number>(entries: Array<[T, string]>) => [...new Map(entries).entries()]
       .map(([value, label]) => ({ value, label }))
       .sort((left, right) => left.label.localeCompare(right.label, "es"));
@@ -214,12 +215,12 @@ export class AnalyticsService {
     };
   }
 
-  async query(query: AnalyticsQueryDto): Promise<AnalyticsQueryResponseDto> {
+  async query(query: AnalyticsQueryDto, modality?: Modality): Promise<AnalyticsQueryResponseDto> {
     if (!Array.isArray(query.widgets) || !query.widgets.length || query.widgets.length > 12) {
       throw new Error("El tablero debe contener entre 1 y 12 widgets");
     }
     for (const widget of query.widgets) this.validateWidget(widget);
-    const facts = await this.reportingRepo.getAnalyticsFacts({ filters: query.filters });
+    const facts = await this.reportingRepo.getAnalyticsFacts({ filters: query.filters, modality });
     return runAnalyticsQuery(facts, query);
   }
 
