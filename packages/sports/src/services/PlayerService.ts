@@ -304,9 +304,18 @@ export class PlayerService {
     const jerseyNumber = requestedJerseyNumber !== undefined ? requestedJerseyNumber : current.jerseyNumber;
     const position = data.position || current.position;
     const nextSecondaryPosition = data.secondaryPosition !== undefined ? secondaryPosition : current.secondaryPosition;
-    if (data.position && data.position !== current.position) this.assertPositionForModality(modality, data.position);
-    if (data.secondaryPosition !== undefined && secondaryPosition !== current.secondaryPosition) {
-      this.assertPositionForModality(modality, secondaryPosition);
+    // Outside the home modality and without a profile, positions are inherited from the home one
+    // (e.g. a tackle player's DT read from flag): validate what will be stored. Otherwise only
+    // validate changes, so legacy positions don't block unrelated edits.
+    const inherited =
+      !isHome && !(await this.playerRepo.listModalityProfiles(id)).some((profile) => profile.modality === modality);
+    if (inherited) {
+      this.assertPositionForModality(modality, position, nextSecondaryPosition);
+    } else {
+      if (data.position && data.position !== current.position) this.assertPositionForModality(modality, data.position);
+      if (data.secondaryPosition !== undefined && secondaryPosition !== current.secondaryPosition) {
+        this.assertPositionForModality(modality, secondaryPosition);
+      }
     }
     const currentTeamId = this.getReferenceId(player.team);
     const teamId = data.team || currentTeamId;
