@@ -1,4 +1,5 @@
 import type { Modality } from "@lufa/sports/entities/Modality";
+import { GAME_EVENT_LABELS, GAME_EVENT_TYPES, MODALITY_RULES } from "@lufa/contracts/game-events";
 import type {
   AnalyticsCatalogDto,
   AnalyticsQueryDto,
@@ -47,12 +48,18 @@ export interface AnalyticsReportPort {
   delete(id: string, expectedVersion: number): Promise<boolean>;
 }
 
-const eventTypes = [
-  ["touchdown", "Touchdown"], ["extra_point_1", "Punto extra +1"], ["extra_point_2", "Punto extra +2"],
-  ["field_goal", "Field goal"], ["safety", "Safety"], ["interception", "Intercepción"], ["pick_six", "Pick six"],
-  ["penalty", "Castigo"], ["unsportsmanlike", "Actitud antideportiva"], ["quarter_end", "Fin de cuarto"],
-  ["game_end", "Fin de partido"], ["substitution", "Sustitución"], ["injury", "Lesión"], ["first_down", "Primero y diez"], ["sack", "Sack"],
-] as const;
+// Flag's extra point is split by value (5 or 10 yards); every other type keeps its catalog label.
+const eventTypes = GAME_EVENT_TYPES.flatMap((type): Array<[string, string]> =>
+  type === "extra_point"
+    ? [["extra_point_1", "Punto extra +1"], ["extra_point_2", "Punto extra +2"]]
+    : [[type, GAME_EVENT_LABELS[type]]],
+);
+
+/** Flag plays two halves stored as quarters 1 and 2; tackle plays four quarters. OT belongs to the second half. */
+const halfOf = (quarter: number, modality: Modality) =>
+  (modality === "tackle" ? quarter <= 2 : quarter <= 1) ? ("first" as const) : ("second" as const);
+const quarterLabel = (quarter: number, modality: Modality) =>
+  MODALITY_RULES[modality].periods.find((period) => period.quarter === quarter)?.label || `${quarter}`;
 
 type AnalyticsRecord = AnalyticsEventFact & { participant?: AnalyticsParticipant; attributedPoints: number };
 const eventKey = (fact: AnalyticsEventFact) => fact.eventType === "extra_point" && (fact.points === 1 || fact.points === 2) ? `extra_point_${fact.points}` : fact.eventType;
@@ -85,7 +92,7 @@ function mergeFilters(global: AnalyticsQueryDto["filters"] = {}, local: Analytic
   };
 }
 
-function recordsFor(widget: AnalyticsWidgetDto, facts: AnalyticsEventFact[], filters: AnalyticsQueryDto["filters"] = {}) {
+function recordsFor(widget: AnalyticsWidgetDto, facts: AnalyticsEventFact[], filters: AnalyticsQueryDto["filters"] = {}, modality: Modality = "flag") {
   const allFilters = mergeFilters(filters, widget.filters);
   const selected = facts.filter((fact) => !( 
     (allFilters.tournamentIds?.length && !allFilters.tournamentIds.includes(fact.tournamentId)) ||
@@ -94,7 +101,7 @@ function recordsFor(widget: AnalyticsWidgetDto, facts: AnalyticsEventFact[], fil
     (allFilters.eventTypes?.length && !allFilters.eventTypes.includes(eventKey(fact))) ||
     (allFilters.phases?.length && !allFilters.phases.includes(fact.phase)) ||
     (allFilters.quarters?.length && !allFilters.quarters.includes(fact.quarter)) ||
-    (allFilters.halves?.length && !allFilters.halves.includes(fact.quarter <= 2 ? "first" : "second")) ||
+    (allFilters.halves?.length && !allFilters.halves.includes(halfOf(fact.quarter, modality))) ||
     (allFilters.from && fact.date < allFilters.from) || (allFilters.to && fact.date > `${allFilters.to}T23:59:59.999Z`)
   ));
   if (widget.source !== "players") return selected.map((fact) => ({ ...fact, attributedPoints: fact.points }))
@@ -106,7 +113,7 @@ function recordsFor(widget: AnalyticsWidgetDto, facts: AnalyticsEventFact[], fil
     .filter((record) => !allFilters.contributionTypes?.length || allFilters.contributionTypes.includes(contribution(record))));
 }
 
-function dimension(record: AnalyticsRecord, value: AnalyticsWidgetDto["dimension"]) {
+function dimension(record: AnalyticsRecord, value: AnalyticsWidgetDto["dimension"], modality: Modality = "flag") {
   if (value === "player") return record.participant ? [record.participant.id, record.participant.name] as const : null;
   if (value === "team") return [record.teamId, record.teamName] as const;
   if (value === "participation_role") return [record.participant?.role || "unassigned", record.participant?.role === "quarterback" ? "Quarterback" : record.participant?.role === "primary" ? "Jugador principal" : "Sin jugador"] as const;
@@ -117,8 +124,8 @@ function dimension(record: AnalyticsRecord, value: AnalyticsWidgetDto["dimension
   if (value === "phase") return [record.phase, pretty(record.phase)] as const;
   if (value === "week") return [String(record.week || 0), record.week ? `Semana ${record.week}` : "Sin semana"] as const;
   if (value === "date") return [record.date.slice(0, 10), record.date.slice(0, 10)] as const;
-  if (value === "quarter") return [String(record.quarter), record.quarter === 5 ? "ET" : `${record.quarter}T`] as const;
-  if (value === "half") return [record.quarter <= 2 ? "first" : "second", record.quarter <= 2 ? "1T" : "2T"] as const;
+  if (value === "quarter") return [String(record.quarter), quarterLabel(record.quarter, modality)] as const;
+  if (value === "half") return [halfOf(record.quarter, modality), halfOf(record.quarter, modality) === "first" ? "1T" : "2T"] as const;
   return ["total", "Total"] as const;
 }
 
@@ -135,20 +142,24 @@ function metric(metric: AnalyticsWidgetDto["metric"], records: AnalyticsRecord[]
   return new Set(records.map(eventKey)).size;
 }
 
-export function runAnalyticsQuery(facts: AnalyticsEventFact[], query: AnalyticsQueryDto): AnalyticsQueryResponseDto {
+export function runAnalyticsQuery(
+  facts: AnalyticsEventFact[],
+  query: AnalyticsQueryDto,
+  modality: Modality = "flag",
+): AnalyticsQueryResponseDto {
   const results = query.widgets.map((widget) => {
     const groups = new Map<string, { label: string; series?: string; records: AnalyticsRecord[] }>();
-    for (const record of recordsFor(widget, facts, query.filters)) {
-      const primary = dimension(record, widget.dimension);
+    for (const record of recordsFor(widget, facts, query.filters, modality)) {
+      const primary = dimension(record, widget.dimension, modality);
       if (!primary) continue;
-      const series = dimension(record, widget.series);
+      const series = dimension(record, widget.series, modality);
       const key = `${primary[0]}::${series?.[0] || ""}`;
       const group = groups.get(key) || { label: primary[1], series: series?.[1], records: [] };
       group.records.push(record); groups.set(key, group);
     }
     const rows = [...groups.entries()].map(([key, group]) => ({ key, label: group.label, series: group.series, value: Number(metric(widget.metric, group.records).toFixed(2)), eventIds: [...new Set(group.records.map((record) => record.eventId))] }));
     rows.sort((left, right) => (widget.order === "asc" ? 1 : -1) * (left.value - right.value) || left.label.localeCompare(right.label, "es"));
-    const selected = recordsFor(widget, facts, query.filters);
+    const selected = recordsFor(widget, facts, query.filters, modality);
     return { widgetId: widget.id, rows: rows.slice(0, widget.limit || 10), provisional: selected.some((record) => record.status === "in_progress") };
   });
   return { generatedAt: new Date().toISOString(), provisional: facts.some((fact) => fact.status === "in_progress"), results };
@@ -210,7 +221,7 @@ export class AnalyticsService {
         teams: options(facts.map((fact) => [fact.teamId, fact.teamName])),
         players: options(facts.flatMap((fact) => fact.participants.map((participant) => [participant.id, participant.name] as [string, string]))),
         phases: options(facts.map((fact) => [fact.phase, pretty(fact.phase)])),
-        quarters: options(facts.map((fact) => [fact.quarter, fact.quarter === 5 ? "ET" : `${fact.quarter}T`])),
+        quarters: options(facts.map((fact) => [fact.quarter, quarterLabel(fact.quarter, modality ?? "flag")])),
       },
     };
   }
@@ -221,7 +232,7 @@ export class AnalyticsService {
     }
     for (const widget of query.widgets) this.validateWidget(widget);
     const facts = await this.reportingRepo.getAnalyticsFacts({ filters: query.filters, modality });
-    return runAnalyticsQuery(facts, query);
+    return runAnalyticsQuery(facts, query, modality);
   }
 
   private validateWidget(widget: AnalyticsWidgetDto) {

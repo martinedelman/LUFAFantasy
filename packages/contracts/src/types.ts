@@ -1,3 +1,6 @@
+import type { GameEventType, PlayerPosition } from "./gameEvents";
+
+export type { GameEventType, PlayerPosition } from "./gameEvents";
 /** LUFA discipline. Omitted query params and legacy data mean "flag". */
 export type Modality = "flag" | "tackle";
 
@@ -5,24 +8,8 @@ export type DivisionCategory = "masculino" | "femenino" | "mixto";
 export type UserRole = "user" | "admin" | "juez" | "entrenador_juveniles" | "redes";
 export type TeamStatus = "active" | "inactive" | "suspended";
 export type PlayerStatus = "active" | "inactive" | "injured" | "suspended" | "pre_approved";
-export type PlayerPosition = "QB" | "WR" | "RB" | "C" | "RS" | "LB" | "CB" | "FS" | "SS";
 export type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
 export type GamePhase = "regular" | "playoff" | "final";
-export type GameEventType =
-  | "touchdown"
-  | "extra_point"
-  | "field_goal"
-  | "safety"
-  | "interception"
-  | "pick_six"
-  | "penalty"
-  | "unsportsmanlike"
-  | "quarter_end"
-  | "game_end"
-  | "substitution"
-  | "injury"
-  | "first_down"
-  | "sack";
 export type TournamentStatus = "upcoming" | "active" | "completed" | "cancelled";
 export type TournamentFormat = "league" | "playoff" | "tournament";
 export type PlayoffCriteria = "NFL" | "DIRECT_FINAL" | "SEMIFINAL";

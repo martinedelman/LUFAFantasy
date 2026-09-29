@@ -11,6 +11,7 @@ import Tag from "../../components/Tag";
 import { useAuth } from "../../hooks/useAuth";
 import { useCachedState } from "../../hooks/useCachedState";
 import type { ApiResponseDto, PaginationDto, PlayerResponseDto } from "@lufa/contracts";
+import PositionOptions from "../../components/PositionOptions";
 
 const playersHero = {
   path: "/players",
@@ -334,15 +335,7 @@ export default function PlayersPage() {
                 className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm"
               >
                 <option value="">Todas las posiciones</option>
-                <option value="QB">Quarterback</option>
-                <option value="WR">Wide Receiver</option>
-                <option value="RB">Running Back</option>
-                <option value="C">Center</option>
-                <option value="RS">Rusher</option>
-                <option value="LB">Linebacker</option>
-                <option value="CB">Cornerback</option>
-                <option value="FS">Free Safety</option>
-                <option value="SS">Strong Safety</option>
+                <PositionOptions withCode={false} />
               </select>
             </div>
             <div>

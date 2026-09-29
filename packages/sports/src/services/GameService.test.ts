@@ -102,3 +102,55 @@ describe("GameService event time", () => {
     ).toThrow("HH:mm");
   });
 });
+
+describe("GameService event rules by modality", () => {
+  const tackleGame = () => {
+    const game = makeGame();
+    Object.assign(game, { tournament: { _id: "tournament", name: "Tackle", modality: "tackle" } });
+    return game;
+  };
+  const base = { quarter: 1, team: "home", player: "p1" } as const;
+
+  it("en tackle fija los puntos del evento sin importar lo que mande el cliente", () => {
+    const { service } = makeService(tackleGame());
+
+    expect(service.buildValidatedGameEvent(tackleGame(), { ...base, type: "field_goal", points: 7 }).points).toBe(3);
+    expect(service.buildValidatedGameEvent(tackleGame(), { ...base, type: "pat_kick" }).points).toBe(1);
+    expect(service.buildValidatedGameEvent(tackleGame(), { ...base, type: "fumble", points: 6 }).points).toBe(0);
+    expect(service.buildValidatedGameEvent(tackleGame(), { ...base, type: "kick_return_td" }).description).toBe(
+      "TD por retorno de kickoff (+6)",
+    );
+  });
+
+  it("rechaza eventos que no existen en la modalidad", () => {
+    const { service } = makeService(tackleGame());
+    expect(() => service.buildValidatedGameEvent(tackleGame(), { ...base, type: "extra_point", points: 1 })).toThrow(
+      "Evento no válido para tackle",
+    );
+
+    const flagGame = makeGame();
+    expect(() => service.buildValidatedGameEvent(flagGame, { ...base, type: "fumble_return_td" })).toThrow(
+      "Evento no válido para flag",
+    );
+  });
+
+  it("en flag mantiene los puntos que carga el juez", () => {
+    const flagGame = makeGame();
+    const { service } = makeService(flagGame);
+
+    expect(service.buildValidatedGameEvent(flagGame, { ...base, type: "extra_point", points: 2 }).points).toBe(2);
+    expect(service.buildValidatedGameEvent(flagGame, { ...base, type: "touchdown", points: -3 }).points).toBe(0);
+    expect(service.buildValidatedGameEvent(flagGame, { ...base, type: "interception" }).points).toBeUndefined();
+    expect(service.buildValidatedGameEvent(flagGame, { ...base, type: "quarter_end" }).description).toBe("Fin de mitad");
+    expect(service.buildValidatedGameEvent(tackleGame(), { ...base, type: "quarter_end" }).description).toBe("Fin de cuarto");
+  });
+
+  it("solo el safety de flag se puede guardar sin anotador cuando tiene QB", () => {
+    const flagGame = makeGame();
+    const { service } = makeService(flagGame);
+    const safety = { quarter: 1, team: "home", type: "safety" as const, points: 2, details: { qb: "qb1" } };
+
+    expect(service.buildValidatedGameEvent(flagGame, safety).player).toBeUndefined();
+    expect(() => service.buildValidatedGameEvent(tackleGame(), safety)).toThrow("El jugador es requerido");
+  });
+});

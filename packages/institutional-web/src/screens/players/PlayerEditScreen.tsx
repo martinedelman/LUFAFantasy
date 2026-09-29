@@ -5,6 +5,9 @@ import ImageUploader from "../../components/ImageUploader";
 import InlineFeedback from "../../components/InlineFeedback";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useAuth } from "../../hooks/useAuth";
+import PositionOptions from "../../components/PositionOptions";
+import { useSiteConfig } from "../../site/SiteConfig";
+import type { PlayerModalityProfileDto } from "@lufa/contracts";
 
 interface Team {
   _id: string;
@@ -50,6 +53,9 @@ export default function EditPlayerPage() {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [playerEmail, setPlayerEmail] = useState("");
+  const { modality } = useSiteConfig();
+  // Number and positions this player uses in the other modality, shown for reference only.
+  const [otherProfiles, setOtherProfiles] = useState<PlayerModalityProfileDto[]>([]);
   const isAdmin = user?.role === "admin";
   const canEdit = !!user && (isAdmin || user.email.trim().toLowerCase() === playerEmail.trim().toLowerCase());
 
@@ -70,6 +76,9 @@ export default function EditPlayerPage() {
           if (playerData.success) {
             const player = playerData.data;
             setPlayerEmail(player.email || "");
+            setOtherProfiles(
+              ((player.profiles || []) as PlayerModalityProfileDto[]).filter((profile) => profile.modality !== modality),
+            );
             setForm({
               firstName: player.firstName || "",
               lastName: player.lastName || "",
@@ -107,7 +116,7 @@ export default function EditPlayerPage() {
     };
 
     fetchData();
-  }, [playerId]);
+  }, [modality, playerId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -477,17 +486,16 @@ export default function EditPlayerPage() {
                 className={inputClassName("position")}
                 required
               >
-                <option value="QB">Quarterback (QB)</option>
-                <option value="WR">Wide Receiver (WR)</option>
-                <option value="RB">Running Back (RB)</option>
-                <option value="C">Center (C)</option>
-                <option value="RS">Rusher (RS)</option>
-                <option value="LB">Linebacker (LB)</option>
-                <option value="CB">Cornerback (CB)</option>
-                <option value="FS">Free Safety (FS)</option>
-                <option value="SS">Strong Safety (SS)</option>
+                <PositionOptions current={form.position} />
               </select>
               {renderFieldError("position")}
+              {otherProfiles.map((profile) => (
+                <p key={profile.modality} className="mt-1 text-xs text-gray-500">
+                  En {profile.modality}:{" "}
+                  {profile.jerseyNumber != null ? `#${profile.jerseyNumber}` : "sin número"} ·{" "}
+                  {[profile.position, profile.secondaryPosition].filter(Boolean).join(" / ")}. Se edita desde ese sitio.
+                </p>
+              ))}
             </div>
             <select
               name="secondaryPosition"
@@ -496,15 +504,7 @@ export default function EditPlayerPage() {
               className="w-full border px-3 py-2 rounded"
             >
               <option value="">Sin posición secundaria</option>
-              <option value="QB">Quarterback (QB)</option>
-              <option value="WR">Wide Receiver (WR)</option>
-              <option value="RB">Running Back (RB)</option>
-              <option value="C">Center (C)</option>
-              <option value="RS">Rusher (RS)</option>
-              <option value="LB">Linebacker (LB)</option>
-              <option value="CB">Cornerback (CB)</option>
-              <option value="FS">Free Safety (FS)</option>
-              <option value="SS">Strong Safety (SS)</option>
+              <PositionOptions current={form.secondaryPosition} />
             </select>
             {/* Campos de contacto de emergencia */}
             <div className="col-span-2">

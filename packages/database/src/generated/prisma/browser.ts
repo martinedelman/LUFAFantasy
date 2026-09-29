@@ -123,6 +123,13 @@ export type TournamentTeam = Prisma.TournamentTeamModel
  */
 export type DivisionTeam = Prisma.DivisionTeamModel
 /**
+ * Model PlayerModalityProfile
+ * Jersey number and positions a shared player uses in each modality
+ * (e.g. #11 C in flag, #40 LB in tackle). The players columns mirror the
+ * profile of the modality of the player's primary team.
+ */
+export type PlayerModalityProfile = Prisma.PlayerModalityProfileModel
+/**
  * Model TeamPlayer
  * 
  */

@@ -7,6 +7,7 @@ import { toPlayerResponseDto } from "@/app/DTOs";
 import { PlayerPosition } from "@lufa/sports/entities/Player";
 import type { UpdatePlayerRequestDto } from "@/app/DTOs";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 
 const playerService = serviceContainer.playerService;
 const authService = serviceContainer.authService;
@@ -57,8 +58,10 @@ function isJerseyOnlyUpdate(body: UpdatePlayerRequestDto) {
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const modality = parseModality(request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
 
-    const player = await playerService.getPlayerById(id);
+    const player = await playerService.getPlayerById(id, modality);
 
     if (!player) {
       return NextResponse.json(
@@ -72,7 +75,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({
       success: true,
-      data: toPlayerResponseDto(player),
+      data: { ...toPlayerResponseDto(player), profiles: await playerService.listModalityProfiles(id) },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al obtener jugador";
@@ -86,6 +89,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const modality = parseModality(request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
     const token = getSessionTokenFromRequest(request);
 
     if (!token) {
@@ -165,7 +170,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       experience: body.experience,
       emergencyContact: body.emergencyContact,
       status: body.status,
-    });
+    }, modality);
 
     invalidateCacheByPrefix(TEAM_RELATED_CACHE_PREFIXES);
 

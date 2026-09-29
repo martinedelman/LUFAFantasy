@@ -1,4 +1,5 @@
 import { AggregateRoot } from "./base/AggregateRoot";
+import type { GameEventType } from "@lufa/contracts/game-events";
 import { Venue } from "./valueObjects/Venue";
 import { GameScore, QuarterScore } from "./valueObjects/Score";
 import { TeamStatistics } from "./valueObjects/TeamStatistics";
@@ -6,21 +7,7 @@ import { TeamStatistics } from "./valueObjects/TeamStatistics";
 export type GameStatus = "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
 export type GamePhase = "regular" | "playoff" | "final";
 
-export type GameEventType =
-  | "touchdown"
-  | "extra_point"
-  | "field_goal"
-  | "safety"
-  | "interception"
-  | "pick_six"
-  | "penalty"
-  | "unsportsmanlike"
-  | "quarter_end"
-  | "game_end"
-  | "substitution"
-  | "injury"
-  | "first_down"
-  | "sack";
+export type { GameEventType } from "@lufa/contracts/game-events";
 
 export interface GameEvent {
   quarter: number;

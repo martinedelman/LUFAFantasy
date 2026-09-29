@@ -7,6 +7,7 @@ import { toPlayerResponseDto } from "@/app/DTOs";
 import type { PlayerPosition } from "@lufa/sports/entities/Player";
 import type { Team } from "@lufa/sports/entities/Team";
 import type { UserRole } from "@lufa/sports/entities/User";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 
 const authService = serviceContainer.authService;
 const playerService = serviceContainer.playerService;
@@ -59,6 +60,8 @@ function parseRequiredJerseyNumber(value: unknown) {
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const modality = parseModality(request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
     const token = getSessionTokenFromRequest(request);
 
     if (!token) {
@@ -124,7 +127,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       jerseyNumber: parseRequiredJerseyNumber(body.jerseyNumber),
       position: String(body.position) as PlayerPosition,
       status: "pre_approved",
-    });
+    }, modality);
 
     await notificationService.sendRosterAdditionNotification({
       player,

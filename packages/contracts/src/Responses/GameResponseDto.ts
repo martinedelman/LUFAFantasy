@@ -1,4 +1,4 @@
-import type { GamePhase, GameStatus, GameStatistics } from "../types";
+import type { GamePhase, GameStatus, GameStatistics, Modality } from "../types";
 import type { GameScore } from "../types";
 import type { GameEventResponseDto } from "./GameLiveResponseDto";
 import type { PlayerSummaryResponseDto } from "./PlayerSummaryResponseDto";
@@ -12,6 +12,7 @@ export interface GameResponseDto {
         _id: string;
         name: string;
         year: number;
+        modality: Modality;
       };
   division:
     | string

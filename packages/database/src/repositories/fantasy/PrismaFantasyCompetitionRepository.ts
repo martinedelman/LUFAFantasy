@@ -46,6 +46,15 @@ function membersForScoreboard(league: LeagueDetailRecord, picks: DraftPickRecord
   }).sort((left, right) => right.points - left.points || left.teamName.localeCompare(right.teamName, "es"));
 }
 
+/** Fantasy is flag-only: tackle players, teams and events never enter drafts or scoring. */
+const FLAG_TEAM = { division: { modality: "flag" } };
+const FLAG_PLAYER = {
+  OR: [
+    { team: { division: { modality: "flag" } } },
+    { teamMemberships: { some: { team: { division: { modality: "flag" } } } } },
+  ],
+};
+
 export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRepository {
   private get db() { return getPrismaClient(); }
 
@@ -159,13 +168,13 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
       const current = this.currentMember(draftLeague.members, draftLeague.draft.currentPick);
       if (!current || current.userId !== data.userId || !current.team) throw new Error("No es tu turno para elegir");
       if (data.playerId) {
-        const player = await tx.player.findFirst({ where: { id: data.playerId, status: "active" } });
+        const player = await tx.player.findFirst({ where: { id: data.playerId, status: "active", ...FLAG_PLAYER } });
         if (!player) throw new Error("Ese jugador no está disponible");
         const taken = await tx.fantasyDraftPick.count({ where: { draftId: draftLeague.draft.id, playerId: data.playerId } });
         if (taken) throw new Error("Ese jugador ya fue elegido por otro equipo");
         await this.createPick(tx, draftLeague, current, { playerId: player.id }, false);
       } else {
-        const defense = await tx.team.findFirst({ where: { id: data.defenseTeamId, status: "active" } });
+        const defense = await tx.team.findFirst({ where: { id: data.defenseTeamId, status: "active", ...FLAG_TEAM } });
         if (!defense) throw new Error("Esa defensa de equipo no está disponible");
         const taken = await tx.fantasyDraftPick.count({ where: { draftId: draftLeague.draft.id, defenseTeamId: defense.id } });
         if (taken) throw new Error("Esa defensa de equipo ya fue elegida");
@@ -184,7 +193,7 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
     if (!current?.team) return;
     const selected = await client.fantasyDraftPick.findMany({ where: { draftId: activeDraftState.draft.id }, select: { playerId: true, defenseTeamId: true } });
     const player = await client.player.findFirst({
-      where: { status: "active", id: { notIn: selected.map((pick) => pick.playerId).filter((playerId): playerId is string => Boolean(playerId)) } },
+      where: { status: "active", ...FLAG_PLAYER, id: { notIn: selected.map((pick) => pick.playerId).filter((playerId): playerId is string => Boolean(playerId)) } },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     });
     if (player) {
@@ -192,7 +201,7 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
       return;
     }
     const defense = await client.team.findFirst({
-      where: { status: "active", id: { notIn: selected.map((pick) => pick.defenseTeamId).filter((teamId): teamId is string => Boolean(teamId)) } },
+      where: { status: "active", ...FLAG_TEAM, id: { notIn: selected.map((pick) => pick.defenseTeamId).filter((teamId): teamId is string => Boolean(teamId)) } },
       orderBy: { name: "asc" },
     });
     if (!defense) throw new Error("No quedan jugadores ni defensas de equipo disponibles para el draft");
@@ -246,10 +255,10 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
     const selectedPlayerIds = draft.picks.map((pick) => pick.playerId).filter((id): id is string => id !== null);
     const selectedDefenseIds = draft.picks.map((pick) => pick.defenseTeamId).filter((id): id is string => id !== null);
     const available = draft.status === "active"
-      ? await this.db.player.findMany({ where: { status: "active", id: { notIn: selectedPlayerIds } }, include: { team: true }, orderBy: [{ lastName: "asc" }, { firstName: "asc" }], take: 120 })
+      ? await this.db.player.findMany({ where: { status: "active", ...FLAG_PLAYER, id: { notIn: selectedPlayerIds } }, include: { team: true }, orderBy: [{ lastName: "asc" }, { firstName: "asc" }], take: 120 })
       : [];
     const availableDefenses = draft.status === "active"
-      ? await this.db.team.findMany({ where: { status: "active", id: { notIn: selectedDefenseIds } }, orderBy: { name: "asc" } })
+      ? await this.db.team.findMany({ where: { status: "active", ...FLAG_TEAM, id: { notIn: selectedDefenseIds } }, orderBy: { name: "asc" } })
       : [];
     const picks: NonNullable<FantasyLeagueDetail["draft"]>["picks"] = draft.picks.flatMap<NonNullable<FantasyLeagueDetail["draft"]>["picks"][number]>((pick) => {
       if (pick.player) return [{ id: pick.id, overall: pick.overall, round: pick.round, autoPicked: pick.autoPicked, teamName: pick.team.name, player: { id: pick.player.id, name: nameOf(pick.player), position: pick.player.position, teamName: pick.player.team.name, kind: "player" } }];
@@ -275,7 +284,7 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
     const playerPicks = league.draft?.picks.filter((pick) => pick.player) || [];
     const playerIds = playerPicks.flatMap((pick) => pick.playerId ? [pick.playerId] : []);
     const events = playerIds.length ? await this.db.gameEvent.findMany({
-      where: { game: { status: { in: ["in_progress", "completed"] } } },
+      where: { game: { status: { in: ["in_progress", "completed"] }, tournament: { modality: "flag" } } },
       select: { playerId: true, type: true, points: true, details: true, createdAt: true, game: { select: { status: true } } },
       orderBy: { createdAt: "asc" },
     }) : [];
