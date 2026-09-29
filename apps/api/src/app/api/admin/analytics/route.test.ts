@@ -43,6 +43,17 @@ describe("GET /api/admin/analytics", () => {
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(mocks.getAnalytics).toHaveBeenCalledWith({ subject: "players", tournament: "t1", division: "d1" });
+    expect(mocks.getAnalytics).toHaveBeenCalledWith({ subject: "players", tournament: "t1", division: "d1", modality: "flag" });
+  });
+
+  it("filtra por la modalidad del sitio", async () => {
+    mocks.token.mockReturnValue("token");
+    mocks.verifyAdmin.mockResolvedValue(true);
+    mocks.getAnalytics.mockResolvedValue({ subject: "teams" });
+    await GET(new NextRequest("http://localhost/api/admin/analytics?subject=teams&modality=tackle"));
+    expect(mocks.getAnalytics).toHaveBeenCalledWith({ subject: "teams", tournament: null, division: null, modality: "tackle" });
+
+    const invalid = await GET(new NextRequest("http://localhost/api/admin/analytics?subject=teams&modality=rugby"));
+    expect(invalid.status).toBe(400);
   });
 });

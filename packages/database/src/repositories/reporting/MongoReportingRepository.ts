@@ -95,6 +95,8 @@ export class MongoReportingRepository implements IReportingRepository {
   }
 
   async getAdminAnalytics(query: AdminAnalyticsQuery) {
+    // Mongo only holds historical flag data.
+    if ((query.modality ?? "flag") !== "flag") return buildAdminAnalytics(query.subject, [], []);
     await connectToDatabase();
     const games = await GameModel.find({
       status: { $in: ["in_progress", "completed"] },
@@ -136,6 +138,7 @@ export class MongoReportingRepository implements IReportingRepository {
   }
 
   async getAnalyticsFacts(query: AnalyticsFactsQuery): Promise<AnalyticsEventFact[]> {
+    if ((query.modality ?? "flag") !== "flag") return [];
     await connectToDatabase();
     const filters = query.filters || {};
     const gameMatch: Record<string, unknown> = {

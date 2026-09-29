@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     if (!modality) return invalidModalityResponse();
 
     if (email) {
-      const player = await playerService.getPlayerByEmail(email);
+      const player = await playerService.getPlayerByEmail(email, modality);
 
       if (!player) {
         return NextResponse.json(

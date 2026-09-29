@@ -46,8 +46,8 @@ const standingService = new StandingService(
 );
 const gameService = new GameService(gameRepository, teamRepository, standingService);
 const playerService = new PlayerService(playerRepository, teamRepository);
-const teamService = new TeamService(teamRepository);
-const divisionService = new DivisionService(divisionRepository);
+const teamService = new TeamService(teamRepository, divisionRepository);
+const divisionService = new DivisionService(divisionRepository, tournamentRepository);
 const emailService = new EmailService();
 const fantasyIdentityService = new FantasyIdentityService(new PrismaFantasyIdentityRepository(), {
   async sendPasswordReset({ to, name, code, expiresInMinutes }) {

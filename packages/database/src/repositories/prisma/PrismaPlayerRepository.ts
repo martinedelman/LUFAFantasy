@@ -89,10 +89,13 @@ export class PrismaPlayerRepository implements IPlayerRepository {
     );
   }
 
-  async findByEmail(email: string): Promise<Player | null> {
+  async findByEmail(email: string, modality?: Modality): Promise<Player | null> {
     return this.toPlayerWithTeam(
       await this.db.player.findFirst({
-        where: { email: { equals: email.trim().toLowerCase(), mode: "insensitive" } },
+        where: {
+          email: { equals: email.trim().toLowerCase(), mode: "insensitive" },
+          ...(modality ? { AND: [playsInModality(modality)] } : {}),
+        },
         include: PLAYER_WITH_TEAM,
       }),
     );

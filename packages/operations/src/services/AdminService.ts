@@ -164,13 +164,14 @@ function toSettingsResponse(settings: {
     sponsorsVisible?: boolean;
   };
   updatedAt?: Date;
-}): SiteSettingsResponseDto {
+}, modality: Modality): SiteSettingsResponseDto {
+  const defaults = DEFAULT_CONTACT[modality];
   return {
-    whatsappMessageTemplate: settings.whatsappMessageTemplate || DEFAULT_CONTACT.flag.whatsappMessageTemplate,
-    contactEmail: settings.contactEmail || "lufaflag@gmail.com",
+    whatsappMessageTemplate: settings.whatsappMessageTemplate || defaults.whatsappMessageTemplate,
+    contactEmail: settings.contactEmail || defaults.contactEmail,
     contactWhatsapp: settings.contactWhatsapp || "",
-    instagramUrl: settings.instagramUrl || "https://www.instagram.com/lufaflag.uy/",
-    whatsappChannelUrl: settings.whatsappChannelUrl || "https://whatsapp.com/channel/0029VbCnCzqKLaHqPlaOvV3W",
+    instagramUrl: settings.instagramUrl || defaults.instagramUrl,
+    whatsappChannelUrl: settings.whatsappChannelUrl || defaults.whatsappChannelUrl,
     sponsors: (settings.sponsors?.length ? settings.sponsors : defaultSponsors)
       .map((sponsor, index) => ({
         name: sponsor.name || "",
@@ -322,7 +323,7 @@ export class AdminService {
     const existing = await this.auxiliaryRepo.getSiteSettings(key);
 
     if (existing) {
-      return toSettingsResponse(existing as unknown as Parameters<typeof toSettingsResponse>[0]);
+      return toSettingsResponse(existing as unknown as Parameters<typeof toSettingsResponse>[0], modality);
     }
 
     const created = await this.auxiliaryRepo.upsertSiteSettings({
@@ -341,7 +342,7 @@ export class AdminService {
       },
     }, key);
 
-    return toSettingsResponse(created as unknown as Parameters<typeof toSettingsResponse>[0]);
+    return toSettingsResponse(created as unknown as Parameters<typeof toSettingsResponse>[0], modality);
   }
 
   async updateSiteSettings(actor: User, data: UpdateSiteSettingsRequestDto, modality: Modality = "flag") {
@@ -394,7 +395,7 @@ export class AdminService {
 
     const saved = await this.auxiliaryRepo.upsertSiteSettings({ ...before, ...update }, key);
 
-    const after = toSettingsResponse(saved as unknown as Parameters<typeof toSettingsResponse>[0]);
+    const after = toSettingsResponse(saved as unknown as Parameters<typeof toSettingsResponse>[0], modality);
     await this.recordAudit(actor, {
       action: "settings.updated",
       entityType: "site_settings",

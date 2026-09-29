@@ -533,7 +533,7 @@ export class GameService {
     modality?: Modality;
   }): Promise<Game[]> {
     if (filters.team) {
-      const gamesByTeam = await this.gameRepo.findByTeam(filters.team);
+      const gamesByTeam = await this.gameRepo.findByTeam(filters.team, filters.modality);
       return gamesByTeam.filter((game) => {
         if (filters.tournament && this.getReferenceId(game.tournament) !== filters.tournament) {
           return false;

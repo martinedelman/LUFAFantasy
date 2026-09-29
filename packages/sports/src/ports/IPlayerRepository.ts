@@ -29,7 +29,7 @@ export interface IPlayerRepository extends IRepository<Player> {
   /**
    * Busca un jugador por email normalizado
    */
-  findByEmail(email: string): Promise<Player | null>;
+  findByEmail(email: string, modality?: Modality): Promise<Player | null>;
 
   /**
    * Busca jugadores por nombre (búsqueda parcial)

@@ -94,6 +94,7 @@ export class PrismaReportingRepository implements IReportingRepository {
     const games = await this.db.game.findMany({
       where: {
         status: { in: ["in_progress", "completed"] },
+        tournament: { modality: query.modality ?? "flag" },
         ...(query.tournament ? { tournamentId: query.tournament } : {}),
         ...(query.division ? { divisionId: query.division } : {}),
       },
@@ -142,6 +143,7 @@ export class PrismaReportingRepository implements IReportingRepository {
     const games = await this.db.game.findMany({
       where: {
         status: { in: ["in_progress", "completed"] },
+        tournament: { modality: query.modality ?? "flag" },
         ...(filters.tournamentIds?.length ? { tournamentId: { in: filters.tournamentIds } } : {}),
         ...(filters.divisionIds?.length ? { divisionId: { in: filters.divisionIds } } : {}),
         ...(filters.phases?.length ? { phase: { in: filters.phases } } : {}),

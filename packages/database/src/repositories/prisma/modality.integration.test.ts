@@ -83,7 +83,7 @@ async function seed(modality: Modality) {
       undefined,
       new Date("2026-01-03"),
       "active",
-      undefined,
+      `${modality}@example.com`,
       undefined,
       undefined,
       undefined,
@@ -114,6 +114,24 @@ async function seed(modality: Modality) {
       id(modality, "game"),
     ),
   );
+  // A completed game with one event feeds the analytics queries.
+  const db = getPrismaClient();
+  await db.game.create({
+    data: {
+      id: id(modality, "played"),
+      tournamentId: id(modality, "tournament"),
+      divisionId: id(modality, "division"),
+      venue: { name: "Cancha", address: "Calle 123" },
+      scheduledDate: new Date("2026-03-01T20:00:00Z"),
+      status: "completed",
+      homeTeamId: id(modality, "team"),
+      awayTeamId: id(modality, "team"),
+      officials: [],
+      score: { home: { total: 6 }, away: { total: 0 } },
+      statistics: {},
+      events: { create: { teamId: id(modality, "team"), playerId: id(modality, "player"), quarter: 1, sequence: 1, type: "touchdown", points: 6 } },
+    },
+  });
 }
 
 describe("modality separation (PostgreSQL)", () => {
@@ -160,7 +178,20 @@ describe("modality separation (PostgreSQL)", () => {
     expect(onlyIds(await teams.findAll({ modality }))).toEqual([id(modality, "team")]);
     expect(onlyIds(await players.findAll({ modality }))).toEqual([id(modality, "player")]);
     expect(onlyIds(await players.searchByName("Jugador", modality))).toEqual([id(modality, "player")]);
-    expect(onlyIds(await games.findAll({ modality }))).toEqual([id(modality, "game")]);
+    expect(onlyIds(await games.findAll({ modality })).sort()).toEqual([id(modality, "game"), id(modality, "played")]);
+    const other = modality === "flag" ? "tackle" : "flag";
+    expect(onlyIds(await games.findByTeam(id(modality, "team"), modality)).sort()).toEqual([id(modality, "game"), id(modality, "played")]);
+    expect(await games.findByTeam(id(other, "team"), modality)).toEqual([]);
+    expect((await players.findByEmail(`${modality}@example.com`, modality))?.id).toBe(id(modality, "player"));
+    expect(await players.findByEmail(`${other}@example.com`, modality)).toBeNull();
+    expect(await teams.existsWithName(`Equipo ${modality}`, undefined, modality)).toBe(true);
+    expect(await teams.existsWithName(`Equipo ${other}`, undefined, modality)).toBe(false);
+
+    const facts = await reporting.getAnalyticsFacts({ modality });
+    expect(facts.map((fact) => fact.tournamentId)).toEqual([id(modality, "tournament")]);
+    const adminAnalytics = JSON.stringify(await reporting.getAdminAnalytics({ subject: "teams", modality }));
+    expect(adminAnalytics).toContain(`Equipo ${modality}`);
+    expect(adminAnalytics).not.toContain(`Equipo ${other}`);
 
     const dashboard = await reporting.getDashboardStats(4, 4, modality);
     expect(dashboard.activeTournaments).toBe(1);
