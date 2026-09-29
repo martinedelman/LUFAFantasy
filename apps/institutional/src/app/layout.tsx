@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Providers from "@/components/Providers";
-import SiteFooter from "@/components/SiteFooter";
+import Navbar from "@lufa/institutional-web/components/Navbar";
+import Providers from "@lufa/institutional-web/components/Providers";
+import SiteFooter from "@lufa/institutional-web/components/SiteFooter";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({

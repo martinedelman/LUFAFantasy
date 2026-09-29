@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { track } from "@vercel/analytics";
-import Avatar from "@/components/Avatar";
-import InlineFeedback from "@/components/InlineFeedback";
-import RevealOnScroll from "@/components/RevealOnScroll";
-import Skeleton from "@/components/Skeleton";
-import SponsorsSection from "@/components/SponsorsSection";
+import Avatar from "@lufa/institutional-web/components/Avatar";
+import InlineFeedback from "@lufa/institutional-web/components/InlineFeedback";
+import RevealOnScroll from "@lufa/institutional-web/components/RevealOnScroll";
+import Skeleton from "@lufa/institutional-web/components/Skeleton";
+import SponsorsSection from "@lufa/institutional-web/components/SponsorsSection";
 import type { PublicSiteSettingsResponseDto } from "@lufa/contracts";
 
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://flag.lufa.com.uy").replace(/\/$/, "");

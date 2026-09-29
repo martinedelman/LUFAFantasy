@@ -1,4 +1,4 @@
-import FeatureGate from "@/components/FeatureGate";
+import FeatureGate from "@lufa/institutional-web/components/FeatureGate";
 import { showStatisticsPages } from "@/flags";
 
 export default function StatisticsLayout({ children }: { children: React.ReactNode }) {

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import LegacyForgotPasswordPage from "@/components/auth/LegacyForgotPasswordPage";
+import LegacyForgotPasswordPage from "@lufa/institutional-web/components/auth/LegacyForgotPasswordPage";
 import { legacyFlagAuthentication } from "@/flags";
-import { centralAuthDestination } from "@/lib/centralAuth";
+import { centralAuthDestination } from "@lufa/institutional-web/lib/centralAuth";
 
 type ForgotPasswordPageProps = {
   searchParams: Promise<{ returnTo?: string | string[] }>;

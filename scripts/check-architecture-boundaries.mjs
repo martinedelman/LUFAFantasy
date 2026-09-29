@@ -32,6 +32,11 @@ await forbid(
   "el frontend institucional no puede importar backend o persistencia",
 );
 await forbid(
+  "packages/institutional-web/src",
+  [/@lufa\/(?:database|identity-institutional|integrations|operations|sports)/, /DATABASE_URL|MONGODB_URI/, /from ["']@\//],
+  "la UI institucional compartida no puede importar backend, secretos ni alias de una app",
+);
+await forbid(
   "apps/fantasy/src",
   [/@lufa\/(?:database|identity-institutional|integrations|operations|sports)/, /DATABASE_URL|MONGODB_URI/],
   "Fantasy no puede importar backend, dominio institucional o secretos",

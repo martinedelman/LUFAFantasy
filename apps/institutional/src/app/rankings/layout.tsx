@@ -1,4 +1,4 @@
-import FeatureGate from "@/components/FeatureGate";
+import FeatureGate from "@lufa/institutional-web/components/FeatureGate";
 import { showRankingsPages } from "@/flags";
 
 export default function RankingsLayout({ children }: { children: React.ReactNode }) {

@@ -1,4 +1,4 @@
-import FeatureGate from "@/components/FeatureGate";
+import FeatureGate from "@lufa/institutional-web/components/FeatureGate";
 import { showTournamentsPages } from "@/flags";
 
 export default function TournamentsLayout({ children }: { children: React.ReactNode }) {

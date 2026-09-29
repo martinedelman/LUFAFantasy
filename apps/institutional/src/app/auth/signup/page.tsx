@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import LegacySignUpPage from "@/components/auth/LegacySignUpPage";
+import LegacySignUpPage from "@lufa/institutional-web/components/auth/LegacySignUpPage";
 import { legacyFlagAuthentication } from "@/flags";
-import { centralAuthDestination } from "@/lib/centralAuth";
+import { centralAuthDestination } from "@lufa/institutional-web/lib/centralAuth";
 
 type SignUpPageProps = {
   searchParams: Promise<{ returnTo?: string | string[] }>;

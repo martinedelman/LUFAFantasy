@@ -1,4 +1,4 @@
-import FeatureGate from "@/components/FeatureGate";
+import FeatureGate from "@lufa/institutional-web/components/FeatureGate";
 import { showTeamsPages } from "@/flags";
 
 export default function TeamsLayout({ children }: { children: React.ReactNode }) {

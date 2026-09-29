@@ -1,4 +1,4 @@
-import FeatureGate from "@/components/FeatureGate";
+import FeatureGate from "@lufa/institutional-web/components/FeatureGate";
 import { showStandingsPages } from "@/flags";
 
 export default function StandingsLayout({ children }: { children: React.ReactNode }) {
