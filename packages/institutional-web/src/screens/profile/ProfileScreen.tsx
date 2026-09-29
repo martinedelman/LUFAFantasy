@@ -5,8 +5,10 @@ import { useAuth } from "../../hooks/useAuth";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import type { ApiResponseDto, PlayerResponseDto } from "@lufa/contracts";
+import { useSiteConfig } from "../../site/SiteConfig";
 
 export default function ProfilePage() {
+  const site = useSiteConfig();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -31,10 +33,10 @@ export default function ProfilePage() {
         name: user.name || "",
         email: user.email || "",
         phone: "",
-        bio: "Fanático del Flag Football y usuario del sistema LUFA Flag.",
+        bio: `Fanático del ${site.sportName} y usuario del sistema ${site.siteName}.`,
       });
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, site.sportName, site.siteName]);
 
   useEffect(() => {
     if (isLoading || !user?.email) {

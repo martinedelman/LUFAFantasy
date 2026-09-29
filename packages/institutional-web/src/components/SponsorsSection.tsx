@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { sponsors as fallbackSponsors, type Sponsor } from "../lib/sponsors";
 import type { ApiResponseDto, PublicSiteSettingsResponseDto } from "@lufa/contracts";
+import { useSiteConfig } from "../site/SiteConfig";
 
 interface SponsorsSectionProps {
   variant?: "home" | "footer";
@@ -16,6 +17,7 @@ interface SponsorViewModel extends Sponsor {
 }
 
 export default function SponsorsSection({ variant = "home" }: SponsorsSectionProps) {
+  const site = useSiteConfig();
   const [sponsors, setSponsors] = useState<SponsorViewModel[]>(fallbackSponsors);
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export default function SponsorsSection({ variant = "home" }: SponsorsSectionPro
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase text-brand-700">Sponsors</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-950">Marcas que impulsan LUFA Flag</h2>
+            <h2 className="mt-2 text-3xl font-bold text-slate-950">Marcas que impulsan {site.siteName}</h2>
           </div>
           <Link
             href="/sumate"
@@ -126,7 +128,7 @@ export default function SponsorsSection({ variant = "home" }: SponsorsSectionPro
           <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
             <p className="text-sm font-semibold text-slate-950">Próximamente anunciaremos los sponsors oficiales.</p>
             <p className="mt-2 text-sm text-slate-600">
-              Las marcas que se sumen van a acompañar el crecimiento del Flag Football en Uruguay.
+              Las marcas que se sumen van a acompañar el crecimiento del {site.sportName} en Uruguay.
             </p>
           </div>
         )}

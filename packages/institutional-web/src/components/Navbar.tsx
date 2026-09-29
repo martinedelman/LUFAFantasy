@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { track } from "@vercel/analytics";
 import { useAuth } from "../hooks/useAuth";
+import { useSiteConfig } from "../site/SiteConfig";
 
 const navigation = [
   { name: "Torneos", href: "/tournaments" },
@@ -17,6 +18,7 @@ const navigation = [
 ];
 
 export default function Navbar() {
+  const site = useSiteConfig();
   const pathname = usePathname();
   const isPrintTemplateRoute = pathname?.includes("/print-template");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -178,8 +180,8 @@ export default function Navbar() {
             <Link href="/" className="flex items-center group">
               <div className="h-8 w-8 md:h-9 md:w-9 rounded-md overflow-hidden bg-white/95 border border-white/30 shadow-md flex-shrink-0 ring-1 ring-white/10 transition-transform hover:scale-110">
                 <Image
-                  src="/lufa_flag_icon.jpeg"
-                  alt="Logo LUFA"
+                  src={site.logo.src}
+                  alt={site.logo.alt}
                   width={36}
                   height={36}
                   className="h-full w-full object-cover"

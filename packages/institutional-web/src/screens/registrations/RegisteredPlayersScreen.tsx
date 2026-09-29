@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AdminProtection from "../../components/AdminProtection";
 import InlineFeedback from "../../components/InlineFeedback";
+import { useSiteConfig } from "../../site/SiteConfig";
 
 interface PlayerRegistration {
   id: string;
@@ -16,9 +17,6 @@ interface PlayerRegistration {
   experience: string;
   createdAt: string;
 }
-
-const defaultMessage =
-  "Hola {nombre}, te escribimos de LUFA Flag por tu inscripción para jugar. Queremos contarte los próximos pasos para sumarte a juveniles.";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("es-UY", {
@@ -52,8 +50,9 @@ function buildWhatsAppUrl(registration: PlayerRegistration, messageTemplate: str
 }
 
 function PlayerRegistrationsContent() {
+  const site = useSiteConfig();
   const [registrations, setRegistrations] = useState<PlayerRegistration[]>([]);
-  const [messageTemplate, setMessageTemplate] = useState(defaultMessage);
+  const [messageTemplate, setMessageTemplate] = useState(site.contact.whatsappMessageTemplate);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
 

@@ -5,8 +5,8 @@ import Link from "next/link";
 import { track } from "@vercel/analytics";
 import GoogleIcon, { type GoogleIconName } from "../../components/GoogleIcon";
 import type { ApiResponseDto, PublicSiteSettingsResponseDto } from "@lufa/contracts";
+import { useSiteConfig } from "../../site/SiteConfig";
 
-const officialWhatsAppChannelUrl = "https://whatsapp.com/channel/0029VbCnCzqKLaHqPlaOvV3W";
 
 type FlagInterestType = "play" | "child" | "team" | "coach" | "referee" | "sponsor" | "school" | "other";
 
@@ -79,6 +79,7 @@ const initialFlagInterestForm: FlagInterestFormState = {
 };
 
 export default function SumatePage() {
+  const site = useSiteConfig();
   const [flagInterestForm, setFlagInterestForm] = useState<FlagInterestFormState>(initialFlagInterestForm);
   const [flagInterestStep, setFlagInterestStep] = useState(0);
   const [flagInterestStatus, setFlagInterestStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -111,7 +112,7 @@ export default function SumatePage() {
   const needsPlayerExperience = flagInterestForm.interestType === "play";
   const needsSponsorDetails = flagInterestForm.interestType === "sponsor";
   const isSumateEnabled = publicSettings?.featureVisibility.sumateEnabled ?? true;
-  const officialChannelUrl = publicSettings?.whatsappChannelUrl || officialWhatsAppChannelUrl;
+  const officialChannelUrl = publicSettings?.whatsappChannelUrl || site.contact.whatsappChannelUrl;
   const flagInterestSteps = [
     "Participación",
     "Nombre",
@@ -198,7 +199,7 @@ export default function SumatePage() {
         throw new Error(payload.message || "No pudimos enviar el formulario.");
       }
 
-      track("Flag interest form submitted", {
+      track(`${site.analyticsLabel} interest form submitted`, {
         interestType: flagInterestForm.interestType,
         location: flagInterestForm.location,
       });
@@ -414,8 +415,8 @@ export default function SumatePage() {
         />
         <div className="relative mx-auto grid min-h-[360px] max-w-6xl items-end px-4 py-16 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-white/80">LUFA Flag</p>
-            <h1 className="mt-4 text-4xl font-black leading-tight sm:text-6xl">Sumate al Flag Football Uruguayo</h1>
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-white/80">{site.siteName}</p>
+            <h1 className="mt-4 text-4xl font-black leading-tight sm:text-6xl">Sumate al {site.sportName} Uruguayo</h1>
             <p className="mt-5 text-lg font-medium leading-relaxed text-white/90 sm:text-xl">
               Completá este formulario en menos de 1 minuto y te contactaremos para ayudarte a empezar.
             </p>
@@ -428,7 +429,7 @@ export default function SumatePage() {
           <div>
             <Link
               href="/"
-              onClick={() => track("Flag interest back home clicked")}
+              onClick={() => track(`${site.analyticsLabel} interest back home clicked`)}
               className="inline-flex min-h-[40px] items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-800 transition hover:border-slate-500"
             >
               Volver al inicio
@@ -452,7 +453,7 @@ export default function SumatePage() {
                 href={officialChannelUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => track("Flag interest whatsapp channel clicked")}
+                onClick={() => track(`${site.analyticsLabel} interest whatsapp channel clicked`)}
                 className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-lg bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 Unirme al canal oficial de WhatsApp
@@ -466,7 +467,7 @@ export default function SumatePage() {
               {flagInterestStatus === "success" ? (
               <div className="rounded-lg bg-white p-6 text-center">
                 <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-800">Formulario enviado</p>
-                <h3 className="mt-3 text-3xl font-black text-slate-950">¡Bienvenido al Flag Football Uruguayo!</h3>
+                <h3 className="mt-3 text-3xl font-black text-slate-950">¡Bienvenido al {site.sportName} Uruguayo!</h3>
                 <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-slate-700">
                   En las próximas 24-48 horas un integrante de la organización se pondrá en contacto contigo para
                   ayudarte a dar el siguiente paso.
@@ -475,7 +476,7 @@ export default function SumatePage() {
                   href={officialChannelUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => track("Flag interest whatsapp channel clicked")}
+                  onClick={() => track(`${site.analyticsLabel} interest whatsapp channel clicked`)}
                   className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-lg bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                 >
                   Unirme al canal oficial de WhatsApp

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSiteConfig } from "../site/SiteConfig";
 
 type Team = {
   name: string;
@@ -139,6 +140,7 @@ function drawCenteredImage(ctx: CanvasRenderingContext2D, image: HTMLImageElemen
 }
 
 export default function GameDayImageDownload({ games }: { games: GameDayGame[] }) {
+  const site = useSiteConfig();
   const [open, setOpen] = useState(false);
   const [availableGames, setAvailableGames] = useState(games);
   const [kind, setKind] = useState<ImageKind>("gameday");
@@ -203,7 +205,7 @@ export default function GameDayImageDownload({ games }: { games: GameDayGame[] }
       const [background, lufaBall, lufaFlag, ...teamLogos] = await Promise.all([
         loadImage("/Hero1.JPG"),
         loadImage("/lufa_icon.png"),
-        loadImage("/lufa_flag_icon.jpeg"),
+        loadImage(site.logo.src),
         ...logoSources.map((source) => (source ? loadImage(source) : Promise.resolve(null))),
       ]);
 

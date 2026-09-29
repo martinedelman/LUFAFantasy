@@ -22,12 +22,17 @@ export function flagAuthUrl(
   return authPageUrl(page, returnTo);
 }
 
+/**
+ * `appUrl` is the site the user returns to by default: the flag site unless
+ * another institutional site (e.g. tackle) passes its own origin.
+ */
 export function centralAuthDestination(
   page: FlagAuthPage,
   searchParams: AuthSearchParams = {},
+  appUrl: string = getFlagAppUrl(),
 ) {
   const requestedReturnTo = firstValue(searchParams.returnTo);
-  const returnTo = normalizeAuthReturnTo(requestedReturnTo) || getFlagAppUrl();
+  const returnTo = normalizeAuthReturnTo(requestedReturnTo) || appUrl;
   const destination = new URL(flagAuthUrl(page, returnTo));
 
   if (page === "verify") {

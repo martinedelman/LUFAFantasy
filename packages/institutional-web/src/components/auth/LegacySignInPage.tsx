@@ -5,8 +5,10 @@ import Link from "next/link";
 import InlineFeedback from "../InlineFeedback";
 import LoadingSpinner from "../LoadingSpinner";
 import { useAuth } from "../../hooks/useAuth";
+import { useSiteConfig } from "../../site/SiteConfig";
 
 export default function SignInPage() {
+  const site = useSiteConfig();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -102,7 +104,7 @@ export default function SignInPage() {
             <span className="text-4xl">🏈</span>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Iniciar Sesión</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">Accede a tu cuenta en LUFA Flag</p>
+          <p className="mt-2 text-center text-sm text-gray-600">Accede a tu cuenta en {site.siteName}</p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

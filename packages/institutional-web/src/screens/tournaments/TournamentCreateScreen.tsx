@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import InlineFeedback from "../../components/InlineFeedback";
 import { useAuth } from "../../hooks/useAuth";
+import { useSiteConfig } from "../../site/SiteConfig";
 
 interface DivisionOption {
   _id: string;
@@ -56,6 +57,7 @@ interface TournamentFormData {
 }
 
 export default function NewTournamentPage() {
+  const site = useSiteConfig();
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -374,7 +376,7 @@ export default function NewTournamentPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Crear Nuevo Torneo</h1>
-              <p className="mt-1 text-sm text-gray-600">Configura un nuevo torneo de Flag Football</p>
+              <p className="mt-1 text-sm text-gray-600">Configura un nuevo torneo de {site.sportName}</p>
             </div>
             <Link
               href="/tournaments"
@@ -409,7 +411,7 @@ export default function NewTournamentPage() {
                   aria-invalid={Boolean(fieldErrors.name)}
                   aria-describedby={fieldErrors.name ? "name-error" : undefined}
                   className={inputClassName("name")}
-                  placeholder="Ej: APERTURA FLAG 2025"
+                  placeholder={`Ej: APERTURA ${site.sportShortName.toUpperCase()} 2025`}
                 />
                 {renderFieldError("name")}
               </div>

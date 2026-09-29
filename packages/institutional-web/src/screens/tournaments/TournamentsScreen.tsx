@@ -11,10 +11,10 @@ import RevealOnScroll from "../../components/RevealOnScroll";
 import Skeleton from "../../components/Skeleton";
 import Tag from "../../components/Tag";
 import { useCachedState } from "../../hooks/useCachedState";
+import { useSiteConfig } from "../../site/SiteConfig";
 
 const tournamentsHero = {
   path: "/tournaments",
-  eyebrow: "Temporada LUFA Flag",
   title: "Torneos",
   imageSrc: "/Tournaments.JPG",
 };
@@ -100,6 +100,7 @@ function TournamentsSkeletonGrid() {
 }
 
 export default function TournamentsPage() {
+  const site = useSiteConfig();
   const { user } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
@@ -219,7 +220,7 @@ export default function TournamentsPage() {
 
   return (
     <>
-      <PageHero {...tournamentsHero}>
+      <PageHero {...tournamentsHero} eyebrow={`Temporada ${site.siteName}`}>
         <FilterAccordion
           className="overflow-hidden rounded-lg border border-white/25 bg-white/92 text-slate-900 shadow-[0_18px_44px_rgba(8,27,43,0.28)] backdrop-blur-md"
           buttonClassName="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-900 sm:px-5"

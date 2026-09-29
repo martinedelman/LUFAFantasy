@@ -6,8 +6,10 @@
   "exports": {
     "./screens/*": "./src/screens/*.tsx",
     "./components/*": "./src/components/*.tsx",
+    "./home/*": "./src/home/*.tsx",
     "./hooks/*": "./src/hooks/*.tsx",
     "./lib/*": "./src/lib/*.ts",
+    "./site": "./src/site/SiteConfig.tsx",
     "./types": "./src/types/index.ts",
     "./styles/*": "./src/styles/*"
   },

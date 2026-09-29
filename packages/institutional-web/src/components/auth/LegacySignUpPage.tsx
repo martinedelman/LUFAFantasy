@@ -4,8 +4,10 @@ import Link from "next/link";
 import InlineFeedback from "../InlineFeedback";
 import LoadingSpinner from "../LoadingSpinner";
 import { useAuth } from "../../hooks/useAuth";
+import { useSiteConfig } from "../../site/SiteConfig";
 
 export default function SignUpPage() {
+  const site = useSiteConfig();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -134,7 +136,7 @@ export default function SignUpPage() {
             <span className="text-4xl">🏈</span>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Crear Cuenta</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">Únete a LUFA Flag</p>
+          <p className="mt-2 text-center text-sm text-gray-600">Únete a {site.siteName}</p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

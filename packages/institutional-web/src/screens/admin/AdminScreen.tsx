@@ -28,6 +28,7 @@ import type {
   UpdateSiteSettingsRequestDto,
 } from "@lufa/contracts";
 import type { UserRole } from "@lufa/contracts";
+import { type SiteConfig, useSiteConfig } from "../../site/SiteConfig";
 
 type AdminTab = "overview" | "analytics" | "users" | "pending" | "content" | "credentials" | "system" | "audit";
 
@@ -117,13 +118,12 @@ const emptyStats: AdminSystemStatsResponseDto = {
   sponsorFlagInterests: 0,
 };
 
-const emptySettings: SiteSettingsResponseDto = {
-  whatsappMessageTemplate:
-    "Hola {nombre}, te escribimos de LUFA Flag por tu inscripción para jugar. Queremos contarte los próximos pasos para sumarte a juveniles.",
-  contactEmail: "lufaflag@gmail.com",
+const createEmptySettings = (contact: SiteConfig["contact"]): SiteSettingsResponseDto => ({
+  whatsappMessageTemplate: contact.whatsappMessageTemplate,
+  contactEmail: contact.email,
   contactWhatsapp: "",
-  instagramUrl: "https://www.instagram.com/lufaflag.uy/",
-  whatsappChannelUrl: "https://whatsapp.com/channel/0029VbCnCzqKLaHqPlaOvV3W",
+  instagramUrl: contact.instagramUrl,
+  whatsappChannelUrl: contact.whatsappChannelUrl,
   sponsors: [],
   homepageAnnouncement: {
     enabled: false,
@@ -137,7 +137,7 @@ const emptySettings: SiteSettingsResponseDto = {
     sumateEnabled: true,
     sponsorsVisible: true,
   },
-};
+});
 
 function formatDate(value?: string) {
   if (!value) return "-";
@@ -382,6 +382,7 @@ function FieldTitle({ children, help }: { children: ReactNode; help: string }) {
 }
 
 function AdminPanelContent() {
+  const site = useSiteConfig();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [stats, setStats] = useState<AdminSystemStatsResponseDto>(emptyStats);
@@ -390,8 +391,8 @@ function AdminPanelContent() {
   const [corrections, setCorrections] = useState<GameEventCorrectionResponse[]>([]);
   const [flagInterests, setFlagInterests] = useState<FlagInterestResponseDto[]>([]);
   const [allFlagInterestIds, setAllFlagInterestIds] = useState<string[]>([]);
-  const [settings, setSettings] = useState<SiteSettingsResponseDto>(emptySettings);
-  const [settingsDraft, setSettingsDraft] = useState<SiteSettingsResponseDto>(emptySettings);
+  const [settings, setSettings] = useState<SiteSettingsResponseDto>(() => createEmptySettings(site.contact));
+  const [settingsDraft, setSettingsDraft] = useState<SiteSettingsResponseDto>(() => createEmptySettings(site.contact));
   const [health, setHealth] = useState<AdminSystemHealthResponseDto | null>(null);
   const [auditLogs, setAuditLogs] = useState<AdminAuditLogResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -829,7 +830,7 @@ function AdminPanelContent() {
         <header className="flex flex-col gap-3 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-brand-700">Administración</p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight">Panel LUFA Flag</h1>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight">Panel {site.siteName}</h1>
             <p className="mt-2 text-sm text-slate-600">
               Backoffice operativo para usuarios, pendientes, contenido, sistema y auditoría.
             </p>
@@ -1286,7 +1287,7 @@ function AdminPanelContent() {
                   <h2 className="text-lg font-semibold">Configuración pública editable</h2>
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
                     <label className="block text-sm font-semibold text-slate-700">
-                      <FieldTitle help="Email público de contacto de LUFA Flag. Se usa como dato institucional visible o disponible para formularios y consultas.">
+                      <FieldTitle help={`Email público de contacto de ${site.siteName}. Se usa como dato institucional visible o disponible para formularios y consultas.`}>
                         Email de contacto
                       </FieldTitle>
                       <input

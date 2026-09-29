@@ -1,8 +1,13 @@
+"use client";
+
+import { useSiteConfig } from "../site/SiteConfig";
+
 type ComingSoonProps = {
   pageName: string;
 };
 
 export default function ComingSoon({ pageName }: ComingSoonProps) {
+  const site = useSiteConfig();
   const displayName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
 
   return (
@@ -19,12 +24,12 @@ export default function ComingSoon({ pageName }: ComingSoonProps) {
             Sección en construcción
           </div>
 
-          <p className="mt-8 text-sm font-semibold uppercase tracking-[0.32em] text-brand-800">LUFA Flag</p>
+          <p className="mt-8 text-sm font-semibold uppercase tracking-[0.32em] text-brand-800">{site.siteName}</p>
           <h1 className="mt-5 max-w-4xl text-4xl font-bold leading-tight text-slate-950 sm:text-6xl lg:text-7xl">
             Próximamente vas a tener toda la información de los {pageName}.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-700">
-            Esta pantalla ya está en obra: estamos preparando todo el contenido para que disfrutes el flag de la mejor
+            Esta pantalla ya está en obra: estamos preparando todo el contenido para que disfrutes el {site.sportShortName} de la mejor
             manera posible.
           </p>
         </div>
