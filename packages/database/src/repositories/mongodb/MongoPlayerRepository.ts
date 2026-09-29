@@ -4,6 +4,7 @@ import { PlayerModel } from "../../models/Player";
 import connectToDatabase from "../../mongodb";
 import { withoutModality } from "./modality";
 import type { Modality } from "@lufa/sports/entities/Modality";
+import type { PlayerModalityProfile } from "@lufa/sports/ports";
 
 export class MongoPlayerRepository implements IPlayerRepository {
   async findById(id: string): Promise<Player | null> {
@@ -105,6 +106,32 @@ export class MongoPlayerRepository implements IPlayerRepository {
 
     const count = await PlayerModel.countDocuments(query).exec();
     return count > 0;
+  }
+
+  // Mongo only holds flag data: there is one profile per player, stored on the player itself.
+
+  async getHomeModality(): Promise<Modality> {
+    return "flag";
+  }
+
+  async listModalityProfiles(): Promise<PlayerModalityProfile[]> {
+    return [];
+  }
+
+  async upsertModalityProfile(): Promise<void> {}
+
+  async isJerseyTaken(
+    jerseyNumber: number,
+    scope: { modality: Modality; teamId?: string; playerId?: string },
+  ): Promise<boolean> {
+    if (scope.modality !== "flag") return false;
+    let teamId = scope.teamId;
+    if (!teamId && scope.playerId) {
+      await connectToDatabase();
+      const player = await PlayerModel.findById(scope.playerId).select("team").lean<{ team?: unknown }>().exec();
+      teamId = player?.team ? String(player.team) : undefined;
+    }
+    return teamId ? this.existsWithJerseyNumber(jerseyNumber, teamId, scope.playerId) : false;
   }
 
   async findByEmail(email: string, modality?: Modality): Promise<Player | null> {

@@ -7,12 +7,12 @@ import type {
   IReportingRepository,
   PlayerRankingQuery,
   PlayerRankingRow,
-  RankingEventType,
 } from "./IReportingRepository";
 import type { AdminAnalyticsQuery } from "./IReportingRepository";
 import { buildAdminAnalytics } from "./adminAnalytics";
 import type { AnalyticsFactsQuery } from "./IReportingRepository";
 import type { AnalyticsEventFact } from "./analyticsBuilder";
+import { rankingEventTypes } from "@lufa/contracts/game-events";
 
 export class MongoReportingRepository implements IReportingRepository {
   async getDashboardStats(
@@ -134,6 +134,7 @@ export class MongoReportingRepository implements IReportingRepository {
             }
           : null,
       })),
+      query.modality ?? "flag",
     );
   }
 
@@ -284,15 +285,8 @@ export class MongoReportingRepository implements IReportingRepository {
     };
   }
 
-  private rankingEventTypes(query: PlayerRankingQuery): RankingEventType[] {
+  private rankingEventTypes(query: PlayerRankingQuery): string[] {
     if (query.mode !== "count" || !query.eventType) return [];
-    const values: RankingEventType[] = [query.eventType];
-    if (
-      query.includePickSix &&
-      (query.eventType === "touchdown" || query.eventType === "interception")
-    ) {
-      values.push("pick_six");
-    }
-    return values;
+    return rankingEventTypes(query.eventType, query.includePickSix);
   }
 }

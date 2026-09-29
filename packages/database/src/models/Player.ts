@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { Player } from "@lufa/contracts/legacy-types";
+import { PLAYER_POSITIONS } from "@lufa/contracts/game-events";
 
 const EmergencyContactSchema = new Schema({
   name: { type: String, trim: true },
@@ -27,12 +28,12 @@ const PlayerSchema = new Schema(
     jerseyNumber: { type: Number },
     position: {
       type: String,
-      enum: ["QB", "WR", "RB", "C", "RS", "G", "T", "DE", "DT", "LB", "CB", "FS", "SS", "K", "P", "FLEX"],
+      enum: [...PLAYER_POSITIONS, "FLEX"],
       required: true,
     },
     secondaryPosition: {
       type: String,
-      enum: ["QB", "WR", "RB", "C", "RS", "LB", "CB", "FS", "SS"],
+      enum: [...PLAYER_POSITIONS],
     },
     height: { type: Number }, // cm
     weight: { type: Number }, // kg

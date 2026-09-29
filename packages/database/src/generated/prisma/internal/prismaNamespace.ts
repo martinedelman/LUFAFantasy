@@ -418,6 +418,7 @@ export const ModelName = {
   TournamentDivision: 'TournamentDivision',
   TournamentTeam: 'TournamentTeam',
   DivisionTeam: 'DivisionTeam',
+  PlayerModalityProfile: 'PlayerModalityProfile',
   TeamPlayer: 'TeamPlayer',
   GamePresentPlayer: 'GamePresentPlayer',
   FantasyUser: 'FantasyUser',
@@ -456,7 +457,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "analyticsReport" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite" | "digitalCredential" | "commerceSeller" | "commerceSellerMember" | "commerceItem" | "commerceOrder" | "commerceOrderItem" | "commerceWebhookEvent" | "commerceTournamentRegistration" | "commerceRefundRequest" | "digitalCredentialAudit"
+    modelProps: "user" | "analyticsReport" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "playerModalityProfile" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite" | "digitalCredential" | "commerceSeller" | "commerceSellerMember" | "commerceItem" | "commerceOrder" | "commerceOrderItem" | "commerceWebhookEvent" | "commerceTournamentRegistration" | "commerceRefundRequest" | "digitalCredentialAudit"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2011,6 +2012,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.DivisionTeamCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.DivisionTeamCountAggregateOutputType> | number
+        }
+      }
+    }
+    PlayerModalityProfile: {
+      payload: Prisma.$PlayerModalityProfilePayload<ExtArgs>
+      fields: Prisma.PlayerModalityProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PlayerModalityProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PlayerModalityProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.PlayerModalityProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PlayerModalityProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload>
+        }
+        findMany: {
+          args: Prisma.PlayerModalityProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload>[]
+        }
+        create: {
+          args: Prisma.PlayerModalityProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload>
+        }
+        createMany: {
+          args: Prisma.PlayerModalityProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PlayerModalityProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.PlayerModalityProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload>
+        }
+        update: {
+          args: Prisma.PlayerModalityProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.PlayerModalityProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PlayerModalityProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PlayerModalityProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.PlayerModalityProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlayerModalityProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.PlayerModalityProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePlayerModalityProfile>
+        }
+        groupBy: {
+          args: Prisma.PlayerModalityProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlayerModalityProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PlayerModalityProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlayerModalityProfileCountAggregateOutputType> | number
         }
       }
     }
@@ -4116,6 +4191,19 @@ export const DivisionTeamScalarFieldEnum = {
 export type DivisionTeamScalarFieldEnum = (typeof DivisionTeamScalarFieldEnum)[keyof typeof DivisionTeamScalarFieldEnum]
 
 
+export const PlayerModalityProfileScalarFieldEnum = {
+  playerId: 'playerId',
+  modality: 'modality',
+  jerseyNumber: 'jerseyNumber',
+  position: 'position',
+  secondaryPosition: 'secondaryPosition',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlayerModalityProfileScalarFieldEnum = (typeof PlayerModalityProfileScalarFieldEnum)[keyof typeof PlayerModalityProfileScalarFieldEnum]
+
+
 export const TeamPlayerScalarFieldEnum = {
   teamId: 'teamId',
   playerId: 'playerId',
@@ -4753,6 +4841,7 @@ export type GlobalOmitConfig = {
   tournamentDivision?: Prisma.TournamentDivisionOmit
   tournamentTeam?: Prisma.TournamentTeamOmit
   divisionTeam?: Prisma.DivisionTeamOmit
+  playerModalityProfile?: Prisma.PlayerModalityProfileOmit
   teamPlayer?: Prisma.TeamPlayerOmit
   gamePresentPlayer?: Prisma.GamePresentPlayerOmit
   fantasyUser?: Prisma.FantasyUserOmit

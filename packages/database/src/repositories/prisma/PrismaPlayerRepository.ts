@@ -3,7 +3,8 @@ import { Player } from "@lufa/sports/entities/Player";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { IPlayerRepository } from "../contracts";
 import { modalityFilter, plainJson, referenceId, toPlayer } from "./mappers";
-import type { Modality } from "@lufa/sports/entities/Modality";
+import { DEFAULT_MODALITY, isModality, type Modality } from "@lufa/sports/entities/Modality";
+import type { PlayerModalityProfile } from "@lufa/sports/ports";
 
 const PLAYER_WITH_TEAM = {
   team: {
@@ -12,6 +13,11 @@ const PLAYER_WITH_TEAM = {
     },
   },
 } as const;
+
+/** With a modality, also load that modality's profile so jersey and positions reflect it. */
+function playerInclude(modality?: Modality) {
+  return modality ? { ...PLAYER_WITH_TEAM, modalityProfiles: { where: { modality } } } : PLAYER_WITH_TEAM;
+}
 
 /** Players are shared across modalities: they play one if any of their teams does. */
 function playsInModality(modality: Modality) {
@@ -28,10 +34,70 @@ export class PrismaPlayerRepository implements IPlayerRepository {
     return getPrismaClient();
   }
 
-  async findById(id: string): Promise<Player | null> {
+  async findById(id: string, modality?: Modality): Promise<Player | null> {
     return this.toPlayerWithTeam(
-      await this.db.player.findUnique({ where: { id }, include: PLAYER_WITH_TEAM }),
+      await this.db.player.findUnique({ where: { id }, include: playerInclude(modality) }),
     );
+  }
+
+  async getHomeModality(playerId: string): Promise<Modality> {
+    const row = await this.db.player.findUnique({
+      where: { id: playerId },
+      select: { team: { select: { division: { select: { modality: true } } } } },
+    });
+    const modality = row?.team?.division?.modality;
+    return isModality(modality) ? modality : DEFAULT_MODALITY;
+  }
+
+  async listModalityProfiles(playerId: string): Promise<PlayerModalityProfile[]> {
+    const rows = await this.db.playerModalityProfile.findMany({ where: { playerId }, orderBy: { modality: "asc" } });
+    return rows.map((row) => ({
+      modality: isModality(row.modality) ? row.modality : DEFAULT_MODALITY,
+      jerseyNumber: row.jerseyNumber,
+      position: row.position as PlayerModalityProfile["position"],
+      secondaryPosition: (row.secondaryPosition as PlayerModalityProfile["secondaryPosition"]) ?? null,
+    }));
+  }
+
+  async upsertModalityProfile(playerId: string, profile: PlayerModalityProfile): Promise<void> {
+    const data = {
+      jerseyNumber: profile.jerseyNumber,
+      position: profile.position,
+      secondaryPosition: profile.secondaryPosition ?? null,
+    };
+    await this.db.playerModalityProfile.upsert({
+      where: { playerId_modality: { playerId, modality: profile.modality } },
+      create: { playerId, modality: profile.modality, ...data },
+      update: data,
+    });
+  }
+
+  async isJerseyTaken(
+    jerseyNumber: number,
+    scope: { modality: Modality; teamId?: string; playerId?: string },
+  ): Promise<boolean> {
+    let teamIds = scope.teamId ? [scope.teamId] : [];
+    if (!scope.teamId && scope.playerId) {
+      const teamSelect = { select: { id: true, division: { select: { modality: true } } } } as const;
+      const player = await this.db.player.findUnique({
+        where: { id: scope.playerId },
+        select: { team: teamSelect, teamMemberships: { select: { team: teamSelect } } },
+      });
+      teamIds = [player?.team, ...(player?.teamMemberships || []).map((membership) => membership.team)]
+        .filter((team) => team?.division?.modality === scope.modality)
+        .map((team) => team!.id);
+    }
+    if (!teamIds.length) return false;
+
+    const roster = await this.db.player.findMany({
+      where: {
+        ...(scope.playerId ? { id: { not: scope.playerId } } : {}),
+        OR: [{ teamId: { in: teamIds } }, { teamMemberships: { some: { teamId: { in: teamIds } } } }],
+      },
+      select: { jerseyNumber: true, modalityProfiles: { where: { modality: scope.modality }, select: { jerseyNumber: true } } },
+    });
+    // The number shown in a modality is its profile's; players without one fall back to their base number.
+    return roster.some((row) => (row.modalityProfiles[0] ? row.modalityProfiles[0].jerseyNumber : row.jerseyNumber) === jerseyNumber);
   }
 
   async findAll(filters: Record<string, unknown> = {}): Promise<Player[]> {
@@ -48,7 +114,7 @@ export class PrismaPlayerRepository implements IPlayerRepository {
     const modality = modalityFilter(filters);
     if (modality) and.push(playsInModality(modality));
     if (and.length) where.AND = and;
-    return (await this.db.player.findMany({ where, include: PLAYER_WITH_TEAM }))
+    return (await this.db.player.findMany({ where, include: playerInclude(modality) }))
       .map((record) => this.toPlayerWithTeam(record))
       .filter((item): item is Player => Boolean(item));
   }
@@ -101,7 +167,7 @@ export class PrismaPlayerRepository implements IPlayerRepository {
           email: { equals: email.trim().toLowerCase(), mode: "insensitive" },
           ...(modality ? { AND: [playsInModality(modality)] } : {}),
         },
-        include: PLAYER_WITH_TEAM,
+        include: playerInclude(modality),
       }),
     );
   }
@@ -115,13 +181,21 @@ export class PrismaPlayerRepository implements IPlayerRepository {
         ],
         ...(modality ? { AND: [playsInModality(modality)] } : {}),
       },
-      include: PLAYER_WITH_TEAM,
+      include: playerInclude(modality),
     });
     return rows.map((record) => this.toPlayerWithTeam(record)).filter((item): item is Player => Boolean(item));
   }
 
   private toPlayerWithTeam(record: any): Player | null {
     const player = toPlayer(record);
+    const profile = record?.modalityProfiles?.[0];
+    if (player && profile) {
+      Object.assign(player, {
+        jerseyNumber: profile.jerseyNumber ?? undefined,
+        position: profile.position,
+        secondaryPosition: profile.secondaryPosition ?? undefined,
+      });
+    }
     if (!player || !record?.team) {
       return player;
     }

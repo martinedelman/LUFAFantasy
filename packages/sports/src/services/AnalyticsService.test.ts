@@ -64,3 +64,27 @@ describe("runAnalyticsQuery", () => {
     expect(data.results[0].rows).toEqual([expect.objectContaining({ label: "Penalty", value: 1 })]);
   });
 });
+
+describe("runAnalyticsQuery por modalidad", () => {
+  const halves = { widgets: [{ id: "half", title: "Mitad", source: "teams" as const, metric: "points" as const, dimension: "half" as const, visualization: "bar" as const }] };
+  const facts = [1, 2, 3, 4, 5].map((quarter) => fact({ eventId: `q${quarter}`, quarter, points: quarter }));
+
+  it("en flag cada cuarto guardado es una mitad", () => {
+    const rows = runAnalyticsQuery(facts.slice(0, 2), halves).results[0].rows;
+    expect(rows).toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: "1T", value: 1 }), expect.objectContaining({ label: "2T", value: 2 }),
+    ]));
+  });
+
+  it("en tackle la primera mitad son los cuartos 1 y 2", () => {
+    const rows = runAnalyticsQuery(facts, halves, "tackle").results[0].rows;
+    expect(rows).toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: "1T", value: 3 }), expect.objectContaining({ label: "2T", value: 12 }),
+    ]));
+  });
+
+  it("etiqueta los cuartos de tackle", () => {
+    const rows = runAnalyticsQuery(facts, { widgets: [{ id: "q", title: "Cuarto", source: "teams", metric: "event_count", dimension: "quarter", visualization: "bar" }] }, "tackle").results[0].rows;
+    expect(rows.map((row) => row.label).sort()).toEqual(["1C", "2C", "3C", "4C", "OT"]);
+  });
+});

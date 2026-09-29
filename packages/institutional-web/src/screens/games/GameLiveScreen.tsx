@@ -9,31 +9,11 @@ import InlineFeedback, { type FeedbackVariant } from "../../components/InlineFee
 import Modal from "../../components/Modal";
 import Toast from "../../components/Toast";
 import type { ApiResponse, GameApiResponse, GameEventType, PlayerApiResponse } from "../../types";
+import { GAME_EVENT_LABELS, MODALITY_RULES, eventRule, qbStatValue } from "@lufa/contracts/game-events";
+import { useSiteConfig } from "../../site/SiteConfig";
 
-type QuarterKey = "q1" | "q2" | "q3" | "q4" | "overtime";
 type TeamSide = "home" | "away";
 type PlayType = "pass" | "run";
-
-const QUARTERS: { key: QuarterKey; label: string }[] = [
-  { key: "q1", label: "1T" },
-  { key: "q2", label: "2T" },
-  { key: "q3", label: "3T" },
-  { key: "q4", label: "4T" },
-  { key: "overtime", label: "ET" },
-];
-
-const EVENT_TYPES: { value: GameEventType; label: string; points?: number }[] = [
-  { value: "touchdown", label: "TD", points: 6 },
-  { value: "extra_point", label: "Punto Extra +1", points: 1 },
-  { value: "extra_point", label: "Punto Extra +2", points: 2 },
-  { value: "safety", label: "Safety", points: 2 },
-  { value: "interception", label: "Intercepción" },
-  { value: "pick_six", label: "Pick Six", points: 6 },
-  { value: "sack", label: "Sack" },
-  { value: "penalty", label: "Castigo" },
-  { value: "unsportsmanlike", label: "Actitud Antideportiva" },
-  // { value: "first_down", label: "1st Down" },
-];
 
 const highContrastControlStyle = {
   backgroundColor: "var(--surface-soft)",
@@ -109,42 +89,7 @@ const getReferenceId = (reference?: string | { _id?: string } | null) => {
   return typeof reference === "string" ? reference : reference._id || "";
 };
 
-const requiresPenaltyDescription = (type: GameEventType) => type === "penalty" || type === "unsportsmanlike";
-
-const PASS_OR_RUN_EVENTS = ["touchdown", "extra_point"] as const;
-const QB_AND_PLAYER_EVENTS = ["touchdown", "extra_point", "safety", "interception", "pick_six", "sack"] as const;
-const NEGATIVE_QB_SCORING_EVENTS = ["safety", "interception", "pick_six", "sack"] as const;
-
-const canChoosePlayType = (type: GameEventType) =>
-  PASS_OR_RUN_EVENTS.includes(type as (typeof PASS_OR_RUN_EVENTS)[number]);
-
-const requiresQbAndPlayer = (type: GameEventType, playType: PlayType) =>
-  QB_AND_PLAYER_EVENTS.includes(type as (typeof QB_AND_PLAYER_EVENTS)[number]) &&
-  (!canChoosePlayType(type) || playType === "pass");
-
-const usesScorerLabel = (type: GameEventType) =>
-  type !== "sack" && QB_AND_PLAYER_EVENTS.includes(type as (typeof QB_AND_PLAYER_EVENTS)[number]);
-
-const usesOpponentQuarterback = (type: GameEventType) =>
-  NEGATIVE_QB_SCORING_EVENTS.includes(type as (typeof NEGATIVE_QB_SCORING_EVENTS)[number]);
-
 const getOppositeSide = (side: TeamSide): TeamSide => (side === "home" ? "away" : "home");
-
-const getQbStatValue = (type: GameEventType, points?: number) => {
-  if (!usesOpponentQuarterback(type)) {
-    return points;
-  }
-
-  if (type === "interception") {
-    return -1;
-  }
-
-  if (type === "sack") {
-    return -1;
-  }
-
-  return -Math.abs(points || 0);
-};
 
 const getPenaltyDescription = (details: unknown) => {
   if (!details || typeof details !== "object") return "";
@@ -186,7 +131,7 @@ export default function LiveMatchPage() {
   const [starting, setStarting] = useState(false);
   const [managingPresentPlayers, setManagingPresentPlayers] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentQuarter, setCurrentQuarter] = useState<QuarterKey>("q1");
+  const [currentQuarter, setCurrentQuarter] = useState(1);
   const [eventDraft, setEventDraft] = useState<EventDraft>({
     teamSide: "home",
     type: "touchdown",
@@ -196,6 +141,25 @@ export default function LiveMatchPage() {
     points: "6",
     description: "",
   });
+  const site = useSiteConfig();
+  // Rules come from the game's tournament; the site's modality is the fallback while loading.
+  const modality = game?.tournament?.modality ?? site.modality;
+  const rules = MODALITY_RULES[modality];
+  const ruleFor = (type: GameEventType) => eventRule(modality, type);
+  const requiresPenaltyDescription = (type: GameEventType) => Boolean(ruleFor(type)?.description);
+  const canChoosePlayType = (type: GameEventType) => Boolean(ruleFor(type)?.passOrRun);
+  const requiresQbAndPlayer = (type: GameEventType, playType: PlayType) =>
+    Boolean(ruleFor(type)?.qb) && (!canChoosePlayType(type) || playType === "pass");
+  const usesScorerLabel = (type: GameEventType) => Boolean(ruleFor(type)?.scorer);
+  const usesOpponentQuarterback = (type: GameEventType) => ruleFor(type)?.qb === "opponent";
+  const getQbStatValue = (type: GameEventType, points?: number) => qbStatValue(ruleFor(type), type, points);
+  /** Flag lets the scorer type the points; tackle fixes them (only multi-value rules need input). */
+  const hasEditablePoints = (type: GameEventType) => {
+    const allowed = ruleFor(type)?.points;
+    return allowed ? allowed.length > 1 : rules.buttons.some((button) => button.type === type && button.points !== undefined);
+  };
+  const periodLabel = (quarter: number) => rules.periods.find((period) => period.quarter === quarter)?.label || `${quarter}`;
+  const isQuarter = rules.periodName === "Cuarto";
   const [savingEvent, setSavingEvent] = useState(false);
   const [toast, setToast] = useState<LiveToastState | null>(null);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
@@ -398,10 +362,7 @@ export default function LiveMatchPage() {
     setToast({ variant, message, title });
   }, []);
 
-  const currentQuarterNumber = useMemo(() => {
-    if (currentQuarter === "overtime") return 5;
-    return currentQuarter === "q1" ? 1 : 2;
-  }, [currentQuarter]);
+  const currentQuarterNumber = currentQuarter;
 
   const playersById = useMemo(() => {
     const entries = [...homePlayers, ...awayPlayers].map((player) => [player._id, player] as const);
@@ -442,12 +403,11 @@ export default function LiveMatchPage() {
   const isPenaltyEventSelected = requiresPenaltyDescription(eventDraft.type);
   const eventTeamId = game?.[`${eventDraft.teamSide}Team`]?._id;
   const eventPoints = eventDraft.points === "" ? undefined : Number(eventDraft.points);
-  const requiresPoints =
-    !isPenaltyEventSelected && ["touchdown", "extra_point", "safety", "pick_six"].includes(eventDraft.type);
+  const requiresPoints = !isPenaltyEventSelected && hasEditablePoints(eventDraft.type);
   const showsPointsInput = !isPenaltyEventSelected && requiresPoints;
   const hasValidPoints =
     !requiresPoints || (eventPoints !== undefined && Number.isFinite(eventPoints) && eventPoints >= 0);
-  const canSubmitSafetyWithoutScorer = eventDraft.type === "safety" && Boolean(eventDraft.qb);
+  const canSubmitSafetyWithoutScorer = Boolean(ruleFor(eventDraft.type)?.scorerOptionalWithQb) && Boolean(eventDraft.qb);
   const hasRequiredEventPlayer = Boolean(eventDraft.player) || canSubmitSafetyWithoutScorer;
   const isEventDraftReady =
     Boolean(eventTeamId) &&
@@ -578,7 +538,7 @@ export default function LiveMatchPage() {
       points: "6",
       description: "",
     });
-    setCurrentQuarter("q1");
+    setCurrentQuarter(1);
     setToast(null);
   };
 
@@ -591,7 +551,8 @@ export default function LiveMatchPage() {
       return;
     }
 
-    const isSafetyWithoutScorer = eventDraft.type === "safety" && Boolean(eventDraft.qb) && !eventDraft.player;
+    const isSafetyWithoutScorer =
+      Boolean(ruleFor(eventDraft.type)?.scorerOptionalWithQb) && Boolean(eventDraft.qb) && !eventDraft.player;
     if (isSafetyWithoutScorer && !allowSafetyWithoutScorer) {
       setPendingConfirmation({
         title: "¿Seguro que quiere registrar un safety sin defensa?",
@@ -731,7 +692,7 @@ export default function LiveMatchPage() {
           : String(event.points),
       description: requiresPenaltyDescription(event.type) ? getPenaltyDescription(event.details) : "",
     });
-    setCurrentQuarter(event.quarter === 5 ? "overtime" : event.quarter === 2 ? "q2" : "q1");
+    setCurrentQuarter(rules.periods.some((period) => period.quarter === event.quarter) ? event.quarter : 1);
     setToast(null);
   };
 
@@ -788,7 +749,7 @@ export default function LiveMatchPage() {
 
     const team = game[`${eventDraft.teamSide}Team`]?._id;
     if (!team) {
-      showLiveToast("error", "Seleccioná un equipo válido antes de terminar la mitad.");
+      showLiveToast("error", `Seleccioná un equipo válido antes de terminar ${isQuarter ? "el cuarto" : "la mitad"}.`);
       return;
     }
 
@@ -811,22 +772,24 @@ export default function LiveMatchPage() {
       const data = (await response.json()) as LiveMatchEventMutationResponse;
 
       if (!response.ok || !data.success || !data.data) {
-        showLiveToast("error", data.message || "No se pudo registrar el fin de mitad.");
+        showLiveToast("error", data.message || `No se pudo registrar el fin de ${rules.periodName.toLowerCase()}.`);
         return;
       }
 
       setGame(data.data);
-      if (currentQuarter === "q1") {
-        setCurrentQuarter("q2");
+      // Advance to the next regulation period; overtime is chosen by hand.
+      const nextPeriod = rules.periods[rules.periods.findIndex((period) => period.quarter === currentQuarter) + 1];
+      if (nextPeriod && nextPeriod.quarter !== 5) {
+        setCurrentQuarter(nextPeriod.quarter);
       }
       showLiveToast(
         "info",
         data.pendingApproval
           ? data.message || "Corrección enviada. Queda pendiente de aprobación por un administrador."
-          : "Mitad registrada correctamente.",
+          : `${rules.periodName} ${isQuarter ? "registrado" : "registrada"} correctamente.`,
       );
     } catch {
-      showLiveToast("error", "Error de conexión al registrar el fin de mitad.");
+      showLiveToast("error", `Error de conexión al registrar el fin de ${rules.periodName.toLowerCase()}.`);
     } finally {
       setSavingEvent(false);
     }
@@ -874,11 +837,11 @@ export default function LiveMatchPage() {
   };
 
   const getEventTypeLabel = (type: GameEventType) => {
-    const option = EVENT_TYPES.find((eventType) => eventType.value === type && eventType.points === undefined);
+    const option = rules.buttons.find((button) => button.type === type && button.points === undefined);
     if (option) return option.label;
 
-    const scoringOption = EVENT_TYPES.find((eventType) => eventType.value === type);
-    return scoringOption?.label || type;
+    const scoringOption = rules.buttons.find((button) => button.type === type);
+    return scoringOption?.label || GAME_EVENT_LABELS[type] || type;
   };
 
   const getEventTeamName = (team: GameApiResponse["events"][number]["team"]) => {
@@ -1355,21 +1318,23 @@ export default function LiveMatchPage() {
                       <p className="text-sm text-gray-500">
                         {game.status === "completed"
                           ? "Los cambios recalculan marcador y standings."
-                          : `Mitad ${currentQuarter === "overtime" ? "ET" : `${currentQuarterNumber}T`}`}
+                          : `${rules.periodName} ${periodLabel(currentQuarter)}`}
                       </p>
                     </div>
-                    <div className="grid w-full grid-cols-3 rounded-md bg-gray-100 p-1 sm:w-auto sm:min-w-80">
-                      {QUARTERS.filter(
-                        (quarter) => quarter.key === "q1" || quarter.key === "q2" || quarter.key === "overtime",
-                      ).map((quarter) => (
+                    <div
+                      className={`grid w-full rounded-md bg-gray-100 p-1 sm:w-auto sm:min-w-80 ${
+                        rules.periods.length > 3 ? "grid-cols-5" : "grid-cols-3"
+                      }`}
+                    >
+                      {rules.periods.map((period) => (
                         <button
-                          key={`quarter-${quarter.key}`}
-                          onClick={() => setCurrentQuarter(quarter.key)}
+                          key={`quarter-${period.quarter}`}
+                          onClick={() => setCurrentQuarter(period.quarter)}
                           className={`min-w-0 truncate rounded px-3 py-2 text-sm font-semibold transition-colors ${
-                            currentQuarter === quarter.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
+                            currentQuarter === period.quarter ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
                           }`}
                         >
-                          {quarter.label}
+                          {period.label}
                         </button>
                       ))}
                     </div>
@@ -1413,15 +1378,15 @@ export default function LiveMatchPage() {
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-gray-700">Tipo</label>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                      {EVENT_TYPES.map((eventType) => {
+                      {rules.buttons.map((eventType) => {
                         const isSelected =
-                          eventDraft.type === eventType.value &&
+                          eventDraft.type === eventType.type &&
                           eventDraft.points === (eventType.points === undefined ? "" : String(eventType.points));
 
                         return (
                           <button
-                            key={`${eventType.value}-${eventType.label}`}
-                            onClick={() => selectEventType(eventType.value, eventType.points)}
+                            key={`${eventType.type}-${eventType.label}`}
+                            onClick={() => selectEventType(eventType.type, eventType.points)}
                             className={`rounded-md border px-3 py-3 text-sm font-bold transition-colors ${
                               isSelected ? "border-blue-600 bg-blue-600 text-white" : "hover:brightness-110"
                             }`}
@@ -1626,7 +1591,7 @@ export default function LiveMatchPage() {
                               {!event.description && event.points ? ` +${event.points}` : ""}
                             </p>
                             <p className="text-sm text-gray-500">
-                              {event.quarter === 5 ? "ET" : `${event.quarter}T`} · {getEventTeamName(event.team)}
+                              {periodLabel(event.quarter)} · {getEventTeamName(event.team)}
                               {event.player
                                 ? ` · ${usesScorerLabel(event.type) ? "Anotador" : "Jugador"}: ${getEventPlayerName(
                                     event.player,
@@ -1710,7 +1675,7 @@ export default function LiveMatchPage() {
                       disabled={savingEvent}
                       className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
                     >
-                      Terminar mitad
+                      Terminar {rules.periodName.toLowerCase()}
                     </button>
                     <button
                       onClick={handleEndGame}

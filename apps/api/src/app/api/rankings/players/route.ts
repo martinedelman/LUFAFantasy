@@ -3,12 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
 import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
-import {
-  type RankingEventType,
-  type RankingStage,
-} from "@lufa/sports/services/PlayerRankingService";
+import { type RankingStage } from "@lufa/sports/services/PlayerRankingService";
+import { RANKING_EVENT_TYPES, type RankingEventType } from "@lufa/contracts/game-events";
 
-const ALLOWED_EVENT_TYPES: RankingEventType[] = ["touchdown", "extra_point", "safety", "interception", "pick_six", "sack"];
+const ALLOWED_EVENT_TYPES: readonly RankingEventType[] = RANKING_EVENT_TYPES;
 const ALLOWED_STAGES: RankingStage[] = ["all", "regular", "playoff", "final", "postseason"];
 const RANKINGS_CACHE_TTL_SECONDS = 1800;
 const rankingService = serviceContainer.rankingService;
@@ -35,8 +33,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "año inválido" }, { status: 400 });
     }
 
-    // v6 invalida resultados calculados antes de la migración de datos a PostgreSQL.
-    const cacheKey = buildRequestCacheKey("rankings:players:v6", searchParams);
+    // v7 invalida resultados previos a los eventos de tackle.
+    const cacheKey = buildRequestCacheKey("rankings:players:v7", searchParams);
     const rankings = await getCachedValue(
       cacheKey,
       RANKINGS_CACHE_TTL_SECONDS * 1000,

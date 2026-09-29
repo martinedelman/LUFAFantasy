@@ -128,6 +128,27 @@ export function getEventNarrative(
     if (qbName) return `Safety sobre ${qbName}`;
   }
 
+  if (event.type === "two_point_conversion") {
+    if (details.playType === "pass") {
+      if (qbName && playerName) return `Conversión de 2: pase de ${qbName} a ${playerName}`;
+      if (playerName) return `Conversión de 2 por pase a ${playerName}`;
+    }
+    if (details.playType === "run" && playerName) return `Conversión de 2 por corrida de ${playerName}`;
+  }
+
+  const tacklePlays: Partial<Record<GameEventResponseDto["type"], string>> = {
+    pat_kick: "PAT de",
+    field_goal: "Field goal de",
+    defensive_conversion: "Conversión defensiva de",
+    fumble: "Fumble de",
+    fumble_recovery: "Fumble recuperado por",
+    fumble_return_td: "Fumble devuelto para touchdown por",
+    kick_return_td: "Kickoff devuelto para touchdown por",
+    punt_return_td: "Punt devuelto para touchdown por",
+  };
+  const tacklePlay = tacklePlays[event.type];
+  if (tacklePlay && playerName) return `${tacklePlay} ${playerName}`;
+
   return playerName;
 }
 

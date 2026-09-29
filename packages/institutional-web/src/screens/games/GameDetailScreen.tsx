@@ -11,6 +11,8 @@ import { useAuth } from "../../hooks/useAuth";
 import type { ApiResponse, GameApiResponse, GameEventType, PlayerApiResponse } from "../../types";
 import type { PlayerSummaryResponseDto, TeamSummaryResponseDto } from "@lufa/contracts";
 import { buildGameEventTimeline } from "./gameEventTimeline";
+import { GAME_EVENT_LABELS, MODALITY_RULES } from "@lufa/contracts/game-events";
+import { useSiteConfig } from "../../site/SiteConfig";
 
 type TeamSide = "home" | "away";
 type PlayerRef = PlayerSummaryResponseDto | string;
@@ -21,9 +23,16 @@ const SCORING_EVENT_LABELS: Partial<Record<GameEventType, string>> = {
   field_goal: "Field goal",
   safety: "Safety",
   pick_six: "Pick six",
+  pat_kick: GAME_EVENT_LABELS.pat_kick,
+  two_point_conversion: GAME_EVENT_LABELS.two_point_conversion,
+  defensive_conversion: GAME_EVENT_LABELS.defensive_conversion,
+  fumble_return_td: GAME_EVENT_LABELS.fumble_return_td,
+  kick_return_td: GAME_EVENT_LABELS.kick_return_td,
+  punt_return_td: GAME_EVENT_LABELS.punt_return_td,
 };
 
 const EVENT_TYPE_LABELS: Record<GameEventType, string> = {
+  ...GAME_EVENT_LABELS,
   touchdown: "Touchdown",
   extra_point: "Punto extra",
   field_goal: "Field goal",
@@ -151,6 +160,12 @@ function getScoringBadgeClass(type: GameEventType) {
     extra_point: "bg-emerald-100 text-emerald-800 ring-emerald-200",
     safety: "bg-amber-100 text-amber-900 ring-amber-200",
     field_goal: "bg-sky-100 text-sky-800 ring-sky-200",
+    pat_kick: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+    two_point_conversion: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+    defensive_conversion: "bg-purple-100 text-purple-800 ring-purple-200",
+    fumble_return_td: "bg-purple-100 text-purple-800 ring-purple-200",
+    kick_return_td: "bg-purple-100 text-purple-800 ring-purple-200",
+    punt_return_td: "bg-purple-100 text-purple-800 ring-purple-200",
   };
 
   return classes[type] || "bg-gray-100 text-gray-700 ring-gray-200";
@@ -165,6 +180,14 @@ function getEventBadgeClass(type: GameEventType) {
     field_goal: "bg-sky-100 text-sky-800 ring-sky-200",
     interception: "bg-indigo-100 text-indigo-800 ring-indigo-200",
     sack: "bg-rose-100 text-rose-800 ring-rose-200",
+    pat_kick: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+    two_point_conversion: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+    defensive_conversion: "bg-purple-100 text-purple-800 ring-purple-200",
+    fumble: "bg-rose-100 text-rose-800 ring-rose-200",
+    fumble_recovery: "bg-indigo-100 text-indigo-800 ring-indigo-200",
+    fumble_return_td: "bg-purple-100 text-purple-800 ring-purple-200",
+    kick_return_td: "bg-purple-100 text-purple-800 ring-purple-200",
+    punt_return_td: "bg-purple-100 text-purple-800 ring-purple-200",
     penalty: "bg-orange-100 text-orange-900 ring-orange-200",
     unsportsmanlike: "bg-red-100 text-red-800 ring-red-200",
     quarter_end: "bg-gray-900 text-white ring-gray-900",
@@ -189,6 +212,14 @@ function getEventIcon(type: GameEventType, points?: number) {
     substitution: "↔",
     first_down: "1°",
     field_goal: "FG",
+    pat_kick: "PAT",
+    two_point_conversion: "2PT",
+    defensive_conversion: "D2",
+    fumble: "FUM",
+    fumble_recovery: "FR",
+    fumble_return_td: "FR",
+    kick_return_td: "KR",
+    punt_return_td: "PR",
   };
 
   if (type === "extra_point") return points ? `+${points}` : "XP";
@@ -214,6 +245,9 @@ export default function MatchPage() {
   const canUseLiveMatch = user?.role === "admin" || user?.role === "juez";
 
   const [game, setGame] = useState<GameApiResponse | null>(null);
+  const site = useSiteConfig();
+  const periods = MODALITY_RULES[game?.tournament?.modality ?? site.modality].periods;
+  const periodLabel = (quarter: number) => periods.find((period) => period.quarter === quarter)?.label || `${quarter}`;
   const [homeRoster, setHomeRoster] = useState<PlayerApiResponse[]>([]);
   const [awayRoster, setAwayRoster] = useState<PlayerApiResponse[]>([]);
   const [teamCoachesById, setTeamCoachesById] = useState<
@@ -654,7 +688,7 @@ export default function MatchPage() {
                           className="inline-flex items-center overflow-hidden rounded-full text-xs font-bold ring-1"
                         >
                           <span className="bg-gray-900 px-2 py-1 text-white">
-                            {play.quarter === 5 ? "ET" : `${play.quarter}T`}
+                            {periodLabel(play.quarter)}
                           </span>
                           <span className={`px-2.5 py-1 ${getScoringBadgeClass(play.type)}`}>
                             {getScoringLabel(play.type, play.points)}
@@ -699,7 +733,7 @@ export default function MatchPage() {
                   >
                     <div className="pt-1 text-right">
                       <p className="text-xs font-black uppercase tracking-wide text-gray-500">
-                        {event.quarter === 5 ? "ET" : `${event.quarter}T`}
+                        {periodLabel(event.quarter)}
                       </p>
                       {event.time && <p className="mt-1 text-sm font-black tabular-nums text-gray-900">{event.time}</p>}
                       <p className="mt-1 text-[11px] font-semibold text-gray-400">#{event.sequenceNumber}</p>

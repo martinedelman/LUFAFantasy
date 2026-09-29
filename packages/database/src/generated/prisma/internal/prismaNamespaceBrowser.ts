@@ -72,6 +72,7 @@ export const ModelName = {
   TournamentDivision: 'TournamentDivision',
   TournamentTeam: 'TournamentTeam',
   DivisionTeam: 'DivisionTeam',
+  PlayerModalityProfile: 'PlayerModalityProfile',
   TeamPlayer: 'TeamPlayer',
   GamePresentPlayer: 'GamePresentPlayer',
   FantasyUser: 'FantasyUser',
@@ -472,6 +473,19 @@ export const DivisionTeamScalarFieldEnum = {
 } as const
 
 export type DivisionTeamScalarFieldEnum = (typeof DivisionTeamScalarFieldEnum)[keyof typeof DivisionTeamScalarFieldEnum]
+
+
+export const PlayerModalityProfileScalarFieldEnum = {
+  playerId: 'playerId',
+  modality: 'modality',
+  jerseyNumber: 'jerseyNumber',
+  position: 'position',
+  secondaryPosition: 'secondaryPosition',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlayerModalityProfileScalarFieldEnum = (typeof PlayerModalityProfileScalarFieldEnum)[keyof typeof PlayerModalityProfileScalarFieldEnum]
 
 
 export const TeamPlayerScalarFieldEnum = {

@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import type { GameEventType } from "@lufa/sports/entities/Game";
+import { GAME_EVENT_TYPES } from "@lufa/contracts/game-events";
 
 export type GameEventCorrectionOperation = "create" | "update" | "delete";
 export type GameEventCorrectionStatus = "pending" | "approved" | "rejected";
@@ -36,22 +37,7 @@ const GameEventCorrectionPayloadSchema = new Schema(
     quarter: { type: Number, required: true, min: 1, max: 5 },
     type: {
       type: String,
-      enum: [
-        "touchdown",
-        "extra_point",
-        "field_goal",
-        "safety",
-        "interception",
-        "pick_six",
-        "penalty",
-        "unsportsmanlike",
-        "quarter_end",
-        "game_end",
-        "substitution",
-        "injury",
-        "first_down",
-        "sack",
-      ],
+      enum: [...GAME_EVENT_TYPES],
       required: true,
     },
     team: { type: Schema.Types.ObjectId, ref: "Team", required: true },

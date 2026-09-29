@@ -29,6 +29,8 @@ import type {
 } from "@lufa/contracts";
 import type { UserRole } from "@lufa/contracts";
 import { type SiteConfig, useSiteConfig } from "../../site/SiteConfig";
+import { MODALITY_RULES } from "@lufa/contracts/game-events";
+import type { Modality } from "@lufa/contracts";
 
 type AdminTab = "overview" | "analytics" | "users" | "pending" | "content" | "credentials" | "system" | "audit";
 
@@ -166,11 +168,12 @@ function operationLabel(operation: GameEventCorrectionResponse["operation"]) {
   return "Eliminar evento";
 }
 
-function eventSummary(event?: CorrectionEventSummary) {
+function eventSummary(event: CorrectionEventSummary | undefined, modality: Modality) {
   if (!event) return "Sin datos";
+  const period = MODALITY_RULES[modality].periods.find((item) => item.quarter === event.quarter);
   const parts = [
     event.type,
-    event.quarter ? `${event.quarter === 5 ? "ET" : `${event.quarter}T`}` : undefined,
+    event.quarter ? period?.label || String(event.quarter) : undefined,
     event.teamName,
     event.playerName,
     event.points !== undefined ? `${event.points} pts` : undefined,
@@ -1187,10 +1190,10 @@ function AdminPanelContent() {
                                 Solicitado por: {correction.requestedByName || correction.requestedByEmail || "Juez"}
                               </p>
                               {correction.operation !== "create" && (
-                                <p className="text-sm text-slate-700">Actual: {eventSummary(correction.originalEvent)}</p>
+                                <p className="text-sm text-slate-700">Actual: {eventSummary(correction.originalEvent, site.modality)}</p>
                               )}
                               {correction.operation !== "delete" && (
-                                <p className="text-sm text-slate-700">Propuesto: {eventSummary(correction.proposedEvent)}</p>
+                                <p className="text-sm text-slate-700">Propuesto: {eventSummary(correction.proposedEvent, site.modality)}</p>
                               )}
                             </div>
                             <div className="flex gap-2">
