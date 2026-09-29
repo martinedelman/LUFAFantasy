@@ -142,8 +142,9 @@ export class PrismaFantasyCompetitionRepository implements FantasyCompetitionRep
       if (league.members.length < 2) throw new Error("Necesitás al menos dos equipos para iniciar el draft");
       if (league.members.some((member) => !member.team)) throw new Error("Hay equipos incompletos en la liga");
       const [playerCount, defenseCount] = await Promise.all([
-        tx.player.count({ where: { status: "active" } }),
-        tx.team.count({ where: { status: "active" } }),
+        // Same eligibility as manual and automatic picks: only flag players and defenses.
+        tx.player.count({ where: { status: "active", ...FLAG_PLAYER } }),
+        tx.team.count({ where: { status: "active", ...FLAG_TEAM } }),
       ]);
       const needed = league.members.length * rosterTotal(league.rosterSize);
       if (playerCount + defenseCount < needed) throw new Error("No hay suficientes jugadores o defensas de equipo disponibles para completar este draft");

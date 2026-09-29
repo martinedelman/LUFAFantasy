@@ -223,6 +223,12 @@ describe("modality separation (PostgreSQL)", () => {
     const played = id("tackle", "played");
     const team = id("tackle", "team");
     const player = id("tackle", "player");
+    // A real opponent: standings are recalculated for both sides in parallel.
+    await teams.create(
+      new Team("Rival tackle", new Colors("#000000", "#ffffff"), id("tackle", "division"), new ContactInfo({}), new Date("2026-01-02"),
+        "active", [], "RIV", undefined, undefined, id("tackle", "tournament"), id("tackle", "rival")),
+    );
+    await getPrismaClient().game.update({ where: { id: played }, data: { awayTeamId: id("tackle", "rival") } });
     const add = (quarter: number, type: Parameters<GameService["addGameEvent"]>[1]["type"], points?: number) =>
       gameService.addGameEvent(played, { quarter, type, team, player, points });
 
@@ -277,6 +283,22 @@ describe("modality separation (PostgreSQL)", () => {
       ["tackle", 40],
     ]);
     await db.teamPlayer.deleteMany({ where: { teamId: id("tackle", "team"), playerId: shared } });
+  });
+
+  it("does not copy a tackle-only position into a new flag profile", async () => {
+    const tacklePlayer = id("tackle", "player");
+    const db = getPrismaClient();
+    await playerService.updatePlayer(tacklePlayer, { position: "DT" }, "tackle");
+    // The tackle player joins the flag team without a flag profile yet: flag reads fall back to DT.
+    await db.teamPlayer.create({ data: { teamId: id("flag", "team"), playerId: tacklePlayer } });
+
+    await expect(playerService.updatePlayer(tacklePlayer, { jerseyNumber: 90 }, "flag")).rejects.toThrow("no existe en flag");
+    expect(await db.playerModalityProfile.count({ where: { playerId: tacklePlayer, modality: "flag" } })).toBe(0);
+
+    const flag = await playerService.updatePlayer(tacklePlayer, { jerseyNumber: 90, position: "RS" }, "flag");
+    expect([flag.jerseyNumber, flag.position]).toEqual([90, "RS"]);
+    expect((await playerService.getPlayerById(tacklePlayer, "tackle"))?.position).toBe("DT");
+    await db.teamPlayer.deleteMany({ where: { teamId: id("flag", "team"), playerId: tacklePlayer } });
   });
 
   it("stores site settings and sign-ups per modality", async () => {
