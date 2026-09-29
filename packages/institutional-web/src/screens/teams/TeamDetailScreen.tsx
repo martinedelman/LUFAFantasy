@@ -1,0 +1,1608 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import ErrorMessage from "../../components/ErrorMessage";
+import Modal from "../../components/Modal";
+import Tag from "../../components/Tag";
+import Avatar from "../../components/Avatar";
+import { useAuth } from "../../hooks/useAuth";
+
+interface Player {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  profilePicture?: string;
+  jerseyNumber?: number | null;
+  position: string;
+  secondaryPosition?: string;
+  email: string;
+  phone: string;
+  height?: number;
+  weight?: number;
+  experience?: string;
+  status: "active" | "inactive" | "injured" | "suspended" | "pre_approved";
+}
+
+interface Division {
+  _id: string;
+  name: string;
+  category: string;
+  ageGroup: string;
+  tournament: {
+    _id: string;
+    name: string;
+    year: number;
+  };
+}
+
+interface Team {
+  _id: string;
+  name: string;
+  shortName: string;
+  logo?: string;
+  backgroundImage?: string;
+  colors: {
+    primary: string;
+    secondary: string;
+  };
+  division: Division;
+  coach?: {
+    name: string;
+    email: string;
+    phone: string;
+    experience: string;
+    certifications: string[];
+  };
+  coaches?: Array<{
+    name: string;
+    email?: string;
+    phone?: string;
+    experience?: string;
+    certifications?: string[];
+  }>;
+  players: Player[];
+  contact?: {
+    email: string;
+    phone: string;
+    address?: string;
+    socialMedia?: {
+      facebook?: string;
+      instagram?: string;
+      x?: string;
+      twitter?: string;
+    };
+  };
+  registrationDate: string;
+  status: "active" | "inactive" | "suspended";
+  canEdit?: boolean;
+}
+
+interface TeamStats {
+  _id: string;
+  team: {
+    _id: string;
+    name: string;
+    shortName: string;
+    colors: {
+      primary: string;
+    };
+  };
+  tournament: {
+    _id: string;
+    name: string;
+    year: number;
+  };
+  division: {
+    _id: string;
+    name: string;
+    category: string;
+  };
+  wins: number;
+  losses: number;
+  ties: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  pickSixPointsExcluded: number;
+  adjustedPointsAgainst: number;
+  pointsDifferential: number;
+  offensiveStats: {
+    totalYards: number;
+    passingYards: number;
+    rushingYards: number;
+    touchdowns: number;
+    extraPointOne: number;
+    extraPointTwo: number;
+    fieldGoals: number;
+    firstDowns: number;
+    thirdDownConversions: {
+      made: number;
+      attempted: number;
+    };
+    redZoneEfficiency: {
+      scores: number;
+      attempts: number;
+    };
+    averageYardsPerGame: number;
+    averagePointsPerGame: number;
+  };
+  defensiveStats: {
+    totalYardsAllowed: number;
+    passingYardsAllowed: number;
+    rushingYardsAllowed: number;
+    touchdownsAllowed: number;
+    interceptions: number;
+    pickSix: number;
+    fumbleRecoveries: number;
+    sacks: number;
+    safeties: number;
+    averageYardsAllowedPerGame: number;
+    averagePointsAllowedPerGame: number;
+  };
+  turnovers: number;
+  turnoverDifferential: number;
+  penalties: number;
+  penaltyYards: number;
+}
+
+type GameEventType =
+  | "touchdown"
+  | "extra_point"
+  | "field_goal"
+  | "safety"
+  | "interception"
+  | "pick_six"
+  | "penalty"
+  | "unsportsmanlike"
+  | "quarter_end"
+  | "game_end"
+  | "substitution"
+  | "injury"
+  | "first_down"
+  | "sack";
+
+interface GameEvent {
+  type: GameEventType;
+  team: string | { _id: string };
+  points?: number;
+  yards?: number;
+}
+
+interface GameTeam {
+  _id: string;
+  name: string;
+  shortName?: string;
+  logo?: string;
+  colors: {
+    primary: string;
+    secondary?: string;
+  };
+}
+
+interface TeamGame {
+  _id: string;
+  status: "scheduled" | "in_progress" | "completed" | "postponed" | "cancelled";
+  scheduledDate: string;
+  week?: number;
+  round?: string;
+  homeTeam: string | GameTeam | null;
+  awayTeam: string | GameTeam | null;
+  tournament: string | { _id: string; name?: string; year?: number };
+  division: string | { _id: string; name?: string; category?: string };
+  venue: {
+    name: string;
+    address: string;
+  };
+  score: {
+    home: { total: number };
+    away: { total: number };
+  };
+  events?: GameEvent[];
+}
+
+const emptyTeamStats = (team: Team): TeamStats => ({
+  _id: `derived-${team._id}`,
+  team: {
+    _id: team._id,
+    name: team.name,
+    shortName: team.shortName,
+    colors: {
+      primary: team.colors.primary,
+    },
+  },
+  tournament: {
+    _id: team.division.tournament?._id || "",
+    name: team.division.tournament?.name || "Torneo",
+    year: team.division.tournament?.year || new Date().getFullYear(),
+  },
+  division: {
+    _id: team.division._id,
+    name: team.division.name,
+    category: team.division.category,
+  },
+  wins: 0,
+  losses: 0,
+  ties: 0,
+  pointsFor: 0,
+  pointsAgainst: 0,
+  pickSixPointsExcluded: 0,
+  adjustedPointsAgainst: 0,
+  pointsDifferential: 0,
+  offensiveStats: {
+    totalYards: 0,
+    passingYards: 0,
+    rushingYards: 0,
+    touchdowns: 0,
+    extraPointOne: 0,
+    extraPointTwo: 0,
+    fieldGoals: 0,
+    firstDowns: 0,
+    thirdDownConversions: { made: 0, attempted: 0 },
+    redZoneEfficiency: { scores: 0, attempts: 0 },
+    averageYardsPerGame: 0,
+    averagePointsPerGame: 0,
+  },
+  defensiveStats: {
+    totalYardsAllowed: 0,
+    passingYardsAllowed: 0,
+    rushingYardsAllowed: 0,
+    touchdownsAllowed: 0,
+    interceptions: 0,
+    pickSix: 0,
+    fumbleRecoveries: 0,
+    sacks: 0,
+    safeties: 0,
+    averageYardsAllowedPerGame: 0,
+    averagePointsAllowedPerGame: 0,
+  },
+  turnovers: 0,
+  turnoverDifferential: 0,
+  penalties: 0,
+  penaltyYards: 0,
+});
+
+const getReferenceId = (reference: string | { _id?: string } | null | undefined) => {
+  if (!reference) return "";
+  return typeof reference === "string" ? reference : reference._id || "";
+};
+
+const getTeamScoreFromGame = (game: TeamGame, teamId: string) => {
+  const homeTeamId = getReferenceId(game.homeTeam);
+  const awayTeamId = getReferenceId(game.awayTeam);
+
+  if (homeTeamId === teamId) {
+    return {
+      for: game.score?.home?.total || 0,
+      against: game.score?.away?.total || 0,
+      side: "home" as const,
+    };
+  }
+
+  if (awayTeamId === teamId) {
+    return {
+      for: game.score?.away?.total || 0,
+      against: game.score?.home?.total || 0,
+      side: "away" as const,
+    };
+  }
+
+  return null;
+};
+
+const deriveTeamStatsFromGames = (team: Team, games: TeamGame[]): TeamStats => {
+  const stats = emptyTeamStats(team);
+  const countedGames = games.filter((game) => game.status === "in_progress" || game.status === "completed");
+
+  countedGames.forEach((game) => {
+    const score = getTeamScoreFromGame(game, team._id);
+    if (!score) return;
+
+    stats.pointsFor += score.for;
+    stats.pointsAgainst += score.against;
+
+    if (score.for > score.against) {
+      stats.wins += 1;
+    } else if (score.for < score.against) {
+      stats.losses += 1;
+    } else {
+      stats.ties += 1;
+    }
+
+    (game.events || []).forEach((event) => {
+      const eventTeamId = getReferenceId(event.team);
+      const yards = event.yards || 0;
+
+      if (eventTeamId === team._id) {
+        stats.offensiveStats.totalYards += yards;
+
+        if (event.type === "touchdown") stats.offensiveStats.touchdowns += 1;
+        if (event.type === "extra_point" && event.points === 1) stats.offensiveStats.extraPointOne += 1;
+        if (event.type === "extra_point" && event.points === 2) stats.offensiveStats.extraPointTwo += 1;
+        if (event.type === "field_goal") stats.offensiveStats.fieldGoals += 1;
+        if (event.type === "first_down") stats.offensiveStats.firstDowns += 1;
+        if (event.type === "interception") stats.defensiveStats.interceptions += 1;
+        if (event.type === "pick_six") {
+          stats.defensiveStats.pickSix += 1;
+          stats.defensiveStats.interceptions += 1;
+        }
+        if (event.type === "sack") stats.defensiveStats.sacks += 1;
+        if (event.type === "safety") stats.defensiveStats.safeties += 1;
+      } else if (event.type === "touchdown") {
+        stats.defensiveStats.touchdownsAllowed += 1;
+      }
+
+      if (eventTeamId !== team._id && event.type === "pick_six") {
+        stats.pickSixPointsExcluded += Math.max(0, Number(event.points || 0));
+      }
+    });
+  });
+
+  const gamesPlayed = stats.wins + stats.losses + stats.ties;
+  stats.adjustedPointsAgainst = Math.max(0, stats.pointsAgainst - stats.pickSixPointsExcluded);
+  stats.pointsDifferential = stats.pointsFor - stats.pointsAgainst;
+  stats.offensiveStats.averagePointsPerGame = gamesPlayed > 0 ? stats.pointsFor / gamesPlayed : 0;
+  stats.defensiveStats.averagePointsAllowedPerGame = gamesPlayed > 0 ? stats.pointsAgainst / gamesPlayed : 0;
+  stats.offensiveStats.averageYardsPerGame = gamesPlayed > 0 ? stats.offensiveStats.totalYards / gamesPlayed : 0;
+  stats.defensiveStats.averageYardsAllowedPerGame =
+    gamesPlayed > 0 ? stats.defensiveStats.totalYardsAllowed / gamesPlayed : 0;
+
+  return stats;
+};
+
+export default function TeamViewerPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const params = useParams();
+  const router = useRouter();
+  const teamId = params?.id as string;
+
+  const [team, setTeam] = useState<Team | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [teamGames, setTeamGames] = useState<TeamGame[]>([]);
+  const [teamStats, setTeamStats] = useState<TeamStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"info" | "roster" | "games" | "stats">("info");
+  const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
+  const [rosterForm, setRosterForm] = useState({
+    firstName: "",
+    lastName: "",
+    jerseyNumber: "",
+    dateOfBirth: "",
+    position: "QB",
+  });
+  const [rosterFormError, setRosterFormError] = useState("");
+  const [isSubmittingRosterPlayer, setIsSubmittingRosterPlayer] = useState(false);
+  const [approvingPlayerId, setApprovingPlayerId] = useState<string | null>(null);
+  const userEmail = user?.email.trim().toLowerCase();
+  const editableTeamCoaches = team
+    ? team.coaches && team.coaches.length > 0
+      ? team.coaches
+      : team.coach
+        ? [team.coach]
+        : []
+    : [];
+  const canEditTeam =
+    !!userEmail &&
+    !!team &&
+    (team.canEdit === true ||
+      isAdmin ||
+      userEmail === (team.contact?.email || "").trim().toLowerCase() ||
+      editableTeamCoaches.some((coach) => userEmail === (coach.email || "").trim().toLowerCase()));
+
+  const fetchPlayers = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/players?team=${teamId}&all=true`);
+      const data = await response.json();
+
+      if (data.success) {
+        setPlayers(data.data);
+      } else {
+        setError(data.message || "Error al cargar los jugadores");
+      }
+    } catch (error) {
+      console.error("Error fetching players:", error);
+      setError("Error de conexión. Por favor, intenta de nuevo.");
+    }
+  }, [teamId]);
+
+  useEffect(() => {
+    const fetchTeamData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch team data
+        const teamResponse = await fetch(`/api/teams/${teamId}`);
+        const teamData = await teamResponse.json();
+
+        if (!teamData.success) {
+          setError(teamData.message || "Error al cargar el equipo");
+          return;
+        }
+
+        const loadedTeam = teamData.data as Team;
+        setTeam(loadedTeam);
+
+        // Fetch team statistics. If the aggregate collection is empty, derive a
+        // live MVP version from games and GameEvents so the team page is useful.
+        try {
+          const [statsResponse, gamesResponse] = await Promise.all([
+            fetch(`/api/statistics/teams?team=${teamId}`),
+            fetch(`/api/games?team=${teamId}`),
+          ]);
+          const statsData = await statsResponse.json();
+          const gamesData = await gamesResponse.json();
+
+          if (gamesData.success) {
+            const loadedGames = (gamesData.data || []) as TeamGame[];
+            setTeamGames(loadedGames);
+            if (statsData.success && statsData.data.length > 0) {
+              setTeamStats(statsData.data[0]);
+            } else {
+              setTeamStats(deriveTeamStatsFromGames(loadedTeam, loadedGames));
+            }
+          } else if (statsData.success && statsData.data.length > 0) {
+            setTeamGames([]);
+            setTeamStats(statsData.data[0]);
+          } else {
+            setTeamGames([]);
+            setTeamStats(emptyTeamStats(loadedTeam));
+          }
+        } catch (statsError) {
+          console.log("Stats not available:", statsError);
+          setTeamGames([]);
+          setTeamStats(emptyTeamStats(loadedTeam));
+        }
+      } catch {
+        setError("Error de conexión. Por favor, intenta de nuevo.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (teamId) {
+      fetchTeamData();
+      void fetchPlayers();
+    }
+  }, [teamId, fetchPlayers]);
+
+  const getStatusTag = (status: string) => {
+    const statusMap: Record<string, { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      active: { label: "Activo", type: "success" },
+      inactive: { label: "Inactivo", type: "warning" },
+      suspended: { label: "Suspendido", type: "error" },
+      injured: { label: "Lesionado", type: "warning" },
+      pre_approved: { label: "PRE-APROBADO", type: "info" },
+    };
+
+    const { label, type } = statusMap[status] || { label: status, type: "info" as const };
+    return <Tag label={label} type={type} />;
+  };
+
+  const resetRosterForm = () => {
+    setRosterForm({
+      firstName: "",
+      lastName: "",
+      jerseyNumber: "",
+      dateOfBirth: "",
+      position: "QB",
+    });
+    setRosterFormError("");
+  };
+
+  const closeAddPlayerModal = () => {
+    if (isSubmittingRosterPlayer) return;
+    setIsAddPlayerModalOpen(false);
+    resetRosterForm();
+  };
+
+  const validateRosterForm = () => {
+    const firstName = rosterForm.firstName.trim();
+    const lastName = rosterForm.lastName.trim();
+    const jerseyNumber = Number(rosterForm.jerseyNumber);
+    const dateOfBirth = new Date(rosterForm.dateOfBirth);
+
+    if (!firstName || !lastName || !rosterForm.jerseyNumber.trim() || !rosterForm.dateOfBirth || !rosterForm.position) {
+      return "Completá nombre, apellido, número, fecha de nacimiento y posición.";
+    }
+
+    if (!Number.isInteger(jerseyNumber) || jerseyNumber < 0 || jerseyNumber > 99) {
+      return "El número de camiseta debe estar entre 0 y 99.";
+    }
+
+    if (Number.isNaN(dateOfBirth.getTime()) || dateOfBirth.getTime() > Date.now()) {
+      return "La fecha de nacimiento no es válida.";
+    }
+
+    return "";
+  };
+
+  const handleRosterFormChange = (field: keyof typeof rosterForm, value: string) => {
+    setRosterForm((previousForm) => ({ ...previousForm, [field]: value }));
+    if (rosterFormError) setRosterFormError("");
+  };
+
+  const handleAddRosterPlayer = async () => {
+    const validationMessage = validateRosterForm();
+    if (validationMessage) {
+      setRosterFormError(validationMessage);
+      return;
+    }
+
+    setIsSubmittingRosterPlayer(true);
+    setRosterFormError("");
+
+    try {
+      const response = await fetch(`/api/teams/${teamId}/players`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: rosterForm.firstName.trim(),
+          lastName: rosterForm.lastName.trim(),
+          jerseyNumber: Number(rosterForm.jerseyNumber),
+          dateOfBirth: rosterForm.dateOfBirth,
+          position: rosterForm.position,
+        }),
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setRosterFormError(data.message || "No se pudo agregar el jugador.");
+        return;
+      }
+
+      setIsAddPlayerModalOpen(false);
+      resetRosterForm();
+      await fetchPlayers();
+    } catch {
+      setRosterFormError("Error de conexión al agregar el jugador.");
+    } finally {
+      setIsSubmittingRosterPlayer(false);
+    }
+  };
+
+  const handleApprovePlayer = async (player: Player) => {
+    setApprovingPlayerId(player._id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/players/${player._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.message || "No se pudo aprobar el jugador.");
+        return;
+      }
+
+      setPlayers((previousPlayers) =>
+        previousPlayers.map((currentPlayer) =>
+          currentPlayer._id === player._id ? { ...currentPlayer, status: "active" } : currentPlayer,
+        ),
+      );
+    } catch {
+      setError("Error de conexión al aprobar el jugador.");
+    } finally {
+      setApprovingPlayerId(null);
+    }
+  };
+
+  const getGameStatusTag = (status: TeamGame["status"]) => {
+    const statusMap: Record<TeamGame["status"], { label: string; type: "info" | "warning" | "success" | "error" }> = {
+      scheduled: { label: "Programado", type: "info" },
+      in_progress: { label: "En Curso", type: "success" },
+      completed: { label: "Completado", type: "success" },
+      postponed: { label: "Pospuesto", type: "warning" },
+      cancelled: { label: "Cancelado", type: "error" },
+    };
+
+    const { label, type } = statusMap[status];
+    return <Tag label={label} type={type} />;
+  };
+
+  const getTeamDisplayName = (gameTeam: TeamGame["homeTeam"]) => {
+    if (!gameTeam || typeof gameTeam === "string") return "TBD";
+    return gameTeam.name;
+  };
+
+  const getTeamAvatarFallback = (gameTeam: TeamGame["homeTeam"]) => {
+    if (!gameTeam || typeof gameTeam === "string") return "TBD";
+    return (gameTeam.shortName || gameTeam.name.substring(0, 2)).toUpperCase();
+  };
+
+  const renderGameTeamAvatar = (gameTeam: TeamGame["homeTeam"], size: "sm" | "md") => (
+    <Avatar
+      imageUrl={typeof gameTeam === "string" ? undefined : gameTeam?.logo}
+      alt={getTeamDisplayName(gameTeam)}
+      fallback={getTeamAvatarFallback(gameTeam)}
+      backgroundColor={typeof gameTeam === "string" ? "#9CA3AF" : gameTeam?.colors.primary || "#9CA3AF"}
+      size={size}
+      fallbackClassName={size === "sm" ? "text-xs" : "text-sm"}
+    />
+  );
+
+  const formatTime = (date: string) => {
+    return new Date(date).toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatDateTimeCompact = (date: string) => {
+    const parsedDate = new Date(date);
+    const dayMonth = parsedDate.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+    });
+
+    const hour = parsedDate.toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    return `${dayMonth} · ${hour}`;
+  };
+
+  const getDivisionName = (game: TeamGame) => {
+    if (typeof game.division === "string") return "División";
+
+    const categoryLabel: Record<string, string> = {
+      masculino: "Masculino",
+      femenino: "Femenino",
+      mixto: "Mixto",
+    };
+
+    return game.division.category
+      ? categoryLabel[game.division.category] || game.division.category
+      : game.division.name || "División";
+  };
+
+  const renderGameCard = (game: TeamGame) => (
+    <Link
+      key={game._id}
+      href={`/games/${game._id}`}
+      className="block rounded-lg bg-white p-4 shadow-md transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+      aria-label={`Ver match ${getTeamDisplayName(game.homeTeam)} vs ${getTeamDisplayName(game.awayTeam)}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="truncate text-sm font-medium text-gray-700">{game.venue.name}</div>
+          <div className="mt-1 line-clamp-2 text-xs text-gray-500">{game.venue.address}</div>
+        </div>
+        <div className="shrink-0 text-right text-xs text-gray-500">{formatDateTimeCompact(game.scheduledDate)}</div>
+      </div>
+
+      <div className="mt-4 flex justify-center">{getGameStatusTag(game.status)}</div>
+
+      <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="min-w-0 text-center">
+          <div className="mb-2 flex justify-center">{renderGameTeamAvatar(game.homeTeam, "sm")}</div>
+          <div className="truncate text-sm font-bold text-gray-900">{getTeamDisplayName(game.homeTeam)}</div>
+        </div>
+
+        <div className="text-center">
+          {game.status === "completed" || game.status === "in_progress" ? (
+            <div className="text-2xl font-bold leading-none text-blue-900">
+              {game.score.home.total}:{game.score.away.total}
+            </div>
+          ) : (
+            <>
+              <div className="text-lg font-bold text-gray-600">vs</div>
+              <div className="text-sm text-gray-500">{formatTime(game.scheduledDate)}</div>
+            </>
+          )}
+        </div>
+
+        <div className="min-w-0 text-center">
+          <div className="mb-2 flex justify-center">{renderGameTeamAvatar(game.awayTeam, "sm")}</div>
+          <div className="truncate text-sm font-bold text-gray-900">{getTeamDisplayName(game.awayTeam)}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 truncate text-center text-xs text-gray-500">
+        {game.week ? `Semana ${game.week}` : "Sin semana"} · {getDivisionName(game)}
+        {game.round ? ` · ${game.round}` : ""}
+      </div>
+    </Link>
+  );
+
+  const calculateWinPercentage = (stats: TeamStats) => {
+    const totalGames = stats.wins + stats.losses + stats.ties;
+    if (totalGames === 0) return 0;
+    return Math.round(((stats.wins + stats.ties * 0.5) / totalGames) * 100);
+  };
+
+  const formatDecimal = (value: number) => value.toFixed(1);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <ErrorMessage message={error} onRetry={() => window.location.reload()} />
+      </div>
+    );
+  }
+
+  if (!team) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Equipo no encontrado</h1>
+          <p className="text-gray-600 mb-4">El equipo que buscas no existe o ha sido eliminado.</p>
+          <Link
+            href="/teams"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            Volver a Equipos
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const hasHeaderImage = Boolean(team.backgroundImage);
+  const teamCoaches = team.coaches && team.coaches.length > 0 ? team.coaches : team.coach ? [team.coach] : [];
+  const now = Date.now();
+  const upcomingGames = [...teamGames]
+    .filter((game) => game.status !== "completed" && new Date(game.scheduledDate).getTime() >= now)
+    .sort((left, right) => new Date(left.scheduledDate).getTime() - new Date(right.scheduledDate).getTime());
+  const previousGames = [...teamGames]
+    .filter((game) => game.status === "completed" || new Date(game.scheduledDate).getTime() < now)
+    .sort((left, right) => new Date(right.scheduledDate).getTime() - new Date(left.scheduledDate).getTime());
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div
+        className={`shadow ${hasHeaderImage ? "relative overflow-hidden" : "bg-white"}`}
+        style={
+          hasHeaderImage
+            ? {
+                backgroundImage: `url(${team.backgroundImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : undefined
+        }
+      >
+        {hasHeaderImage && <div className="absolute inset-0 bg-black/55" />}
+        <div
+          className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${hasHeaderImage ? "relative z-10 py-16 lg:py-20" : "py-6"}`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.back()}
+                className={
+                  hasHeaderImage
+                    ? "text-white/80 hover:text-white transition-colors"
+                    : "text-gray-400 hover:text-gray-600"
+                }
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div className="flex items-center space-x-4">
+                <Avatar
+                  imageUrl={team.logo}
+                  alt={team.name}
+                  fallback={team.shortName || team.name.substring(0, 2).toUpperCase()}
+                  backgroundColor={team.colors.primary}
+                  size="lg"
+                  fallbackClassName="text-xl"
+                />
+                <div>
+                  <h1
+                    className={`font-bold ${hasHeaderImage ? "text-4xl md:text-5xl text-white" : "text-3xl text-gray-900"}`}
+                  >
+                    {team.name}
+                  </h1>
+                  <div className="flex items-center space-x-4 mt-1">
+                    <p className={`text-sm ${hasHeaderImage ? "text-white/90" : "text-gray-600"}`}>
+                      {team.division.name}
+                    </p>
+                    {getStatusTag(team.status)}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {canEditTeam && (
+              <Link
+                href={`/teams/${team._id}/edit`}
+                className={`inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  hasHeaderImage
+                    ? "border-white/20 bg-blue-600/90 hover:bg-blue-700 backdrop-blur-sm focus:ring-blue-300"
+                    : "border-transparent bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                Editar Equipo
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Stats Cards */}
+        {teamStats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Record</dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {teamStats.wins}-{teamStats.losses}-{teamStats.ties}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">%</span>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">% Victorias</dt>
+                      <dd className="text-lg font-medium text-gray-900">{calculateWinPercentage(teamStats)}%</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                      <span className="text-white font-bold text-xs">PF</span>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Puntos a Favor</dt>
+                      <dd className="text-lg font-medium text-gray-900">{teamStats.pointsFor}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                      <span className="text-white font-bold text-xs">PC</span>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Puntos en Contra</dt>
+                      <dd className="text-lg font-medium text-gray-900">{teamStats.pointsAgainst}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab("info")}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "info"
+                    ? "border-green-500 text-green-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Información
+              </button>
+              <button
+                onClick={() => setActiveTab("roster")}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "roster"
+                    ? "border-green-500 text-green-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Roster ({players.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("games")}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "games"
+                    ? "border-green-500 text-green-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Partidos ({teamGames.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("stats")}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "stats"
+                    ? "border-green-500 text-green-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Estadísticas
+              </button>
+            </nav>
+          </div>
+
+          <div className="p-6">
+            {/* Info Tab */}
+            {activeTab === "info" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Team Details */}
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Detalles del Equipo</h3>
+                    <dl className="space-y-3">
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Nombre</dt>
+                        <dd className="text-sm text-gray-900">{team.name}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">División</dt>
+                        <dd className="text-sm text-gray-900">{team.division.name}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">Colores</dt>
+                        <dd className="flex items-center">
+                          <div
+                            className="w-6 h-6 rounded border border-gray-300"
+                            style={{ backgroundColor: team.colors.primary }}
+                          ></div>
+                          {team.colors.secondary && (
+                            <>
+                              <div
+                                className="w-6 h-6 rounded border border-gray-300 ml-4"
+                                style={{ backgroundColor: team.colors.secondary }}
+                              ></div>
+                            </>
+                          )}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  {/* Coach Information */}
+                  {teamCoaches.length > 0 && isAdmin && (
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Entrenadores</h3>
+                      <div className="space-y-6">
+                        {teamCoaches.map((coach, index) => (
+                          <dl key={`${coach.email || coach.name}-${index}`} className="space-y-3">
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Nombre</dt>
+                              <dd className="text-sm text-gray-900">{coach.name}</dd>
+                            </div>
+                            {coach.email && (
+                              <div>
+                                <dt className="text-sm font-medium text-gray-500">Email</dt>
+                                <dd className="text-sm text-gray-900">
+                                  <a href={`mailto:${coach.email}`} className="text-green-600 hover:text-green-800">
+                                    {coach.email}
+                                  </a>
+                                </dd>
+                              </div>
+                            )}
+                            {coach.phone && (
+                              <div>
+                                <dt className="text-sm font-medium text-gray-500">Teléfono</dt>
+                                <dd className="text-sm text-gray-900">
+                                  <a href={`tel:${coach.phone}`} className="text-green-600 hover:text-green-800">
+                                    {coach.phone}
+                                  </a>
+                                </dd>
+                              </div>
+                            )}
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500">Experiencia</dt>
+                              <dd className="text-sm text-gray-900">{coach.experience || "No especificada"}</dd>
+                            </div>
+                            {coach.certifications && coach.certifications.length > 0 && (
+                              <div>
+                                <dt className="text-sm font-medium text-gray-500">Certificaciones</dt>
+                                <dd className="text-sm text-gray-900">{coach.certifications.join(", ")}</dd>
+                              </div>
+                            )}
+                          </dl>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contact Information */}
+                  {team.contact ? (
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Contacto</h3>
+                      <dl className="space-y-3">
+                        <div>
+                          <dt className="text-sm font-medium text-gray-500">Email</dt>
+                          <dd className="text-sm text-gray-900">
+                            <a href={`mailto:${team.contact.email}`} className="text-green-600 hover:text-green-800">
+                              {team.contact.email}
+                            </a>
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-medium text-gray-500">Teléfono</dt>
+                          <dd className="text-sm text-gray-900">
+                            <a href={`tel:${team.contact.phone}`} className="text-green-600 hover:text-green-800">
+                              {team.contact.phone}
+                            </a>
+                          </dd>
+                        </div>
+                        {team.contact.address && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">Dirección</dt>
+                            <dd className="text-sm text-gray-900">{team.contact.address}</dd>
+                          </div>
+                        )}
+                        {team.contact.socialMedia && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">Redes sociales</dt>
+                            <dd className="flex space-x-3">
+                              {team.contact.socialMedia.facebook && (
+                                <a
+                                  href={team.contact.socialMedia.facebook}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  Facebook
+                                </a>
+                              )}
+                              {team.contact.socialMedia.instagram && (
+                                <a
+                                  href={team.contact.socialMedia.instagram}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-pink-600 hover:text-pink-800"
+                                >
+                                  Instagram
+                                </a>
+                              )}
+                              {(team.contact.socialMedia.x || team.contact.socialMedia.twitter) && (
+                                <a
+                                  href={team.contact.socialMedia.x || team.contact.socialMedia.twitter}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-400 hover:text-blue-600"
+                                >
+                                  X
+                                </a>
+                              )}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Contacto</h3>
+                      <p className="text-sm text-gray-600">No hay información de contacto disponible.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Roster Tab */}
+            {activeTab === "roster" && (
+              <div>
+                <div className="sm:flex sm:items-center mb-6">
+                  <div className="sm:flex-auto">
+                    <h3 className="text-lg font-medium text-gray-900">Roster del Equipo</h3>
+                    <p className="mt-1 text-sm text-gray-700">Lista completa de jugadores registrados en el equipo.</p>
+                  </div>
+                  {canEditTeam && (
+                    <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddPlayerModalOpen(true)}
+                        className="inline-flex items-center justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      >
+                        Agregar Jugador
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {players.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No hay jugadores</h3>
+                    <p className="mt-1 text-sm text-gray-500">Este equipo aún no tiene jugadores registrados.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto w-full shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table className="min-w-[720px] w-full divide-y divide-gray-300">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Foto
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            #
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Jugador
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Posición
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Información
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Estado
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Acciones
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {players.map((player) => (
+                          <tr key={player._id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Avatar
+                                imageUrl={player.profilePicture}
+                                alt={`${player.firstName} ${player.lastName}`}
+                                fallback={`${player.firstName.charAt(0)}${player.lastName.charAt(0)}`.toUpperCase()}
+                                backgroundColor={team.colors.primary}
+                                size="sm"
+                                fallbackClassName="text-xs"
+                              />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {player.jerseyNumber ?? "S/N"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {player.firstName} {player.lastName}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {[player.position, player.secondaryPosition].filter(Boolean).join(" / ")}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <div className="space-y-1">
+                                <div>
+                                  {player.height && player.weight ? (
+                                    <span>
+                                      {player.height} cm, {player.weight} kg
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">-</span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  {player.experience || "Sin experiencia especificada"}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">{getStatusTag(player.status)}</td>
+                            {user?.role === "admin" ? (
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Link
+                                  href={`/players/${player._id}`}
+                                  className="text-green-600 hover:text-green-900 mr-3"
+                                >
+                                  Ver
+                                </Link>
+                                <Link
+                                  href={`/players/${player._id}/edit`}
+                                  className="text-blue-600 hover:text-blue-900"
+                                >
+                                  Editar
+                                </Link>
+                                {player.status === "pre_approved" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApprovePlayer(player)}
+                                    disabled={approvingPlayerId === player._id}
+                                    className="ml-3 text-emerald-700 hover:text-emerald-900 disabled:cursor-not-allowed disabled:text-gray-400"
+                                  >
+                                    {approvingPlayerId === player._id ? "Aprobando..." : "Aprobar"}
+                                  </button>
+                                )}
+                              </td>
+                            ) : (
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Link href={`/players/${player._id}`} className="text-green-600 hover:text-green-900">
+                                  Ver Perfil
+                                </Link>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Games Tab */}
+            {activeTab === "games" && (
+              <div className="space-y-8">
+                <section>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Próximos partidos</h3>
+                    <p className="mt-1 text-sm text-gray-700">Partidos programados o en curso para este equipo.</p>
+                  </div>
+
+                  {upcomingGames.length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{upcomingGames.map(renderGameCard)}</div>
+                  ) : (
+                    <div className="rounded-lg bg-gray-50 px-4 py-10 text-center">
+                      <h4 className="text-sm font-medium text-gray-900">No hay próximos partidos</h4>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Cuando se programen partidos para este equipo, aparecerán acá.
+                      </p>
+                    </div>
+                  )}
+                </section>
+
+                <section>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Historial de partidos</h3>
+                    <p className="mt-1 text-sm text-gray-700">Partidos anteriores y resultados registrados.</p>
+                  </div>
+
+                  {previousGames.length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{previousGames.map(renderGameCard)}</div>
+                  ) : (
+                    <div className="rounded-lg bg-gray-50 px-4 py-10 text-center">
+                      <h4 className="text-sm font-medium text-gray-900">No hay partidos anteriores</h4>
+                      <p className="mt-1 text-sm text-gray-500">
+                        El historial aparecerá cuando este equipo haya jugado partidos.
+                      </p>
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+
+            {/* Stats Tab */}
+            {activeTab === "stats" && (
+              <div>
+                {teamStats ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Win/Loss Record */}
+                      <div className="bg-gray-50 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Record</h3>
+                        <div className="space-y-4">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Victorias</span>
+                            <span className="text-sm font-medium text-green-600">{teamStats.wins}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Derrotas</span>
+                            <span className="text-sm font-medium text-red-600">{teamStats.losses}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Empates</span>
+                            <span className="text-sm font-medium text-gray-600">{teamStats.ties}</span>
+                          </div>
+                          <div className="border-t pt-4">
+                            <div className="flex justify-between">
+                              <span className="text-sm font-medium text-gray-900">% Victorias</span>
+                              <span className="text-sm font-bold text-gray-900">
+                                {calculateWinPercentage(teamStats)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Scoring */}
+                      <div className="bg-gray-50 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Puntuación</h3>
+                        <div className="space-y-4">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Puntos a Favor</span>
+                            <span className="text-sm font-medium text-green-600">{teamStats.pointsFor}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Puntos en contra (marcador)</span>
+                            <span className="text-sm font-medium text-red-600">{teamStats.pointsAgainst}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Pick six descontados</span>
+                            <span className="text-sm font-medium text-gray-900">{teamStats.pickSixPointsExcluded}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium text-gray-900">Puntos permitidos ajustados</span>
+                            <span className="text-sm font-bold text-gray-900">{teamStats.adjustedPointsAgainst}</span>
+                          </div>
+                          <div className="border-t pt-4">
+                            <div className="flex justify-between">
+                              <span className="text-sm font-medium text-gray-900">Diferencial</span>
+                              <span
+                                className={`text-sm font-bold ${
+                                  teamStats.pointsDifferential >= 0 ? "text-green-600" : "text-red-600"
+                                }`}
+                              >
+                                {teamStats.pointsDifferential >= 0 ? "+" : ""}
+                                {teamStats.pointsDifferential}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Averages */}
+                      <div className="bg-gray-50 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Promedios</h3>
+                        <div className="space-y-4">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Puntos por Juego</span>
+                            <span className="text-sm font-medium text-gray-900">
+                              {formatDecimal(teamStats.offensiveStats.averagePointsPerGame)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Puntos Permitidos</span>
+                            <span className="text-sm font-medium text-gray-900">
+                              {formatDecimal(teamStats.defensiveStats.averagePointsAllowedPerGame)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="bg-gray-50 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Ofensiva</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Touchdowns</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.touchdowns}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Puntos extra (+1)</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {teamStats.offensiveStats.extraPointOne ?? 0}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Puntos extra (+2)</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {teamStats.offensiveStats.extraPointTwo ?? 0}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Primeros down</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.offensiveStats.firstDowns}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Defensiva</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Intercepciones</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.interceptions}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Pick Six</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.pickSix}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Sacks</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.sacks}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Safeties</p>
+                            <p className="text-2xl font-bold text-gray-900">{teamStats.defensiveStats.safeties}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">TD permitidos</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {teamStats.defensiveStats.touchdownsAllowed}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No hay estadísticas</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Las estadísticas aparecerán cuando el equipo participe en partidos.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <Modal
+        open={isAddPlayerModalOpen}
+        title="Agregar jugador al roster"
+        onClose={closeAddPlayerModal}
+        variant="info"
+        closeOnBackdrop={!isSubmittingRosterPlayer}
+        primaryAction={{
+          label: isSubmittingRosterPlayer ? "Agregando..." : "Agregar jugador",
+          onClick: handleAddRosterPlayer,
+          disabled: isSubmittingRosterPlayer,
+        }}
+        secondaryAction={{
+          label: "Cancelar",
+          onClick: closeAddPlayerModal,
+          disabled: isSubmittingRosterPlayer,
+        }}
+      >
+        <div className="space-y-4">
+          {rosterFormError && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+              {rosterFormError}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="roster-first-name" className="block text-sm font-medium text-gray-700">
+                Nombre
+              </label>
+              <input
+                id="roster-first-name"
+                type="text"
+                value={rosterForm.firstName}
+                onChange={(event) => handleRosterFormChange("firstName", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              />
+            </div>
+            <div>
+              <label htmlFor="roster-last-name" className="block text-sm font-medium text-gray-700">
+                Apellido
+              </label>
+              <input
+                id="roster-last-name"
+                type="text"
+                value={rosterForm.lastName}
+                onChange={(event) => handleRosterFormChange("lastName", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              />
+            </div>
+            <div>
+              <label htmlFor="roster-jersey-number" className="block text-sm font-medium text-gray-700">
+                Nro de camiseta
+              </label>
+              <input
+                id="roster-jersey-number"
+                type="number"
+                min="0"
+                max="99"
+                value={rosterForm.jerseyNumber}
+                onChange={(event) => handleRosterFormChange("jerseyNumber", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              />
+            </div>
+            <div>
+              <label htmlFor="roster-date-of-birth" className="block text-sm font-medium text-gray-700">
+                Fecha de nacimiento
+              </label>
+              <input
+                id="roster-date-of-birth"
+                type="date"
+                value={rosterForm.dateOfBirth}
+                onChange={(event) => handleRosterFormChange("dateOfBirth", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="roster-position" className="block text-sm font-medium text-gray-700">
+                Posición
+              </label>
+              <select
+                id="roster-position"
+                value={rosterForm.position}
+                onChange={(event) => handleRosterFormChange("position", event.target.value)}
+                disabled={isSubmittingRosterPlayer}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+              >
+                <option value="QB">Quarterback (QB)</option>
+                <option value="WR">Wide Receiver (WR)</option>
+                <option value="RB">Running Back (RB)</option>
+                <option value="C">Center (C)</option>
+                <option value="RS">Rusher (RS)</option>
+                <option value="LB">Linebacker (LB)</option>
+                <option value="CB">Cornerback (CB)</option>
+                <option value="FS">Free Safety (FS)</option>
+                <option value="SS">Strong Safety (SS)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}

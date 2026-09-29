@@ -1,9 +1,11 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { safeTrack } from "@/lib/serverAnalytics";
 import { getAuxiliaryRepository } from "@lufa/database/repositories/auxiliary";
+import { siteSettingsKey } from "@lufa/operations";
 
 const emailService = serviceContainer.emailService;
 const auxiliaryRepo = getAuxiliaryRepository();
@@ -75,6 +77,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const modality = parseModality(request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
+    const siteName = modality === "tackle" ? "LUFA Tackle" : "LUFA Flag";
+    const subjectTag = modality === "tackle" ? "[LUFA_TACKLE_SUMATE]" : "[LUFA_FLAG_SUMATE]";
     const body = (await request.json()) as FlagInterestRequestBody;
     const interestType = body.interestType;
     const interestLabel = interestType ? interestLabels[interestType] : undefined;
@@ -148,13 +154,20 @@ export async function POST(request: NextRequest) {
       experience,
       company,
       sponsorInterest,
+      modality,
     });
 
+    // Flag keeps its historical inbox; tackle uses its configured contact email.
+    const tackleContact =
+      modality === "tackle"
+        ? String((await auxiliaryRepo.getSiteSettings(siteSettingsKey(modality)))?.contactEmail || "")
+        : "";
+
     await emailService.send({
-      to: "lufaflag@gmail.com",
-      subject: `[LUFA_FLAG_SUMATE] Nuevo interesado: ${interestLabel}`,
+      to: tackleContact || "lufaflag@gmail.com",
+      subject: `${subjectTag} Nuevo interesado: ${interestLabel}`,
       text: [
-        "Nuevo formulario de sumate a LUFA Flag",
+        `Nuevo formulario de sumate a ${siteName}`,
         `Interés: ${interestLabel}`,
         `Nombre: ${name}`,
         `Edad: ${ageRange}`,
@@ -165,8 +178,8 @@ export async function POST(request: NextRequest) {
       ].join("\n"),
       html: `
         <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.5;">
-          <h1 style="font-size: 22px; margin: 0 0 12px;">Nuevo formulario de sumate a LUFA Flag</h1>
-          <p style="margin: 0 0 16px; color: #475569;">Asunto preparado para etiqueta de Gmail: <strong>[LUFA_FLAG_SUMATE]</strong></p>
+          <h1 style="font-size: 22px; margin: 0 0 12px;">Nuevo formulario de sumate a ${siteName}</h1>
+          <p style="margin: 0 0 16px; color: #475569;">Asunto preparado para etiqueta de Gmail: <strong>${subjectTag}</strong></p>
           <table style="border-collapse: collapse; width: 100%; max-width: 680px; border: 1px solid #e2e8f0;">
             <tbody>${rows.join("")}</tbody>
           </table>
@@ -174,7 +187,7 @@ export async function POST(request: NextRequest) {
       `,
     });
 
-    await safeTrack("Flag interest submitted", {
+    await safeTrack(modality === "tackle" ? "Tackle interest submitted" : "Flag interest submitted", {
       interestType,
       location,
     });

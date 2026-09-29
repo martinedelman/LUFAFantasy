@@ -10,6 +10,7 @@ export function toDivisionResponseDto(division: Division): DivisionResponseDto {
     tournament: division.tournament,
     teams: division.teams,
     maxTeams: division.maxTeams,
+    modality: division.modality || "flag",
     createdAt: division.createdAt?.toISOString(),
     updatedAt: division.updatedAt?.toISOString(),
   };

@@ -5,6 +5,8 @@ import { GameModel } from "../../models/Game";
 import { GameEventModel, GameEventDocument } from "../../models/GameEvent";
 import connectToDatabase from "../../mongodb";
 import mongoose, { ClientSession } from "mongoose";
+import { withoutModality } from "./modality";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 export class MongoGameRepository implements IGameRepository {
   async findById(id: string): Promise<Game | null> {
@@ -22,7 +24,9 @@ export class MongoGameRepository implements IGameRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Game[]> {
     await connectToDatabase();
-    const docs = await GameModel.find(filters || {})
+    const query = withoutModality(filters);
+    if (!query) return [];
+    const docs = await GameModel.find(query)
       .populate("homeTeam")
       .populate("awayTeam")
       .populate("tournament")
@@ -104,7 +108,8 @@ export class MongoGameRepository implements IGameRepository {
     return await this.attachEventsToMany(docs);
   }
 
-  async findByTeam(teamId: string): Promise<Game[]> {
+  async findByTeam(teamId: string, modality?: Modality): Promise<Game[]> {
+    if (!withoutModality({ modality })) return [];
     await connectToDatabase();
     const docs = await GameModel.find({
       $or: [{ homeTeam: teamId }, { awayTeam: teamId }],

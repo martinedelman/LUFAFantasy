@@ -18,6 +18,8 @@ export function toTournamentResponseDto(tournament: Tournament): TournamentRespo
     participatingTeams: tournament.participatingTeams,
     rules: tournament.rules,
     prizes: tournament.prizes,
+    // Mongo documents have no modality; they are all flag.
+    modality: tournament.modality || "flag",
     createdAt: tournament.createdAt?.toISOString(),
     updatedAt: tournament.updatedAt?.toISOString(),
   };

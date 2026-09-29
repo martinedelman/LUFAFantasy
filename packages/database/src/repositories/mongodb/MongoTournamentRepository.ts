@@ -2,6 +2,7 @@ import { ITournamentRepository } from "../contracts/ITournamentRepository";
 import { Tournament, TournamentStatus } from "@lufa/sports/entities/Tournament";
 import { TournamentModel } from "../../models/Tournament";
 import connectToDatabase from "../../mongodb";
+import { withoutModality } from "./modality";
 
 export class MongoTournamentRepository implements ITournamentRepository {
   async findById(id: string): Promise<Tournament | null> {
@@ -12,7 +13,9 @@ export class MongoTournamentRepository implements ITournamentRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Tournament[]> {
     await connectToDatabase();
-    const docs = await TournamentModel.find(filters || {})
+    const query = withoutModality(filters);
+    if (!query) return [];
+    const docs = await TournamentModel.find(query)
       .populate("divisions")
       .exec();
     return docs;

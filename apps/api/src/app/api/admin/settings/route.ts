@@ -2,6 +2,7 @@ import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import type { UpdateSiteSettingsRequestDto } from "@/app/DTOs";
 
 const adminService = serviceContainer.adminService;
@@ -20,7 +21,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "No autorizado" }, { status: 403 });
     }
 
-    const settings = await adminService.getSiteSettings();
+    const modality = parseModality(request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
+
+    const settings = await adminService.getSiteSettings(modality);
     return NextResponse.json({ success: true, data: settings });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al obtener configuración";
@@ -42,7 +46,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = (await request.json()) as UpdateSiteSettingsRequestDto;
-    const settings = await adminService.updateSiteSettings(actor, body);
+    const modality = parseModality(request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
+    const settings = await adminService.updateSiteSettings(actor, body, modality);
 
     return NextResponse.json({ success: true, message: "Configuración actualizada", data: settings });
   } catch (error) {

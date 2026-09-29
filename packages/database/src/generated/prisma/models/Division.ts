@@ -41,6 +41,7 @@ export type DivisionMinAggregateOutputType = {
   ageGroup: string | null
   tournamentId: string | null
   maxTeams: number | null
+  modality: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -52,6 +53,7 @@ export type DivisionMaxAggregateOutputType = {
   ageGroup: string | null
   tournamentId: string | null
   maxTeams: number | null
+  modality: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -63,6 +65,7 @@ export type DivisionCountAggregateOutputType = {
   ageGroup: number
   tournamentId: number
   maxTeams: number
+  modality: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -84,6 +87,7 @@ export type DivisionMinAggregateInputType = {
   ageGroup?: true
   tournamentId?: true
   maxTeams?: true
+  modality?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -95,6 +99,7 @@ export type DivisionMaxAggregateInputType = {
   ageGroup?: true
   tournamentId?: true
   maxTeams?: true
+  modality?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -106,6 +111,7 @@ export type DivisionCountAggregateInputType = {
   ageGroup?: true
   tournamentId?: true
   maxTeams?: true
+  modality?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -204,6 +210,7 @@ export type DivisionGroupByOutputType = {
   ageGroup: string | null
   tournamentId: string | null
   maxTeams: number | null
+  modality: string
   createdAt: Date
   updatedAt: Date
   _count: DivisionCountAggregateOutputType | null
@@ -238,6 +245,7 @@ export type DivisionWhereInput = {
   ageGroup?: Prisma.StringNullableFilter<"Division"> | string | null
   tournamentId?: Prisma.StringNullableFilter<"Division"> | string | null
   maxTeams?: Prisma.IntNullableFilter<"Division"> | number | null
+  modality?: Prisma.StringFilter<"Division"> | string
   createdAt?: Prisma.DateTimeFilter<"Division"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Division"> | Date | string
   legacyTournament?: Prisma.XOR<Prisma.TournamentNullableScalarRelationFilter, Prisma.TournamentWhereInput> | null
@@ -257,6 +265,7 @@ export type DivisionOrderByWithRelationInput = {
   ageGroup?: Prisma.SortOrderInput | Prisma.SortOrder
   tournamentId?: Prisma.SortOrderInput | Prisma.SortOrder
   maxTeams?: Prisma.SortOrderInput | Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   legacyTournament?: Prisma.TournamentOrderByWithRelationInput
@@ -279,6 +288,7 @@ export type DivisionWhereUniqueInput = Prisma.AtLeast<{
   ageGroup?: Prisma.StringNullableFilter<"Division"> | string | null
   tournamentId?: Prisma.StringNullableFilter<"Division"> | string | null
   maxTeams?: Prisma.IntNullableFilter<"Division"> | number | null
+  modality?: Prisma.StringFilter<"Division"> | string
   createdAt?: Prisma.DateTimeFilter<"Division"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Division"> | Date | string
   legacyTournament?: Prisma.XOR<Prisma.TournamentNullableScalarRelationFilter, Prisma.TournamentWhereInput> | null
@@ -298,6 +308,7 @@ export type DivisionOrderByWithAggregationInput = {
   ageGroup?: Prisma.SortOrderInput | Prisma.SortOrder
   tournamentId?: Prisma.SortOrderInput | Prisma.SortOrder
   maxTeams?: Prisma.SortOrderInput | Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DivisionCountOrderByAggregateInput
@@ -317,6 +328,7 @@ export type DivisionScalarWhereWithAggregatesInput = {
   ageGroup?: Prisma.StringNullableWithAggregatesFilter<"Division"> | string | null
   tournamentId?: Prisma.StringNullableWithAggregatesFilter<"Division"> | string | null
   maxTeams?: Prisma.IntNullableWithAggregatesFilter<"Division"> | number | null
+  modality?: Prisma.StringWithAggregatesFilter<"Division"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Division"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Division"> | Date | string
 }
@@ -327,6 +339,7 @@ export type DivisionCreateInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTournament?: Prisma.TournamentCreateNestedOneWithoutLegacyDivisionsInput
@@ -346,6 +359,7 @@ export type DivisionUncheckedCreateInput = {
   ageGroup?: string | null
   tournamentId?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedCreateNestedManyWithoutDivisionInput
@@ -363,6 +377,7 @@ export type DivisionUpdateInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTournament?: Prisma.TournamentUpdateOneWithoutLegacyDivisionsNestedInput
@@ -382,6 +397,7 @@ export type DivisionUncheckedUpdateInput = {
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedUpdateManyWithoutDivisionNestedInput
@@ -400,6 +416,7 @@ export type DivisionCreateManyInput = {
   ageGroup?: string | null
   tournamentId?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -410,6 +427,7 @@ export type DivisionUpdateManyMutationInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -421,6 +439,7 @@ export type DivisionUncheckedUpdateManyInput = {
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -442,6 +461,7 @@ export type DivisionCountOrderByAggregateInput = {
   ageGroup?: Prisma.SortOrder
   tournamentId?: Prisma.SortOrder
   maxTeams?: Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -457,6 +477,7 @@ export type DivisionMaxOrderByAggregateInput = {
   ageGroup?: Prisma.SortOrder
   tournamentId?: Prisma.SortOrder
   maxTeams?: Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -468,6 +489,7 @@ export type DivisionMinOrderByAggregateInput = {
   ageGroup?: Prisma.SortOrder
   tournamentId?: Prisma.SortOrder
   maxTeams?: Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -635,6 +657,7 @@ export type DivisionCreateWithoutLegacyTournamentInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   tournaments?: Prisma.TournamentDivisionCreateNestedManyWithoutDivisionInput
@@ -652,6 +675,7 @@ export type DivisionUncheckedCreateWithoutLegacyTournamentInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedCreateNestedManyWithoutDivisionInput
@@ -699,6 +723,7 @@ export type DivisionScalarWhereInput = {
   ageGroup?: Prisma.StringNullableFilter<"Division"> | string | null
   tournamentId?: Prisma.StringNullableFilter<"Division"> | string | null
   maxTeams?: Prisma.IntNullableFilter<"Division"> | number | null
+  modality?: Prisma.StringFilter<"Division"> | string
   createdAt?: Prisma.DateTimeFilter<"Division"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Division"> | Date | string
 }
@@ -709,6 +734,7 @@ export type DivisionCreateWithoutPrimaryTeamsInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTournament?: Prisma.TournamentCreateNestedOneWithoutLegacyDivisionsInput
@@ -727,6 +753,7 @@ export type DivisionUncheckedCreateWithoutPrimaryTeamsInput = {
   ageGroup?: string | null
   tournamentId?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedCreateNestedManyWithoutDivisionInput
@@ -759,6 +786,7 @@ export type DivisionUpdateWithoutPrimaryTeamsInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTournament?: Prisma.TournamentUpdateOneWithoutLegacyDivisionsNestedInput
@@ -777,6 +805,7 @@ export type DivisionUncheckedUpdateWithoutPrimaryTeamsInput = {
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedUpdateManyWithoutDivisionNestedInput
@@ -793,6 +822,7 @@ export type DivisionCreateWithoutGamesInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTournament?: Prisma.TournamentCreateNestedOneWithoutLegacyDivisionsInput
@@ -811,6 +841,7 @@ export type DivisionUncheckedCreateWithoutGamesInput = {
   ageGroup?: string | null
   tournamentId?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedCreateNestedManyWithoutDivisionInput
@@ -843,6 +874,7 @@ export type DivisionUpdateWithoutGamesInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTournament?: Prisma.TournamentUpdateOneWithoutLegacyDivisionsNestedInput
@@ -861,6 +893,7 @@ export type DivisionUncheckedUpdateWithoutGamesInput = {
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedUpdateManyWithoutDivisionNestedInput
@@ -877,6 +910,7 @@ export type DivisionCreateWithoutStandingsInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTournament?: Prisma.TournamentCreateNestedOneWithoutLegacyDivisionsInput
@@ -895,6 +929,7 @@ export type DivisionUncheckedCreateWithoutStandingsInput = {
   ageGroup?: string | null
   tournamentId?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedCreateNestedManyWithoutDivisionInput
@@ -927,6 +962,7 @@ export type DivisionUpdateWithoutStandingsInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTournament?: Prisma.TournamentUpdateOneWithoutLegacyDivisionsNestedInput
@@ -945,6 +981,7 @@ export type DivisionUncheckedUpdateWithoutStandingsInput = {
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedUpdateManyWithoutDivisionNestedInput
@@ -961,6 +998,7 @@ export type DivisionCreateWithoutPlayerStatsInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTournament?: Prisma.TournamentCreateNestedOneWithoutLegacyDivisionsInput
@@ -979,6 +1017,7 @@ export type DivisionUncheckedCreateWithoutPlayerStatsInput = {
   ageGroup?: string | null
   tournamentId?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedCreateNestedManyWithoutDivisionInput
@@ -1011,6 +1050,7 @@ export type DivisionUpdateWithoutPlayerStatsInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTournament?: Prisma.TournamentUpdateOneWithoutLegacyDivisionsNestedInput
@@ -1029,6 +1069,7 @@ export type DivisionUncheckedUpdateWithoutPlayerStatsInput = {
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedUpdateManyWithoutDivisionNestedInput
@@ -1045,6 +1086,7 @@ export type DivisionCreateWithoutTeamStatsInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTournament?: Prisma.TournamentCreateNestedOneWithoutLegacyDivisionsInput
@@ -1063,6 +1105,7 @@ export type DivisionUncheckedCreateWithoutTeamStatsInput = {
   ageGroup?: string | null
   tournamentId?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedCreateNestedManyWithoutDivisionInput
@@ -1095,6 +1138,7 @@ export type DivisionUpdateWithoutTeamStatsInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTournament?: Prisma.TournamentUpdateOneWithoutLegacyDivisionsNestedInput
@@ -1113,6 +1157,7 @@ export type DivisionUncheckedUpdateWithoutTeamStatsInput = {
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedUpdateManyWithoutDivisionNestedInput
@@ -1129,6 +1174,7 @@ export type DivisionCreateWithoutTournamentsInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTournament?: Prisma.TournamentCreateNestedOneWithoutLegacyDivisionsInput
@@ -1147,6 +1193,7 @@ export type DivisionUncheckedCreateWithoutTournamentsInput = {
   ageGroup?: string | null
   tournamentId?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   membershipTeams?: Prisma.DivisionTeamUncheckedCreateNestedManyWithoutDivisionInput
@@ -1179,6 +1226,7 @@ export type DivisionUpdateWithoutTournamentsInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTournament?: Prisma.TournamentUpdateOneWithoutLegacyDivisionsNestedInput
@@ -1197,6 +1245,7 @@ export type DivisionUncheckedUpdateWithoutTournamentsInput = {
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   membershipTeams?: Prisma.DivisionTeamUncheckedUpdateManyWithoutDivisionNestedInput
@@ -1213,6 +1262,7 @@ export type DivisionCreateWithoutMembershipTeamsInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   legacyTournament?: Prisma.TournamentCreateNestedOneWithoutLegacyDivisionsInput
@@ -1231,6 +1281,7 @@ export type DivisionUncheckedCreateWithoutMembershipTeamsInput = {
   ageGroup?: string | null
   tournamentId?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedCreateNestedManyWithoutDivisionInput
@@ -1263,6 +1314,7 @@ export type DivisionUpdateWithoutMembershipTeamsInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legacyTournament?: Prisma.TournamentUpdateOneWithoutLegacyDivisionsNestedInput
@@ -1281,6 +1333,7 @@ export type DivisionUncheckedUpdateWithoutMembershipTeamsInput = {
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tournamentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedUpdateManyWithoutDivisionNestedInput
@@ -1297,6 +1350,7 @@ export type DivisionCreateManyLegacyTournamentInput = {
   category: string
   ageGroup?: string | null
   maxTeams?: number | null
+  modality?: string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1307,6 +1361,7 @@ export type DivisionUpdateWithoutLegacyTournamentInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tournaments?: Prisma.TournamentDivisionUpdateManyWithoutDivisionNestedInput
@@ -1324,6 +1379,7 @@ export type DivisionUncheckedUpdateWithoutLegacyTournamentInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tournaments?: Prisma.TournamentDivisionUncheckedUpdateManyWithoutDivisionNestedInput
@@ -1341,6 +1397,7 @@ export type DivisionUncheckedUpdateManyWithoutLegacyTournamentInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   ageGroup?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxTeams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1437,6 +1494,7 @@ export type DivisionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   ageGroup?: boolean
   tournamentId?: boolean
   maxTeams?: boolean
+  modality?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   legacyTournament?: boolean | Prisma.Division$legacyTournamentArgs<ExtArgs>
@@ -1457,6 +1515,7 @@ export type DivisionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   ageGroup?: boolean
   tournamentId?: boolean
   maxTeams?: boolean
+  modality?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   legacyTournament?: boolean | Prisma.Division$legacyTournamentArgs<ExtArgs>
@@ -1469,6 +1528,7 @@ export type DivisionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   ageGroup?: boolean
   tournamentId?: boolean
   maxTeams?: boolean
+  modality?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   legacyTournament?: boolean | Prisma.Division$legacyTournamentArgs<ExtArgs>
@@ -1481,11 +1541,12 @@ export type DivisionSelectScalar = {
   ageGroup?: boolean
   tournamentId?: boolean
   maxTeams?: boolean
+  modality?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DivisionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "category" | "ageGroup" | "tournamentId" | "maxTeams" | "createdAt" | "updatedAt", ExtArgs["result"]["division"]>
+export type DivisionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "category" | "ageGroup" | "tournamentId" | "maxTeams" | "modality" | "createdAt" | "updatedAt", ExtArgs["result"]["division"]>
 export type DivisionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   legacyTournament?: boolean | Prisma.Division$legacyTournamentArgs<ExtArgs>
   tournaments?: boolean | Prisma.Division$tournamentsArgs<ExtArgs>
@@ -1523,6 +1584,10 @@ export type $DivisionPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     ageGroup: string | null
     tournamentId: string | null
     maxTeams: number | null
+    /**
+     * "flag" | "tackle". Teams inherit it via division_id.
+     */
+    modality: string
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["division"]>
@@ -1962,6 +2027,7 @@ export interface DivisionFieldRefs {
   readonly ageGroup: Prisma.FieldRef<"Division", 'String'>
   readonly tournamentId: Prisma.FieldRef<"Division", 'String'>
   readonly maxTeams: Prisma.FieldRef<"Division", 'Int'>
+  readonly modality: Prisma.FieldRef<"Division", 'String'>
   readonly createdAt: Prisma.FieldRef<"Division", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Division", 'DateTime'>
 }

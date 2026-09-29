@@ -1,5 +1,6 @@
 import type { IDivisionRepository, IGameRepository, ITeamRepository, ITournamentRepository } from "@lufa/sports/ports";
 import { calculateTeamDefensePoints } from "./teamDefensePoints";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 export type TeamDefenseRankingStage = "all" | "regular" | "playoff" | "final" | "postseason";
 
@@ -9,6 +10,7 @@ export interface TeamDefenseRankingQuery {
   year?: number | null;
   stage: TeamDefenseRankingStage;
   limit: number;
+  modality?: Modality;
 }
 
 export interface TeamDefenseRankingRow {
@@ -48,7 +50,7 @@ export class TeamDefenseRankingService {
     const tournamentIdsForYear = query.year
       ? new Set((await this.tournamentRepo.findByYear(query.year)).map((tournament) => tournament.id).filter(Boolean))
       : null;
-    const games = (await this.gameRepo.findAll()).filter((game) => {
+    const games = (await this.gameRepo.findAll(query.modality ? { modality: query.modality } : undefined)).filter((game) => {
       if (!["in_progress", "completed"].includes(game.status)) return false;
       if (query.tournament && referenceId(game.tournament) !== query.tournament) return false;
       if (query.division && referenceId(game.division) !== query.division) return false;

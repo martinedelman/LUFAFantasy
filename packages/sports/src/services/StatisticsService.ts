@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { IGameRepository, IPlayerRepository, ITeamRepository } from "@lufa/sports/ports";
 import { calculateTeamDefensePoints } from "./teamDefensePoints";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 interface StatisticsQuery {
   tournament?: string | null;
@@ -11,18 +12,19 @@ interface StatisticsQuery {
   order: 1 | -1;
   page: number;
   limit: number;
+  modality?: Modality;
 }
 
 export interface StatisticsRepositoryPort {
   listPlayerStatistics(
-    filters: { tournament?: string; division?: string; player?: string },
+    filters: { tournament?: string; division?: string; player?: string; modality?: Modality },
     sortBy: string,
     order: 1 | -1,
     page: number,
     limit: number,
   ): Promise<{ rows: Record<string, unknown>[]; total: number }>;
   listTeamStatistics(
-    filters: { tournament?: string; division?: string; team?: string },
+    filters: { tournament?: string; division?: string; team?: string; modality?: Modality },
     sortBy: string,
     order: 1 | -1,
     page: number,
@@ -55,6 +57,7 @@ export class StatisticsService {
       {
         ...(query.tournament ? { tournament: query.tournament } : {}),
         ...(query.division ? { division: query.division } : {}),
+        ...(query.modality ? { modality: query.modality } : {}),
       },
       query.sortBy,
       query.order,
@@ -70,6 +73,7 @@ export class StatisticsService {
       {
         ...(query.tournament ? { tournament: query.tournament } : {}),
         ...(query.division ? { division: query.division } : {}),
+        ...(query.modality ? { modality: query.modality } : {}),
       },
       query.sortBy,
       query.order,

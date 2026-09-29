@@ -3,7 +3,7 @@ import path from "node:path";
 import { apiEndpoint } from "@lufa/api-client/config.ts";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@lufa/api-client", "@lufa/contracts"],
+  transpilePackages: ["@lufa/api-client", "@lufa/contracts", "@lufa/institutional-web"],
   turbopack: {
     resolveAlias: {
       "@vercel/flags-definitions": "./src/lib/vercelFlagsDefinitions.ts",

@@ -1,6 +1,7 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality, resolveModality } from "@/lib/modality";
 import { TournamentStatus } from "@lufa/sports/entities/Tournament";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { toDivisionResponseDto, toTournamentResponseDto } from "@/app/DTOs";
@@ -32,9 +33,11 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get("year");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
 
     // Construir filtros
-    const filters: { status?: TournamentStatus; year?: number } = {};
+    const filters: { status?: TournamentStatus; year?: number; modality: typeof modality } = { modality };
     if (status) filters.status = status;
     if (year) filters.year = parseInt(year);
 
@@ -96,6 +99,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = (await request.json()) as CreateTournamentRequestDto;
+    // The site's modality comes in the query; an explicit body value wins.
+    const modality = resolveModality(body.modality, request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
 
     // Validación básica
     if (!body.name || !body.season || !body.year || !body.startDate || !body.endDate || !body.status || !body.format) {
@@ -123,6 +129,7 @@ export async function POST(request: NextRequest) {
       participatingTeams: body.participatingTeams,
       rules: body.rules,
       prizes: body.prizes,
+      modality,
     });
 
     return NextResponse.json(

@@ -3,13 +3,16 @@ import { analyticsActor } from "@/lib/analyticsAccess";
 import { apiErrorResponse } from "@/lib/apiError";
 import type { AnalyticsQueryDto } from "@lufa/contracts";
 import { NextRequest, NextResponse } from "next/server";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 
 export async function POST(request: NextRequest) {
   const access = await analyticsActor(request);
   if (access.response) return access.response;
+  const modality = parseModality(request.nextUrl.searchParams);
+  if (!modality) return invalidModalityResponse();
   try {
     const query = await request.json() as AnalyticsQueryDto;
-    const data = await serviceContainer.analyticsService.query(query);
+    const data = await serviceContainer.analyticsService.query(query, modality);
     return NextResponse.json({ success: true, data }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Consulta inválida";

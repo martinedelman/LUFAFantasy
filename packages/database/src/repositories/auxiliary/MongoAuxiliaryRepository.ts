@@ -24,6 +24,7 @@ import type {
   OtpPurpose,
   OtpRecord,
 } from "./IAuxiliaryRepository";
+import { DEFAULT_MODALITY, type Modality } from "@lufa/sports/entities/Modality";
 
 function id(value: unknown): string {
   if (!value) return "";
@@ -274,14 +275,14 @@ export class MongoAuxiliaryRepository implements IAuxiliaryRepository {
     return result.modifiedCount > 0;
   }
 
-  async getSiteSettings(): Promise<Record<string, unknown> | null> {
+  async getSiteSettings(key = "global"): Promise<Record<string, unknown> | null> {
     await this.connect();
-    return (await SiteSettingsModel.findOne({ key: "global" }).lean().exec()) as Record<string, unknown> | null;
+    return (await SiteSettingsModel.findOne({ key }).lean().exec()) as Record<string, unknown> | null;
   }
 
-  async upsertSiteSettings(data: Record<string, unknown>): Promise<Record<string, unknown>> {
+  async upsertSiteSettings(data: Record<string, unknown>, key = "global"): Promise<Record<string, unknown>> {
     await this.connect();
-    return (await SiteSettingsModel.findOneAndUpdate({ key: "global" }, data, {
+    return (await SiteSettingsModel.findOneAndUpdate({ key }, { ...data, key }, {
       new: true,
       upsert: true,
       runValidators: true,
@@ -309,8 +310,10 @@ export class MongoAuxiliaryRepository implements IAuxiliaryRepository {
   }
 
   async listFlagInterests(
-    filters: { interestType?: string; playerRegistrationsOnly?: boolean } = {},
+    filters: { interestType?: string; playerRegistrationsOnly?: boolean; modality?: Modality } = {},
   ): Promise<Record<string, unknown>[]> {
+    // Mongo only holds historical flag data.
+    if ((filters.modality ?? DEFAULT_MODALITY) !== DEFAULT_MODALITY) return [];
     await this.connect();
     const query = filters.playerRegistrationsOnly
       ? { interestType: { $in: ["play", "child"] } }
@@ -321,12 +324,14 @@ export class MongoAuxiliaryRepository implements IAuxiliaryRepository {
   }
 
   async listPlayerStatistics(
-    filters: { tournament?: string; division?: string; player?: string },
+    rawFilters: { tournament?: string; division?: string; player?: string; modality?: Modality },
     sortBy: string,
     order: 1 | -1,
     page: number,
     limit: number,
   ): Promise<{ rows: Record<string, unknown>[]; total: number }> {
+    const { modality = DEFAULT_MODALITY, ...filters } = rawFilters;
+    if (modality !== DEFAULT_MODALITY) return { rows: [], total: 0 };
     await this.connect();
     const [rows, total] = await Promise.all([
       PlayerStatisticsModel.find(filters)
@@ -347,12 +352,14 @@ export class MongoAuxiliaryRepository implements IAuxiliaryRepository {
   }
 
   async listTeamStatistics(
-    filters: { tournament?: string; division?: string; team?: string },
+    rawFilters: { tournament?: string; division?: string; team?: string; modality?: Modality },
     sortBy: string,
     order: 1 | -1,
     page: number,
     limit: number,
   ): Promise<{ rows: Record<string, unknown>[]; total: number }> {
+    const { modality = DEFAULT_MODALITY, ...filters } = rawFilters;
+    if (modality !== DEFAULT_MODALITY) return { rows: [], total: 0 };
     await this.connect();
     const [rows, total] = await Promise.all([
       TeamStatisticsModel.find(filters)

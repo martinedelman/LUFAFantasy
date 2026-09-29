@@ -1,5 +1,6 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/apiError";
 import type { AdminAnalyticsSubject } from "@lufa/contracts";
@@ -19,10 +20,13 @@ export async function GET(request: NextRequest) {
     if (subject !== "teams" && subject !== "players") {
       return NextResponse.json({ success: false, message: "subject inválido" }, { status: 400 });
     }
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
     const analytics = await analyticsService.getAnalytics({
       subject: subject as AdminAnalyticsSubject,
       tournament: searchParams.get("tournament"),
       division: searchParams.get("division"),
+      modality,
     });
     return NextResponse.json({ success: true, data: analytics }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

@@ -1,0 +1,22 @@
+import { redirect } from "next/navigation";
+import LegacySignInPage from "@lufa/institutional-web/components/auth/LegacySignInPage";
+import { legacyFlagAuthentication } from "@/flags";
+import { getTackleAppUrl } from "@lufa/api-client/authUrls";
+import { centralAuthDestination } from "@lufa/institutional-web/lib/centralAuth";
+
+type SignInPageProps = {
+  searchParams: Promise<{ returnTo?: string | string[] }>;
+};
+
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+  const [useLegacyAuthentication, params] = await Promise.all([
+    legacyFlagAuthentication(),
+    searchParams,
+  ]);
+
+  if (!useLegacyAuthentication) {
+    redirect(centralAuthDestination("login", params, getTackleAppUrl()).toString());
+  }
+
+  return <LegacySignInPage />;
+}

@@ -1,4 +1,4 @@
-import type { DivisionCategory } from "../types";
+import type { DivisionCategory, Modality } from "../types";
 
 export interface CreateDivisionRequestDto {
   name: string;
@@ -7,4 +7,6 @@ export interface CreateDivisionRequestDto {
   tournament?: string;
   maxTeams?: number;
   teams?: string[];
+  /** Defaults to the request's `?modality=`, then flag. */
+  modality?: Modality;
 }

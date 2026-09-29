@@ -2,7 +2,7 @@
 import { Standing } from "@lufa/sports/entities/Standing";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { IStandingRepository } from "../contracts";
-import { referenceId, toStanding } from "./mappers";
+import { modalityFilter, referenceId, toStanding } from "./mappers";
 
 const standingInclude = { team: true, division: true } as const;
 
@@ -20,6 +20,8 @@ export class PrismaStandingRepository implements IStandingRepository {
     if (typeof filters.division === "string") where.divisionId = filters.division;
     if (typeof filters.tournament === "string") where.tournamentId = filters.tournament;
     if (typeof filters.team === "string") where.teamId = filters.team;
+    const modality = modalityFilter(filters);
+    if (modality) where.tournament = { modality };
     return this.map(await this.db.standing.findMany({ where, include: standingInclude }));
   }
 

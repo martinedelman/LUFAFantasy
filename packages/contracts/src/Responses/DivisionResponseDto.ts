@@ -1,4 +1,4 @@
-import type { DivisionCategory } from "../types";
+import type { DivisionCategory, Modality } from "../types";
 
 export interface DivisionResponseDto {
   _id?: string;
@@ -8,6 +8,7 @@ export interface DivisionResponseDto {
   tournament?: string;
   teams: unknown[];
   maxTeams?: number;
+  modality: Modality;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -1,3 +1,5 @@
+import type { Modality } from "@lufa/sports/entities/Modality";
+
 export type OtpPurpose = "email_verification" | "password_reset";
 
 export interface OtpRecord {
@@ -57,22 +59,27 @@ export interface IAuxiliaryRepository {
     reviewNote?: string,
   ): Promise<boolean>;
 
-  getSiteSettings(): Promise<Record<string, unknown> | null>;
-  upsertSiteSettings(data: Record<string, unknown>): Promise<Record<string, unknown>>;
+  /** `key` is "global" for flag (historical row) or the modality name. */
+  getSiteSettings(key?: string): Promise<Record<string, unknown> | null>;
+  upsertSiteSettings(data: Record<string, unknown>, key?: string): Promise<Record<string, unknown>>;
   createAuditLog(data: Record<string, unknown>): Promise<void>;
   listAuditLogs(filters?: Record<string, string>): Promise<Record<string, unknown>[]>;
   createFlagInterest(data: Record<string, unknown>): Promise<Record<string, unknown>>;
-  listFlagInterests(filters?: { interestType?: string; playerRegistrationsOnly?: boolean }): Promise<Record<string, unknown>[]>;
+  listFlagInterests(filters?: {
+    interestType?: string;
+    playerRegistrationsOnly?: boolean;
+    modality?: Modality;
+  }): Promise<Record<string, unknown>[]>;
 
   listPlayerStatistics(
-    filters: { tournament?: string; division?: string; player?: string },
+    filters: { tournament?: string; division?: string; player?: string; modality?: Modality },
     sortBy: string,
     order: 1 | -1,
     page: number,
     limit: number,
   ): Promise<{ rows: Record<string, unknown>[]; total: number }>;
   listTeamStatistics(
-    filters: { tournament?: string; division?: string; team?: string },
+    filters: { tournament?: string; division?: string; team?: string; modality?: Modality },
     sortBy: string,
     order: 1 | -1,
     page: number,

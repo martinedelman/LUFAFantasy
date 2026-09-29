@@ -5,6 +5,9 @@ export { AggregateRoot } from "./base/AggregateRoot";
 
 export { ContactInfo } from "./valueObjects/ContactInfo";
 
+export { DEFAULT_MODALITY, MODALITIES, isModality } from "./Modality";
+export type { Modality } from "./Modality";
+
 // Entities
 export { User } from "./User";
 export type { UserRole } from "./User";

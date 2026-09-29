@@ -159,6 +159,7 @@ export const TournamentScalarFieldEnum = {
   playoffCriteria: 'playoffCriteria',
   rules: 'rules',
   prizes: 'prizes',
+  modality: 'modality',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -173,6 +174,7 @@ export const DivisionScalarFieldEnum = {
   ageGroup: 'ageGroup',
   tournamentId: 'tournamentId',
   maxTeams: 'maxTeams',
+  modality: 'modality',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -382,6 +384,7 @@ export const FlagInterestScalarFieldEnum = {
   experience: 'experience',
   company: 'company',
   sponsorInterest: 'sponsorInterest',
+  modality: 'modality',
   createdAt: 'createdAt'
 } as const
 

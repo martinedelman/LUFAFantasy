@@ -2,7 +2,7 @@
 import { Tournament, type TournamentStatus } from "@lufa/sports/entities/Tournament";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { ITournamentRepository } from "../contracts";
-import { plainJson, toTournament } from "./mappers";
+import { modalityFilter, plainJson, toTournament } from "./mappers";
 
 const tournamentInclude = { divisions: true, teams: true } as const;
 
@@ -20,6 +20,8 @@ export class PrismaTournamentRepository implements ITournamentRepository {
     if (typeof filters.status === "string") where.status = filters.status;
     if (typeof filters.year === "number") where.year = filters.year;
     if (typeof filters.season === "string") where.season = filters.season;
+    const modality = modalityFilter(filters);
+    if (modality) where.modality = modality;
     return (await this.db.tournament.findMany({ where, include: tournamentInclude }))
       .map(toTournament)
       .filter((item): item is Tournament => Boolean(item));
@@ -43,6 +45,7 @@ export class PrismaTournamentRepository implements ITournamentRepository {
           playoffCriteria: value.playoffCriteria,
           rules: plainJson(value.rules),
           prizes: plainJson(value.prizes),
+          modality: value.modality,
           ...(value.createdAt ? { createdAt: value.createdAt } : {}),
           ...(value.updatedAt ? { updatedAt: value.updatedAt } : {}),
         },

@@ -1,5 +1,6 @@
 import { EmergencyContact, Player, PlayerPosition, PlayerStatus } from "@lufa/sports/entities/Player";
 import type { IPlayerRepository, ITeamRepository } from "@lufa/sports/ports";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 /**
  * Servicio de gestión de jugadores
@@ -175,16 +176,33 @@ export class PlayerService {
     position?: PlayerPosition;
     status?: PlayerStatus;
     search?: string;
+    modality?: Modality;
   }): Promise<Player[]> {
     if (!filters) {
       const players = await this.playerRepo.findAll();
       return this.sortPlayers(players);
     }
 
-    const { search, team, position, status } = filters;
+    const { search, team, position, status, modality } = filters;
+
+    if (search && team) {
+      // Resolve the roster (primary team + memberships) first, then match the name.
+      const needle = search.trim().toLowerCase();
+      const roster = await this.playerRepo.findAll({
+        team,
+        ...(position ? { position } : {}),
+        ...(status ? { status } : {}),
+        ...(modality ? { modality } : {}),
+      });
+      return this.sortPlayers(
+        roster.filter((player) =>
+          [player.firstName, player.lastName].some((name) => name?.toLowerCase().includes(needle)),
+        ),
+      );
+    }
 
     if (search) {
-      const searchResults = await this.playerRepo.searchByName(search);
+      const searchResults = await this.playerRepo.searchByName(search, modality);
       const filteredPlayers = searchResults.filter((player) => {
         if (team && String((player.team as unknown as { _id?: string })?._id || player.team) !== team) {
           return false;
@@ -204,10 +222,11 @@ export class PlayerService {
       return this.sortPlayers(filteredPlayers);
     }
 
-    const queryFilters: { team?: string; status?: PlayerStatus; position?: PlayerPosition } = {};
+    const queryFilters: { team?: string; status?: PlayerStatus; position?: PlayerPosition; modality?: Modality } = {};
     if (team) queryFilters.team = team;
     if (position) queryFilters.position = position;
     if (status) queryFilters.status = status;
+    if (modality) queryFilters.modality = modality;
 
     const players = await this.playerRepo.findAll(queryFilters);
     return this.sortPlayers(players);
@@ -305,8 +324,8 @@ export class PlayerService {
     return await this.playerRepo.update(id, updatedPlayer);
   }
 
-  async getPlayerByEmail(email: string): Promise<Player | null> {
-    return await this.playerRepo.findByEmail(email);
+  async getPlayerByEmail(email: string, modality?: Modality): Promise<Player | null> {
+    return await this.playerRepo.findByEmail(email, modality);
   }
 
   /**

@@ -6,9 +6,10 @@ import { AuthControl } from "./AuthControl";
 import { StoreNavLinks } from "./StoreNavLinks";
 import "./SiteNav.css";
 
-type Props = { flagUrl: string; store?: boolean };
+/** `tackleUrl` stays unset until the tackle site is live, showing it as upcoming. */
+type Props = { flagUrl: string; tackleUrl?: string; store?: boolean };
 
-export function SiteNav({ flagUrl, store = false }: Props) {
+export function SiteNav({ flagUrl, tackleUrl = process.env.NEXT_PUBLIC_TACKLE_URL, store = false }: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -45,7 +46,11 @@ export function SiteNav({ flagUrl, store = false }: Props) {
         <Link href="/tienda" onClick={closeMenu}>Tienda</Link>
         {store ? <StoreNavLinks closeMenu={closeMenu} /> : null}
         <a href={flagUrl}>Flag Football</a>
-        <span aria-disabled="true">Tackle <small>Próximamente</small></span>
+        {tackleUrl ? (
+          <a href={tackleUrl}>Tackle Football</a>
+        ) : (
+          <span aria-disabled="true">Tackle <small>Próximamente</small></span>
+        )}
         <div className="site-nav-session">
           <AuthControl />
         </div>

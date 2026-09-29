@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Providers from "@/components/Providers";
-import SiteFooter from "@/components/SiteFooter";
+import Navbar from "@lufa/institutional-web/components/Navbar";
+import Providers from "@lufa/institutional-web/components/Providers";
+import SiteFooter from "@lufa/institutional-web/components/SiteFooter";
 import { Analytics } from "@vercel/analytics/next";
+import { siteConfig } from "@/site.config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -114,7 +115,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 min-h-screen flex flex-col`}>
-        <Providers>
+        <Providers siteConfig={siteConfig}>
           <Navbar />
           <main className="flex-1">{children}</main>
           <SiteFooter />

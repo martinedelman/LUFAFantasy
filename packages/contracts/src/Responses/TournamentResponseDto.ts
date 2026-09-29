@@ -1,4 +1,5 @@
 import type {
+  Modality,
   PlayoffCriteria,
   TournamentFormat,
   TournamentPrize,
@@ -22,6 +23,7 @@ export interface TournamentResponseDto {
   participatingTeams?: unknown[];
   rules?: TournamentRules;
   prizes?: TournamentPrize[];
+  modality: Modality;
   createdAt?: string;
   updatedAt?: string;
 }

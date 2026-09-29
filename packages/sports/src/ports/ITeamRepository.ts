@@ -1,5 +1,6 @@
 import { IRepository } from "./IRepository";
 import { Team } from "@lufa/sports/entities/Team";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 /**
  * Interface para el repositorio de Teams
@@ -17,8 +18,9 @@ export interface ITeamRepository extends IRepository<Team> {
 
   /**
    * Verifica si existe un equipo con el nombre dado en un torneo
+   * (o, sin torneo, en la modalidad indicada)
    */
-  existsWithName(name: string, tournamentId?: string): Promise<boolean>;
+  existsWithName(name: string, tournamentId?: string, modality?: Modality): Promise<boolean>;
 
   /**
    * Busca equipos por nombre normalizado

@@ -2,6 +2,7 @@ import { IStandingRepository } from "../contracts/IStandingRepository";
 import { Standing } from "@lufa/sports/entities/Standing";
 import { StandingModel } from "../../models/Standing";
 import connectToDatabase from "../../mongodb";
+import { withoutModality } from "./modality";
 
 export class MongoStandingRepository implements IStandingRepository {
   private static tournamentScopedIndexPromise: Promise<void> | null = null;
@@ -46,7 +47,9 @@ export class MongoStandingRepository implements IStandingRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Standing[]> {
     await connectToDatabase();
-    const docs = await StandingModel.find(filters || {})
+    const query = withoutModality(filters);
+    if (!query) return [];
+    const docs = await StandingModel.find(query)
       .populate("team")
       .populate("division")
       .exec();

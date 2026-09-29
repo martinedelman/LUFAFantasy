@@ -6,6 +6,7 @@ import {
   TournamentRules,
   TournamentPrize,
 } from "@lufa/sports/entities/Tournament";
+import { DEFAULT_MODALITY, type Modality } from "@lufa/sports/entities/Modality";
 import type { IDivisionRepository, ITeamRepository, ITournamentRepository } from "@lufa/sports/ports";
 import { StandingService } from "./StandingService";
 
@@ -33,11 +34,19 @@ export class TournamentService {
     return reference.toString();
   }
 
-  private async validateParticipatingTeams(divisions: string[], participatingTeams: string[]): Promise<void> {
+  private async validateParticipatingTeams(
+    divisions: string[],
+    participatingTeams: string[],
+    modality: Modality,
+  ): Promise<void> {
     for (const divisionId of divisions) {
       const division = await this.divisionRepo.findById(divisionId);
       if (!division) {
         throw new Error(`División no encontrada: ${divisionId}`);
+      }
+      // Mongo documents predate modality; treat them as the default.
+      if ((division.modality || DEFAULT_MODALITY) !== modality) {
+        throw new Error(`La división ${division.name} no pertenece a la modalidad ${modality}`);
       }
     }
 
@@ -83,11 +92,13 @@ export class TournamentService {
     participatingTeams?: string[];
     rules?: TournamentRules;
     prizes?: TournamentPrize[];
+    modality?: Modality;
   }): Promise<Tournament> {
     const divisionIds = data.divisions || [];
     const participatingTeams = data.participatingTeams || [];
+    const modality = data.modality || DEFAULT_MODALITY;
 
-    await this.validateParticipatingTeams(divisionIds, participatingTeams);
+    await this.validateParticipatingTeams(divisionIds, participatingTeams, modality);
 
     const tournament = new Tournament(
       data.name,
@@ -104,6 +115,10 @@ export class TournamentService {
       data.registrationDeadline,
       data.rules,
       data.prizes,
+      undefined,
+      undefined,
+      undefined,
+      modality,
     );
 
     // Validar
@@ -136,6 +151,7 @@ export class TournamentService {
     status?: TournamentStatus;
     year?: number;
     season?: string;
+    modality?: Modality;
   }): Promise<Tournament[]> {
     return await this.tournamentRepo.findAll(filters);
   }
@@ -184,7 +200,11 @@ export class TournamentService {
         ? data.participatingTeams
         : (tournament.participatingTeams || []).map((teamRef) => this.getReferenceId(teamRef));
 
-    await this.validateParticipatingTeams(nextDivisionIds, nextParticipatingTeams);
+    await this.validateParticipatingTeams(
+      nextDivisionIds,
+      nextParticipatingTeams,
+      tournament.modality || DEFAULT_MODALITY,
+    );
 
     const updatedTournament = new Tournament(
       data.name || tournament.name,
@@ -204,6 +224,7 @@ export class TournamentService {
       tournament.id,
       tournament.createdAt,
       tournament.updatedAt,
+      tournament.modality,
     );
 
     // Validar

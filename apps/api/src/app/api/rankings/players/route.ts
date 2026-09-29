@@ -1,6 +1,7 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
 import {
   type RankingEventType,
@@ -21,6 +22,8 @@ export async function GET(request: NextRequest) {
     const stage = ALLOWED_STAGES.includes(stageValue as RankingStage) ? (stageValue as RankingStage) : "regular";
     const points = parseOptionalNumber(searchParams.get("points"));
     const year = parseOptionalNumber(searchParams.get("year"));
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
 
     if (mode === "count" && (!eventType || !ALLOWED_EVENT_TYPES.includes(eventType))) {
       return NextResponse.json({ success: false, message: "eventType inválido" }, { status: 400 });
@@ -48,6 +51,7 @@ export async function GET(request: NextRequest) {
           stage,
           includePickSix: searchParams.get("includePickSix") === "true",
           limit: Math.max(1, Math.min(Number.parseInt(searchParams.get("limit") || "10", 10), 50)),
+          modality,
         }),
       { tags: ["rankings"] },
     );
