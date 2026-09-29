@@ -204,7 +204,8 @@ export const MODALITY_RULES: Record<Modality, ModalityRules> = {
       { type: "punt_return_td", points: [6], scorer: true, nonDefensiveScore: true },
       { type: "sack", points: [], qb: "opponent" },
       { type: "first_down", points: [] },
-      ...CONTROL_EVENTS,
+      // Control and discipline events never score in tackle.
+      ...CONTROL_EVENTS.map((rule) => ({ ...rule, points: [] })),
     ],
     buttons: [
       { type: "touchdown", label: "TD", points: 6 },

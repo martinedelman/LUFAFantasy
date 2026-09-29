@@ -170,16 +170,12 @@ export class PlayerService {
       throw new Error(validation.errors.join(", "));
     }
 
-    const created = await this.playerRepo.create(player);
-    if (!created.id) return created;
-
-    const profile = { jerseyNumber: jerseyNumber ?? null, position: data.position, secondaryPosition: secondaryPosition ?? null };
-    const home = await this.playerRepo.getHomeModality(created.id);
-    await this.playerRepo.upsertModalityProfile(created.id, { modality: home, ...profile });
-    if (modality !== home) {
-      await this.playerRepo.upsertModalityProfile(created.id, { modality, ...profile });
-    }
-    return (await this.playerRepo.findById(created.id, modality)) || created;
+    return await this.playerRepo.createWithProfile(player, {
+      modality,
+      jerseyNumber: jerseyNumber ?? null,
+      position: data.position,
+      secondaryPosition: secondaryPosition ?? null,
+    });
   }
 
   /**
@@ -371,14 +367,12 @@ export class PlayerService {
       throw new Error(validation.errors.join(", "));
     }
 
-    const saved = await this.playerRepo.update(id, updatedPlayer);
-    await this.playerRepo.upsertModalityProfile(id, {
+    return await this.playerRepo.updateWithProfile(id, updatedPlayer, {
       modality,
       jerseyNumber: jerseyNumber ?? null,
       position,
       secondaryPosition: nextSecondaryPosition ?? null,
     });
-    return (await this.playerRepo.findById(id, modality)) || saved;
   }
 
   async getPlayerByEmail(email: string, modality?: Modality): Promise<Player | null> {

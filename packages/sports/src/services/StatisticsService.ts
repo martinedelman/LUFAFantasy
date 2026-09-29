@@ -43,12 +43,6 @@ function ref(value: unknown): string {
   return String(value);
 }
 
-function fumblesLost(games: unknown[], teamId: string) {
-  return games
-    .flatMap((game) => (game as { events?: Array<{ type?: string; team?: unknown }> }).events || [])
-    .filter((event) => event.type === "fumble" && ref(event.team) === teamId).length;
-}
-
 export class StatisticsService {
   constructor(
     private readonly gameRepo: IGameRepository,
@@ -236,8 +230,9 @@ export class StatisticsService {
       penaltyYards: 0,
     };
 
-    let takeawaysAgainst = 0;
     for (const game of games) {
+      let gameFumbles = 0;
+      let gameRecoveriesAgainst = 0;
       const isHome = ref(game.homeTeam) === teamId;
       const teamScore = isHome ? game.score.home.total : game.score.away.total;
       const opponentScore = isHome ? game.score.away.total : game.score.home.total;
@@ -262,7 +257,7 @@ export class StatisticsService {
           if (event.type === "fumble_recovery" || event.type === "fumble_return_td") {
             stats.defensiveStats.fumbleRecoveries += 1;
           }
-          if (event.type === "fumble") stats.turnovers += 1;
+          if (event.type === "fumble") gameFumbles += 1;
           if (event.type === "field_goal") stats.offensiveStats.fieldGoals += 1;
           if (event.type === "first_down") stats.offensiveStats.firstDowns += 1;
           if (event.type === "interception") stats.defensiveStats.interceptions += 1;
@@ -274,14 +269,15 @@ export class StatisticsService {
           if (event.type === "safety") stats.defensiveStats.safeties += 1;
         } else {
           if (event.type === "touchdown") stats.defensiveStats.touchdownsAllowed += 1;
-          // Takeaways by the opponent are this team's turnovers (a recorded "fumble" already counts above).
+          // Takeaways by the opponent are this team's turnovers.
           if (["interception", "pick_six"].includes(event.type)) stats.turnovers += 1;
-          if (event.type === "fumble_recovery" || event.type === "fumble_return_td") takeawaysAgainst += 1;
+          if (event.type === "fumble_recovery" || event.type === "fumble_return_td") gameRecoveriesAgainst += 1;
         }
       }
+      // The same lost fumble can be logged by the offense ("fumble") and/or the defense (recovery):
+      // within one game, count the larger of the two so it isn't counted twice.
+      stats.turnovers += Math.max(gameFumbles, gameRecoveriesAgainst);
     }
-    // A fumble can be logged as "fumble" (by the offense) and/or as a recovery (by the defense): count it once.
-    stats.turnovers += Math.max(0, takeawaysAgainst - fumblesLost(games, teamId));
     stats.turnoverDifferential =
       stats.defensiveStats.interceptions + stats.defensiveStats.fumbleRecoveries - stats.turnovers;
     const defensePoints = calculateTeamDefensePoints(games, teamId);

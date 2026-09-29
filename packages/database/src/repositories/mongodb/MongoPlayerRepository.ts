@@ -118,7 +118,13 @@ export class MongoPlayerRepository implements IPlayerRepository {
     return [];
   }
 
-  async upsertModalityProfile(): Promise<void> {}
+  async createWithProfile(player: Player): Promise<Player> {
+    return this.create(player);
+  }
+
+  async updateWithProfile(id: string, player: Player): Promise<Player> {
+    return this.update(id, player);
+  }
 
   async isJerseyTaken(
     jerseyNumber: number,

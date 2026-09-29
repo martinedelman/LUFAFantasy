@@ -26,7 +26,17 @@ export interface IPlayerRepository extends IRepository<Player> {
 
   listModalityProfiles(playerId: string): Promise<PlayerModalityProfile[]>;
 
-  upsertModalityProfile(playerId: string, profile: PlayerModalityProfile): Promise<void>;
+  /**
+   * Crea el jugador y, en la misma transacción, su perfil en la modalidad del equipo
+   * principal y en `profile.modality`
+   */
+  createWithProfile(player: Player, profile: PlayerModalityProfile): Promise<Player>;
+
+  /**
+   * Actualiza el jugador y el perfil de `profile.modality` en una transacción. Al terminar,
+   * las columnas base reflejan el perfil de la modalidad del equipo principal (aunque el equipo haya cambiado)
+   */
+  updateWithProfile(id: string, player: Player, profile: PlayerModalityProfile): Promise<Player>;
 
   /**
    * Indica si otro jugador usa ese número en la modalidad, dentro del equipo dado
