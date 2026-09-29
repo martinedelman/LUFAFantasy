@@ -11,9 +11,10 @@ const gameInclude: any = {
   division: true,
   homeTeam: true,
   awayTeam: true,
-  presentPlayers: { include: { player: true }, orderBy: { ordinal: "asc" } },
+  // Profiles let the mapper show each player's number in the game's modality.
+  presentPlayers: { include: { player: { include: { modalityProfiles: true } } }, orderBy: { ordinal: "asc" } },
   events: {
-    include: { team: true, player: true },
+    include: { team: true, player: { include: { modalityProfiles: true } } },
     orderBy: [{ sequence: "asc" }, { createdAt: "asc" }],
   },
 };

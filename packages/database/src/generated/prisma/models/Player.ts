@@ -334,6 +334,7 @@ export type PlayerWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Player"> | Date | string
   team?: Prisma.XOR<Prisma.TeamScalarRelationFilter, Prisma.TeamWhereInput>
   teamMemberships?: Prisma.TeamPlayerListRelationFilter
+  modalityProfiles?: Prisma.PlayerModalityProfileListRelationFilter
   presentGames?: Prisma.GamePresentPlayerListRelationFilter
   events?: Prisma.GameEventListRelationFilter
   importMigrations?: Prisma.PlayerImportMigrationListRelationFilter
@@ -365,6 +366,7 @@ export type PlayerOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   team?: Prisma.TeamOrderByWithRelationInput
   teamMemberships?: Prisma.TeamPlayerOrderByRelationAggregateInput
+  modalityProfiles?: Prisma.PlayerModalityProfileOrderByRelationAggregateInput
   presentGames?: Prisma.GamePresentPlayerOrderByRelationAggregateInput
   events?: Prisma.GameEventOrderByRelationAggregateInput
   importMigrations?: Prisma.PlayerImportMigrationOrderByRelationAggregateInput
@@ -399,6 +401,7 @@ export type PlayerWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Player"> | Date | string
   team?: Prisma.XOR<Prisma.TeamScalarRelationFilter, Prisma.TeamWhereInput>
   teamMemberships?: Prisma.TeamPlayerListRelationFilter
+  modalityProfiles?: Prisma.PlayerModalityProfileListRelationFilter
   presentGames?: Prisma.GamePresentPlayerListRelationFilter
   events?: Prisma.GameEventListRelationFilter
   importMigrations?: Prisma.PlayerImportMigrationListRelationFilter
@@ -481,6 +484,7 @@ export type PlayerCreateInput = {
   updatedAt?: Date | string
   team: Prisma.TeamCreateNestedOneWithoutPlayersInput
   teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
@@ -511,6 +515,7 @@ export type PlayerUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
@@ -541,6 +546,7 @@ export type PlayerUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
   teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
@@ -571,6 +577,7 @@ export type PlayerUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
@@ -837,6 +844,20 @@ export type PlayerUpdateOneRequiredWithoutPlayerStatsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.PlayerUpdateToOneWithWhereWithoutPlayerStatsInput, Prisma.PlayerUpdateWithoutPlayerStatsInput>, Prisma.PlayerUncheckedUpdateWithoutPlayerStatsInput>
 }
 
+export type PlayerCreateNestedOneWithoutModalityProfilesInput = {
+  create?: Prisma.XOR<Prisma.PlayerCreateWithoutModalityProfilesInput, Prisma.PlayerUncheckedCreateWithoutModalityProfilesInput>
+  connectOrCreate?: Prisma.PlayerCreateOrConnectWithoutModalityProfilesInput
+  connect?: Prisma.PlayerWhereUniqueInput
+}
+
+export type PlayerUpdateOneRequiredWithoutModalityProfilesNestedInput = {
+  create?: Prisma.XOR<Prisma.PlayerCreateWithoutModalityProfilesInput, Prisma.PlayerUncheckedCreateWithoutModalityProfilesInput>
+  connectOrCreate?: Prisma.PlayerCreateOrConnectWithoutModalityProfilesInput
+  upsert?: Prisma.PlayerUpsertWithoutModalityProfilesInput
+  connect?: Prisma.PlayerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.PlayerUpdateToOneWithWhereWithoutModalityProfilesInput, Prisma.PlayerUpdateWithoutModalityProfilesInput>, Prisma.PlayerUncheckedUpdateWithoutModalityProfilesInput>
+}
+
 export type PlayerCreateNestedOneWithoutTeamMembershipsInput = {
   create?: Prisma.XOR<Prisma.PlayerCreateWithoutTeamMembershipsInput, Prisma.PlayerUncheckedCreateWithoutTeamMembershipsInput>
   connectOrCreate?: Prisma.PlayerCreateOrConnectWithoutTeamMembershipsInput
@@ -933,6 +954,7 @@ export type PlayerCreateWithoutTeamInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
@@ -962,6 +984,7 @@ export type PlayerUncheckedCreateWithoutTeamInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
@@ -1043,6 +1066,7 @@ export type PlayerCreateWithoutEventsInput = {
   updatedAt?: Date | string
   team: Prisma.TeamCreateNestedOneWithoutPlayersInput
   teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
   playerStats?: Prisma.PlayerStatisticsCreateNestedManyWithoutPlayerInput
@@ -1072,6 +1096,7 @@ export type PlayerUncheckedCreateWithoutEventsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
   playerStats?: Prisma.PlayerStatisticsUncheckedCreateNestedManyWithoutPlayerInput
@@ -1117,6 +1142,7 @@ export type PlayerUpdateWithoutEventsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
   teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
   playerStats?: Prisma.PlayerStatisticsUpdateManyWithoutPlayerNestedInput
@@ -1146,6 +1172,7 @@ export type PlayerUncheckedUpdateWithoutEventsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
   playerStats?: Prisma.PlayerStatisticsUncheckedUpdateManyWithoutPlayerNestedInput
@@ -1175,6 +1202,7 @@ export type PlayerCreateWithoutImportMigrationsInput = {
   updatedAt?: Date | string
   team: Prisma.TeamCreateNestedOneWithoutPlayersInput
   teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
   playerStats?: Prisma.PlayerStatisticsCreateNestedManyWithoutPlayerInput
@@ -1204,6 +1232,7 @@ export type PlayerUncheckedCreateWithoutImportMigrationsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
   playerStats?: Prisma.PlayerStatisticsUncheckedCreateNestedManyWithoutPlayerInput
@@ -1249,6 +1278,7 @@ export type PlayerUpdateWithoutImportMigrationsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
   teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
   playerStats?: Prisma.PlayerStatisticsUpdateManyWithoutPlayerNestedInput
@@ -1278,6 +1308,7 @@ export type PlayerUncheckedUpdateWithoutImportMigrationsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
   playerStats?: Prisma.PlayerStatisticsUncheckedUpdateManyWithoutPlayerNestedInput
@@ -1307,6 +1338,7 @@ export type PlayerCreateWithoutPlayerStatsInput = {
   updatedAt?: Date | string
   team: Prisma.TeamCreateNestedOneWithoutPlayersInput
   teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
@@ -1336,6 +1368,7 @@ export type PlayerUncheckedCreateWithoutPlayerStatsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
@@ -1381,6 +1414,7 @@ export type PlayerUpdateWithoutPlayerStatsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
   teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
@@ -1410,9 +1444,146 @@ export type PlayerUncheckedUpdateWithoutPlayerStatsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
+  fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
+  fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+}
+
+export type PlayerCreateWithoutModalityProfilesInput = {
+  id?: string
+  firstName: string
+  lastName: string
+  profilePicture?: string | null
+  email?: string | null
+  phone?: string | null
+  dateOfBirth: Date | string
+  jerseyNumber?: number | null
+  position: string
+  secondaryPosition?: string | null
+  height?: number | null
+  weight?: number | null
+  experience?: string | null
+  emergencyContact?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  registrationDate: Date | string
+  status?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  team: Prisma.TeamCreateNestedOneWithoutPlayersInput
+  teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
+  events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
+  importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
+  playerStats?: Prisma.PlayerStatisticsCreateNestedManyWithoutPlayerInput
+  fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
+  fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
+  digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+}
+
+export type PlayerUncheckedCreateWithoutModalityProfilesInput = {
+  id?: string
+  firstName: string
+  lastName: string
+  profilePicture?: string | null
+  email?: string | null
+  phone?: string | null
+  dateOfBirth: Date | string
+  teamId: string
+  jerseyNumber?: number | null
+  position: string
+  secondaryPosition?: string | null
+  height?: number | null
+  weight?: number | null
+  experience?: string | null
+  emergencyContact?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  registrationDate: Date | string
+  status?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
+  importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
+  playerStats?: Prisma.PlayerStatisticsUncheckedCreateNestedManyWithoutPlayerInput
+  fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
+  fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+}
+
+export type PlayerCreateOrConnectWithoutModalityProfilesInput = {
+  where: Prisma.PlayerWhereUniqueInput
+  create: Prisma.XOR<Prisma.PlayerCreateWithoutModalityProfilesInput, Prisma.PlayerUncheckedCreateWithoutModalityProfilesInput>
+}
+
+export type PlayerUpsertWithoutModalityProfilesInput = {
+  update: Prisma.XOR<Prisma.PlayerUpdateWithoutModalityProfilesInput, Prisma.PlayerUncheckedUpdateWithoutModalityProfilesInput>
+  create: Prisma.XOR<Prisma.PlayerCreateWithoutModalityProfilesInput, Prisma.PlayerUncheckedCreateWithoutModalityProfilesInput>
+  where?: Prisma.PlayerWhereInput
+}
+
+export type PlayerUpdateToOneWithWhereWithoutModalityProfilesInput = {
+  where?: Prisma.PlayerWhereInput
+  data: Prisma.XOR<Prisma.PlayerUpdateWithoutModalityProfilesInput, Prisma.PlayerUncheckedUpdateWithoutModalityProfilesInput>
+}
+
+export type PlayerUpdateWithoutModalityProfilesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  jerseyNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  position?: Prisma.StringFieldUpdateOperationsInput | string
+  secondaryPosition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  experience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergencyContact?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  registrationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
+  teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
+  events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
+  importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
+  playerStats?: Prisma.PlayerStatisticsUpdateManyWithoutPlayerNestedInput
+  fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
+  fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+}
+
+export type PlayerUncheckedUpdateWithoutModalityProfilesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
+  jerseyNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  position?: Prisma.StringFieldUpdateOperationsInput | string
+  secondaryPosition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  experience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergencyContact?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  registrationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
+  importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
+  playerStats?: Prisma.PlayerStatisticsUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
@@ -1438,6 +1609,7 @@ export type PlayerCreateWithoutTeamMembershipsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   team: Prisma.TeamCreateNestedOneWithoutPlayersInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
@@ -1467,6 +1639,7 @@ export type PlayerUncheckedCreateWithoutTeamMembershipsInput = {
   status?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
@@ -1512,6 +1685,7 @@ export type PlayerUpdateWithoutTeamMembershipsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
@@ -1541,6 +1715,7 @@ export type PlayerUncheckedUpdateWithoutTeamMembershipsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
@@ -1571,6 +1746,7 @@ export type PlayerCreateWithoutPresentGamesInput = {
   updatedAt?: Date | string
   team: Prisma.TeamCreateNestedOneWithoutPlayersInput
   teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
   playerStats?: Prisma.PlayerStatisticsCreateNestedManyWithoutPlayerInput
@@ -1600,6 +1776,7 @@ export type PlayerUncheckedCreateWithoutPresentGamesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
   playerStats?: Prisma.PlayerStatisticsUncheckedCreateNestedManyWithoutPlayerInput
@@ -1645,6 +1822,7 @@ export type PlayerUpdateWithoutPresentGamesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
   teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
   playerStats?: Prisma.PlayerStatisticsUpdateManyWithoutPlayerNestedInput
@@ -1674,6 +1852,7 @@ export type PlayerUncheckedUpdateWithoutPresentGamesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
   playerStats?: Prisma.PlayerStatisticsUncheckedUpdateManyWithoutPlayerNestedInput
@@ -1703,6 +1882,7 @@ export type PlayerCreateWithoutFantasyDraftPicksInput = {
   updatedAt?: Date | string
   team: Prisma.TeamCreateNestedOneWithoutPlayersInput
   teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
@@ -1732,6 +1912,7 @@ export type PlayerUncheckedCreateWithoutFantasyDraftPicksInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
@@ -1777,6 +1958,7 @@ export type PlayerUpdateWithoutFantasyDraftPicksInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
   teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
@@ -1806,6 +1988,7 @@ export type PlayerUncheckedUpdateWithoutFantasyDraftPicksInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
@@ -1835,6 +2018,7 @@ export type PlayerCreateWithoutFantasyFavoritesInput = {
   updatedAt?: Date | string
   team: Prisma.TeamCreateNestedOneWithoutPlayersInput
   teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
@@ -1864,6 +2048,7 @@ export type PlayerUncheckedCreateWithoutFantasyFavoritesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
@@ -1909,6 +2094,7 @@ export type PlayerUpdateWithoutFantasyFavoritesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
   teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
@@ -1938,6 +2124,7 @@ export type PlayerUncheckedUpdateWithoutFantasyFavoritesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
@@ -1967,6 +2154,7 @@ export type PlayerCreateWithoutDigitalCredentialsInput = {
   updatedAt?: Date | string
   team: Prisma.TeamCreateNestedOneWithoutPlayersInput
   teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
@@ -1996,6 +2184,7 @@ export type PlayerUncheckedCreateWithoutDigitalCredentialsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
   presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
   events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
@@ -2041,6 +2230,7 @@ export type PlayerUpdateWithoutDigitalCredentialsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
   teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
@@ -2070,6 +2260,7 @@ export type PlayerUncheckedUpdateWithoutDigitalCredentialsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
@@ -2119,6 +2310,7 @@ export type PlayerUpdateWithoutTeamInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
@@ -2148,6 +2340,7 @@ export type PlayerUncheckedUpdateWithoutTeamInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
   presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
   events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
   importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
@@ -2185,6 +2378,7 @@ export type PlayerUncheckedUpdateManyWithoutTeamInput = {
 
 export type PlayerCountOutputType = {
   teamMemberships: number
+  modalityProfiles: number
   presentGames: number
   events: number
   importMigrations: number
@@ -2196,6 +2390,7 @@ export type PlayerCountOutputType = {
 
 export type PlayerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   teamMemberships?: boolean | PlayerCountOutputTypeCountTeamMembershipsArgs
+  modalityProfiles?: boolean | PlayerCountOutputTypeCountModalityProfilesArgs
   presentGames?: boolean | PlayerCountOutputTypeCountPresentGamesArgs
   events?: boolean | PlayerCountOutputTypeCountEventsArgs
   importMigrations?: boolean | PlayerCountOutputTypeCountImportMigrationsArgs
@@ -2220,6 +2415,13 @@ export type PlayerCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exten
  */
 export type PlayerCountOutputTypeCountTeamMembershipsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.TeamPlayerWhereInput
+}
+
+/**
+ * PlayerCountOutputType without action
+ */
+export type PlayerCountOutputTypeCountModalityProfilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PlayerModalityProfileWhereInput
 }
 
 /**
@@ -2294,6 +2496,7 @@ export type PlayerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   updatedAt?: boolean
   team?: boolean | Prisma.TeamDefaultArgs<ExtArgs>
   teamMemberships?: boolean | Prisma.Player$teamMembershipsArgs<ExtArgs>
+  modalityProfiles?: boolean | Prisma.Player$modalityProfilesArgs<ExtArgs>
   presentGames?: boolean | Prisma.Player$presentGamesArgs<ExtArgs>
   events?: boolean | Prisma.Player$eventsArgs<ExtArgs>
   importMigrations?: boolean | Prisma.Player$importMigrationsArgs<ExtArgs>
@@ -2376,6 +2579,7 @@ export type PlayerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 export type PlayerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   team?: boolean | Prisma.TeamDefaultArgs<ExtArgs>
   teamMemberships?: boolean | Prisma.Player$teamMembershipsArgs<ExtArgs>
+  modalityProfiles?: boolean | Prisma.Player$modalityProfilesArgs<ExtArgs>
   presentGames?: boolean | Prisma.Player$presentGamesArgs<ExtArgs>
   events?: boolean | Prisma.Player$eventsArgs<ExtArgs>
   importMigrations?: boolean | Prisma.Player$importMigrationsArgs<ExtArgs>
@@ -2397,6 +2601,7 @@ export type $PlayerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   objects: {
     team: Prisma.$TeamPayload<ExtArgs>
     teamMemberships: Prisma.$TeamPlayerPayload<ExtArgs>[]
+    modalityProfiles: Prisma.$PlayerModalityProfilePayload<ExtArgs>[]
     presentGames: Prisma.$GamePresentPlayerPayload<ExtArgs>[]
     events: Prisma.$GameEventPayload<ExtArgs>[]
     importMigrations: Prisma.$PlayerImportMigrationPayload<ExtArgs>[]
@@ -2821,6 +3026,7 @@ export interface Prisma__PlayerClient<T, Null = never, ExtArgs extends runtime.T
   readonly [Symbol.toStringTag]: "PrismaPromise"
   team<T extends Prisma.TeamDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TeamDefaultArgs<ExtArgs>>): Prisma.Prisma__TeamClient<runtime.Types.Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   teamMemberships<T extends Prisma.Player$teamMembershipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Player$teamMembershipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamPlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  modalityProfiles<T extends Prisma.Player$modalityProfilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Player$modalityProfilesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlayerModalityProfilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   presentGames<T extends Prisma.Player$presentGamesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Player$presentGamesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GamePresentPlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   events<T extends Prisma.Player$eventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Player$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GameEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   importMigrations<T extends Prisma.Player$importMigrationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Player$importMigrationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlayerImportMigrationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3298,6 +3504,30 @@ export type Player$teamMembershipsArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.TeamPlayerScalarFieldEnum | Prisma.TeamPlayerScalarFieldEnum[]
+}
+
+/**
+ * Player.modalityProfiles
+ */
+export type Player$modalityProfilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PlayerModalityProfile
+   */
+  select?: Prisma.PlayerModalityProfileSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PlayerModalityProfile
+   */
+  omit?: Prisma.PlayerModalityProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PlayerModalityProfileInclude<ExtArgs> | null
+  where?: Prisma.PlayerModalityProfileWhereInput
+  orderBy?: Prisma.PlayerModalityProfileOrderByWithRelationInput | Prisma.PlayerModalityProfileOrderByWithRelationInput[]
+  cursor?: Prisma.PlayerModalityProfileWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PlayerModalityProfileScalarFieldEnum | Prisma.PlayerModalityProfileScalarFieldEnum[]
 }
 
 /**

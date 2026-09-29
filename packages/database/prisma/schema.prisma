@@ -180,6 +180,7 @@ model Player {
 
   team             Team                    @relation(fields: [teamId], references: [id], onDelete: Restrict)
   teamMemberships  TeamPlayer[]
+  modalityProfiles PlayerModalityProfile[]
   presentGames     GamePresentPlayer[]
   events           GameEvent[]             @relation("EventPlayer")
   importMigrations PlayerImportMigration[]
@@ -511,6 +512,25 @@ model DivisionTeam {
 
   @@id([divisionId, teamId])
   @@map("division_teams")
+}
+
+/// Jersey number and positions a shared player uses in each modality
+/// (e.g. #11 C in flag, #40 LB in tackle). The players columns mirror the
+/// profile of the modality of the player's primary team.
+model PlayerModalityProfile {
+  playerId          String   @map("player_id")
+  modality          String
+  jerseyNumber      Int?     @map("jersey_number")
+  position          String
+  secondaryPosition String?  @map("secondary_position")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, modality])
+  @@index([modality])
+  @@map("player_modality_profiles")
 }
 
 model TeamPlayer {

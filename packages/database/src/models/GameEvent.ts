@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import type { GameEventType } from "@lufa/sports/entities/Game";
+import { GAME_EVENT_TYPES } from "@lufa/contracts/game-events";
 
 export interface GameEventDocument {
   _id?: unknown;
@@ -36,22 +37,7 @@ const GameEventSchema = new Schema(
     time: { type: String },
     type: {
       type: String,
-      enum: [
-        "touchdown",
-        "extra_point",
-        "field_goal",
-        "safety",
-        "interception",
-        "pick_six",
-        "penalty",
-        "unsportsmanlike",
-        "quarter_end",
-        "game_end",
-        "substitution",
-        "injury",
-        "first_down",
-        "sack",
-      ],
+      enum: [...GAME_EVENT_TYPES],
       required: true,
     },
     description: { type: String, trim: true },

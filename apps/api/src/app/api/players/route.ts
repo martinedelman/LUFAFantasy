@@ -120,6 +120,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as CreatePlayerRequestDto;
+    const modality = parseModality(request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
 
     // Validación básica
     if (!body.firstName || !body.lastName || !body.dateOfBirth || !body.team || !body.position) {
@@ -150,7 +152,7 @@ export async function POST(request: NextRequest) {
       experience: body.experience,
       emergencyContact: body.emergencyContact,
       status: body.status,
-    });
+    }, modality);
 
     invalidateCacheByPrefix(TEAM_RELATED_CACHE_PREFIXES);
 

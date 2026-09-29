@@ -5,6 +5,7 @@ import AdminProtection from "../../components/AdminProtection";
 import ImageUploader from "../../components/ImageUploader";
 import InlineFeedback from "../../components/InlineFeedback";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import PositionOptions from "../../components/PositionOptions";
 
 interface Team {
   _id: string;
@@ -433,15 +434,7 @@ export default function CreatePlayerPage() {
                       className={inputClassName("position")}
                       required
                     >
-                      <option value="QB">Quarterback (QB)</option>
-                      <option value="WR">Wide Receiver (WR)</option>
-                      <option value="RB">Running Back (RB)</option>
-                      <option value="C">Center (C)</option>
-                      <option value="RS">Rusher (RS)</option>
-                      <option value="LB">Linebacker (LB)</option>
-                      <option value="CB">Cornerback (CB)</option>
-                      <option value="FS">Free Safety (FS)</option>
-                      <option value="SS">Strong Safety (SS)</option>
+                      <PositionOptions />
                     </select>
                     {renderFieldError("position")}
                   </div>
@@ -457,15 +450,7 @@ export default function CreatePlayerPage() {
                       className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Sin posición secundaria</option>
-                      <option value="QB">Quarterback (QB)</option>
-                      <option value="WR">Wide Receiver (WR)</option>
-                      <option value="RB">Running Back (RB)</option>
-                      <option value="C">Center (C)</option>
-                      <option value="RS">Rusher (RS)</option>
-                      <option value="LB">Linebacker (LB)</option>
-                      <option value="CB">Cornerback (CB)</option>
-                      <option value="FS">Free Safety (FS)</option>
-                      <option value="SS">Strong Safety (SS)</option>
+                      <PositionOptions />
                     </select>
                   </div>
                   <div>

@@ -9,6 +9,8 @@ import Modal from "../../components/Modal";
 import Tag from "../../components/Tag";
 import Avatar from "../../components/Avatar";
 import { useAuth } from "../../hooks/useAuth";
+import PositionOptions from "../../components/PositionOptions";
+import { NON_DEFENSIVE_SCORING_EVENTS, type GameEventType } from "@lufa/contracts/game-events";
 
 interface Player {
   _id: string;
@@ -147,21 +149,6 @@ interface TeamStats {
   penaltyYards: number;
 }
 
-type GameEventType =
-  | "touchdown"
-  | "extra_point"
-  | "field_goal"
-  | "safety"
-  | "interception"
-  | "pick_six"
-  | "penalty"
-  | "unsportsmanlike"
-  | "quarter_end"
-  | "game_end"
-  | "substitution"
-  | "injury"
-  | "first_down"
-  | "sack";
 
 interface GameEvent {
   type: GameEventType;
@@ -317,9 +304,18 @@ const deriveTeamStatsFromGames = (team: Team, games: TeamGame[]): TeamStats => {
       if (eventTeamId === team._id) {
         stats.offensiveStats.totalYards += yards;
 
-        if (event.type === "touchdown") stats.offensiveStats.touchdowns += 1;
-        if (event.type === "extra_point" && event.points === 1) stats.offensiveStats.extraPointOne += 1;
-        if (event.type === "extra_point" && event.points === 2) stats.offensiveStats.extraPointTwo += 1;
+        if (["touchdown", "fumble_return_td", "kick_return_td", "punt_return_td"].includes(event.type)) {
+          stats.offensiveStats.touchdowns += 1;
+        }
+        if ((event.type === "extra_point" && event.points === 1) || event.type === "pat_kick") {
+          stats.offensiveStats.extraPointOne += 1;
+        }
+        if ((event.type === "extra_point" && event.points === 2) || event.type === "two_point_conversion") {
+          stats.offensiveStats.extraPointTwo += 1;
+        }
+        if (event.type === "fumble_recovery" || event.type === "fumble_return_td") {
+          stats.defensiveStats.fumbleRecoveries += 1;
+        }
         if (event.type === "field_goal") stats.offensiveStats.fieldGoals += 1;
         if (event.type === "first_down") stats.offensiveStats.firstDowns += 1;
         if (event.type === "interception") stats.defensiveStats.interceptions += 1;
@@ -333,7 +329,8 @@ const deriveTeamStatsFromGames = (team: Team, games: TeamGame[]): TeamStats => {
         stats.defensiveStats.touchdownsAllowed += 1;
       }
 
-      if (eventTeamId !== team._id && event.type === "pick_six") {
+      // Pick six, return TDs and defensive conversions don't count against the defense.
+      if (eventTeamId !== team._id && NON_DEFENSIVE_SCORING_EVENTS.includes(event.type)) {
         stats.pickSixPointsExcluded += Math.max(0, Number(event.points || 0));
       }
     });
@@ -1589,15 +1586,7 @@ export default function TeamViewerPage() {
                 disabled={isSubmittingRosterPlayer}
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
               >
-                <option value="QB">Quarterback (QB)</option>
-                <option value="WR">Wide Receiver (WR)</option>
-                <option value="RB">Running Back (RB)</option>
-                <option value="C">Center (C)</option>
-                <option value="RS">Rusher (RS)</option>
-                <option value="LB">Linebacker (LB)</option>
-                <option value="CB">Cornerback (CB)</option>
-                <option value="FS">Free Safety (FS)</option>
-                <option value="SS">Strong Safety (SS)</option>
+                <PositionOptions />
               </select>
             </div>
           </div>

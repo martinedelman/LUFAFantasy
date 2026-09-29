@@ -8,6 +8,9 @@ import RevealOnScroll from "../../components/RevealOnScroll";
 import Skeleton from "../../components/Skeleton";
 import Link from "next/link";
 import { useCachedState } from "../../hooks/useCachedState";
+import { useSiteConfig } from "../../site/SiteConfig";
+import type { RankingEventType } from "@lufa/contracts/game-events";
+import type { Modality } from "@lufa/contracts";
 
 const rankingsHero = {
   path: "/rankings",
@@ -63,7 +66,7 @@ type RankingMetric = {
   key: string;
   label: string;
   mode: "count" | "points";
-  eventType?: "touchdown" | "extra_point" | "safety" | "interception" | "pick_six" | "sack";
+  eventType?: RankingEventType;
   points?: number;
   includePickSix?: boolean;
 };
@@ -92,7 +95,7 @@ const STAGE_OPTIONS: Array<{ value: RankingsStage; label: string }> = [
   { value: "postseason", label: "Post temporada" },
 ];
 
-const METRICS: RankingMetric[] = [
+const FLAG_METRICS: RankingMetric[] = [
   { key: "globalPoints", label: "Top 10 Puntos Globales", mode: "points" },
   {
     key: "touchdown",
@@ -127,6 +130,19 @@ const METRICS: RankingMetric[] = [
   { key: "pickSix", label: "Top 10 PICK SIX", mode: "count", eventType: "pick_six", points: 6 },
   { key: "sacks", label: "Top 10 Sacks", mode: "count", eventType: "sack" },
 ];
+
+const TACKLE_METRICS: RankingMetric[] = [
+  { key: "globalPoints", label: "Top 10 Puntos Globales", mode: "points" },
+  // Counts every touchdown: offense, pick six and returns.
+  { key: "touchdown", label: "Top 10 Touchdowns", mode: "count", eventType: "touchdown", includePickSix: true },
+  { key: "fieldGoal", label: "Top 10 Field Goals", mode: "count", eventType: "field_goal" },
+  { key: "twoPoint", label: "Top 10 Conversiones de 2", mode: "count", eventType: "two_point_conversion" },
+  { key: "interception", label: "Top 10 Intercepciones", mode: "count", eventType: "interception", includePickSix: true },
+  { key: "fumbleRecovery", label: "Top 10 Fumbles recuperados", mode: "count", eventType: "fumble_recovery", includePickSix: true },
+  { key: "sacks", label: "Top 10 Sacks", mode: "count", eventType: "sack" },
+];
+
+const METRICS_BY_MODALITY: Record<Modality, RankingMetric[]> = { flag: FLAG_METRICS, tackle: TACKLE_METRICS };
 
 function RankingSectionSkeleton() {
   return (
@@ -246,6 +262,7 @@ function getTournamentId(tournament?: DivisionOption["tournament"]) {
 }
 
 export default function RankingsPage() {
+  const METRICS = METRICS_BY_MODALITY[useSiteConfig().modality];
   const [tournaments, setTournaments] = useState<TournamentOption[]>([]);
   const [divisions, setDivisions] = useState<DivisionOption[]>([]);
   const [filters, setFilters, , filtersHydrated] = useCachedState("filters:rankings:v3", INITIAL_RANKINGS_FILTERS);
@@ -303,7 +320,7 @@ export default function RankingsPage() {
     );
 
     setRankingsByMetric(Object.fromEntries(rankings));
-  }, []);
+  }, [METRICS]);
 
   const fetchTeamDefenseRankings = useCallback(async (rankingFilters: RankingsFilters) => {
     const params = new URLSearchParams({

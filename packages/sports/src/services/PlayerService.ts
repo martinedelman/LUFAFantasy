@@ -1,6 +1,7 @@
 import { EmergencyContact, Player, PlayerPosition, PlayerStatus } from "@lufa/sports/entities/Player";
-import type { IPlayerRepository, ITeamRepository } from "@lufa/sports/ports";
-import type { Modality } from "@lufa/sports/entities/Modality";
+import type { IPlayerRepository, ITeamRepository, PlayerModalityProfile } from "@lufa/sports/ports";
+import { DEFAULT_MODALITY, type Modality } from "@lufa/sports/entities/Modality";
+import { MODALITY_RULES } from "@lufa/contracts/game-events";
 
 /**
  * Servicio de gestión de jugadores
@@ -92,8 +93,18 @@ export class PlayerService {
     return value as PlayerPosition;
   }
 
+  private assertPositionForModality(modality: Modality, ...positions: Array<PlayerPosition | null | undefined>) {
+    const allowed: readonly string[] = MODALITY_RULES[modality].positions;
+    for (const position of positions) {
+      if (position && !allowed.includes(position)) {
+        throw new Error(`La posición ${position} no existe en ${modality}`);
+      }
+    }
+  }
+
   /**
-   * Crea un nuevo jugador
+   * Crea un nuevo jugador. `modality` es la del sitio desde el que se carga
+   * (por defecto flag): ahí queda guardado su número y posición.
    */
   async createPlayer(data: {
     firstName: string;
@@ -112,9 +123,10 @@ export class PlayerService {
     emergencyContact?: EmergencyContact;
     status?: PlayerStatus;
     registrationDate?: Date;
-  }): Promise<Player> {
+  }, modality: Modality = DEFAULT_MODALITY): Promise<Player> {
     const jerseyNumber = this.normalizeJerseyNumber(data.jerseyNumber);
     const secondaryPosition = this.normalizeSecondaryPosition(data.secondaryPosition);
+    this.assertPositionForModality(modality, data.position, secondaryPosition);
 
     // Verificar que el equipo existe
     const team = await this.teamRepo.findById(data.team);
@@ -124,7 +136,7 @@ export class PlayerService {
 
     // Verificar que el número de camiseta no esté en uso en el equipo
     if (jerseyNumber !== undefined && jerseyNumber !== null) {
-      const numberExists = await this.playerRepo.existsWithJerseyNumber(jerseyNumber, data.team);
+      const numberExists = await this.playerRepo.isJerseyTaken(jerseyNumber, { modality, teamId: data.team });
       if (numberExists) {
         throw new Error("El número de camiseta ya está en uso en este equipo");
       }
@@ -158,14 +170,23 @@ export class PlayerService {
       throw new Error(validation.errors.join(", "));
     }
 
-    return await this.playerRepo.create(player);
+    return await this.playerRepo.createWithProfile(player, {
+      modality,
+      jerseyNumber: jerseyNumber ?? null,
+      position: data.position,
+      secondaryPosition: secondaryPosition ?? null,
+    });
   }
 
   /**
-   * Obtiene un jugador por ID
+   * Obtiene un jugador por ID. Con modalidad, número y posiciones son los de esa modalidad.
    */
-  async getPlayerById(id: string): Promise<Player | null> {
-    return await this.playerRepo.findById(id);
+  async getPlayerById(id: string, modality?: Modality): Promise<Player | null> {
+    return await this.playerRepo.findById(id, modality);
+  }
+
+  async listModalityProfiles(id: string): Promise<PlayerModalityProfile[]> {
+    return await this.playerRepo.listModalityProfiles(id);
   }
 
   /**
@@ -262,15 +283,36 @@ export class PlayerService {
       registrationDate: Date;
       status: PlayerStatus;
     }>,
+    modality: Modality = DEFAULT_MODALITY,
   ): Promise<Player> {
     const player = await this.playerRepo.findById(id);
     if (!player) {
       throw new Error("Jugador no encontrado");
     }
 
+    // The base record mirrors the primary team's modality; other modalities only touch their profile.
+    const home = await this.playerRepo.getHomeModality(id);
+    const isHome = modality === home;
+    const current = isHome ? player : (await this.playerRepo.findById(id, modality)) || player;
+
     const requestedJerseyNumber = this.normalizeJerseyNumber(data.jerseyNumber);
     const secondaryPosition = this.normalizeSecondaryPosition(data.secondaryPosition);
-    const jerseyNumber = requestedJerseyNumber !== undefined ? requestedJerseyNumber : player.jerseyNumber;
+    const jerseyNumber = requestedJerseyNumber !== undefined ? requestedJerseyNumber : current.jerseyNumber;
+    const position = data.position || current.position;
+    const nextSecondaryPosition = data.secondaryPosition !== undefined ? secondaryPosition : current.secondaryPosition;
+    // Outside the home modality and without a profile, positions are inherited from the home one
+    // (e.g. a tackle player's DT read from flag): validate what will be stored. Otherwise only
+    // validate changes, so legacy positions don't block unrelated edits.
+    const inherited =
+      !isHome && !(await this.playerRepo.listModalityProfiles(id)).some((profile) => profile.modality === modality);
+    if (inherited) {
+      this.assertPositionForModality(modality, position, nextSecondaryPosition);
+    } else {
+      if (data.position && data.position !== current.position) this.assertPositionForModality(modality, data.position);
+      if (data.secondaryPosition !== undefined && secondaryPosition !== current.secondaryPosition) {
+        this.assertPositionForModality(modality, secondaryPosition);
+      }
+    }
     const currentTeamId = this.getReferenceId(player.team);
     const teamId = data.team || currentTeamId;
 
@@ -285,9 +327,13 @@ export class PlayerService {
     if (
       jerseyNumber !== undefined &&
       jerseyNumber !== null &&
-      (jerseyNumber !== player.jerseyNumber || teamId !== currentTeamId)
+      (jerseyNumber !== current.jerseyNumber || teamId !== currentTeamId)
     ) {
-      const numberExists = await this.playerRepo.existsWithJerseyNumber(jerseyNumber, teamId, player.id);
+      const numberExists = await this.playerRepo.isJerseyTaken(jerseyNumber, {
+        modality,
+        playerId: id,
+        ...(teamId !== currentTeamId ? { teamId } : {}),
+      });
       if (numberExists) {
         throw new Error("El número de camiseta ya está en uso en este equipo");
       }
@@ -298,9 +344,9 @@ export class PlayerService {
       data.lastName || player.lastName,
       data.dateOfBirth || player.dateOfBirth,
       teamId,
-      jerseyNumber,
-      data.position || player.position,
-      data.secondaryPosition !== undefined ? secondaryPosition : player.secondaryPosition,
+      isHome ? jerseyNumber : player.jerseyNumber,
+      isHome ? position : player.position,
+      isHome ? nextSecondaryPosition : player.secondaryPosition,
       data.registrationDate || player.registrationDate,
       data.status || player.status,
       data.email !== undefined ? data.email : player.email,
@@ -321,7 +367,12 @@ export class PlayerService {
       throw new Error(validation.errors.join(", "));
     }
 
-    return await this.playerRepo.update(id, updatedPlayer);
+    return await this.playerRepo.updateWithProfile(id, updatedPlayer, {
+      modality,
+      jerseyNumber: jerseyNumber ?? null,
+      position,
+      secondaryPosition: nextSecondaryPosition ?? null,
+    });
   }
 
   async getPlayerByEmail(email: string, modality?: Modality): Promise<Player | null> {

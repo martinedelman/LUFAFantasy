@@ -3,6 +3,7 @@ import type {
   AdminAnalyticsSubject,
   AdminPlayerAnalyticsRowDto,
   AdminTeamAnalyticsRowDto,
+  Modality,
 } from "@lufa/contracts";
 
 export interface AnalyticsGameRecord {
@@ -28,6 +29,8 @@ const top = <T extends { name: string }>(rows: T[], value: (row: T) => number) =
     .sort((left, right) => value(right) - value(left) || left.name.localeCompare(right.name, "es"))
     .slice(0, 5);
 
+const OFFENSIVE_AND_RETURN_TOUCHDOWNS = ["touchdown", "fumble_return_td", "kick_return_td", "punt_return_td"];
+
 function versatilityEventType(type: string, points: number) {
   if (type !== "extra_point") return type;
   if (points === 1) return "extra_point_1";
@@ -47,6 +50,7 @@ export function buildAdminAnalytics(
   subject: AdminAnalyticsSubject,
   games: AnalyticsGameRecord[],
   events: AnalyticsEventRecord[],
+  modality: Modality = "flag",
 ): AdminAnalyticsResponseDto {
   const teams = new Map<string, TeamRow>();
   const players = new Map<string, PlayerRow>();
@@ -84,8 +88,11 @@ export function buildAdminAnalytics(
       if (isUnsportsmanlike) team.unsportsmanlike += 1;
     }
     const points = Number(event.points || 0);
-    const isFirstHalfScore = event.quarter === 1 && points > 0;
-    const isSecondHalfScore = event.quarter === 2 && points > 0;
+    // Flag stores its two halves as quarters 1 and 2; tackle plays four quarters. Overtime is left out.
+    const firstHalf = modality === "tackle" ? event.quarter <= 2 : event.quarter === 1;
+    const secondHalf = modality === "tackle" ? event.quarter === 3 || event.quarter === 4 : event.quarter === 2;
+    const isFirstHalfScore = firstHalf && points > 0;
+    const isSecondHalfScore = secondHalf && points > 0;
     const team = getTeam(event.teamId);
     if (isFirstHalfScore) {
       team.firstHalfPoints += points;
@@ -99,7 +106,7 @@ export function buildAdminAnalytics(
     const player = players.get(event.player.id) || playerRow(event.player.id, event.player.name, event.player.teamName);
     players.set(player.id, player);
     player.points += points;
-    if (event.type === "touchdown") player.touchdowns += 1;
+    if (OFFENSIVE_AND_RETURN_TOUCHDOWNS.includes(event.type)) player.touchdowns += 1;
     if (isFirstHalfScore) {
       player.firstHalfPoints += points;
       player.firstHalfScores += 1;
@@ -108,7 +115,7 @@ export function buildAdminAnalytics(
       player.secondHalfPoints += points;
       player.secondHalfScores += 1;
     }
-    if (points > 0 || ["interception", "pick_six", "sack", "first_down"].includes(event.type)) {
+    if (points > 0 || ["interception", "pick_six", "sack", "first_down", "fumble_recovery"].includes(event.type)) {
       const types = playerEventTypes.get(player.id) || new Set<string>();
       types.add(versatilityEventType(event.type, points));
       playerEventTypes.set(player.id, types);

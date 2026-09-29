@@ -52,7 +52,7 @@ export class StatisticsService {
   ) {}
 
   async getPlayerStatistics(query: StatisticsQuery) {
-    if (query.player) return this.computePlayerStatistics(query.player, query.tournament, query.division);
+    if (query.player) return this.computePlayerStatistics(query.player, query.tournament, query.division, query.modality);
     const result = await this.auxiliaryRepo.listPlayerStatistics(
       {
         ...(query.tournament ? { tournament: query.tournament } : {}),
@@ -68,7 +68,7 @@ export class StatisticsService {
   }
 
   async getTeamStatistics(query: StatisticsQuery) {
-    if (query.team) return this.computeTeamStatistics(query.team, query.tournament, query.division);
+    if (query.team) return this.computeTeamStatistics(query.team, query.tournament, query.division, query.modality);
     const result = await this.auxiliaryRepo.listTeamStatistics(
       {
         ...(query.tournament ? { tournament: query.tournament } : {}),
@@ -87,10 +87,15 @@ export class StatisticsService {
     return this.auxiliaryRepo.upsertTeamStatistics(data);
   }
 
-  private async computePlayerStatistics(playerId: string, tournament?: string | null, division?: string | null) {
+  private async computePlayerStatistics(
+    playerId: string,
+    tournament?: string | null,
+    division?: string | null,
+    modality?: Modality,
+  ) {
     const playerExists = await this.playerRepo.exists(playerId).catch(() => false);
     if (!playerExists) throw new Error("player inválido");
-    const games = await this.filteredGames(tournament, division);
+    const games = await this.filteredGames(tournament, division, modality);
     const matchingGames = games.filter((game) => ["in_progress", "completed"].includes(game.status));
     const participated = new Set<string>();
     const liveStats = {
@@ -104,6 +109,9 @@ export class StatisticsService {
       penalties: 0,
       pickSixes: 0,
       unsportsmanlike: 0,
+      twoPointConversions: 0,
+      defensiveConversions: 0,
+      returns: { touchdowns: 0 },
       passing: { attempts: 0, completions: 0, yards: 0, touchdowns: 0, interceptions: 0 },
       rushing: { attempts: 0, yards: 0, touchdowns: 0, fumbles: 0 },
       receiving: { receptions: 0, yards: 0, touchdowns: 0, fumbles: 0 },
@@ -134,7 +142,19 @@ export class StatisticsService {
           if (event.details?.playType === "run") liveStats.rushing.touchdowns += 1;
           else liveStats.receiving.touchdowns += 1;
         }
-        if (event.type === "extra_point") liveStats.extraPoints += 1;
+        if (event.type === "extra_point" || event.type === "pat_kick") liveStats.extraPoints += 1;
+        if (event.type === "two_point_conversion") liveStats.twoPointConversions += 1;
+        if (event.type === "defensive_conversion") liveStats.defensiveConversions += 1;
+        if (event.type === "fumble") liveStats.rushing.fumbles += 1;
+        if (event.type === "fumble_recovery") liveStats.defensive.fumbleRecoveries += 1;
+        if (event.type === "fumble_return_td") {
+          liveStats.touchdowns += 1;
+          liveStats.defensive.fumbleRecoveries += 1;
+        }
+        if (event.type === "kick_return_td" || event.type === "punt_return_td") {
+          liveStats.touchdowns += 1;
+          liveStats.returns.touchdowns += 1;
+        }
         if (event.type === "field_goal") liveStats.fieldGoals += 1;
         if (event.type === "safety") {
           liveStats.safeties += 1;
@@ -153,10 +173,15 @@ export class StatisticsService {
     return this.page([liveStats], 1, 1, 1);
   }
 
-  private async computeTeamStatistics(teamId: string, tournament?: string | null, division?: string | null) {
+  private async computeTeamStatistics(
+    teamId: string,
+    tournament?: string | null,
+    division?: string | null,
+    modality?: Modality,
+  ) {
     const team = await this.teamRepo.findById(teamId).catch(() => null);
     if (!team) throw new Error("team inválido");
-    const games = (await this.gameRepo.findByTeam(teamId)).filter(
+    const games = (await this.gameRepo.findByTeam(teamId, modality)).filter(
       (game) =>
         ["in_progress", "completed"].includes(game.status) &&
         (!tournament || ref(game.tournament) === tournament) &&
@@ -206,6 +231,8 @@ export class StatisticsService {
     };
 
     for (const game of games) {
+      let gameFumbles = 0;
+      let gameRecoveriesAgainst = 0;
       const isHome = ref(game.homeTeam) === teamId;
       const teamScore = isHome ? game.score.home.total : game.score.away.total;
       const opponentScore = isHome ? game.score.away.total : game.score.home.total;
@@ -218,9 +245,19 @@ export class StatisticsService {
         const yards = Number(event.yards || 0);
         if (ref(event.team) === teamId) {
           stats.offensiveStats.totalYards += yards;
-          if (event.type === "touchdown") stats.offensiveStats.touchdowns += 1;
-          if (event.type === "extra_point" && event.points === 1) stats.offensiveStats.extraPointOne += 1;
-          if (event.type === "extra_point" && event.points === 2) stats.offensiveStats.extraPointTwo += 1;
+          if (["touchdown", "fumble_return_td", "kick_return_td", "punt_return_td"].includes(event.type)) {
+            stats.offensiveStats.touchdowns += 1;
+          }
+          if ((event.type === "extra_point" && event.points === 1) || event.type === "pat_kick") {
+            stats.offensiveStats.extraPointOne += 1;
+          }
+          if ((event.type === "extra_point" && event.points === 2) || event.type === "two_point_conversion") {
+            stats.offensiveStats.extraPointTwo += 1;
+          }
+          if (event.type === "fumble_recovery" || event.type === "fumble_return_td") {
+            stats.defensiveStats.fumbleRecoveries += 1;
+          }
+          if (event.type === "fumble") gameFumbles += 1;
           if (event.type === "field_goal") stats.offensiveStats.fieldGoals += 1;
           if (event.type === "first_down") stats.offensiveStats.firstDowns += 1;
           if (event.type === "interception") stats.defensiveStats.interceptions += 1;
@@ -230,9 +267,19 @@ export class StatisticsService {
           }
           if (event.type === "sack") stats.defensiveStats.sacks += 1;
           if (event.type === "safety") stats.defensiveStats.safeties += 1;
-        } else if (event.type === "touchdown") stats.defensiveStats.touchdownsAllowed += 1;
+        } else {
+          if (event.type === "touchdown") stats.defensiveStats.touchdownsAllowed += 1;
+          // Takeaways by the opponent are this team's turnovers.
+          if (["interception", "pick_six"].includes(event.type)) stats.turnovers += 1;
+          if (event.type === "fumble_recovery" || event.type === "fumble_return_td") gameRecoveriesAgainst += 1;
+        }
       }
+      // The same lost fumble can be logged by the offense ("fumble") and/or the defense (recovery):
+      // within one game, count the larger of the two so it isn't counted twice.
+      stats.turnovers += Math.max(gameFumbles, gameRecoveriesAgainst);
     }
+    stats.turnoverDifferential =
+      stats.defensiveStats.interceptions + stats.defensiveStats.fumbleRecoveries - stats.turnovers;
     const defensePoints = calculateTeamDefensePoints(games, teamId);
     stats.pointsAgainst = defensePoints.pointsAgainst;
     stats.pickSixPointsExcluded = defensePoints.pickSixPointsExcluded;
@@ -248,10 +295,10 @@ export class StatisticsService {
     return this.page([stats], 1, 1, 1);
   }
 
-  private async filteredGames(tournament?: string | null, division?: string | null) {
+  private async filteredGames(tournament?: string | null, division?: string | null, modality?: Modality) {
     if (tournament) return this.gameRepo.findByTournament(tournament);
     if (division) return this.gameRepo.findByDivision(division);
-    return this.gameRepo.findAll();
+    return this.gameRepo.findAll(modality ? { modality } : {});
   }
 
   private page(rows: unknown[], total: number, page: number, limit: number) {

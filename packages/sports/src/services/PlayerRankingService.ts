@@ -1,7 +1,8 @@
 import type { Modality } from "@lufa/sports/entities/Modality";
 import type { IDivisionRepository, ITournamentRepository } from "@lufa/sports/ports";
 
-export type RankingEventType = "touchdown" | "extra_point" | "safety" | "interception" | "pick_six" | "sack";
+export type { RankingEventType } from "@lufa/contracts/game-events";
+import type { RankingEventType } from "@lufa/contracts/game-events";
 export type RankingStage = "all" | "regular" | "playoff" | "final" | "postseason";
 
 export interface PlayerRankingQuery {

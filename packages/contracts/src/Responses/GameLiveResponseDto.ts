@@ -1,6 +1,6 @@
 import type { GameStatus } from "../types";
 import type { GameScore } from "../types";
-import type { GameEventType } from "../types";
+import type { GameEventType, Modality } from "../types";
 import type { PlayerSummaryResponseDto } from "./PlayerSummaryResponseDto";
 import type { TeamSummaryResponseDto } from "./TeamSummaryResponseDto";
 
@@ -25,6 +25,7 @@ export interface GameLiveResponseDto {
   tournament: {
     _id: string;
     name: string;
+    modality?: Modality;
   };
   division: {
     _id: string;

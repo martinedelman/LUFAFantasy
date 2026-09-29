@@ -1,4 +1,5 @@
 import type { Game } from "@lufa/sports/entities/Game";
+import { NON_DEFENSIVE_SCORING_EVENTS } from "@lufa/contracts/game-events";
 
 type GameWithEvents = Game & {
   events?: Array<{ type?: unknown; team?: unknown; points?: unknown }>;
@@ -42,7 +43,9 @@ export function calculateTeamDefensePoints(games: Game[], teamId: string): TeamD
     totals.pointsAgainst += opponentScore;
 
     for (const event of (game as GameWithEvents).events || []) {
-      if (event.type !== "pick_six" || referenceId(event.team) !== opponentId) continue;
+      // Pick six, return TDs and defensive conversions are not the defense's fault.
+      const nonDefensive = (NON_DEFENSIVE_SCORING_EVENTS as readonly unknown[]).includes(event.type);
+      if (!nonDefensive || referenceId(event.team) !== opponentId) continue;
       totals.pickSixPointsExcluded += Math.max(0, Number(event.points) || 0);
     }
   }

@@ -13,9 +13,13 @@ import {
   PrismaDivisionRepository,
   PrismaGameRepository,
   PrismaPlayerRepository,
+  PrismaStandingRepository,
   PrismaTeamRepository,
   PrismaTournamentRepository,
 } from ".";
+import { GameService } from "@lufa/sports/services/GameService";
+import { PlayerService } from "@lufa/sports/services/PlayerService";
+import { StandingService } from "@lufa/sports/services/StandingService";
 import { PrismaAuxiliaryRepository } from "@lufa/database/repositories/auxiliary/PrismaAuxiliaryRepository";
 import { PrismaReportingRepository } from "@lufa/database/repositories/reporting/PrismaReportingRepository";
 
@@ -26,6 +30,12 @@ const players = new PrismaPlayerRepository();
 const games = new PrismaGameRepository();
 const auxiliary = new PrismaAuxiliaryRepository();
 const reporting = new PrismaReportingRepository();
+const gameService = new GameService(
+  games,
+  teams,
+  new StandingService(new PrismaStandingRepository(), games, tournaments, teams),
+);
+const playerService = new PlayerService(players, teams);
 
 const id = (modality: Modality, entity: string) => `modality-${modality}-${entity}`;
 
@@ -207,6 +217,101 @@ describe("modality separation (PostgreSQL)", () => {
     const roster = (await players.findAll({ team: id("tackle", "team"), modality: "tackle" })).map((player) => player.id).sort();
     expect(roster).toEqual([id("flag", "player"), id("tackle", "player")]);
     await db.teamPlayer.deleteMany({ where: { teamId: id("tackle", "team"), playerId: id("flag", "player") } });
+  });
+
+  it("scores tackle events with the server's points across four quarters", async () => {
+    const played = id("tackle", "played");
+    const team = id("tackle", "team");
+    const player = id("tackle", "player");
+    // A real opponent: standings are recalculated for both sides in parallel.
+    await teams.create(
+      new Team("Rival tackle", new Colors("#000000", "#ffffff"), id("tackle", "division"), new ContactInfo({}), new Date("2026-01-02"),
+        "active", [], "RIV", undefined, undefined, id("tackle", "tournament"), id("tackle", "rival")),
+    );
+    await getPrismaClient().game.update({ where: { id: played }, data: { awayTeamId: id("tackle", "rival") } });
+    const add = (quarter: number, type: Parameters<GameService["addGameEvent"]>[1]["type"], points?: number) =>
+      gameService.addGameEvent(played, { quarter, type, team, player, points });
+
+    await add(2, "pat_kick");
+    await add(3, "field_goal", 7); // the client value is ignored: a field goal is 3
+    await add(4, "two_point_conversion");
+    const game = await add(4, "fumble_return_td");
+    await expect(add(1, "extra_point", 1)).rejects.toThrow("Evento no válido para tackle");
+
+    // Seeded touchdown (6, 1st quarter) + PAT 1 + FG 3 + 2-pt 2 + fumble-return TD 6.
+    expect(game.score.home).toMatchObject({ q1: 6, q2: 1, q3: 3, q4: 8 });
+    expect(game.score.home.total).toBe(18);
+
+    const touchdowns = await reporting.getPlayerRankings({
+      mode: "count", eventType: "touchdown", includePickSix: true, stage: "all", limit: 10, modality: "tackle",
+    });
+    expect(touchdowns.map((row) => [row.player._id, row.value])).toEqual([[player, 2]]);
+    const flagTouchdowns = await reporting.getPlayerRankings({
+      mode: "count", eventType: "touchdown", includePickSix: true, stage: "all", limit: 10, modality: "flag",
+    });
+    expect(flagTouchdowns.map((row) => row.player._id)).toEqual([id("flag", "player")]);
+  });
+
+  it("keeps a jersey number and positions per modality", async () => {
+    const shared = id("flag", "player");
+    const db = getPrismaClient();
+    // The flag player joins the tackle team.
+    await db.teamPlayer.create({ data: { teamId: id("tackle", "team"), playerId: shared } });
+
+    await playerService.updatePlayer(shared, { jerseyNumber: 11, position: "C" }, "flag");
+    const tackle = await playerService.updatePlayer(shared, { jerseyNumber: 40, position: "LB" }, "tackle");
+    expect([tackle.jerseyNumber, tackle.position]).toEqual([40, "LB"]);
+
+    const flag = await playerService.getPlayerById(shared, "flag");
+    expect([flag?.jerseyNumber, flag?.position]).toEqual([11, "C"]);
+    // Base columns mirror the primary (flag) team, so Mongo-era readers and fantasy keep seeing flag.
+    const base = await db.player.findUniqueOrThrow({ where: { id: shared } });
+    expect([base.jerseyNumber, base.position]).toEqual([11, "C"]);
+
+    const roster = await players.findAll({ team: id("tackle", "team"), modality: "tackle" });
+    expect(roster.find((row) => row.id === shared)?.jerseyNumber).toBe(40);
+
+    // #40 is taken in tackle, not in flag; positions are validated against the modality.
+    await expect(
+      playerService.updatePlayer(id("tackle", "player"), { jerseyNumber: 40 }, "tackle"),
+    ).rejects.toThrow("ya está en uso");
+    await expect(playerService.updatePlayer(shared, { position: "RS" }, "tackle")).resolves.toBeDefined();
+    await expect(playerService.updatePlayer(shared, { position: "DT" }, "flag")).rejects.toThrow("no existe en flag");
+
+    expect((await playerService.listModalityProfiles(shared)).map((profile) => [profile.modality, profile.jerseyNumber])).toEqual([
+      ["flag", 11],
+      ["tackle", 40],
+    ]);
+
+    // Position filters use the modality's profile (RS in tackle, C in flag).
+    const idsWith = async (position: string, modality: Modality) =>
+      (await players.findAll({ team: id("tackle", "team"), position, modality })).map((row) => row.id);
+    expect(await idsWith("RS", "tackle")).toContain(shared);
+    expect(await idsWith("C", "tackle")).not.toContain(shared);
+
+    // Moving the primary team to tackle: base columns now mirror the tackle profile; flag's is kept.
+    await playerService.updatePlayer(shared, { team: id("tackle", "team") }, "tackle");
+    expect(await db.player.findUniqueOrThrow({ where: { id: shared } })).toMatchObject({ jerseyNumber: 40, position: "RS" });
+    expect((await playerService.getPlayerById(shared, "flag"))?.jerseyNumber).toBe(11);
+    await playerService.updatePlayer(shared, { team: id("flag", "team") }, "flag");
+    expect(await db.player.findUniqueOrThrow({ where: { id: shared } })).toMatchObject({ jerseyNumber: 11, position: "C" });
+    await db.teamPlayer.deleteMany({ where: { teamId: id("tackle", "team"), playerId: shared } });
+  });
+
+  it("does not copy a tackle-only position into a new flag profile", async () => {
+    const tacklePlayer = id("tackle", "player");
+    const db = getPrismaClient();
+    await playerService.updatePlayer(tacklePlayer, { position: "DT" }, "tackle");
+    // The tackle player joins the flag team without a flag profile yet: flag reads fall back to DT.
+    await db.teamPlayer.create({ data: { teamId: id("flag", "team"), playerId: tacklePlayer } });
+
+    await expect(playerService.updatePlayer(tacklePlayer, { jerseyNumber: 90 }, "flag")).rejects.toThrow("no existe en flag");
+    expect(await db.playerModalityProfile.count({ where: { playerId: tacklePlayer, modality: "flag" } })).toBe(0);
+
+    const flag = await playerService.updatePlayer(tacklePlayer, { jerseyNumber: 90, position: "RS" }, "flag");
+    expect([flag.jerseyNumber, flag.position]).toEqual([90, "RS"]);
+    expect((await playerService.getPlayerById(tacklePlayer, "tackle"))?.position).toBe("DT");
+    await db.teamPlayer.deleteMany({ where: { teamId: id("flag", "team"), playerId: tacklePlayer } });
   });
 
   it("stores site settings and sign-ups per modality", async () => {
