@@ -21,6 +21,16 @@ describe("api config", () => {
     expect(apiEndpoint()).toBe(`https://api.lufa.test${API_PREFIX}`);
   });
 
+  it("adds HTTPS when deployment config provides a host without a protocol", () => {
+    vi.stubEnv("API_URL", "testing-lufa-api.vercel.app");
+    expect(apiEndpoint(":path*")).toBe("https://testing-lufa-api.vercel.app/api/:path*");
+  });
+
+  it("keeps local host configuration on HTTP", () => {
+    vi.stubEnv("API_URL", "localhost:3001");
+    expect(apiEndpoint()).toBe("http://localhost:3001/api");
+  });
+
   it("targets API_URL on the server and the same-origin rewrite in the browser", () => {
     vi.stubEnv("API_URL", "https://api.lufa.test");
     expect(resolveApiBaseUrl()).toBe("https://api.lufa.test/api");
