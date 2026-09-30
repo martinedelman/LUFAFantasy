@@ -29,4 +29,6 @@ export interface PlayerResponseDto {
   updatedAt?: string;
   /** Number and positions per modality; only on single-player reads. */
   profiles?: PlayerModalityProfileDto[];
+  /** Modality of the primary team; only on single-player reads. */
+  homeModality?: Modality;
 }

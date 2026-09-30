@@ -75,7 +75,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({
       success: true,
-      data: { ...toPlayerResponseDto(player), profiles: await playerService.listModalityProfiles(id) },
+      data: {
+        ...toPlayerResponseDto(player),
+        profiles: await playerService.listModalityProfiles(id),
+        homeModality: await playerService.getHomeModality(id),
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al obtener jugador";

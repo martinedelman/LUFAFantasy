@@ -82,12 +82,33 @@ export class PrismaReportingRepository implements IReportingRepository {
   }
 
   async getActivePlayerCounts(teamIds: string[]): Promise<Record<string, number>> {
-    const rows = await this.db.player.groupBy({
-      by: ["teamId"],
-      where: { teamId: { in: teamIds }, status: "active" },
-      _count: { _all: true },
+    if (!teamIds.length) return {};
+    const rows = await this.db.player.findMany({
+      where: {
+        status: "active",
+        OR: [
+          { teamId: { in: teamIds } },
+          { teamMemberships: { some: { teamId: { in: teamIds } } } },
+        ],
+      },
+      select: {
+        teamId: true,
+        teamMemberships: {
+          where: { teamId: { in: teamIds } },
+          select: { teamId: true },
+        },
+      },
     });
-    return Object.fromEntries(rows.map((row) => [row.teamId, row._count._all]));
+    const selected = new Set(teamIds);
+    const counts: Record<string, number> = {};
+    for (const row of rows) {
+      const memberships = new Set([
+        ...(selected.has(row.teamId) ? [row.teamId] : []),
+        ...row.teamMemberships.map((membership) => membership.teamId),
+      ]);
+      for (const teamId of memberships) counts[teamId] = (counts[teamId] ?? 0) + 1;
+    }
+    return counts;
   }
 
   async getAdminAnalytics(query: AdminAnalyticsQuery) {
