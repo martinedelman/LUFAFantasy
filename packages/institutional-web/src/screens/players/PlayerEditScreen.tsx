@@ -13,6 +13,7 @@ interface Team {
   _id: string;
   name: string;
   shortName: string;
+  players?: string[];
   division: {
     _id: string;
     name: string;
@@ -56,6 +57,7 @@ export default function EditPlayerPage() {
   const { modality } = useSiteConfig();
   // Number and positions this player uses in the other modality, shown for reference only.
   const [otherProfiles, setOtherProfiles] = useState<PlayerModalityProfileDto[]>([]);
+  const [isSecondaryMembership, setIsSecondaryMembership] = useState(false);
   const isAdmin = user?.role === "admin";
   const canEdit = !!user && (isAdmin || user.email.trim().toLowerCase() === playerEmail.trim().toLowerCase());
 
@@ -65,9 +67,8 @@ export default function EditPlayerPage() {
         // Fetch teams
         const teamsRes = await fetch("/api/teams?limit=100");
         const teamsData = await teamsRes.json();
-        if (teamsData.success) {
-          setTeams(teamsData.data);
-        }
+        const availableTeams: Team[] = teamsData.success ? teamsData.data : [];
+        setTeams(availableTeams);
 
         // Fetch player data
         if (playerId) {
@@ -75,6 +76,13 @@ export default function EditPlayerPage() {
           const playerData = await playerRes.json();
           if (playerData.success) {
             const player = playerData.data;
+            const modalityTeam = availableTeams.find((team) => team.players?.includes(playerId));
+            const currentTeamId = player.team?._id || "";
+            setIsSecondaryMembership(
+              player.homeModality
+                ? player.homeModality !== modality
+                : Boolean(modalityTeam && modalityTeam._id !== currentTeamId),
+            );
             setPlayerEmail(player.email || "");
             setOtherProfiles(
               ((player.profiles || []) as PlayerModalityProfileDto[]).filter((profile) => profile.modality !== modality),
@@ -86,12 +94,12 @@ export default function EditPlayerPage() {
               email: player.email || "",
               phone: player.phone || "",
               dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth).toISOString().split("T")[0] : "",
-              team: player.team?._id || "",
+              team: modalityTeam?._id || currentTeamId,
               jerseyNumber: player.jerseyNumber?.toString() || "",
               position: player.position || "QB",
               secondaryPosition: player.secondaryPosition || "",
-              height: player.height?.toString() || "",
-              weight: player.weight?.toString() || "",
+              height: player.height > 0 ? player.height.toString() : "",
+              weight: player.weight > 0 ? player.weight.toString() : "",
               experience: player.experience || "",
               emergencyContact: {
                 name: player.emergencyContact?.name || "",
@@ -226,13 +234,17 @@ export default function EditPlayerPage() {
     setLoading(true);
     setError("");
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         ...form,
+        height: form.height ? Number(form.height) : undefined,
+        weight: form.weight ? Number(form.weight) : undefined,
         ...(isAdmin ? { status: form.status } : {}),
       };
+      if (!isAdmin || isSecondaryMembership) {
+        delete payload.team;
+      }
       if (!isAdmin) {
-        delete (payload as Partial<typeof form>).status;
-        delete (payload as Partial<typeof form>).team;
+        delete payload.status;
       }
 
       const res = await fetch(`/api/players/${playerId}`, {
@@ -576,7 +588,7 @@ export default function EditPlayerPage() {
                 aria-invalid={Boolean(fieldErrors.team)}
                 aria-describedby={fieldErrors.team ? "team-error" : undefined}
                 className={inputClassName("team")}
-                disabled={!isAdmin}
+                disabled={!isAdmin || isSecondaryMembership}
                 required
               >
                 <option value="">Selecciona un equipo</option>

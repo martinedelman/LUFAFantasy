@@ -261,15 +261,18 @@ describe("modality separation (PostgreSQL)", () => {
     await playerService.updatePlayer(shared, { jerseyNumber: 11, position: "C" }, "flag");
     const tackle = await playerService.updatePlayer(shared, { jerseyNumber: 40, position: "LB" }, "tackle");
     expect([tackle.jerseyNumber, tackle.position]).toEqual([40, "LB"]);
+    expect(tackle.team).toMatchObject({ _id: id("tackle", "team") });
 
     const flag = await playerService.getPlayerById(shared, "flag");
     expect([flag?.jerseyNumber, flag?.position]).toEqual([11, "C"]);
+    expect(flag?.team).toMatchObject({ _id: id("flag", "team") });
     // Base columns mirror the primary (flag) team, so Mongo-era readers and fantasy keep seeing flag.
     const base = await db.player.findUniqueOrThrow({ where: { id: shared } });
     expect([base.jerseyNumber, base.position]).toEqual([11, "C"]);
 
     const roster = await players.findAll({ team: id("tackle", "team"), modality: "tackle" });
     expect(roster.find((row) => row.id === shared)?.jerseyNumber).toBe(40);
+    expect(roster.find((row) => row.id === shared)?.team).toMatchObject({ _id: id("tackle", "team") });
 
     // #40 is taken in tackle, not in flag; positions are validated against the modality.
     await expect(
