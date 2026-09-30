@@ -28,6 +28,6 @@ export function PurchaseHistory() {
   return <div className={styles.historyList}>{orders.map((order) => <article className={styles.historyOrder} key={order.id}>
     <div className={styles.historyOrderHead}><div><small>{new Intl.DateTimeFormat("es-UY", { dateStyle: "medium" }).format(new Date(order.createdAt))} · Orden {order.id.slice(-8).toUpperCase()}</small><h2>{order.items.map((item) => item.title).join(", ")}</h2></div><span>{statusLabels[order.status] ?? order.status}</span></div>
     <p>{order.items.map((item) => `${item.quantity} × ${item.title}`).join(" · ")}</p>
-    <div className={styles.historyOrderFoot}><strong>{money(order.totalMinor)}</strong><Link href={`/tienda/resultado?order=${encodeURIComponent(order.id)}`}>Ver detalle</Link></div>
+          <div className={styles.historyOrderFoot}><span><strong>{money(order.totalMinor)}</strong><small>{order.paymentInstallments && order.paymentInstallments > 1 ? `${order.paymentInstallments} cuotas` : order.paymentMode === "installments" ? "Pago en cuotas" : "Pago al contado"}</small></span><Link href={`/tienda/resultado?order=${encodeURIComponent(order.id)}`}>Ver detalle</Link></div>
   </article>)}</div>;
 }

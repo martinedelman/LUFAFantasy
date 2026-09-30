@@ -30,6 +30,9 @@ export type CommerceOrderAvgAggregateOutputType = {
   subtotalMinor: number | null
   discountMinor: number | null
   totalMinor: number | null
+  maxInstallments: number | null
+  paymentInstallments: number | null
+  paymentInstallmentAmountMinor: number | null
   refundedMinor: number | null
 }
 
@@ -37,6 +40,9 @@ export type CommerceOrderSumAggregateOutputType = {
   subtotalMinor: number | null
   discountMinor: number | null
   totalMinor: number | null
+  maxInstallments: number | null
+  paymentInstallments: number | null
+  paymentInstallmentAmountMinor: number | null
   refundedMinor: number | null
 }
 
@@ -46,10 +52,17 @@ export type CommerceOrderMinAggregateOutputType = {
   sellerId: string | null
   status: string | null
   fulfillmentStatus: string | null
+  pickupInstructions: string | null
   currency: string | null
   subtotalMinor: number | null
   discountMinor: number | null
   totalMinor: number | null
+  paymentMode: string | null
+  maxInstallments: number | null
+  paymentMethodId: string | null
+  paymentMethodType: string | null
+  paymentInstallments: number | null
+  paymentInstallmentAmountMinor: number | null
   idempotencyKey: string | null
   payloadFingerprint: string | null
   providerOrderId: string | null
@@ -71,10 +84,17 @@ export type CommerceOrderMaxAggregateOutputType = {
   sellerId: string | null
   status: string | null
   fulfillmentStatus: string | null
+  pickupInstructions: string | null
   currency: string | null
   subtotalMinor: number | null
   discountMinor: number | null
   totalMinor: number | null
+  paymentMode: string | null
+  maxInstallments: number | null
+  paymentMethodId: string | null
+  paymentMethodType: string | null
+  paymentInstallments: number | null
+  paymentInstallmentAmountMinor: number | null
   idempotencyKey: string | null
   payloadFingerprint: string | null
   providerOrderId: string | null
@@ -96,10 +116,17 @@ export type CommerceOrderCountAggregateOutputType = {
   sellerId: number
   status: number
   fulfillmentStatus: number
+  pickupInstructions: number
   currency: number
   subtotalMinor: number
   discountMinor: number
   totalMinor: number
+  paymentMode: number
+  maxInstallments: number
+  paymentMethodId: number
+  paymentMethodType: number
+  paymentInstallments: number
+  paymentInstallmentAmountMinor: number
   idempotencyKey: number
   payloadFingerprint: number
   providerOrderId: number
@@ -121,6 +148,9 @@ export type CommerceOrderAvgAggregateInputType = {
   subtotalMinor?: true
   discountMinor?: true
   totalMinor?: true
+  maxInstallments?: true
+  paymentInstallments?: true
+  paymentInstallmentAmountMinor?: true
   refundedMinor?: true
 }
 
@@ -128,6 +158,9 @@ export type CommerceOrderSumAggregateInputType = {
   subtotalMinor?: true
   discountMinor?: true
   totalMinor?: true
+  maxInstallments?: true
+  paymentInstallments?: true
+  paymentInstallmentAmountMinor?: true
   refundedMinor?: true
 }
 
@@ -137,10 +170,17 @@ export type CommerceOrderMinAggregateInputType = {
   sellerId?: true
   status?: true
   fulfillmentStatus?: true
+  pickupInstructions?: true
   currency?: true
   subtotalMinor?: true
   discountMinor?: true
   totalMinor?: true
+  paymentMode?: true
+  maxInstallments?: true
+  paymentMethodId?: true
+  paymentMethodType?: true
+  paymentInstallments?: true
+  paymentInstallmentAmountMinor?: true
   idempotencyKey?: true
   payloadFingerprint?: true
   providerOrderId?: true
@@ -162,10 +202,17 @@ export type CommerceOrderMaxAggregateInputType = {
   sellerId?: true
   status?: true
   fulfillmentStatus?: true
+  pickupInstructions?: true
   currency?: true
   subtotalMinor?: true
   discountMinor?: true
   totalMinor?: true
+  paymentMode?: true
+  maxInstallments?: true
+  paymentMethodId?: true
+  paymentMethodType?: true
+  paymentInstallments?: true
+  paymentInstallmentAmountMinor?: true
   idempotencyKey?: true
   payloadFingerprint?: true
   providerOrderId?: true
@@ -187,10 +234,17 @@ export type CommerceOrderCountAggregateInputType = {
   sellerId?: true
   status?: true
   fulfillmentStatus?: true
+  pickupInstructions?: true
   currency?: true
   subtotalMinor?: true
   discountMinor?: true
   totalMinor?: true
+  paymentMode?: true
+  maxInstallments?: true
+  paymentMethodId?: true
+  paymentMethodType?: true
+  paymentInstallments?: true
+  paymentInstallmentAmountMinor?: true
   idempotencyKey?: true
   payloadFingerprint?: true
   providerOrderId?: true
@@ -299,10 +353,17 @@ export type CommerceOrderGroupByOutputType = {
   sellerId: string
   status: string
   fulfillmentStatus: string
+  pickupInstructions: string | null
   currency: string
   subtotalMinor: number
   discountMinor: number
   totalMinor: number
+  paymentMode: string
+  maxInstallments: number
+  paymentMethodId: string | null
+  paymentMethodType: string | null
+  paymentInstallments: number | null
+  paymentInstallmentAmountMinor: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId: string | null
@@ -347,10 +408,17 @@ export type CommerceOrderWhereInput = {
   sellerId?: Prisma.StringFilter<"CommerceOrder"> | string
   status?: Prisma.StringFilter<"CommerceOrder"> | string
   fulfillmentStatus?: Prisma.StringFilter<"CommerceOrder"> | string
+  pickupInstructions?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
   currency?: Prisma.StringFilter<"CommerceOrder"> | string
   subtotalMinor?: Prisma.IntFilter<"CommerceOrder"> | number
   discountMinor?: Prisma.IntFilter<"CommerceOrder"> | number
   totalMinor?: Prisma.IntFilter<"CommerceOrder"> | number
+  paymentMode?: Prisma.StringFilter<"CommerceOrder"> | string
+  maxInstallments?: Prisma.IntFilter<"CommerceOrder"> | number
+  paymentMethodId?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
+  paymentMethodType?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
+  paymentInstallments?: Prisma.IntNullableFilter<"CommerceOrder"> | number | null
+  paymentInstallmentAmountMinor?: Prisma.IntNullableFilter<"CommerceOrder"> | number | null
   idempotencyKey?: Prisma.StringFilter<"CommerceOrder"> | string
   payloadFingerprint?: Prisma.StringFilter<"CommerceOrder"> | string
   providerOrderId?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
@@ -377,10 +445,17 @@ export type CommerceOrderOrderByWithRelationInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
   totalMinor?: Prisma.SortOrder
+  paymentMode?: Prisma.SortOrder
+  maxInstallments?: Prisma.SortOrder
+  paymentMethodId?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentMethodType?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentInstallments?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentInstallmentAmountMinor?: Prisma.SortOrderInput | Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
   payloadFingerprint?: Prisma.SortOrder
   providerOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -412,10 +487,17 @@ export type CommerceOrderWhereUniqueInput = Prisma.AtLeast<{
   sellerId?: Prisma.StringFilter<"CommerceOrder"> | string
   status?: Prisma.StringFilter<"CommerceOrder"> | string
   fulfillmentStatus?: Prisma.StringFilter<"CommerceOrder"> | string
+  pickupInstructions?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
   currency?: Prisma.StringFilter<"CommerceOrder"> | string
   subtotalMinor?: Prisma.IntFilter<"CommerceOrder"> | number
   discountMinor?: Prisma.IntFilter<"CommerceOrder"> | number
   totalMinor?: Prisma.IntFilter<"CommerceOrder"> | number
+  paymentMode?: Prisma.StringFilter<"CommerceOrder"> | string
+  maxInstallments?: Prisma.IntFilter<"CommerceOrder"> | number
+  paymentMethodId?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
+  paymentMethodType?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
+  paymentInstallments?: Prisma.IntNullableFilter<"CommerceOrder"> | number | null
+  paymentInstallmentAmountMinor?: Prisma.IntNullableFilter<"CommerceOrder"> | number | null
   payloadFingerprint?: Prisma.StringFilter<"CommerceOrder"> | string
   providerStatus?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
   checkoutUrl?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
@@ -440,10 +522,17 @@ export type CommerceOrderOrderByWithAggregationInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
   totalMinor?: Prisma.SortOrder
+  paymentMode?: Prisma.SortOrder
+  maxInstallments?: Prisma.SortOrder
+  paymentMethodId?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentMethodType?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentInstallments?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentInstallmentAmountMinor?: Prisma.SortOrderInput | Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
   payloadFingerprint?: Prisma.SortOrder
   providerOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -473,10 +562,17 @@ export type CommerceOrderScalarWhereWithAggregatesInput = {
   sellerId?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
   status?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
   fulfillmentStatus?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
+  pickupInstructions?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrder"> | string | null
   currency?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
   subtotalMinor?: Prisma.IntWithAggregatesFilter<"CommerceOrder"> | number
   discountMinor?: Prisma.IntWithAggregatesFilter<"CommerceOrder"> | number
   totalMinor?: Prisma.IntWithAggregatesFilter<"CommerceOrder"> | number
+  paymentMode?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
+  maxInstallments?: Prisma.IntWithAggregatesFilter<"CommerceOrder"> | number
+  paymentMethodId?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrder"> | string | null
+  paymentMethodType?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrder"> | string | null
+  paymentInstallments?: Prisma.IntNullableWithAggregatesFilter<"CommerceOrder"> | number | null
+  paymentInstallmentAmountMinor?: Prisma.IntNullableWithAggregatesFilter<"CommerceOrder"> | number | null
   idempotencyKey?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
   payloadFingerprint?: Prisma.StringWithAggregatesFilter<"CommerceOrder"> | string
   providerOrderId?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrder"> | string | null
@@ -496,10 +592,17 @@ export type CommerceOrderCreateInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -526,10 +629,17 @@ export type CommerceOrderUncheckedCreateInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -552,10 +662,17 @@ export type CommerceOrderUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -582,10 +699,17 @@ export type CommerceOrderUncheckedUpdateInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -610,10 +734,17 @@ export type CommerceOrderCreateManyInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -633,10 +764,17 @@ export type CommerceOrderUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -658,10 +796,17 @@ export type CommerceOrderUncheckedUpdateManyInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -693,10 +838,17 @@ export type CommerceOrderCountOrderByAggregateInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
   totalMinor?: Prisma.SortOrder
+  paymentMode?: Prisma.SortOrder
+  maxInstallments?: Prisma.SortOrder
+  paymentMethodId?: Prisma.SortOrder
+  paymentMethodType?: Prisma.SortOrder
+  paymentInstallments?: Prisma.SortOrder
+  paymentInstallmentAmountMinor?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
   payloadFingerprint?: Prisma.SortOrder
   providerOrderId?: Prisma.SortOrder
@@ -716,6 +868,9 @@ export type CommerceOrderAvgOrderByAggregateInput = {
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
   totalMinor?: Prisma.SortOrder
+  maxInstallments?: Prisma.SortOrder
+  paymentInstallments?: Prisma.SortOrder
+  paymentInstallmentAmountMinor?: Prisma.SortOrder
   refundedMinor?: Prisma.SortOrder
 }
 
@@ -725,10 +880,17 @@ export type CommerceOrderMaxOrderByAggregateInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
   totalMinor?: Prisma.SortOrder
+  paymentMode?: Prisma.SortOrder
+  maxInstallments?: Prisma.SortOrder
+  paymentMethodId?: Prisma.SortOrder
+  paymentMethodType?: Prisma.SortOrder
+  paymentInstallments?: Prisma.SortOrder
+  paymentInstallmentAmountMinor?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
   payloadFingerprint?: Prisma.SortOrder
   providerOrderId?: Prisma.SortOrder
@@ -750,10 +912,17 @@ export type CommerceOrderMinOrderByAggregateInput = {
   sellerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   fulfillmentStatus?: Prisma.SortOrder
+  pickupInstructions?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
   totalMinor?: Prisma.SortOrder
+  paymentMode?: Prisma.SortOrder
+  maxInstallments?: Prisma.SortOrder
+  paymentMethodId?: Prisma.SortOrder
+  paymentMethodType?: Prisma.SortOrder
+  paymentInstallments?: Prisma.SortOrder
+  paymentInstallmentAmountMinor?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
   payloadFingerprint?: Prisma.SortOrder
   providerOrderId?: Prisma.SortOrder
@@ -773,6 +942,9 @@ export type CommerceOrderSumOrderByAggregateInput = {
   subtotalMinor?: Prisma.SortOrder
   discountMinor?: Prisma.SortOrder
   totalMinor?: Prisma.SortOrder
+  maxInstallments?: Prisma.SortOrder
+  paymentInstallments?: Prisma.SortOrder
+  paymentInstallmentAmountMinor?: Prisma.SortOrder
   refundedMinor?: Prisma.SortOrder
 }
 
@@ -911,10 +1083,17 @@ export type CommerceOrderCreateWithoutBuyerInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -939,10 +1118,17 @@ export type CommerceOrderUncheckedCreateWithoutBuyerInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -996,10 +1182,17 @@ export type CommerceOrderScalarWhereInput = {
   sellerId?: Prisma.StringFilter<"CommerceOrder"> | string
   status?: Prisma.StringFilter<"CommerceOrder"> | string
   fulfillmentStatus?: Prisma.StringFilter<"CommerceOrder"> | string
+  pickupInstructions?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
   currency?: Prisma.StringFilter<"CommerceOrder"> | string
   subtotalMinor?: Prisma.IntFilter<"CommerceOrder"> | number
   discountMinor?: Prisma.IntFilter<"CommerceOrder"> | number
   totalMinor?: Prisma.IntFilter<"CommerceOrder"> | number
+  paymentMode?: Prisma.StringFilter<"CommerceOrder"> | string
+  maxInstallments?: Prisma.IntFilter<"CommerceOrder"> | number
+  paymentMethodId?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
+  paymentMethodType?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
+  paymentInstallments?: Prisma.IntNullableFilter<"CommerceOrder"> | number | null
+  paymentInstallmentAmountMinor?: Prisma.IntNullableFilter<"CommerceOrder"> | number | null
   idempotencyKey?: Prisma.StringFilter<"CommerceOrder"> | string
   payloadFingerprint?: Prisma.StringFilter<"CommerceOrder"> | string
   providerOrderId?: Prisma.StringNullableFilter<"CommerceOrder"> | string | null
@@ -1019,10 +1212,17 @@ export type CommerceOrderCreateWithoutSellerInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1047,10 +1247,17 @@ export type CommerceOrderUncheckedCreateWithoutSellerInput = {
   buyerUserId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1099,10 +1306,17 @@ export type CommerceOrderCreateWithoutItemsInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1128,10 +1342,17 @@ export type CommerceOrderUncheckedCreateWithoutItemsInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1169,10 +1390,17 @@ export type CommerceOrderUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1198,10 +1426,17 @@ export type CommerceOrderUncheckedUpdateWithoutItemsInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1223,10 +1458,17 @@ export type CommerceOrderCreateWithoutRegistrationsInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1252,10 +1494,17 @@ export type CommerceOrderUncheckedCreateWithoutRegistrationsInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1293,10 +1542,17 @@ export type CommerceOrderUpdateWithoutRegistrationsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1322,10 +1578,17 @@ export type CommerceOrderUncheckedUpdateWithoutRegistrationsInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1347,10 +1610,17 @@ export type CommerceOrderCreateWithoutRefundRequestsInput = {
   id?: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1376,10 +1646,17 @@ export type CommerceOrderUncheckedCreateWithoutRefundRequestsInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1417,10 +1694,17 @@ export type CommerceOrderUpdateWithoutRefundRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1446,10 +1730,17 @@ export type CommerceOrderUncheckedUpdateWithoutRefundRequestsInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1472,10 +1763,17 @@ export type CommerceOrderCreateManyBuyerInput = {
   sellerId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1495,10 +1793,17 @@ export type CommerceOrderUpdateWithoutBuyerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1523,10 +1828,17 @@ export type CommerceOrderUncheckedUpdateWithoutBuyerInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1550,10 +1862,17 @@ export type CommerceOrderUncheckedUpdateManyWithoutBuyerInput = {
   sellerId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1574,10 +1893,17 @@ export type CommerceOrderCreateManySellerInput = {
   buyerUserId: string
   status?: string
   fulfillmentStatus?: string
+  pickupInstructions?: string | null
   currency?: string
   subtotalMinor: number
   discountMinor?: number
   totalMinor: number
+  paymentMode?: string
+  maxInstallments?: number
+  paymentMethodId?: string | null
+  paymentMethodType?: string | null
+  paymentInstallments?: number | null
+  paymentInstallmentAmountMinor?: number | null
   idempotencyKey: string
   payloadFingerprint: string
   providerOrderId?: string | null
@@ -1597,10 +1923,17 @@ export type CommerceOrderUpdateWithoutSellerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1625,10 +1958,17 @@ export type CommerceOrderUncheckedUpdateWithoutSellerInput = {
   buyerUserId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1652,10 +1992,17 @@ export type CommerceOrderUncheckedUpdateManyWithoutSellerInput = {
   buyerUserId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   fulfillmentStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   subtotalMinor?: Prisma.IntFieldUpdateOperationsInput | number
   discountMinor?: Prisma.IntFieldUpdateOperationsInput | number
   totalMinor?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMode?: Prisma.StringFieldUpdateOperationsInput | string
+  maxInstallments?: Prisma.IntFieldUpdateOperationsInput | number
+  paymentMethodId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethodType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentInstallments?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  paymentInstallmentAmountMinor?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   payloadFingerprint?: Prisma.StringFieldUpdateOperationsInput | string
   providerOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1726,10 +2073,17 @@ export type CommerceOrderSelect<ExtArgs extends runtime.Types.Extensions.Interna
   sellerId?: boolean
   status?: boolean
   fulfillmentStatus?: boolean
+  pickupInstructions?: boolean
   currency?: boolean
   subtotalMinor?: boolean
   discountMinor?: boolean
   totalMinor?: boolean
+  paymentMode?: boolean
+  maxInstallments?: boolean
+  paymentMethodId?: boolean
+  paymentMethodType?: boolean
+  paymentInstallments?: boolean
+  paymentInstallmentAmountMinor?: boolean
   idempotencyKey?: boolean
   payloadFingerprint?: boolean
   providerOrderId?: boolean
@@ -1757,10 +2111,17 @@ export type CommerceOrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   sellerId?: boolean
   status?: boolean
   fulfillmentStatus?: boolean
+  pickupInstructions?: boolean
   currency?: boolean
   subtotalMinor?: boolean
   discountMinor?: boolean
   totalMinor?: boolean
+  paymentMode?: boolean
+  maxInstallments?: boolean
+  paymentMethodId?: boolean
+  paymentMethodType?: boolean
+  paymentInstallments?: boolean
+  paymentInstallmentAmountMinor?: boolean
   idempotencyKey?: boolean
   payloadFingerprint?: boolean
   providerOrderId?: boolean
@@ -1784,10 +2145,17 @@ export type CommerceOrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   sellerId?: boolean
   status?: boolean
   fulfillmentStatus?: boolean
+  pickupInstructions?: boolean
   currency?: boolean
   subtotalMinor?: boolean
   discountMinor?: boolean
   totalMinor?: boolean
+  paymentMode?: boolean
+  maxInstallments?: boolean
+  paymentMethodId?: boolean
+  paymentMethodType?: boolean
+  paymentInstallments?: boolean
+  paymentInstallmentAmountMinor?: boolean
   idempotencyKey?: boolean
   payloadFingerprint?: boolean
   providerOrderId?: boolean
@@ -1811,10 +2179,17 @@ export type CommerceOrderSelectScalar = {
   sellerId?: boolean
   status?: boolean
   fulfillmentStatus?: boolean
+  pickupInstructions?: boolean
   currency?: boolean
   subtotalMinor?: boolean
   discountMinor?: boolean
   totalMinor?: boolean
+  paymentMode?: boolean
+  maxInstallments?: boolean
+  paymentMethodId?: boolean
+  paymentMethodType?: boolean
+  paymentInstallments?: boolean
+  paymentInstallmentAmountMinor?: boolean
   idempotencyKey?: boolean
   payloadFingerprint?: boolean
   providerOrderId?: boolean
@@ -1830,7 +2205,7 @@ export type CommerceOrderSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CommerceOrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "buyerUserId" | "sellerId" | "status" | "fulfillmentStatus" | "currency" | "subtotalMinor" | "discountMinor" | "totalMinor" | "idempotencyKey" | "payloadFingerprint" | "providerOrderId" | "providerStatus" | "checkoutUrl" | "liveMode" | "reservationExpiresAt" | "paidAt" | "fulfilledAt" | "cancelledAt" | "refundedMinor" | "createdAt" | "updatedAt", ExtArgs["result"]["commerceOrder"]>
+export type CommerceOrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "buyerUserId" | "sellerId" | "status" | "fulfillmentStatus" | "pickupInstructions" | "currency" | "subtotalMinor" | "discountMinor" | "totalMinor" | "paymentMode" | "maxInstallments" | "paymentMethodId" | "paymentMethodType" | "paymentInstallments" | "paymentInstallmentAmountMinor" | "idempotencyKey" | "payloadFingerprint" | "providerOrderId" | "providerStatus" | "checkoutUrl" | "liveMode" | "reservationExpiresAt" | "paidAt" | "fulfilledAt" | "cancelledAt" | "refundedMinor" | "createdAt" | "updatedAt", ExtArgs["result"]["commerceOrder"]>
 export type CommerceOrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   buyer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   seller?: boolean | Prisma.CommerceSellerDefaultArgs<ExtArgs>
@@ -1863,10 +2238,17 @@ export type $CommerceOrderPayload<ExtArgs extends runtime.Types.Extensions.Inter
     sellerId: string
     status: string
     fulfillmentStatus: string
+    pickupInstructions: string | null
     currency: string
     subtotalMinor: number
     discountMinor: number
     totalMinor: number
+    paymentMode: string
+    maxInstallments: number
+    paymentMethodId: string | null
+    paymentMethodType: string | null
+    paymentInstallments: number | null
+    paymentInstallmentAmountMinor: number | null
     idempotencyKey: string
     payloadFingerprint: string
     providerOrderId: string | null
@@ -2313,10 +2695,17 @@ export interface CommerceOrderFieldRefs {
   readonly sellerId: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly status: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly fulfillmentStatus: Prisma.FieldRef<"CommerceOrder", 'String'>
+  readonly pickupInstructions: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly currency: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly subtotalMinor: Prisma.FieldRef<"CommerceOrder", 'Int'>
   readonly discountMinor: Prisma.FieldRef<"CommerceOrder", 'Int'>
   readonly totalMinor: Prisma.FieldRef<"CommerceOrder", 'Int'>
+  readonly paymentMode: Prisma.FieldRef<"CommerceOrder", 'String'>
+  readonly maxInstallments: Prisma.FieldRef<"CommerceOrder", 'Int'>
+  readonly paymentMethodId: Prisma.FieldRef<"CommerceOrder", 'String'>
+  readonly paymentMethodType: Prisma.FieldRef<"CommerceOrder", 'String'>
+  readonly paymentInstallments: Prisma.FieldRef<"CommerceOrder", 'Int'>
+  readonly paymentInstallmentAmountMinor: Prisma.FieldRef<"CommerceOrder", 'Int'>
   readonly idempotencyKey: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly payloadFingerprint: Prisma.FieldRef<"CommerceOrder", 'String'>
   readonly providerOrderId: Prisma.FieldRef<"CommerceOrder", 'String'>

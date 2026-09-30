@@ -1,8 +1,14 @@
 import { createHash } from "node:crypto";
 import type {
   CommerceCatalogDto,
+  CommerceCheckoutQuoteDto,
+  CommerceAdminDashboardDto,
+  CommerceFulfillmentStatus,
   CommerceItemDto,
+  CommerceOrderFiltersDto,
   CommerceOrderDto,
+  CommercePaymentMode,
+  CreateCommerceCheckoutQuoteDto,
   CreateCommerceCheckoutDto,
   CreateCommerceItemDto,
   CreateCommerceRefundRequestDto,
@@ -34,6 +40,10 @@ export interface VerifiedProviderOrder {
   applicationId: string;
   checkoutUrl: string | null;
   paidAt: Date | null;
+  paymentMethodId: string | null;
+  paymentMethodType: string | null;
+  paymentInstallments: number | null;
+  paymentInstallmentAmountMinor: number | null;
 }
 
 export interface CreateProviderOrderInput {
@@ -46,6 +56,8 @@ export interface CreateProviderOrderInput {
   pendingUrl: string;
   failureUrl: string;
   expirationMinutes: number;
+  paymentMode: CommercePaymentMode;
+  maxInstallments: number;
 }
 
 export interface PaymentProvider {
@@ -57,7 +69,8 @@ export interface PaymentProvider {
 
 export interface CommerceRepository {
   listCatalog(userId?: string): Promise<CommerceCatalogDto>;
-  reserveOrder(input: { buyer: CommerceActor; request: CreateCommerceCheckoutDto; fingerprint: string; liveMode: boolean; reservationMinutes: number }): Promise<ReservedOrder>;
+  quoteCheckout(input: { buyer: CommerceActor; request: CreateCommerceCheckoutQuoteDto }): Promise<CommerceCheckoutQuoteDto>;
+  reserveOrder(input: { buyer: CommerceActor; request: CreateCommerceCheckoutDto; fingerprint: string; liveMode: boolean; reservationMinutes: number; maxInstallments: number }): Promise<ReservedOrder>;
   attachProviderOrder(orderId: string, provider: VerifiedProviderOrder): Promise<CommerceOrderDto>;
   cancelCreation(orderId: string, reason: string): Promise<void>;
   getOrderForBuyer(orderId: string, buyerId: string): Promise<CommerceOrderDto | null>;
@@ -76,6 +89,11 @@ export interface CommerceRepository {
   createSeller(actor: CommerceActor, input: CreateCommerceSellerDto): Promise<{ id: string; slug: string; name: string }>;
   addSellerMember(actor: CommerceActor, sellerId: string, userId: string): Promise<void>;
   listSellerOrders(actor: CommerceActor): Promise<CommerceOrderDto[]>;
+  listAdminDashboard(actor: CommerceActor): Promise<CommerceAdminDashboardDto>;
+  listAdminOrders(actor: CommerceActor, filters: CommerceOrderFiltersDto): Promise<CommerceOrderDto[]>;
+  updateFulfillment(actor: CommerceActor, orderId: string, status: CommerceFulfillmentStatus): Promise<CommerceOrderDto>;
+  listCommerceSellers(actor: CommerceActor): Promise<Array<{ id: string; slug: string; name: string; status: string; kind: string }>>;
+  updateSellerStatus(actor: CommerceActor, sellerId: string, status: "active" | "inactive"): Promise<{ id: string; slug: string; name: string; status: string; kind: string }>;
   requestRefund(actor: CommerceActor, orderId: string, input: CreateCommerceRefundRequestDto): Promise<{ id: string; status: string }>;
   getRefundForExecution(actor: CommerceActor, refundId: string): Promise<{ id: string; orderId: string; providerOrderId: string; amountMinor: number }>;
   completeRefund(refundId: string, providerRefundId: string, reviewedById: string): Promise<void>;
@@ -91,11 +109,22 @@ export class CommerceService {
   constructor(
     private readonly repository: CommerceRepository,
     private readonly provider: PaymentProvider,
-    private readonly config: { liveMode: boolean; returnBaseUrl: string; reservationMinutes: number; enabled?: boolean; environmentConfigured?: boolean },
+    private readonly config: { liveMode: boolean; returnBaseUrl: string; reservationMinutes: number; maxInstallments?: number; enabled?: boolean; environmentConfigured?: boolean },
   ) {}
 
   listCatalog(userId?: string) {
     return this.repository.listCatalog(userId);
+  }
+
+  quoteCheckout(buyer: CommerceActor, request: CreateCommerceCheckoutQuoteDto) {
+    if (!Array.isArray(request.items) || request.items.length < 1 || request.items.length > 10) {
+      throw new CommerceError("El carrito debe tener entre 1 y 10 productos.", "INVALID_CART", 400);
+    }
+    const items = request.items.map(({ itemId, variantId, quantity }) => ({ itemId: String(itemId), variantId: variantId ? String(variantId) : null, quantity: Number(quantity) }));
+    if (items.some((item) => !item.itemId || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10)) {
+      throw new CommerceError("Las cantidades del carrito no son válidas.", "INVALID_CART", 400);
+    }
+    return this.repository.quoteCheckout({ buyer, request: { items } });
   }
 
   async createCheckout(buyer: CommerceActor, request: CreateCommerceCheckoutDto) {
@@ -109,18 +138,27 @@ export class CommerceService {
     if (!Array.isArray(request.items) || request.items.length < 1 || request.items.length > 10) {
       throw new CommerceError("El carrito debe tener entre 1 y 10 productos.", "INVALID_CART", 400);
     }
-    const normalized = request.items.map(({ itemId, quantity }) => ({ itemId: String(itemId), quantity: Number(quantity) }));
+    const paymentMode: CommercePaymentMode = request.paymentMode || "cash";
+    if (paymentMode !== "cash" && paymentMode !== "installments") {
+      throw new CommerceError("La modalidad de pago no es válida.", "INVALID_PAYMENT_MODE", 400);
+    }
+    const normalized = request.items.map(({ itemId, variantId, quantity }) => ({ itemId: String(itemId), variantId: variantId ? String(variantId) : null, quantity: Number(quantity) }));
     if (normalized.some((item) => !item.itemId || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10)) {
       throw new CommerceError("Las cantidades del carrito no son válidas.", "INVALID_CART", 400);
     }
-    normalized.sort((a, b) => a.itemId.localeCompare(b.itemId));
-    const fingerprint = createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
+    normalized.sort((a, b) => a.itemId.localeCompare(b.itemId) || String(a.variantId || "").localeCompare(String(b.variantId || "")));
+    const fingerprint = createHash("sha256").update(JSON.stringify({ items: normalized, paymentMode })).digest("hex");
+    const configuredInstallments = Number.isInteger(this.config.maxInstallments) && this.config.maxInstallments! >= 2 && this.config.maxInstallments! <= 24
+      ? this.config.maxInstallments!
+      : 12;
+    const maxInstallments = paymentMode === "cash" ? 1 : configuredInstallments;
     const reserved = await this.repository.reserveOrder({
       buyer,
-      request: { ...request, items: normalized },
+      request: { ...request, paymentMode, items: normalized },
       fingerprint,
       liveMode: this.config.liveMode,
       reservationMinutes: this.config.reservationMinutes,
+      maxInstallments,
     });
     if (reserved.checkoutUrl) return reserved;
 
@@ -139,6 +177,8 @@ export class CommerceService {
         pendingUrl: `${this.config.returnBaseUrl}/tienda/resultado?order=${encodeURIComponent(reserved.id)}`,
         failureUrl: `${this.config.returnBaseUrl}/tienda/resultado?order=${encodeURIComponent(reserved.id)}`,
         expirationMinutes: this.config.reservationMinutes,
+        paymentMode,
+        maxInstallments,
       });
       return await this.repository.attachProviderOrder(reserved.id, provider);
     } catch (error) {
@@ -218,6 +258,11 @@ export class CommerceService {
     return this.repository.addSellerMember(actor, sellerId, userId);
   }
   listSellerOrders(actor: CommerceActor) { return this.repository.listSellerOrders(actor); }
+  listAdminDashboard(actor: CommerceActor) { return this.repository.listAdminDashboard(actor); }
+  listAdminOrders(actor: CommerceActor, filters: CommerceOrderFiltersDto) { return this.repository.listAdminOrders(actor, filters); }
+  updateFulfillment(actor: CommerceActor, orderId: string, status: CommerceFulfillmentStatus) { return this.repository.updateFulfillment(actor, orderId, status); }
+  listCommerceSellers(actor: CommerceActor) { return this.repository.listCommerceSellers(actor); }
+  updateSellerStatus(actor: CommerceActor, sellerId: string, status: "active" | "inactive") { return this.repository.updateSellerStatus(actor, sellerId, status); }
   requestRefund(actor: CommerceActor, orderId: string, input: CreateCommerceRefundRequestDto) { return this.repository.requestRefund(actor, orderId, input); }
 
   async executeRefund(actor: CommerceActor, refundId: string) {

@@ -39,18 +39,22 @@ export function SiteNav({ flagUrl, tackleUrl, store = false }: Props) {
         <span aria-hidden="true" />
       </button>
       <nav id="site-nav-menu" className="site-nav-menu" aria-label="Navegación principal">
-        <Link href={store ? "/#inicio" : "#inicio"} onClick={closeMenu}>Inicio</Link>
-        <Link href={store ? "/#acerca" : "#acerca"} onClick={closeMenu}>Acerca de LUFA</Link>
-        <Link href={store ? "/#proximos-partidos" : "#proximos-partidos"} onClick={closeMenu}>Próximos partidos</Link>
-        <Link href={store ? "/#sumate" : "#sumate"} onClick={closeMenu}>Sumate</Link>
-        <Link href="/tienda" onClick={closeMenu}>Tienda</Link>
-        {store ? <StoreNavLinks closeMenu={closeMenu} /> : null}
-        <a href={flagUrl}>Flag Football</a>
-        {tackleUrl ? (
-          <a href={tackleUrl}>Tackle Football</a>
-        ) : (
-          <span aria-disabled="true">Tackle <small>Próximamente</small></span>
-        )}
+        {store ? <>
+          <Link href="/tienda" onClick={closeMenu}>Tienda</Link>
+          <StoreNavLinks closeMenu={closeMenu} />
+        </> : <>
+          <Link href="#inicio" onClick={closeMenu}>Inicio</Link>
+          <Link href="#acerca" onClick={closeMenu}>Acerca de LUFA</Link>
+          <Link href="#proximos-partidos" onClick={closeMenu}>Próximos partidos</Link>
+          <Link href="#sumate" onClick={closeMenu}>Sumate</Link>
+          <Link href="/tienda" onClick={closeMenu}>Tienda</Link>
+          <a href={flagUrl}>Flag Football</a>
+          {tackleUrl ? (
+            <a href={tackleUrl}>Tackle Football</a>
+          ) : (
+            <span aria-disabled="true">Tackle <small>Próximamente</small></span>
+          )}
+        </>}
         <div className="site-nav-session">
           <AuthControl />
         </div>

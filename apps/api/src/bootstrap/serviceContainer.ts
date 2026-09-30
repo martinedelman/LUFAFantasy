@@ -82,6 +82,7 @@ const commerceService = new CommerceService(
     liveMode: process.env.MERCADOPAGO_EXPECTED_LIVE_MODE === "true",
     returnBaseUrl: (process.env.LUFA_PUBLIC_APP_URL || "http://localhost:3003").replace(/\/$/, ""),
     reservationMinutes: Number(process.env.COMMERCE_RESERVATION_MINUTES || 30),
+    maxInstallments: Number(process.env.COMMERCE_MAX_INSTALLMENTS || 12),
     enabled: process.env.COMMERCE_ENABLED === "true",
     environmentConfigured: ["true", "false"].includes(process.env.MERCADOPAGO_EXPECTED_LIVE_MODE || ""),
   },

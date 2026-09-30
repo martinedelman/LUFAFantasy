@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 export function StoreNavLinks({ closeMenu }: { closeMenu: () => void }) {
   const [signedIn, setSignedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [canSell, setCanSell] = useState(false);
   useEffect(() => {
     let active = true;
@@ -14,6 +15,9 @@ export function StoreNavLinks({ closeMenu }: { closeMenu: () => void }) {
     }).then(async (user) => {
       if (!active || !user) return;
       setSignedIn(true);
+      const admin = user.role === "admin";
+      setIsAdmin(admin);
+      if (admin) return;
       const response = await fetch("/api/commerce/seller/profile", { cache: "no-store" });
       if (!active || !response.ok) return;
       const body = await response.json() as { data?: unknown[] };
@@ -21,5 +25,9 @@ export function StoreNavLinks({ closeMenu }: { closeMenu: () => void }) {
     }).catch(() => undefined);
     return () => { active = false; };
   }, []);
-  return <>{signedIn ? <Link href="/tienda/mis-compras" onClick={closeMenu}>Mis compras</Link> : null}{canSell ? <Link href="/vender" onClick={closeMenu}>Vendedores</Link> : null}</>;
+  return <>
+    {signedIn ? <Link href="/tienda/mis-compras" onClick={closeMenu}>Mis compras</Link> : null}
+    {isAdmin ? <Link href="/admin/tienda" onClick={closeMenu}>Administrar tienda</Link> : null}
+    {canSell ? <Link href="/vender" onClick={closeMenu}>Vendedores</Link> : null}
+  </>;
 }
