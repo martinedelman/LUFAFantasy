@@ -30,9 +30,15 @@ export function getTackleAppUrl() {
   );
 }
 
-/** Sessions are shared only by the production LUFA properties. */
+/**
+ * Sessions are shared only by the production LUFA properties. Testing/preview
+ * deployments live on *.vercel.app (a public suffix), where browsers reject a
+ * cookie Domain, so they get a host-only cookie instead.
+ */
 export const SHARED_SESSION_COOKIE_DOMAIN =
-  process.env.NODE_ENV === "production" ? ".lufa.com.uy" : undefined;
+  process.env.NODE_ENV === "production" && (process.env.VERCEL_ENV ?? "production") === "production"
+    ? ".lufa.com.uy"
+    : undefined;
 
 export function normalizeAuthReturnTo(value: string | null | undefined) {
   if (!value) return null;
