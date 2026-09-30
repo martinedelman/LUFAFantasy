@@ -7,9 +7,11 @@ import pg from "pg";
  *
  * - Prod se lee en una transacción READ ONLY con snapshot consistente.
  * - Testing se reemplaza en una sola transacción: si algo falla no queda nada a medias.
- * - Las tablas de cuentas (PRESERVED_TABLES) no se tocan. Las referencias de prod a usuarios se
- *   remapean por email a los usuarios de testing; si no hay match, la FK nullable queda en null y la
- *   fila con FK obligatoria se descarta (junto con lo que dependa de ella).
+ * - Las cuentas de testing (PRESERVED_TABLES) no se tocan. Las referencias de prod a usuarios se
+ *   remapean por email a los usuarios de testing; los usuarios de prod sin cuenta en testing se crean
+ *   como cuentas sin acceso (email anonimizado, contraseña inutilizable, inactivas), así no se pierde
+ *   ningún dato que dependa de ellos y testing nunca le escribe a una persona real.
+ * - Las FK que igual no resuelven quedan en null si son nullable; si no, la fila se descarta.
  * - El esquema de testing puede estar adelantado a prod (migraciones todavía no liberadas): se copian
  *   las columnas en común y las tablas que prod no tiene se rellenan con BACKFILLS.
  */
@@ -22,6 +24,19 @@ const PRESERVED_TABLES = new Set(["users", "otp_verifications", "fantasy_users",
 
 /** Tablas de cuentas cuyas filas de prod se remapean por email a las de testing. */
 const IDENTITY_TABLES = ["users", "fantasy_users"];
+
+/** Dominio reservado (RFC 2606): los mails a estas cuentas nunca llegan a nadie. */
+const PLACEHOLDER_DOMAIN = "sync.invalid";
+
+/** No es un hash bcrypt válido: bcrypt.compare siempre devuelve false. */
+const DISABLED_PASSWORD_HASH = "!sync-disabled";
+
+/** Valores que pisan los de prod en las cuentas sin acceso, si la tabla tiene la columna. */
+const PLACEHOLDER_OVERRIDES: Record<string, string | null> = {
+  password_hash: DISABLED_PASSWORD_HASH,
+  is_active: "false",
+  last_login: null,
+};
 
 /** Relleno para tablas que existen en testing pero todavía no en prod (mismo SQL que su migración). */
 const BACKFILLS: Record<string, string> = {
@@ -69,6 +84,19 @@ interface TablePlan {
   skipped: number;
   nulled: number;
   remapped: number;
+  /** Cuentas de prod creadas sin acceso (solo tablas de cuentas). */
+  added: number;
+  /** Cuentas sin acceso de una corrida anterior que ya no se usan. */
+  removed: number;
+}
+
+interface IdentitySync {
+  /** prod id -> testing id */
+  map: Map<string, string>;
+  matched: number;
+  columns: string[];
+  placeholders: Row[];
+  staleIds: string[];
 }
 
 // Every value travels as Postgres' own text representation, which is valid input for the same type:
@@ -83,6 +111,7 @@ function parseArgs() {
 function printHelp() {
   console.log(`
 Copia la base PostgreSQL de prod a la de testing, preservando las cuentas de testing.
+Los usuarios de prod sin cuenta en testing se crean sin acceso (email @${PLACEHOLDER_DOMAIN}, inactivos).
 
 Variables (en .env):
   SYNC_SOURCE_DATABASE_URL  conexión directa a prod (solo se lee)
@@ -226,22 +255,63 @@ async function countRows(client: pg.Client, table: string) {
   return Number(result.rows[0].count);
 }
 
-/** prod user id -> testing user id, matching by email (case-insensitive). */
-async function buildIdentityMaps(source: pg.Client, target: pg.Client, sourceSchema: Schema) {
-  const maps = new Map<string, Map<string, string>>();
+function placeholderEmail(sourceId: string) {
+  return `prod-${sourceId.toLowerCase()}@${PLACEHOLDER_DOMAIN}`;
+}
+
+/**
+ * Maps every prod account to a testing one: same email if testing has it, otherwise an account without
+ * access (reused across runs, since its email derives from the prod id).
+ */
+async function buildIdentitySyncs(source: pg.Client, target: pg.Client, sourceSchema: Schema, targetSchema: Schema) {
+  const syncs = new Map<string, IdentitySync>();
   for (const table of IDENTITY_TABLES) {
-    const map = new Map<string, string>();
-    maps.set(table, map);
-    if (!sourceSchema.tables.has(table)) continue;
-    const query = `SELECT id, lower(email) AS email FROM ${quote(table)}`;
-    const [sourceRows, targetRows] = await Promise.all([source.query<Row>(query), target.query<Row>(query)]);
-    const targetByEmail = new Map(targetRows.rows.map((row) => [row.email, row.id!]));
+    const sourceColumns = sourceSchema.tables.get(table);
+    const targetColumns = targetSchema.tables.get(table);
+    const sync: IdentitySync = { map: new Map(), matched: 0, columns: [], placeholders: [], staleIds: [] };
+    syncs.set(table, sync);
+    if (!sourceColumns || !targetColumns) continue;
+
+    sync.columns = [...targetColumns.keys()].filter((column) => sourceColumns.has(column));
+    const [sourceRows, targetRows] = await Promise.all([
+      source.query<Row>(`SELECT ${sync.columns.map(quote).join(", ")} FROM ${quote(table)}`),
+      target.query<Row>(`SELECT id, lower(email) AS email FROM ${quote(table)}`),
+    ]);
+    const targetByEmail = new Map(targetRows.rows.map((row) => [row.email!, row.id!]));
+    const targetIds = new Set(targetRows.rows.map((row) => row.id!));
+    const used = new Set<string>();
+
     for (const row of sourceRows.rows) {
-      const targetId = targetByEmail.get(row.email);
-      if (targetId) map.set(row.id!, targetId);
+      const sourceId = row.id!;
+      const matched = targetByEmail.get(row.email!.toLowerCase());
+      if (matched) {
+        sync.map.set(sourceId, matched);
+        sync.matched += 1;
+        continue;
+      }
+
+      const email = placeholderEmail(sourceId);
+      const existing = targetByEmail.get(email);
+      if (existing) {
+        sync.map.set(sourceId, existing);
+        used.add(existing);
+        continue;
+      }
+
+      const id = targetIds.has(sourceId) ? `${sourceId}_prod` : sourceId;
+      const placeholder: Row = { ...row, id, email };
+      for (const [column, value] of Object.entries(PLACEHOLDER_OVERRIDES)) {
+        if (column in placeholder) placeholder[column] = value;
+      }
+      sync.placeholders.push(placeholder);
+      sync.map.set(sourceId, id);
     }
+
+    sync.staleIds = targetRows.rows
+      .filter((row) => row.email!.endsWith(`@${PLACEHOLDER_DOMAIN}`) && !used.has(row.id!))
+      .map((row) => row.id!);
   }
-  return maps;
+  return syncs;
 }
 
 /** Keys present in testing for every (table, columns) that some FK points to. */
@@ -290,7 +360,7 @@ function filterRows(
   plan: TablePlan,
   foreignKeys: ForeignKey[],
   columns: Map<string, Column>,
-  identityMaps: Map<string, Map<string, string>>,
+  identities: Map<string, IdentitySync>,
   references: ReferenceIndex,
 ) {
   const accepted: Row[] = [];
@@ -303,7 +373,7 @@ function filterRows(
     for (const fk of tableKeys) {
       if (fk.columns.some((column) => row[column] === null || row[column] === undefined)) continue;
 
-      const identityMap = identityMaps.get(fk.refTable);
+      const identityMap = identities.get(fk.refTable)?.map;
       if (identityMap && fk.columns.length === 1 && fk.refColumns[0] === "id") {
         const mapped = identityMap.get(row[fk.columns[0]]!);
         if (mapped) {
@@ -373,7 +443,8 @@ async function backupTarget(target: pg.Client, plans: TablePlan[], meta: Record<
   await writeFile(path.join(backupDir, "summary.json"), JSON.stringify({ ...meta, plans }, null, 2), "utf8");
 
   for (const plan of plans) {
-    if (plan.action === "preserve" || plan.targetCount === 0) continue;
+    const touched = plan.action !== "preserve" || plan.added > 0 || plan.removed > 0;
+    if (!touched || plan.targetCount === 0) continue;
     const result = await target.query<Row>(`SELECT * FROM ${quote(plan.table)}`);
     const lines = result.rows.map((row) => JSON.stringify(row)).join("\n");
     await writeFile(path.join(backupDir, `${plan.table}.ndjson`), lines ? `${lines}\n` : "", "utf8");
@@ -386,7 +457,11 @@ function printPlan(plans: TablePlan[], warnings: string[], confirm: boolean) {
   for (const plan of plans) {
     const counts = `testing=${plan.targetCount}`;
     if (plan.action === "preserve") {
-      console.log(`- PRESERVAR ${plan.table}: ${counts}`);
+      const changes = [
+        plan.added ? `+${plan.added} cuentas de prod sin acceso` : "",
+        plan.removed ? `-${plan.removed} cuentas sin acceso que ya no se usan` : "",
+      ].filter(Boolean);
+      console.log(`- PRESERVAR ${plan.table}: ${counts}${changes.length ? ` (${changes.join(", ")})` : ""}`);
     } else if (plan.action === "backfill") {
       console.log(`- RELLENAR ${plan.table}: ${counts} -> se genera desde los datos copiados (no existe en prod)`);
     } else if (plan.action === "empty") {
@@ -395,7 +470,7 @@ function printPlan(plans: TablePlan[], warnings: string[], confirm: boolean) {
       const details = [
         plan.skipped ? `${plan.skipped} descartadas` : "",
         plan.nulled ? `${plan.nulled} referencias en null` : "",
-        plan.remapped ? `${plan.remapped} remapeadas por email` : "",
+        plan.remapped ? `${plan.remapped} referencias a cuentas remapeadas` : "",
       ].filter(Boolean);
       const suffix = details.length ? ` (${details.join(", ")})` : "";
       console.log(`- REEMPLAZAR ${plan.table}: ${counts} -> ${plan.copied} de prod=${plan.sourceCount}${suffix}`);
@@ -452,7 +527,7 @@ async function main() {
     }
 
     const tables = sortByDependencies([...targetSchema.tables.keys()], targetSchema.foreignKeys);
-    const identityMaps = await buildIdentityMaps(source, target, sourceSchema);
+    const identities = await buildIdentitySyncs(source, target, sourceSchema, targetSchema);
     const references = new ReferenceIndex(targetSchema.foreignKeys);
     const pendingRows = new Map<string, Row[]>();
     const plans: TablePlan[] = [];
@@ -470,11 +545,14 @@ async function main() {
         skipped: 0,
         nulled: 0,
         remapped: 0,
+        added: identities.get(table)?.placeholders.length ?? 0,
+        removed: identities.get(table)?.staleIds.length ?? 0,
       };
       plans.push(plan);
 
       if (plan.action === "preserve") {
         await references.loadFromTarget(target, table);
+        references.add(table, identities.get(table)?.placeholders ?? []);
         continue;
       }
       if (!sourceColumns) {
@@ -488,7 +566,7 @@ async function main() {
 
       const result = await source.query<Row>(`SELECT ${plan.columns.map(quote).join(", ")} FROM ${quote(table)}`);
       plan.sourceCount = result.rows.length;
-      const rows = filterRows(result.rows, plan, targetSchema.foreignKeys, targetColumns, identityMaps, references);
+      const rows = filterRows(result.rows, plan, targetSchema.foreignKeys, targetColumns, identities, references);
       plan.copied = rows.length;
       references.add(table, rows);
       pendingRows.set(table, rows);
@@ -496,11 +574,9 @@ async function main() {
 
     await source.query("COMMIT");
 
-    const identityMatches = IDENTITY_TABLES.map((table) => {
-      const plan = plans.find((item) => item.table === table);
-      return plan ? `${table}: ${identityMaps.get(table)?.size ?? 0} cuentas de prod con email en testing` : "";
-    }).filter(Boolean);
-    warnings.push(...identityMatches);
+    for (const [table, sync] of identities) {
+      if (sync.map.size) warnings.push(`${table}: ${sync.matched} de ${sync.map.size} cuentas de prod tienen el mismo email en testing.`);
+    }
 
     printPlan(plans, warnings, args.confirm);
     if (!args.confirm) return;
@@ -522,11 +598,20 @@ async function main() {
     if (cleared.length) await target.query(`TRUNCATE ${cleared.join(", ")}`);
 
     for (const plan of plans) {
-      if (plan.action === "replace") {
+      const identity = identities.get(plan.table);
+      if (plan.action === "preserve" && identity) {
+        if (identity.staleIds.length) {
+          await target.query(`DELETE FROM ${quote(plan.table)} WHERE id = ANY($1)`, [identity.staleIds]);
+        }
+        if (identity.placeholders.length) {
+          console.log(`${LOG} Creando ${identity.placeholders.length} cuentas sin acceso en ${plan.table}`);
+          await insertRows(target, plan.table, identity.columns, false, identity.placeholders);
+        }
+      } else if (plan.action === "replace") {
         const columns = targetSchema.tables.get(plan.table)!;
-        const identity = plan.columns.some((column) => columns.get(column)?.identity);
+        const hasIdentityColumn = plan.columns.some((column) => columns.get(column)?.identity);
         console.log(`${LOG} Copiando ${plan.table} (${plan.copied})`);
-        await insertRows(target, plan.table, plan.columns, identity, pendingRows.get(plan.table) ?? []);
+        await insertRows(target, plan.table, plan.columns, hasIdentityColumn, pendingRows.get(plan.table) ?? []);
         await resetSequences(target, plan.table);
       } else if (plan.action === "backfill") {
         console.log(`${LOG} Rellenando ${plan.table}`);
