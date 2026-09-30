@@ -185,6 +185,10 @@ export class PlayerService {
     return await this.playerRepo.findById(id, modality);
   }
 
+  async getHomeModality(id: string): Promise<Modality> {
+    return await this.playerRepo.getHomeModality(id);
+  }
+
   async listModalityProfiles(id: string): Promise<PlayerModalityProfile[]> {
     return await this.playerRepo.listModalityProfiles(id);
   }

@@ -15,7 +15,7 @@ export interface PlayerModalityProfile {
  */
 export interface IPlayerRepository extends IRepository<Player> {
   /**
-   * Busca un jugador; con modalidad, el número y las posiciones son los de esa modalidad
+   * Busca un jugador; con modalidad, el equipo, número y posiciones son los de esa modalidad
    */
   findById(id: string, modality?: Modality): Promise<Player | null>;
 

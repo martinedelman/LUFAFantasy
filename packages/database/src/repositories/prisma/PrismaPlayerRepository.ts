@@ -35,7 +35,16 @@ function profileColumns(profile: { jerseyNumber?: number | null; position: strin
 
 /** With a modality, also load that modality's profile so jersey and positions reflect it. */
 function playerInclude(modality?: Modality) {
-  return modality ? { ...PLAYER_WITH_TEAM, modalityProfiles: { where: { modality } } } : PLAYER_WITH_TEAM;
+  return modality
+    ? {
+        ...PLAYER_WITH_TEAM,
+        modalityProfiles: { where: { modality } },
+        teamMemberships: {
+          where: { team: { division: { modality } } },
+          include: { team: { include: { division: true } } },
+        },
+      }
+    : PLAYER_WITH_TEAM;
 }
 
 /** Players are shared across modalities: they play one if any of their teams does. */
@@ -56,6 +65,7 @@ export class PrismaPlayerRepository implements IPlayerRepository {
   async findById(id: string, modality?: Modality): Promise<Player | null> {
     return this.toPlayerWithTeam(
       await this.db.player.findUnique({ where: { id }, include: playerInclude(modality) }),
+      modality,
     );
   }
 
@@ -167,7 +177,7 @@ export class PrismaPlayerRepository implements IPlayerRepository {
     if (modality) and.push(playsInModality(modality));
     if (and.length) where.AND = and;
     return (await this.db.player.findMany({ where, include: playerInclude(modality) }))
-      .map((record) => this.toPlayerWithTeam(record))
+      .map((record) => this.toPlayerWithTeam(record, modality))
       .filter((item): item is Player => Boolean(item));
   }
 
@@ -221,6 +231,7 @@ export class PrismaPlayerRepository implements IPlayerRepository {
         },
         include: playerInclude(modality),
       }),
+      modality,
     );
   }
 
@@ -235,10 +246,10 @@ export class PrismaPlayerRepository implements IPlayerRepository {
       },
       include: playerInclude(modality),
     });
-    return rows.map((record) => this.toPlayerWithTeam(record)).filter((item): item is Player => Boolean(item));
+    return rows.map((record) => this.toPlayerWithTeam(record, modality)).filter((item): item is Player => Boolean(item));
   }
 
-  private toPlayerWithTeam(record: any): Player | null {
+  private toPlayerWithTeam(record: any, modality?: Modality): Player | null {
     const player = toPlayer(record);
     const profile = record?.modalityProfiles?.[0];
     if (player && profile) {
@@ -252,7 +263,10 @@ export class PrismaPlayerRepository implements IPlayerRepository {
       return player;
     }
 
-    const team = record.team;
+    const team =
+      modality && record.team.division?.modality !== modality
+        ? (record.teamMemberships?.[0]?.team ?? record.team)
+        : record.team;
     const division = team.division;
 
     // Mongo's player repository populates this relation. Preserve that public
