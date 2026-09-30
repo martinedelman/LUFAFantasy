@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@lufa/institutional-web/components/Navbar";
 import Providers from "@lufa/institutional-web/components/Providers";
 import SiteFooter from "@lufa/institutional-web/components/SiteFooter";
+import EnvironmentWatermark from "@lufa/institutional-web/components/EnvironmentWatermark";
 import { Analytics } from "@vercel/analytics/next";
 import { siteConfig } from "@/site.config";
 
@@ -117,6 +118,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <SiteFooter />
         </Providers>
+        <EnvironmentWatermark />
         <Analytics />
       </body>
     </html>

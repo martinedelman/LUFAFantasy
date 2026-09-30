@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import EnvironmentWatermark from "@lufa/institutional-web/components/EnvironmentWatermark";
 import "./globals.css";
 import "./flag-font.css";
 
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="es-UY">
       <body className={geistSans.variable}>
         {children}
+        <EnvironmentWatermark />
         <Analytics />
       </body>
     </html>
