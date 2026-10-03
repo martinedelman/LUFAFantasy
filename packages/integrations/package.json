@@ -5,6 +5,6 @@
   "type": "module",
   "exports": { ".": "./src/index.ts", "./services/*": "./src/services/*.ts" },
   "scripts": { "build": "tsc --noEmit", "lint": "eslint src", "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
-  "dependencies": { "@lufa/sports": "*", "@vercel/blob": "2.3.3", "nodemailer": "8.0.0" },
+  "dependencies": { "@lufa/commerce": "*", "@lufa/sports": "*", "@vercel/blob": "2.3.3", "nodemailer": "8.0.0" },
   "devDependencies": { "@types/nodemailer": "8.0.0", "typescript": "5.9.2", "vitest": "4.1.10" }
 }

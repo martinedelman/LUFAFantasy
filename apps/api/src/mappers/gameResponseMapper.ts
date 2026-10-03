@@ -8,6 +8,7 @@ interface PopulatedRef {
   name?: string;
   category?: string;
   year?: number;
+  modality?: string;
   firstName?: string;
   lastName?: string;
   jerseyNumber?: number | null;
@@ -117,6 +118,7 @@ function toTournamentRef(tournament: string | PopulatedRef): GameResponseDto["to
     _id: stringifyId(tournament._id || tournament.id),
     name: tournament.name || "Torneo",
     year: tournament.year || new Date().getFullYear(),
+    modality: tournament.modality === "tackle" ? "tackle" : "flag",
   };
 }
 

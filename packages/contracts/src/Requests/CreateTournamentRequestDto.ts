@@ -1,4 +1,5 @@
 import type {
+  Modality,
   PlayoffCriteria,
   TournamentFormat,
   TournamentPrize,
@@ -21,4 +22,6 @@ export interface CreateTournamentRequestDto {
   participatingTeams?: string[];
   rules?: TournamentRules;
   prizes?: TournamentPrize[];
+  /** Defaults to the request's `?modality=`, then flag. */
+  modality?: Modality;
 }

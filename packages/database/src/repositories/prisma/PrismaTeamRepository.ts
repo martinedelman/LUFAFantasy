@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Team } from "@lufa/sports/entities/Team";
+import type { Modality } from "@lufa/sports/entities/Modality";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { ITeamRepository } from "../contracts";
-import { plainJson, referenceId, toTeam } from "./mappers";
+import { modalityFilter, plainJson, referenceId, toTeam } from "./mappers";
 
 const teamInclude = { playerMemberships: true } as const;
 
@@ -22,6 +23,8 @@ export class PrismaTeamRepository implements ITeamRepository {
       where.OR = [{ tournamentId: filters.tournament }, { tournaments: { some: { tournamentId: filters.tournament } } }];
     }
     if (typeof filters.status === "string") where.status = filters.status;
+    const modality = modalityFilter(filters);
+    if (modality) where.division = { modality };
     return (await this.db.team.findMany({ where, include: teamInclude }))
       .map(toTeam)
       .filter((item): item is Team => Boolean(item));
@@ -73,11 +76,13 @@ export class PrismaTeamRepository implements ITeamRepository {
     return this.findAll({ division: divisionId });
   }
 
-  async existsWithName(name: string, tournamentId?: string): Promise<boolean> {
+  async existsWithName(name: string, tournamentId?: string, modality?: Modality): Promise<boolean> {
     const where: Record<string, unknown> = { name: { equals: name.trim(), mode: "insensitive" } };
     if (tournamentId) {
       const tournament = await this.db.tournament.findUnique({ where: { id: tournamentId }, include: { divisions: true } });
       where.divisionId = { in: tournament?.divisions.map((item) => item.divisionId) || [] };
+    } else if (modality) {
+      where.division = { modality };
     }
     return (await this.db.team.count({ where })) > 0;
   }

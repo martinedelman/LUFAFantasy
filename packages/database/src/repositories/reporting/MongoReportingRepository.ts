@@ -1,21 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import connectToDatabase from "@lufa/database/mongodb";
 import { GameEventModel, GameModel, PlayerModel, TeamModel, TournamentModel } from "@lufa/database/models";
-import type { DashboardStatsResponseDto, NextGameResponseDto } from "@lufa/contracts";
+import type { DashboardStatsResponseDto, Modality, NextGameResponseDto } from "@lufa/contracts";
 import mongoose from "mongoose";
 import type {
   IReportingRepository,
   PlayerRankingQuery,
   PlayerRankingRow,
-  RankingEventType,
 } from "./IReportingRepository";
 import type { AdminAnalyticsQuery } from "./IReportingRepository";
 import { buildAdminAnalytics } from "./adminAnalytics";
 import type { AnalyticsFactsQuery } from "./IReportingRepository";
 import type { AnalyticsEventFact } from "./analyticsBuilder";
+import { rankingEventTypes } from "@lufa/contracts/game-events";
 
 export class MongoReportingRepository implements IReportingRepository {
-  async getDashboardStats(nextGamesLimit: number, topPlayersLimit: number): Promise<DashboardStatsResponseDto> {
+  async getDashboardStats(
+    nextGamesLimit: number,
+    topPlayersLimit: number,
+    modality: Modality = "flag",
+  ): Promise<DashboardStatsResponseDto> {
+    // Mongo only holds historical flag data.
+    if (modality !== "flag") {
+      return { activeTournaments: 0, totalTeams: 0, totalPlayers: 0, completedGames: 0, nextGames: [], topPlayers: [] };
+    }
     await connectToDatabase();
     const [activeTournaments, totalTeams, totalPlayers, completedGames, nextGamesData, topPlayersData] =
       await Promise.all([
@@ -87,6 +95,8 @@ export class MongoReportingRepository implements IReportingRepository {
   }
 
   async getAdminAnalytics(query: AdminAnalyticsQuery) {
+    // Mongo only holds historical flag data.
+    if ((query.modality ?? "flag") !== "flag") return buildAdminAnalytics(query.subject, [], []);
     await connectToDatabase();
     const games = await GameModel.find({
       status: { $in: ["in_progress", "completed"] },
@@ -124,10 +134,12 @@ export class MongoReportingRepository implements IReportingRepository {
             }
           : null,
       })),
+      query.modality ?? "flag",
     );
   }
 
   async getAnalyticsFacts(query: AnalyticsFactsQuery): Promise<AnalyticsEventFact[]> {
+    if ((query.modality ?? "flag") !== "flag") return [];
     await connectToDatabase();
     const filters = query.filters || {};
     const gameMatch: Record<string, unknown> = {
@@ -178,6 +190,7 @@ export class MongoReportingRepository implements IReportingRepository {
   }
 
   async getPlayerRankings(query: PlayerRankingQuery): Promise<PlayerRankingRow[]> {
+    if ((query.modality ?? "flag") !== "flag") return [];
     await connectToDatabase();
     const eventMatch: Record<string, unknown> = {
       player: { $exists: true, $ne: null },
@@ -272,15 +285,8 @@ export class MongoReportingRepository implements IReportingRepository {
     };
   }
 
-  private rankingEventTypes(query: PlayerRankingQuery): RankingEventType[] {
+  private rankingEventTypes(query: PlayerRankingQuery): string[] {
     if (query.mode !== "count" || !query.eventType) return [];
-    const values: RankingEventType[] = [query.eventType];
-    if (
-      query.includePickSix &&
-      (query.eventType === "touchdown" || query.eventType === "interception")
-    ) {
-      values.push("pick_six");
-    }
-    return values;
+    return rankingEventTypes(query.eventType, query.includePickSix);
   }
 }

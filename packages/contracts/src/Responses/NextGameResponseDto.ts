@@ -1,4 +1,6 @@
-export type GameModality = "flag" | "tackle";
+import type { Modality } from "../types";
+
+export type GameModality = Modality;
 
 export interface NextGameResponseDto {
   id: string;

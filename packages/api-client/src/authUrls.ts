@@ -1,7 +1,9 @@
 const PRODUCTION_LUFA_URL = "https://lufa.com.uy";
 const PRODUCTION_FLAG_URL = "https://flag.lufa.com.uy";
+const PRODUCTION_TACKLE_URL = "https://tackle.lufa.com.uy";
 const LOCAL_LUFA_URL = "http://localhost:3003";
 const LOCAL_FLAG_URL = "http://localhost:3000";
+const LOCAL_TACKLE_URL = "http://localhost:3004";
 
 function trimTrailingSlash(value: string) {
   return value.replace(/\/+$/, "");
@@ -21,16 +23,29 @@ export function getFlagAppUrl() {
   );
 }
 
-/** Sessions are shared only by the two production LUFA properties. */
+export function getTackleAppUrl() {
+  return trimTrailingSlash(
+    process.env.NEXT_PUBLIC_TACKLE_URL ||
+      (process.env.NODE_ENV === "production" ? PRODUCTION_TACKLE_URL : LOCAL_TACKLE_URL),
+  );
+}
+
+/**
+ * Sessions are shared only by the production LUFA properties. Testing/preview
+ * deployments live on *.vercel.app (a public suffix), where browsers reject a
+ * cookie Domain, so they get a host-only cookie instead.
+ */
 export const SHARED_SESSION_COOKIE_DOMAIN =
-  process.env.NODE_ENV === "production" ? ".lufa.com.uy" : undefined;
+  process.env.NODE_ENV === "production" && (process.env.VERCEL_ENV ?? "production") === "production"
+    ? ".lufa.com.uy"
+    : undefined;
 
 export function normalizeAuthReturnTo(value: string | null | undefined) {
   if (!value) return null;
 
   try {
     const destination = new URL(value);
-    const allowedOrigins = new Set([getLufaAppUrl(), getFlagAppUrl()]);
+    const allowedOrigins = new Set([getLufaAppUrl(), getFlagAppUrl(), getTackleAppUrl()]);
     if (!allowedOrigins.has(destination.origin)) return null;
     return destination.toString();
   } catch {

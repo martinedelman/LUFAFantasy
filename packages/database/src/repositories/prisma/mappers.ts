@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Division } from "@lufa/sports/entities/Division";
+import { DEFAULT_MODALITY, isModality, type Modality } from "@lufa/sports/entities/Modality";
 import { Game, type GameEvent, type GameOfficial, type GameStatistics, type GameStatus } from "@lufa/sports/entities/Game";
 import { Player, type EmergencyContact, type PlayerPosition, type PlayerStatus } from "@lufa/sports/entities/Player";
 import { Standing } from "@lufa/sports/entities/Standing";
@@ -29,6 +30,15 @@ export function referenceId(value: unknown): string {
     return String(record.id ?? record._id ?? "");
   }
   return String(value);
+}
+
+/** The modality a list query asks for, if any. Unknown values are ignored. */
+export function modalityFilter(filters: Record<string, unknown>): Modality | undefined {
+  return isModality(filters.modality) ? filters.modality : undefined;
+}
+
+function toModality(value: unknown): Modality {
+  return isModality(value) ? value : DEFAULT_MODALITY;
 }
 
 function jsonValue<T>(value: unknown, fallback: T): T {
@@ -74,6 +84,7 @@ export function toTournament(record: AnyRecord | null): Tournament | null {
     record.id,
     record.createdAt,
     record.updatedAt,
+    toModality(record.modality),
   );
 }
 
@@ -92,6 +103,7 @@ export function toDivision(record: AnyRecord | null): Division | null {
     record.id,
     record.createdAt,
     record.updatedAt,
+    toModality(record.modality),
   );
 }
 
@@ -174,16 +186,19 @@ function teamSummary(team: AnyRecord | null | undefined): unknown {
   };
 }
 
-function playerSummary(player: AnyRecord | null | undefined): unknown {
+function playerSummary(player: AnyRecord | null | undefined, modality?: string): unknown {
   if (!player) return undefined;
+  const profile = modality
+    ? (player.modalityProfiles as AnyRecord[] | undefined)?.find((item) => item.modality === modality)
+    : undefined;
   return {
     _id: player.id,
     id: player.id,
     firstName: player.firstName,
     lastName: player.lastName,
-    jerseyNumber: player.jerseyNumber,
-    position: player.position,
-    secondaryPosition: player.secondaryPosition,
+    jerseyNumber: profile ? profile.jerseyNumber : player.jerseyNumber,
+    position: profile ? profile.position : player.position,
+    secondaryPosition: profile ? profile.secondaryPosition : player.secondaryPosition,
     status: player.status,
   };
 }
@@ -197,7 +212,7 @@ export function toGame(record: AnyRecord | null): Game | null {
 
   for (const item of (record.presentPlayers || []).sort(byOrdinal)) {
     const side = item.side === "away" ? "away" : "home";
-    present[side].push(playerSummary(item.player));
+    present[side].push(playerSummary(item.player, record.tournament?.modality));
   }
 
   const game = new Game(
@@ -233,7 +248,7 @@ export function toGame(record: AnyRecord | null): Game | null {
     time: event.time ?? undefined,
     type: event.type,
     team: teamSummary(event.team) || event.teamId,
-    player: playerSummary(event.player),
+    player: playerSummary(event.player, record.tournament?.modality),
     description: event.description ?? undefined,
     yards: event.yards ?? undefined,
     points: event.points ?? undefined,
@@ -242,7 +257,13 @@ export function toGame(record: AnyRecord | null): Game | null {
 
   Object.assign(game, {
     tournament: record.tournament
-      ? { _id: record.tournament.id, id: record.tournament.id, name: record.tournament.name, year: record.tournament.year }
+      ? {
+          _id: record.tournament.id,
+          id: record.tournament.id,
+          name: record.tournament.name,
+          year: record.tournament.year,
+          modality: record.tournament.modality,
+        }
       : record.tournamentId,
     division: record.division
       ? { _id: record.division.id, id: record.division.id, name: record.division.name, category: record.division.category }

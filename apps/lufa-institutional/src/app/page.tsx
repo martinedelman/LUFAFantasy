@@ -5,6 +5,8 @@ import Link from "next/link";
 import styles from "./page.module.css";
 
 const flagUrl = process.env.NEXT_PUBLIC_FLAG_URL || "https://flag.lufa.com.uy";
+// Opt-in: the tackle card links out only once its URL is configured.
+const tackleUrl = process.env.NEXT_PUBLIC_TACKLE_URL;
 
 export default function HomePage() {
   return (
@@ -14,7 +16,7 @@ export default function HomePage() {
           <Image src="/lufa_icon.png" alt="" width={78} height={78} priority />
           <span>Liga Uruguaya de Football Americano</span>
         </Link>
-        <SiteNav flagUrl={flagUrl} />
+        <SiteNav flagUrl={flagUrl} tackleUrl={tackleUrl} />
       </header>
 
       <section className={`hero ${styles.hero}`} id="inicio" aria-labelledby="portal-title">
@@ -30,12 +32,20 @@ export default function HomePage() {
         <div className="hero-panel">
           <p className="eyebrow">Liga Uruguaya de Football Americano</p>
           <h1 id="portal-title">
-            Bienvenidos<br />a la LUFA
+            Bienvenidos
+            <br />a la LUFA
           </h1>
-          <p>El football americano en Uruguay tiene lugar para vos: jugadores, clubes, instituciones y quienes quieran conocer el deporte.</p>
+          <p>
+            El football americano en Uruguay tiene lugar para vos: jugadores, clubes, instituciones y quienes quieran
+            conocer el deporte.
+          </p>
           <div className={styles.heroActions}>
-            <a className={styles.primaryAction} href="#sumate">Quiero sumarme</a>
-            <a className={styles.secondaryAction} href="#proximos-partidos">Ver próximos partidos</a>
+            <a className={styles.primaryAction} href="#sumate">
+              Quiero sumarme
+            </a>
+            <a className={styles.secondaryAction} href="#proximos-partidos">
+              Ver próximos partidos
+            </a>
           </div>
         </div>
       </section>
@@ -53,11 +63,20 @@ export default function HomePage() {
             <small>Ver competencia y novedades</small>
             <i aria-hidden="true">↗</i>
           </a>
-          <div className="discipline-card tackle-card" aria-disabled="true">
-            <span>02</span>
-            <strong>Tackle Football</strong>
-            <small>Próximamente</small>
-          </div>
+          {tackleUrl ? (
+            <a className="discipline-card tackle-card" href={tackleUrl}>
+              <span>02</span>
+              <strong>Tackle Football</strong>
+              <small>Ver competencia y novedades</small>
+              <i aria-hidden="true">↗</i>
+            </a>
+          ) : (
+            <div className="discipline-card tackle-card" aria-disabled="true">
+              <span>02</span>
+              <strong>Tackle Football</strong>
+              <small>Próximamente</small>
+            </div>
+          )}
         </div>
       </section>
 
@@ -82,9 +101,26 @@ export default function HomePage() {
         <div className="about-copy">
           <p className="eyebrow">Institucional</p>
           <h2 id="about-title">Acerca de LUFA</h2>
-          <p>La Liga Uruguaya de Football Americano (LUFA) fue fundada en 1999, es una asociación civil sin fines de lucro, y es el ente rector del football americano en todo el territorio del Uruguay.</p>
-          <p>Miembros de la <a href="http://www.americanfootball.sport/" target="_blank" rel="noreferrer">Federación Internacional de Football Americano</a> (IFAF) y de <a href="http://www.americanfootball.sport/member-federations/25" target="_blank" rel="noreferrer">IFAF Américas</a>, actualmente impulsa el crecimiento del deporte a través de sus modalidades de tackle y flag football.</p>
-          <p>En particular, el flag football ha tenido un importante desarrollo en sus ramas masculina y femenina, y LUFA se encuentra además trabajando en el fortalecimiento de un proyecto de flag juvenil, con el objetivo de ampliar la base deportiva y seguir consolidando el crecimiento de la disciplina en el país.</p>
+          <p>
+            La Liga Uruguaya de Football Americano (LUFA) fue fundada en 1999, es una asociación civil sin fines de
+            lucro, y es el ente rector del football americano en todo el territorio del Uruguay.
+          </p>
+          <p>
+            Miembros de la{" "}
+            <a href="http://www.americanfootball.sport/" target="_blank" rel="noreferrer">
+              Federación Internacional de Football Americano
+            </a>{" "}
+            (IFAF) y de{" "}
+            <a href="http://www.americanfootball.sport/member-federations/25" target="_blank" rel="noreferrer">
+              IFAF Américas
+            </a>
+            , actualmente impulsa el crecimiento del deporte a través de sus modalidades de tackle y flag football.
+          </p>
+          <p>
+            En particular, el flag football ha tenido un importante desarrollo en sus ramas masculina y femenina, y LUFA
+            se encuentra además trabajando en el fortalecimiento de un proyecto de flag juvenil, con el objetivo de
+            ampliar la base deportiva y seguir consolidando el crecimiento de la disciplina en el país.
+          </p>
         </div>
       </section>
 
@@ -105,19 +141,28 @@ export default function HomePage() {
           <article className={styles.joinCard}>
             <p className="eyebrow">Jugadores y jugadoras</p>
             <h3>Empezá a jugar</h3>
-            <p>No necesitás experiencia previa. Los equipos reciben nuevos integrantes durante toda la temporada y podés ir a ver un partido para conocer la comunidad.</p>
+            <p>
+              No necesitás experiencia previa. Los equipos reciben nuevos integrantes durante toda la temporada y podés
+              ir a ver un partido para conocer la comunidad.
+            </p>
             <a href={flagUrl}>Conocer la competencia de Flag ↗</a>
           </article>
           <article className={styles.joinCard}>
             <p className="eyebrow">Clubes e instituciones</p>
             <h3>Traé el deporte a tu institución</h3>
-            <p>Acompañamos a clubes, colegios y organizaciones que quieran formar un equipo, organizar clínicas o sumar el flag football a sus actividades.</p>
+            <p>
+              Acompañamos a clubes, colegios y organizaciones que quieran formar un equipo, organizar clínicas o sumar
+              el flag football a sus actividades.
+            </p>
             <a href="#acerca">Conocer más sobre LUFA</a>
           </article>
           <article className={styles.joinCard}>
             <p className="eyebrow">Hinchas y familias</p>
             <h3>Vení a ver un partido</h3>
-            <p>Los partidos son abiertos y con entrada libre. Encontrá la fecha, la modalidad y la dirección de cada encuentro en el calendario.</p>
+            <p>
+              Los partidos son abiertos y con entrada libre. Encontrá la fecha, la modalidad y la dirección de cada
+              encuentro en el calendario.
+            </p>
             <a href="#proximos-partidos">Ver el calendario</a>
           </article>
         </div>

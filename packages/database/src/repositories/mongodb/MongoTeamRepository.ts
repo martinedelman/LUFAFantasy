@@ -3,6 +3,8 @@ import { Team } from "@lufa/sports/entities/Team";
 import { TeamModel } from "../../models/Team";
 import connectToDatabase from "../../mongodb";
 import { TournamentModel } from "@lufa/database/models";
+import { withoutModality } from "./modality";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -17,7 +19,9 @@ export class MongoTeamRepository implements ITeamRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Team[]> {
     await connectToDatabase();
-    const docs = await TeamModel.find(filters || {})
+    const query = withoutModality(filters);
+    if (!query) return [];
+    const docs = await TeamModel.find(query)
       .populate("division")
       .exec();
     return docs;
@@ -85,7 +89,8 @@ export class MongoTeamRepository implements ITeamRepository {
     return docs;
   }
 
-  async existsWithName(name: string, tournamentId?: string): Promise<boolean> {
+  async existsWithName(name: string, tournamentId?: string, modality?: Modality): Promise<boolean> {
+    if (!withoutModality({ modality })) return false;
     await connectToDatabase();
     const query: Record<string, unknown> = { name: { $regex: new RegExp(`^${name}$`, "i") } };
     if (tournamentId) {

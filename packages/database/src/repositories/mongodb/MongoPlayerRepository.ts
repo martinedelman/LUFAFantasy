@@ -2,6 +2,9 @@ import { IPlayerRepository } from "../contracts/IPlayerRepository";
 import { Player } from "@lufa/sports/entities/Player";
 import { PlayerModel } from "../../models/Player";
 import connectToDatabase from "../../mongodb";
+import { withoutModality } from "./modality";
+import type { Modality } from "@lufa/sports/entities/Modality";
+import type { PlayerModalityProfile } from "@lufa/sports/ports";
 
 export class MongoPlayerRepository implements IPlayerRepository {
   async findById(id: string): Promise<Player | null> {
@@ -20,7 +23,9 @@ export class MongoPlayerRepository implements IPlayerRepository {
 
   async findAll(filters?: Record<string, unknown>): Promise<Player[]> {
     await connectToDatabase();
-    const query: Record<string, unknown> = { ...(filters || {}) };
+    const withoutModalityQuery = withoutModality(filters);
+    if (!withoutModalityQuery) return [];
+    const query: Record<string, unknown> = { ...withoutModalityQuery };
     if (typeof query.position === "string") {
       const position = query.position;
       delete query.position;
@@ -103,15 +108,49 @@ export class MongoPlayerRepository implements IPlayerRepository {
     return count > 0;
   }
 
-  async findByEmail(email: string): Promise<Player | null> {
+  // Mongo only holds flag data: there is one profile per player, stored on the player itself.
+
+  async getHomeModality(): Promise<Modality> {
+    return "flag";
+  }
+
+  async listModalityProfiles(): Promise<PlayerModalityProfile[]> {
+    return [];
+  }
+
+  async createWithProfile(player: Player): Promise<Player> {
+    return this.create(player);
+  }
+
+  async updateWithProfile(id: string, player: Player): Promise<Player> {
+    return this.update(id, player);
+  }
+
+  async isJerseyTaken(
+    jerseyNumber: number,
+    scope: { modality: Modality; teamId?: string; playerId?: string },
+  ): Promise<boolean> {
+    if (scope.modality !== "flag") return false;
+    let teamId = scope.teamId;
+    if (!teamId && scope.playerId) {
+      await connectToDatabase();
+      const player = await PlayerModel.findById(scope.playerId).select("team").lean<{ team?: unknown }>().exec();
+      teamId = player?.team ? String(player.team) : undefined;
+    }
+    return teamId ? this.existsWithJerseyNumber(jerseyNumber, teamId, scope.playerId) : false;
+  }
+
+  async findByEmail(email: string, modality?: Modality): Promise<Player | null> {
+    if (!withoutModality({ modality })) return null;
     await connectToDatabase();
     const normalizedEmail = email.trim().toLowerCase();
     const doc = await PlayerModel.findOne({ email: normalizedEmail }).exec();
     return doc ? doc : null;
   }
 
-  async searchByName(query: string): Promise<Player[]> {
+  async searchByName(query: string, modality?: Modality): Promise<Player[]> {
     await connectToDatabase();
+    if (!withoutModality({ modality })) return [];
     const regex = new RegExp(query, "i");
     const docs = await PlayerModel.find({
       $or: [{ firstName: regex }, { lastName: regex }],

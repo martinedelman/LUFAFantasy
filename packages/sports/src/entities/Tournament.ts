@@ -1,4 +1,5 @@
 import { AggregateRoot } from "./base/AggregateRoot";
+import { DEFAULT_MODALITY, type Modality } from "./Modality";
 
 export type TournamentStatus = "upcoming" | "active" | "completed" | "cancelled";
 export type TournamentFormat = "league" | "playoff" | "tournament";
@@ -46,6 +47,7 @@ export class Tournament extends AggregateRoot {
   public readonly participatingTeams: string[]; // IDs de equipos participantes
   public readonly rules?: TournamentRules;
   public readonly prizes?: TournamentPrize[];
+  public readonly modality: Modality;
 
   constructor(
     name: string,
@@ -65,6 +67,7 @@ export class Tournament extends AggregateRoot {
     id?: string,
     createdAt?: Date,
     updatedAt?: Date,
+    modality: Modality = DEFAULT_MODALITY,
   ) {
     super(id, createdAt, updatedAt);
     this.name = name;
@@ -81,6 +84,7 @@ export class Tournament extends AggregateRoot {
     this.participatingTeams = participatingTeams;
     this.rules = rules;
     this.prizes = prizes;
+    this.modality = modality;
   }
 
   /**

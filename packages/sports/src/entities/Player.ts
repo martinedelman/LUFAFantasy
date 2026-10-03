@@ -1,15 +1,7 @@
 import { AggregateRoot } from "./base/AggregateRoot";
+import { PLAYER_POSITIONS, type PlayerPosition } from "@lufa/contracts/game-events";
 
-export type PlayerPosition =
-  | "QB" // Quarterback
-  | "WR" // Wide Receiver
-  | "RB" // Running Back
-  | "C" // Center
-  | "RS" // Rusher
-  | "LB" // Linebacker
-  | "CB" // Cornerback
-  | "FS" // Free Safety
-  | "SS"; // Strong Safety
+export type { PlayerPosition } from "@lufa/contracts/game-events";
 
 export type PlayerStatus = "active" | "inactive" | "injured" | "suspended" | "pre_approved";
 
@@ -149,7 +141,7 @@ export class Player extends AggregateRoot {
       errors.push("El número de camiseta debe estar entre 0 y 99");
     }
 
-    const validPositions = ["QB", "WR", "RB", "C", "RS", "LB", "CB", "FS", "SS"];
+    const validPositions: readonly string[] = PLAYER_POSITIONS;
     if (!validPositions.includes(this.position)) {
       errors.push("Posición inválida");
     }

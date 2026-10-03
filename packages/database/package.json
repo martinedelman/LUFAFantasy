@@ -19,22 +19,24 @@
     "./repositories/auxiliary/*": "./src/repositories/auxiliary/*.ts",
     "./repositories/reporting": "./src/repositories/reporting/index.ts",
     "./repositories/reporting/*": "./src/repositories/reporting/*.ts",
-    "./repositories/fantasy": "./src/repositories/fantasy/index.ts"
+    "./repositories/fantasy": "./src/repositories/fantasy/index.ts",
+    "./repositories/commerce": "./src/repositories/commerce/index.ts"
   },
   "scripts": {
     "generate": "prisma generate --config=../../prisma.config.ts",
     "build": "tsc --noEmit",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests --exclude src/repositories/prisma/provider.integration.test.ts",
+    "test": "vitest run --passWithNoTests --exclude src/repositories/prisma/provider.integration.test.ts --exclude src/repositories/prisma/modality.integration.test.ts",
     "prisma:generate": "prisma generate --config=../../prisma.config.ts",
     "prisma:validate": "prisma validate --config=../../prisma.config.ts",
     "prisma:status": "prisma migrate status --config=../../prisma.config.ts",
     "db:postgres:migrate": "prisma migrate deploy --config=../../prisma.config.ts",
     "db:postgres:test:prepare": "prisma migrate deploy --config=../../prisma.config.ts",
-    "test:postgres": "vitest run src/repositories/prisma/provider.integration.test.ts"
+    "test:postgres": "vitest run src/repositories/prisma/provider.integration.test.ts src/repositories/prisma/modality.integration.test.ts"
   },
   "dependencies": {
+    "@lufa/commerce": "*",
     "@lufa/contracts": "*",
     "@lufa/fantasy-core": "*",
     "@lufa/identity-institutional": "*",

@@ -1,6 +1,7 @@
 import { IRepository } from "./IRepository";
 import { Game, GameEvent, GameStatus } from "@lufa/sports/entities/Game";
 import { GameScore } from "@lufa/sports/entities/valueObjects/Score";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 /**
  * Interface para el repositorio de Games
@@ -14,7 +15,7 @@ export interface IGameRepository extends IRepository<Game> {
   /**
    * Busca partidos por equipo
    */
-  findByTeam(teamId: string): Promise<Game[]>;
+  findByTeam(teamId: string, modality?: Modality): Promise<Game[]>;
 
   /**
    * Busca partidos por estado

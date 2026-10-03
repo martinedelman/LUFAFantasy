@@ -1,6 +1,7 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { getAuxiliaryRepository } from "@lufa/database/repositories/auxiliary";
 
@@ -57,11 +58,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const modality = parseModality(request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
+
     const docs = (await auxiliaryRepo.listFlagInterests({
       playerRegistrationsOnly: true,
+      modality,
     })) as unknown as PlayerRegistrationDocument[];
 
-    const settings = await adminService.getSiteSettings();
+    const settings = await adminService.getSiteSettings(modality);
 
     return NextResponse.json({
       success: true,

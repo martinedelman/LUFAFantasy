@@ -3,6 +3,8 @@ import { GameScore, QuarterScore } from "@lufa/sports/entities/valueObjects/Scor
 import { Venue } from "@lufa/sports/entities/valueObjects/Venue";
 import type { IGameRepository, ITeamRepository } from "@lufa/sports/ports";
 import { StandingService } from "./StandingService";
+import { DEFAULT_MODALITY, isModality, type Modality } from "@lufa/sports/entities/Modality";
+import { GAME_EVENT_LABELS, eventRule, qbStatValue, resolveEventPoints } from "@lufa/contracts/game-events";
 
 interface ScoreUpdate {
   home: { q1: number; q2: number; q3: number; q4: number; overtime?: number };
@@ -262,7 +264,14 @@ export class GameService {
       throw new Error("El equipo es requerido");
     }
 
-    const allowsMissingPlayer = eventData.type === "safety" && this.hasEventQuarterback(eventData.details);
+    const modality = this.getGameModality(game);
+    const points = resolveEventPoints(modality, eventData.type, eventData.points);
+    if (!points.ok) {
+      throw new Error(points.message);
+    }
+
+    const rule = eventRule(modality, eventData.type);
+    const allowsMissingPlayer = Boolean(rule?.scorerOptionalWithQb) && this.hasEventQuarterback(eventData.details);
     const requiresPlayer = eventData.type !== "quarter_end" && eventData.type !== "game_end" && !allowsMissingPlayer;
     if (requiresPlayer && !eventData.player) {
       throw new Error("El jugador es requerido");
@@ -275,7 +284,8 @@ export class GameService {
       throw new Error("El equipo del evento no participa en este partido");
     }
 
-    const safePoints = eventData.points === undefined ? undefined : Math.max(0, eventData.points);
+    // Flag keeps "no points" as undefined when the client sends none; tackle always stores the rule's points.
+    const safePoints = rule?.points || eventData.points !== undefined ? points.points : undefined;
     const time = eventData.time?.trim();
 
     if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
@@ -289,9 +299,20 @@ export class GameService {
       team: eventData.team,
       player: eventData.player || undefined,
       points: safePoints,
-      description: this.getEventDescription(eventData.type, safePoints),
-      details: eventData.details,
+      description: this.getEventDescription(modality, eventData.type, safePoints),
+      details: this.withServerQbStatValue(rule, eventData.type, safePoints, eventData.details),
     };
+  }
+
+  /** The QB's credit follows the stored points, never the client's value. */
+  private withServerQbStatValue(
+    rule: ReturnType<typeof eventRule>,
+    type: GameEventType,
+    points: number | undefined,
+    details: unknown,
+  ): unknown {
+    if (!rule?.qb || !this.hasEventQuarterback(details)) return details;
+    return { ...(details as Record<string, unknown>), qbStatValue: qbStatValue(rule, type, points) };
   }
 
   /**
@@ -489,27 +510,16 @@ export class GameService {
     );
   }
 
-  private getEventDescription(type: GameEventType, points?: number): string {
-    const labels: Record<GameEventType, string> = {
-      touchdown: "Touchdown",
-      extra_point: "Punto extra",
-      field_goal: "Field goal",
-      safety: "Safety",
-      interception: "Intercepción",
-      pick_six: "PICK SIX",
-      penalty: "Castigo",
-      unsportsmanlike: "Actitud Antideportiva",
-      quarter_end: "Fin de cuarto",
-      game_end: "Fin del partido",
-      substitution: "Sustitución",
-      injury: "Lesión",
-      first_down: "Primero y diez",
-      sack: "Sack",
-    };
+  private getEventDescription(modality: Modality, type: GameEventType, points?: number): string {
+    if (type === "quarter_end") return modality === "tackle" ? "Fin de cuarto" : "Fin de mitad";
 
-    if (type === "quarter_end") return "Fin de mitad";
+    const label = GAME_EVENT_LABELS[type];
+    return points && points > 0 ? `${label} (+${points})` : label;
+  }
 
-    return points && points > 0 ? `${labels[type]} (+${points})` : labels[type];
+  private getGameModality(game: Game): Modality {
+    const modality = (game.tournament as unknown as { modality?: unknown } | undefined)?.modality;
+    return isModality(modality) ? modality : DEFAULT_MODALITY;
   }
 
   /**
@@ -529,9 +539,10 @@ export class GameService {
     status?: GameStatus;
     phase?: GamePhase;
     playoffSlot?: string;
+    modality?: Modality;
   }): Promise<Game[]> {
     if (filters.team) {
-      const gamesByTeam = await this.gameRepo.findByTeam(filters.team);
+      const gamesByTeam = await this.gameRepo.findByTeam(filters.team, filters.modality);
       return gamesByTeam.filter((game) => {
         if (filters.tournament && this.getReferenceId(game.tournament) !== filters.tournament) {
           return false;
@@ -563,6 +574,7 @@ export class GameService {
       status?: GameStatus;
       phase?: GamePhase;
       playoffSlot?: string;
+      modality?: Modality;
     } = {};
 
     if (filters.tournament) queryFilters.tournament = filters.tournament;
@@ -570,6 +582,7 @@ export class GameService {
     if (filters.status) queryFilters.status = filters.status;
     if (filters.playoffSlot) queryFilters.playoffSlot = filters.playoffSlot;
     if (filters.phase) queryFilters.phase = filters.phase;
+    if (filters.modality) queryFilters.modality = filters.modality;
 
     return await this.gameRepo.findAll(queryFilters);
   }

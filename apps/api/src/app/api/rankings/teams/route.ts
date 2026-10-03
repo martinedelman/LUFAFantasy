@@ -1,6 +1,7 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import { buildRequestCacheKey, createCacheHeaders, getCachedValue } from "@/lib/serverCache";
 import type { TeamDefenseRankingStage } from "@lufa/sports/services/TeamDefenseRankingService";
 
@@ -16,6 +17,8 @@ export async function GET(request: NextRequest) {
       ? (stageValue as TeamDefenseRankingStage)
       : "regular";
     const year = parseOptionalNumber(searchParams.get("year"));
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
     if (year !== null && (!Number.isInteger(year) || year < 2000 || year > 2100)) {
       return NextResponse.json({ success: false, message: "año inválido" }, { status: 400 });
     }
@@ -31,6 +34,7 @@ export async function GET(request: NextRequest) {
           year,
           stage,
           limit: Math.max(1, Math.min(Number.parseInt(searchParams.get("limit") || "10", 10), 50)),
+          modality,
         }),
       { tags: ["rankings"] },
     );

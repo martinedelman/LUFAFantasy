@@ -1,3 +1,5 @@
+import type { GameEventType, PlayerPosition } from "./gameEvents";
+
 // Tipos principales para el sistema de Flag Football
 
 // Usuario del sistema
@@ -137,16 +139,7 @@ export interface Player {
   updatedAt: Date;
 }
 
-export type PlayerPosition =
-  | "QB" // Quarterback
-  | "WR" // Wide Receiver
-  | "RB" // Running Back
-  | "C" // Center
-  | "RS" // Rusher
-  | "LB" // Linebacker
-  | "CB" // Cornerback
-  | "FS" // Free Safety
-  | "SS"; // Strong Safety
+export type { PlayerPosition } from "./gameEvents";
 
 export interface EmergencyContact {
   name: string;
@@ -262,21 +255,7 @@ export interface GameEvent {
   details?: string;
 }
 
-export type GameEventType =
-  | "touchdown"
-  | "extra_point"
-  | "field_goal"
-  | "safety"
-  | "interception"
-  | "pick_six"
-  | "penalty"
-  | "unsportsmanlike"
-  | "quarter_end"
-  | "game_end"
-  | "substitution"
-  | "injury"
-  | "first_down"
-  | "sack";
+export type { GameEventType } from "./gameEvents";
 
 export interface PlayerStatistics {
   _id?: string;

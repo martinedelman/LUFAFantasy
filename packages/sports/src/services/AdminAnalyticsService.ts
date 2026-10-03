@@ -1,11 +1,13 @@
 import type { AdminAnalyticsResponseDto, AdminAnalyticsSubject } from "@lufa/contracts";
 import type { IDivisionRepository, ITournamentRepository } from "@lufa/sports/ports";
+import type { Modality } from "@lufa/sports/entities/Modality";
 
 export interface AdminAnalyticsPort {
   getAdminAnalytics(query: {
     subject: AdminAnalyticsSubject;
     tournament?: string | null;
     division?: string | null;
+    modality?: Modality;
   }): Promise<AdminAnalyticsResponseDto>;
 }
 
@@ -20,6 +22,7 @@ export class AdminAnalyticsService {
     subject: AdminAnalyticsSubject;
     tournament?: string | null;
     division?: string | null;
+    modality?: Modality;
   }) {
     if (query.tournament && !(await this.tournamentRepo.exists(query.tournament).catch(() => false))) {
       throw new Error("campeonato inválido");

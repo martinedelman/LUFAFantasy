@@ -1,11 +1,15 @@
 import { Division, DivisionCategory } from "@lufa/sports/entities/Division";
-import type { IDivisionRepository } from "@lufa/sports/ports";
+import { DEFAULT_MODALITY, type Modality } from "@lufa/sports/entities/Modality";
+import type { IDivisionRepository, ITournamentRepository } from "@lufa/sports/ports";
 
 /**
  * Servicio de gestión de divisiones
  */
 export class DivisionService {
-  constructor(private readonly divisionRepo: IDivisionRepository) {}
+  constructor(
+    private readonly divisionRepo: IDivisionRepository,
+    private readonly tournamentRepo: ITournamentRepository,
+  ) {}
 
   /**
    * Crea una nueva división
@@ -17,6 +21,7 @@ export class DivisionService {
     tournament?: string;
     maxTeams?: number;
     teams?: string[];
+    modality?: Modality;
   }): Promise<Division> {
     const division = new Division(
       data.name,
@@ -25,12 +30,27 @@ export class DivisionService {
       data.ageGroup,
       data.tournament,
       data.maxTeams,
+      undefined,
+      undefined,
+      undefined,
+      data.modality,
     );
 
     // Validar
     const validation = division.validate();
     if (!validation.isValid) {
       throw new Error(validation.errors.join(", "));
+    }
+
+    if (data.tournament) {
+      const tournament = await this.tournamentRepo.findById(data.tournament);
+      if (!tournament) {
+        throw new Error("Torneo no encontrado");
+      }
+      const modality = data.modality || DEFAULT_MODALITY;
+      if ((tournament.modality || DEFAULT_MODALITY) !== modality) {
+        throw new Error(`El torneo ${tournament.name} no pertenece a la modalidad ${modality}`);
+      }
     }
 
     return await this.divisionRepo.create(division);
@@ -46,7 +66,7 @@ export class DivisionService {
   /**
    * Lista divisiones con filtros
    */
-  async listDivisions(filters?: { tournament?: string; category?: DivisionCategory }): Promise<Division[]> {
+  async listDivisions(filters?: { tournament?: string; category?: DivisionCategory; modality?: Modality }): Promise<Division[]> {
     return await this.divisionRepo.findAll(filters);
   }
 
@@ -79,6 +99,7 @@ export class DivisionService {
       existingDivision.id,
       existingDivision.createdAt,
       existingDivision.updatedAt,
+      existingDivision.modality,
     );
 
     // Validar
@@ -118,6 +139,7 @@ export class DivisionService {
       division.id,
       division.createdAt,
       division.updatedAt,
+      division.modality,
     );
 
     return await this.divisionRepo.update(divisionId, updatedDivision);
@@ -147,6 +169,7 @@ export class DivisionService {
       division.id,
       division.createdAt,
       division.updatedAt,
+      division.modality,
     );
 
     return await this.divisionRepo.update(divisionId, updatedDivision);

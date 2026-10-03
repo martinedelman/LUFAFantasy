@@ -38,7 +38,7 @@ export type { JudgeResponseDto } from "./JudgeResponseDto";
 export type { NextGameResponseDto } from "./NextGameResponseDto";
 export type { PaginatedResponseDto } from "./PaginatedResponseDto";
 export type { PaginationDto } from "./PaginationDto";
-export type { PlayerResponseDto } from "./PlayerResponseDto";
+export type { PlayerModalityProfileDto, PlayerResponseDto } from "./PlayerResponseDto";
 export type { PlayerProfileResponseDto } from "./PlayerProfileResponseDto";
 export type { PlayerStatsResponseDto } from "./PlayerStatsResponseDto";
 export type { PlayerSummaryResponseDto } from "./PlayerSummaryResponseDto";

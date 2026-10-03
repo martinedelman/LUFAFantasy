@@ -1,13 +1,17 @@
 import { Coach, Team, TeamStatus } from "@lufa/sports/entities/Team";
 import { Colors } from "@lufa/sports/entities/valueObjects/Colors";
 import { ContactInfo } from "@lufa/sports/entities/valueObjects/ContactInfo";
-import type { ITeamRepository } from "@lufa/sports/ports";
+import type { IDivisionRepository, ITeamRepository } from "@lufa/sports/ports";
+import { DEFAULT_MODALITY, type Modality } from "@lufa/sports/entities/Modality";
 
 /**
  * Servicio de gestión de equipos
  */
 export class TeamService {
-  constructor(private readonly teamRepo: ITeamRepository) {}
+  constructor(
+    private readonly teamRepo: ITeamRepository,
+    private readonly divisionRepo: IDivisionRepository,
+  ) {}
 
   /**
    * Crea un nuevo equipo
@@ -37,8 +41,13 @@ export class TeamService {
     status?: TeamStatus;
     registrationDate?: Date;
   }): Promise<Team> {
-    // Verificar que el nombre no esté en uso
-    const exists = await this.teamRepo.existsWithName(data.name, data.tournament);
+    // Verificar que el nombre no esté en uso dentro del torneo o, sin torneo, de la modalidad de la división
+    const division = await this.divisionRepo.findById(data.division);
+    const exists = await this.teamRepo.existsWithName(
+      data.name,
+      data.tournament,
+      division?.modality || DEFAULT_MODALITY,
+    );
     if (exists) {
       throw new Error("Ya existe un equipo con ese nombre");
     }
@@ -92,7 +101,12 @@ export class TeamService {
   /**
    * Lista equipos con filtros
    */
-  async listTeams(filters?: { tournament?: string; division?: string; status?: TeamStatus }): Promise<Team[]> {
+  async listTeams(filters?: {
+    tournament?: string;
+    division?: string;
+    status?: TeamStatus;
+    modality?: Modality;
+  }): Promise<Team[]> {
     if (!filters) {
       return await this.teamRepo.findAll();
     }
@@ -118,9 +132,10 @@ export class TeamService {
       });
     }
 
-    const queryFilters: { division?: string; status?: TeamStatus } = {};
+    const queryFilters: { division?: string; status?: TeamStatus; modality?: Modality } = {};
     if (filters.division) queryFilters.division = filters.division;
     if (filters.status) queryFilters.status = filters.status;
+    if (filters.modality) queryFilters.modality = filters.modality;
 
     return await this.teamRepo.findAll(queryFilters);
   }

@@ -72,6 +72,7 @@ export const ModelName = {
   TournamentDivision: 'TournamentDivision',
   TournamentTeam: 'TournamentTeam',
   DivisionTeam: 'DivisionTeam',
+  PlayerModalityProfile: 'PlayerModalityProfile',
   TeamPlayer: 'TeamPlayer',
   GamePresentPlayer: 'GamePresentPlayer',
   FantasyUser: 'FantasyUser',
@@ -86,6 +87,15 @@ export const ModelName = {
   FantasyDraftPick: 'FantasyDraftPick',
   FantasyPlayerFavorite: 'FantasyPlayerFavorite',
   DigitalCredential: 'DigitalCredential',
+  CommerceSeller: 'CommerceSeller',
+  CommerceSellerMember: 'CommerceSellerMember',
+  CommerceItem: 'CommerceItem',
+  CommerceOrder: 'CommerceOrder',
+  CommerceOrderItem: 'CommerceOrderItem',
+  CommerceItemVariant: 'CommerceItemVariant',
+  CommerceWebhookEvent: 'CommerceWebhookEvent',
+  CommerceTournamentRegistration: 'CommerceTournamentRegistration',
+  CommerceRefundRequest: 'CommerceRefundRequest',
   DigitalCredentialAudit: 'DigitalCredentialAudit'
 } as const
 
@@ -151,6 +161,7 @@ export const TournamentScalarFieldEnum = {
   playoffCriteria: 'playoffCriteria',
   rules: 'rules',
   prizes: 'prizes',
+  modality: 'modality',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -165,6 +176,7 @@ export const DivisionScalarFieldEnum = {
   ageGroup: 'ageGroup',
   tournamentId: 'tournamentId',
   maxTeams: 'maxTeams',
+  modality: 'modality',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -374,6 +386,7 @@ export const FlagInterestScalarFieldEnum = {
   experience: 'experience',
   company: 'company',
   sponsorInterest: 'sponsorInterest',
+  modality: 'modality',
   createdAt: 'createdAt'
 } as const
 
@@ -461,6 +474,19 @@ export const DivisionTeamScalarFieldEnum = {
 } as const
 
 export type DivisionTeamScalarFieldEnum = (typeof DivisionTeamScalarFieldEnum)[keyof typeof DivisionTeamScalarFieldEnum]
+
+
+export const PlayerModalityProfileScalarFieldEnum = {
+  playerId: 'playerId',
+  modality: 'modality',
+  jerseyNumber: 'jerseyNumber',
+  position: 'position',
+  secondaryPosition: 'secondaryPosition',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlayerModalityProfileScalarFieldEnum = (typeof PlayerModalityProfileScalarFieldEnum)[keyof typeof PlayerModalityProfileScalarFieldEnum]
 
 
 export const TeamPlayerScalarFieldEnum = {
@@ -653,6 +679,172 @@ export const DigitalCredentialScalarFieldEnum = {
 } as const
 
 export type DigitalCredentialScalarFieldEnum = (typeof DigitalCredentialScalarFieldEnum)[keyof typeof DigitalCredentialScalarFieldEnum]
+
+
+export const CommerceSellerScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  name: 'name',
+  kind: 'kind',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommerceSellerScalarFieldEnum = (typeof CommerceSellerScalarFieldEnum)[keyof typeof CommerceSellerScalarFieldEnum]
+
+
+export const CommerceSellerMemberScalarFieldEnum = {
+  id: 'id',
+  sellerId: 'sellerId',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type CommerceSellerMemberScalarFieldEnum = (typeof CommerceSellerMemberScalarFieldEnum)[keyof typeof CommerceSellerMemberScalarFieldEnum]
+
+
+export const CommerceItemScalarFieldEnum = {
+  id: 'id',
+  sellerId: 'sellerId',
+  tournamentId: 'tournamentId',
+  slug: 'slug',
+  kind: 'kind',
+  title: 'title',
+  description: 'description',
+  imageUrl: 'imageUrl',
+  imageUrls: 'imageUrls',
+  sku: 'sku',
+  details: 'details',
+  pickupInstructions: 'pickupInstructions',
+  priceMinor: 'priceMinor',
+  currency: 'currency',
+  credentialDiscountBps: 'credentialDiscountBps',
+  stockQuantity: 'stockQuantity',
+  entitlementMonths: 'entitlementMonths',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommerceItemScalarFieldEnum = (typeof CommerceItemScalarFieldEnum)[keyof typeof CommerceItemScalarFieldEnum]
+
+
+export const CommerceOrderScalarFieldEnum = {
+  id: 'id',
+  buyerUserId: 'buyerUserId',
+  sellerId: 'sellerId',
+  status: 'status',
+  fulfillmentStatus: 'fulfillmentStatus',
+  pickupInstructions: 'pickupInstructions',
+  currency: 'currency',
+  subtotalMinor: 'subtotalMinor',
+  discountMinor: 'discountMinor',
+  totalMinor: 'totalMinor',
+  paymentMode: 'paymentMode',
+  maxInstallments: 'maxInstallments',
+  paymentMethodId: 'paymentMethodId',
+  paymentMethodType: 'paymentMethodType',
+  paymentInstallments: 'paymentInstallments',
+  paymentInstallmentAmountMinor: 'paymentInstallmentAmountMinor',
+  idempotencyKey: 'idempotencyKey',
+  payloadFingerprint: 'payloadFingerprint',
+  providerOrderId: 'providerOrderId',
+  providerStatus: 'providerStatus',
+  checkoutUrl: 'checkoutUrl',
+  liveMode: 'liveMode',
+  reservationExpiresAt: 'reservationExpiresAt',
+  paidAt: 'paidAt',
+  fulfilledAt: 'fulfilledAt',
+  cancelledAt: 'cancelledAt',
+  refundedMinor: 'refundedMinor',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommerceOrderScalarFieldEnum = (typeof CommerceOrderScalarFieldEnum)[keyof typeof CommerceOrderScalarFieldEnum]
+
+
+export const CommerceOrderItemScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  itemId: 'itemId',
+  variantId: 'variantId',
+  title: 'title',
+  kind: 'kind',
+  quantity: 'quantity',
+  unitPriceMinor: 'unitPriceMinor',
+  unitDiscountMinor: 'unitDiscountMinor',
+  entitlementMonths: 'entitlementMonths',
+  variantSku: 'variantSku',
+  variantLabel: 'variantLabel'
+} as const
+
+export type CommerceOrderItemScalarFieldEnum = (typeof CommerceOrderItemScalarFieldEnum)[keyof typeof CommerceOrderItemScalarFieldEnum]
+
+
+export const CommerceItemVariantScalarFieldEnum = {
+  id: 'id',
+  itemId: 'itemId',
+  sku: 'sku',
+  label: 'label',
+  optionName: 'optionName',
+  optionValue: 'optionValue',
+  priceMinor: 'priceMinor',
+  stockQuantity: 'stockQuantity',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommerceItemVariantScalarFieldEnum = (typeof CommerceItemVariantScalarFieldEnum)[keyof typeof CommerceItemVariantScalarFieldEnum]
+
+
+export const CommerceWebhookEventScalarFieldEnum = {
+  id: 'id',
+  deliveryKey: 'deliveryKey',
+  providerResourceId: 'providerResourceId',
+  action: 'action',
+  liveMode: 'liveMode',
+  status: 'status',
+  attempts: 'attempts',
+  error: 'error',
+  receivedAt: 'receivedAt',
+  processedAt: 'processedAt'
+} as const
+
+export type CommerceWebhookEventScalarFieldEnum = (typeof CommerceWebhookEventScalarFieldEnum)[keyof typeof CommerceWebhookEventScalarFieldEnum]
+
+
+export const CommerceTournamentRegistrationScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  itemId: 'itemId',
+  tournamentId: 'tournamentId',
+  userId: 'userId',
+  status: 'status',
+  cancelledAt: 'cancelledAt',
+  createdAt: 'createdAt'
+} as const
+
+export type CommerceTournamentRegistrationScalarFieldEnum = (typeof CommerceTournamentRegistrationScalarFieldEnum)[keyof typeof CommerceTournamentRegistrationScalarFieldEnum]
+
+
+export const CommerceRefundRequestScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  requestedById: 'requestedById',
+  amountMinor: 'amountMinor',
+  reason: 'reason',
+  status: 'status',
+  providerRefundId: 'providerRefundId',
+  reviewedById: 'reviewedById',
+  reviewedAt: 'reviewedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type CommerceRefundRequestScalarFieldEnum = (typeof CommerceRefundRequestScalarFieldEnum)[keyof typeof CommerceRefundRequestScalarFieldEnum]
 
 
 export const DigitalCredentialAuditScalarFieldEnum = {

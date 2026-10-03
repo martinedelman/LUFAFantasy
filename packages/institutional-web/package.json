@@ -1,0 +1,41 @@
+{
+  "name": "@lufa/institutional-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./screens/*": "./src/screens/*.tsx",
+    "./components/*": "./src/components/*.tsx",
+    "./home/*": "./src/home/*.tsx",
+    "./hooks/*": "./src/hooks/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
+    "./site": "./src/site/SiteConfig.tsx",
+    "./types": "./src/types/index.ts",
+    "./styles/*": "./src/styles/*"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@lufa/api-client": "*",
+    "@lufa/contracts": "*"
+  },
+  "peerDependencies": {
+    "@vercel/analytics": "*",
+    "echarts": "*",
+    "next": "*",
+    "react": "*",
+    "react-dom": "*",
+    "react-grid-layout": "*"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.1",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
+    "typescript": "5.9.2",
+    "vitest": "4.1.10"
+  }
+}

@@ -6,10 +6,13 @@ La plataforma separa despliegue, presentación y reglas de negocio sin duplicar 
 
 ```mermaid
 flowchart LR
-  Institutional[apps/institutional] --> Client[packages/api-client]
+  Institutional[apps/institutional · flag] --> Web[packages/institutional-web]
+  Tackle[apps/tackle-institucional · tackle] --> Web
+  Web --> Client[packages/api-client]
   Fantasy[apps/fantasy] -->|/api/fantasy/v1/*| API
   Client --> Contracts[packages/contracts]
   Institutional -->|rewrite /api/*| API[apps/api]
+  Tackle -->|rewrite /api/*?modality=tackle| API
   API --> Sports[packages/sports]
   API --> Identity[packages/identity-institutional]
   API --> Operations[packages/operations]
@@ -18,6 +21,15 @@ flowchart LR
   Database --> Postgres[(PostgreSQL / Supabase testing)]
   Database -. selección explícita .-> Mongo[(MongoDB fallback)]
 ```
+
+## Flag y tackle
+
+LUFA tiene dos modalidades con la misma UI y la misma API.
+
+- **UI compartida:** `packages/institutional-web` contiene componentes, hooks, pantallas (`screens/*`) y las piezas de la home (`home/*`). `apps/institutional` (flag) y `apps/tackle-institucional` (tackle) son shells finos: rutas que re-exportan pantallas, `layout.tsx` con metadata, `flags.ts`, `public/` con sus imágenes, su home y un `src/site.config.ts` (`SiteConfig`) con nombre, logo, contacto y etiquetas de analytics. Un fix o feature en una pantalla llega a los dos sitios.
+- **Modalidad en la API:** cada listado acepta `?modality=flag|tackle`. Si falta, es `flag`, así que los clientes existentes no cambian. El sitio de tackle lo agrega a todas las llamadas desde el rewrite de `/api` en su `next.config.ts`. Las altas de torneos y divisiones toman la modalidad del body o del query. `site-settings` usa la fila `global` para flag y `tackle` para tackle.
+- **Datos:** `tournaments.modality` y `divisions.modality` (default `flag`). Partidos, posiciones y estadísticas la heredan por `tournament_id`; los equipos por `division_id`; los jugadores se comparten y pertenecen a una modalidad si alguno de sus equipos lo hace. MongoDB sólo tiene datos históricos de flag y devuelve vacío para tackle.
+- **Pendiente (fase 2):** eventos, posiciones de jugador y scoring propios de tackle.
 
 ## Composition root
 
@@ -49,7 +61,7 @@ Cada app se compila desde su workspace y no necesita una conexión viva a la bas
 ## Reglas de evolución
 
 1. Los contratos públicos no contienen modelos Prisma/Mongoose.
-2. Los frontends no importan database, repositories ni servicios backend.
+2. Los frontends no importan database, repositories ni servicios backend. Las pantallas institucionales viven en `packages/institutional-web`, no en una app.
 3. El dominio deportivo no importa Next.js, Prisma, Mongoose ni variables de entorno.
 4. Todo nuevo endpoint actualiza contratos, tests y la línea base de paridad deliberadamente.
 5. El primer caso de uso Fantasy creará su paquete de dominio; no se mantienen paquetes vacíos.

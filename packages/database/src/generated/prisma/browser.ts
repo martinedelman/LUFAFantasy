@@ -123,6 +123,13 @@ export type TournamentTeam = Prisma.TournamentTeamModel
  */
 export type DivisionTeam = Prisma.DivisionTeamModel
 /**
+ * Model PlayerModalityProfile
+ * Jersey number and positions a shared player uses in each modality
+ * (e.g. #11 C in flag, #40 LB in tackle). The players columns mirror the
+ * profile of the modality of the player's primary team.
+ */
+export type PlayerModalityProfile = Prisma.PlayerModalityProfileModel
+/**
  * Model TeamPlayer
  * 
  */
@@ -192,6 +199,51 @@ export type FantasyPlayerFavorite = Prisma.FantasyPlayerFavoriteModel
  * 
  */
 export type DigitalCredential = Prisma.DigitalCredentialModel
+/**
+ * Model CommerceSeller
+ * 
+ */
+export type CommerceSeller = Prisma.CommerceSellerModel
+/**
+ * Model CommerceSellerMember
+ * 
+ */
+export type CommerceSellerMember = Prisma.CommerceSellerMemberModel
+/**
+ * Model CommerceItem
+ * 
+ */
+export type CommerceItem = Prisma.CommerceItemModel
+/**
+ * Model CommerceOrder
+ * 
+ */
+export type CommerceOrder = Prisma.CommerceOrderModel
+/**
+ * Model CommerceOrderItem
+ * 
+ */
+export type CommerceOrderItem = Prisma.CommerceOrderItemModel
+/**
+ * Model CommerceItemVariant
+ * 
+ */
+export type CommerceItemVariant = Prisma.CommerceItemVariantModel
+/**
+ * Model CommerceWebhookEvent
+ * 
+ */
+export type CommerceWebhookEvent = Prisma.CommerceWebhookEventModel
+/**
+ * Model CommerceTournamentRegistration
+ * 
+ */
+export type CommerceTournamentRegistration = Prisma.CommerceTournamentRegistrationModel
+/**
+ * Model CommerceRefundRequest
+ * 
+ */
+export type CommerceRefundRequest = Prisma.CommerceRefundRequestModel
 /**
  * Model DigitalCredentialAudit
  * 

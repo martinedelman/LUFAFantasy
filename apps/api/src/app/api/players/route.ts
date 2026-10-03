@@ -1,6 +1,7 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import { PlayerPosition, PlayerStatus } from "@lufa/sports/entities/Player";
 import { toPlayerResponseDto } from "@/app/DTOs";
 import type { CreatePlayerRequestDto } from "@/app/DTOs";
@@ -48,9 +49,11 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const returnAll = searchParams.get("all") === "true";
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
 
     if (email) {
-      const player = await playerService.getPlayerByEmail(email);
+      const player = await playerService.getPlayerByEmail(email, modality);
 
       if (!player) {
         return NextResponse.json(
@@ -74,7 +77,8 @@ export async function GET(request: NextRequest) {
       position?: PlayerPosition;
       status?: PlayerStatus;
       search?: string;
-    } = {};
+      modality: typeof modality;
+    } = { modality };
     if (team) filters.team = team;
     if (position) filters.position = position;
     if (status) filters.status = status;
@@ -116,6 +120,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as CreatePlayerRequestDto;
+    const modality = parseModality(request.nextUrl.searchParams);
+    if (!modality) return invalidModalityResponse();
 
     // Validación básica
     if (!body.firstName || !body.lastName || !body.dateOfBirth || !body.team || !body.position) {
@@ -146,7 +152,7 @@ export async function POST(request: NextRequest) {
       experience: body.experience,
       emergencyContact: body.emergencyContact,
       status: body.status,
-    });
+    }, modality);
 
     invalidateCacheByPrefix(TEAM_RELATED_CACHE_PREFIXES);
 

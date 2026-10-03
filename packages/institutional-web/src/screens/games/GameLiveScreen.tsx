@@ -1,0 +1,1696 @@
+"use client";
+
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
+import AdminProtection from "../../components/AdminProtection";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import ErrorMessage from "../../components/ErrorMessage";
+import InlineFeedback, { type FeedbackVariant } from "../../components/InlineFeedback";
+import Modal from "../../components/Modal";
+import Toast from "../../components/Toast";
+import type { ApiResponse, GameApiResponse, GameEventType, PlayerApiResponse } from "../../types";
+import { GAME_EVENT_LABELS, MODALITY_RULES, eventRule, qbStatValue } from "@lufa/contracts/game-events";
+import { useSiteConfig } from "../../site/SiteConfig";
+
+type TeamSide = "home" | "away";
+type PlayType = "pass" | "run";
+
+const highContrastControlStyle = {
+  backgroundColor: "var(--surface-soft)",
+  borderColor: "var(--border)",
+  color: "var(--foreground)",
+};
+
+type EventDraft = {
+  teamSide: TeamSide;
+  type: GameEventType;
+  playType: PlayType;
+  qb: string;
+  player: string;
+  points: string;
+  description: string;
+};
+
+const LIVE_MATCH_ROLES = ["admin", "juez"] as const;
+const LIVE_MATCH_ACCESS_MESSAGE = "Solo administradores o jueces pueden acceder al modo Live Match.";
+type JerseyDrafts = Record<string, string>;
+type JerseyMessages = Record<string, string | null>;
+type LiveToastState = {
+  variant: Extract<FeedbackVariant, "info" | "warning" | "error">;
+  title?: string;
+  message: string;
+};
+type LiveMatchEventMutationResponse = ApiResponse<GameApiResponse> & {
+  pendingApproval?: boolean;
+};
+type PendingConfirmation = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  variant: Extract<FeedbackVariant, "warning" | "error">;
+  onConfirm: () => Promise<void> | void;
+};
+
+const getReadableTextColor = (backgroundColor?: string) => {
+  if (!backgroundColor || !/^#[0-9A-Fa-f]{6}$/.test(backgroundColor)) {
+    return "#ffffff";
+  }
+
+  const red = parseInt(backgroundColor.slice(1, 3), 16);
+  const green = parseInt(backgroundColor.slice(3, 5), 16);
+  const blue = parseInt(backgroundColor.slice(5, 7), 16);
+  const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+
+  return luminance > 0.62 ? "#111827" : "#ffffff";
+};
+
+const sortPlayersByJerseyNumber = (players: PlayerApiResponse[]) => {
+  return [...players].sort((leftPlayer, rightPlayer) => {
+    const leftJersey = leftPlayer.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+    const rightJersey = rightPlayer.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+
+    if (leftJersey !== rightJersey) {
+      return leftJersey - rightJersey;
+    }
+
+    const leftName = `${leftPlayer.firstName} ${leftPlayer.lastName}`.toLowerCase();
+    const rightName = `${rightPlayer.firstName} ${rightPlayer.lastName}`.toLowerCase();
+
+    return leftName.localeCompare(rightName, "es", { sensitivity: "base" });
+  });
+};
+
+const formatPlayerPositions = (player: Pick<PlayerApiResponse, "position" | "secondaryPosition">) => {
+  return [player.position, player.secondaryPosition].filter(Boolean).join(" / ") || "Sin posición";
+};
+
+const getReferenceId = (reference?: string | { _id?: string } | null) => {
+  if (!reference) return "";
+  return typeof reference === "string" ? reference : reference._id || "";
+};
+
+const getOppositeSide = (side: TeamSide): TeamSide => (side === "home" ? "away" : "home");
+
+const getPenaltyDescription = (details: unknown) => {
+  if (!details || typeof details !== "object") return "";
+
+  const description = (details as { description?: unknown }).description;
+  return typeof description === "string" ? description : "";
+};
+
+const getEventQbId = (details: unknown) => {
+  if (!details || typeof details !== "object") return "";
+
+  const qb = (details as { qb?: unknown }).qb;
+  if (typeof qb === "string") return qb;
+  if (qb && typeof qb === "object" && "_id" in qb) {
+    const qbId = (qb as { _id?: unknown })._id;
+    return typeof qbId === "string" ? qbId : qbId?.toString() || "";
+  }
+
+  return "";
+};
+
+const getEventPlayType = (details: unknown): PlayType => {
+  if (!details || typeof details !== "object") return "pass";
+
+  return (details as { playType?: unknown }).playType === "run" ? "run" : "pass";
+};
+
+export default function LiveMatchPage() {
+  const params = useParams();
+  const router = useRouter();
+  const gameId = params?.id as string;
+
+  const [game, setGame] = useState<GameApiResponse | null>(null);
+  const [homePlayers, setHomePlayers] = useState<PlayerApiResponse[]>([]);
+  const [awayPlayers, setAwayPlayers] = useState<PlayerApiResponse[]>([]);
+  const [selectedHomePlayers, setSelectedHomePlayers] = useState<Set<string>>(new Set());
+  const [selectedAwayPlayers, setSelectedAwayPlayers] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(false);
+  const [managingPresentPlayers, setManagingPresentPlayers] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentQuarter, setCurrentQuarter] = useState(1);
+  const [eventDraft, setEventDraft] = useState<EventDraft>({
+    teamSide: "home",
+    type: "touchdown",
+    playType: "pass",
+    qb: "",
+    player: "",
+    points: "6",
+    description: "",
+  });
+  const site = useSiteConfig();
+  // Rules come from the game's tournament; the site's modality is the fallback while loading.
+  const modality = game?.tournament?.modality ?? site.modality;
+  const rules = MODALITY_RULES[modality];
+  const ruleFor = (type: GameEventType) => eventRule(modality, type);
+  const requiresPenaltyDescription = (type: GameEventType) => Boolean(ruleFor(type)?.description);
+  const canChoosePlayType = (type: GameEventType) => Boolean(ruleFor(type)?.passOrRun);
+  const requiresQbAndPlayer = (type: GameEventType, playType: PlayType) =>
+    Boolean(ruleFor(type)?.qb) && (!canChoosePlayType(type) || playType === "pass");
+  const usesScorerLabel = (type: GameEventType) => Boolean(ruleFor(type)?.scorer);
+  const usesOpponentQuarterback = (type: GameEventType) => ruleFor(type)?.qb === "opponent";
+  const getQbStatValue = (type: GameEventType, points?: number) => qbStatValue(ruleFor(type), type, points);
+  /** Flag lets the scorer type the points; tackle fixes them (only multi-value rules need input). */
+  const hasEditablePoints = (type: GameEventType) => {
+    const allowed = ruleFor(type)?.points;
+    return allowed ? allowed.length > 1 : rules.buttons.some((button) => button.type === type && button.points !== undefined);
+  };
+  const periodLabel = (quarter: number) => rules.periods.find((period) => period.quarter === quarter)?.label || `${quarter}`;
+  const isQuarter = rules.periodName === "Cuarto";
+  const [savingEvent, setSavingEvent] = useState(false);
+  const [toast, setToast] = useState<LiveToastState | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [jerseyDrafts, setJerseyDrafts] = useState<JerseyDrafts>({});
+  const [savingJerseyPlayerId, setSavingJerseyPlayerId] = useState<string | null>(null);
+  const [jerseyErrors, setJerseyErrors] = useState<JerseyMessages>({});
+  const [jerseyMessages, setJerseyMessages] = useState<JerseyMessages>({});
+
+  const fetchGameData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch game data
+      const gameRes = await fetch(`/api/games/${gameId}`);
+      const gameData: ApiResponse<GameApiResponse> = await gameRes.json();
+
+      if (!gameData.success || !gameData.data) {
+        setError(gameData.message || "No se pudo cargar el partido");
+        return;
+      }
+
+      setGame(gameData.data);
+
+      // Fetch players for both teams
+      if (gameData.data.homeTeam) {
+        const homePlayersRes = await fetch(
+          `/api/players?team=${gameData.data.homeTeam._id}&status=active&all=true`,
+        );
+        const homePlayersData: ApiResponse<PlayerApiResponse[]> = await homePlayersRes.json();
+        if (homePlayersData.success && homePlayersData.data) {
+          setHomePlayers(sortPlayersByJerseyNumber(homePlayersData.data));
+        }
+      }
+
+      if (gameData.data.awayTeam) {
+        const awayPlayersRes = await fetch(
+          `/api/players?team=${gameData.data.awayTeam._id}&status=active&all=true`,
+        );
+        const awayPlayersData: ApiResponse<PlayerApiResponse[]> = await awayPlayersRes.json();
+        if (awayPlayersData.success && awayPlayersData.data) {
+          setAwayPlayers(sortPlayersByJerseyNumber(awayPlayersData.data));
+        }
+      }
+    } catch {
+      setError("Error al cargar datos del partido");
+    } finally {
+      setLoading(false);
+    }
+  }, [gameId]);
+
+  useEffect(() => {
+    fetchGameData();
+  }, [fetchGameData]);
+
+  useEffect(() => {
+    if (!game || game.status === "scheduled") {
+      return;
+    }
+
+    setSelectedHomePlayers(new Set((game.presentPlayers?.home || []).map(getReferenceId).filter(Boolean)));
+    setSelectedAwayPlayers(new Set((game.presentPlayers?.away || []).map(getReferenceId).filter(Boolean)));
+  }, [game]);
+
+  useEffect(() => {
+    setJerseyDrafts((previousDrafts) => {
+      const nextDrafts = { ...previousDrafts };
+      [...homePlayers, ...awayPlayers].forEach((player) => {
+        if (nextDrafts[player._id] === undefined) {
+          nextDrafts[player._id] = player.jerseyNumber == null ? "" : String(player.jerseyNumber);
+        }
+      });
+      return nextDrafts;
+    });
+  }, [awayPlayers, homePlayers]);
+
+  const toggleHomePlayer = (playerId: string) => {
+    setSelectedHomePlayers((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(playerId)) {
+        newSet.delete(playerId);
+      } else {
+        newSet.add(playerId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleAwayPlayer = (playerId: string) => {
+    setSelectedAwayPlayers((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(playerId)) {
+        newSet.delete(playerId);
+      } else {
+        newSet.add(playerId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllHome = () => {
+    setSelectedHomePlayers(new Set(homePlayers.map((p) => p._id)));
+  };
+
+  const deselectAllHome = () => {
+    setSelectedHomePlayers(new Set());
+  };
+
+  const selectAllAway = () => {
+    setSelectedAwayPlayers(new Set(awayPlayers.map((p) => p._id)));
+  };
+
+  const deselectAllAway = () => {
+    setSelectedAwayPlayers(new Set());
+  };
+
+  const canSavePresentPlayers = selectedHomePlayers.size >= 4 && selectedAwayPlayers.size >= 4;
+
+  const handleSavePresentPlayers = async () => {
+    if (!canSavePresentPlayers || !game) return;
+
+    try {
+      setStarting(true);
+      setToast(null);
+
+      const response = await fetch(`/api/games/${gameId}/start`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          presentPlayers: {
+            home: Array.from(selectedHomePlayers),
+            away: Array.from(selectedAwayPlayers),
+          },
+        }),
+      });
+
+      const data: ApiResponse<GameApiResponse> = await response.json();
+
+      if (!data.success) {
+        showLiveToast("error", data.message || "Error al guardar jugadores presentes.");
+        return;
+      }
+
+      // Actualizar el estado del juego
+      if (data.data) {
+        setGame(data.data);
+        setManagingPresentPlayers(false);
+        showLiveToast("info", "Jugadores presentes guardados correctamente.");
+      }
+    } catch {
+      showLiveToast("error", "Error de conexión al guardar jugadores presentes.");
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  const openPresentPlayersManager = () => {
+    setSelectedHomePlayers(new Set((game?.presentPlayers?.home || []).map(getReferenceId).filter(Boolean)));
+    setSelectedAwayPlayers(new Set((game?.presentPlayers?.away || []).map(getReferenceId).filter(Boolean)));
+    setManagingPresentPlayers(true);
+    setError(null);
+  };
+
+  const cancelPresentPlayersManager = () => {
+    setSelectedHomePlayers(new Set((game?.presentPlayers?.home || []).map(getReferenceId).filter(Boolean)));
+    setSelectedAwayPlayers(new Set((game?.presentPlayers?.away || []).map(getReferenceId).filter(Boolean)));
+    setManagingPresentPlayers(false);
+    setError(null);
+  };
+
+  const teamNames = useMemo(
+    () => ({
+      home: game?.homeTeam?.name || "Equipo Local",
+      away: game?.awayTeam?.name || "Equipo Visitante",
+    }),
+    [game],
+  );
+
+  const teamColors = useMemo(
+    () => ({
+      home: {
+        background: game?.homeTeam?.colors.primary || "#1f2937",
+        text: getReadableTextColor(game?.homeTeam?.colors.primary || "#1f2937"),
+      },
+      away: {
+        background: game?.awayTeam?.colors.primary || "#1f2937",
+        text: getReadableTextColor(game?.awayTeam?.colors.primary || "#1f2937"),
+      },
+    }),
+    [game],
+  );
+
+  const liveScoreHome = game?.score?.home?.total ?? 0;
+  const liveScoreAway = game?.score?.away?.total ?? 0;
+
+  const showLiveToast = useCallback((variant: LiveToastState["variant"], message: string, title?: string) => {
+    setToast({ variant, message, title });
+  }, []);
+
+  const currentQuarterNumber = currentQuarter;
+
+  const playersById = useMemo(() => {
+    const entries = [...homePlayers, ...awayPlayers].map((player) => [player._id, player] as const);
+    return new Map(entries);
+  }, [awayPlayers, homePlayers]);
+
+  const presentPlayersBySide = useMemo(() => {
+    const buildSide = (side: TeamSide, roster: PlayerApiResponse[]) => {
+      const presentPlayerIds = new Set((game?.presentPlayers?.[side] || []).map(getReferenceId).filter(Boolean));
+
+      if (presentPlayerIds.size === 0) {
+        return game?.status === "scheduled" ? roster : [];
+      }
+
+      return sortPlayersByJerseyNumber(
+        Array.from(presentPlayerIds)
+          .map((playerId) => playersById.get(playerId))
+          .filter((player): player is PlayerApiResponse => Boolean(player)),
+      );
+    };
+
+    return {
+      home: buildSide("home", homePlayers),
+      away: buildSide("away", awayPlayers),
+    };
+  }, [awayPlayers, game?.presentPlayers, game?.status, homePlayers, playersById]);
+
+  const eventPlayers = presentPlayersBySide[eventDraft.teamSide];
+  const eventCanChoosePlayType = canChoosePlayType(eventDraft.type);
+  const eventRequiresQbAndPlayer = requiresQbAndPlayer(eventDraft.type, eventDraft.playType);
+  const eventUsesScorerLabel = usesScorerLabel(eventDraft.type);
+  const qbTeamSide = eventRequiresQbAndPlayer
+    ? usesOpponentQuarterback(eventDraft.type)
+      ? getOppositeSide(eventDraft.teamSide)
+      : eventDraft.teamSide
+    : eventDraft.teamSide;
+  const qbPlayers = presentPlayersBySide[qbTeamSide];
+  const isPenaltyEventSelected = requiresPenaltyDescription(eventDraft.type);
+  const eventTeamId = game?.[`${eventDraft.teamSide}Team`]?._id;
+  const eventPoints = eventDraft.points === "" ? undefined : Number(eventDraft.points);
+  const requiresPoints = !isPenaltyEventSelected && hasEditablePoints(eventDraft.type);
+  const showsPointsInput = !isPenaltyEventSelected && requiresPoints;
+  const hasValidPoints =
+    !requiresPoints || (eventPoints !== undefined && Number.isFinite(eventPoints) && eventPoints >= 0);
+  const canSubmitSafetyWithoutScorer = Boolean(ruleFor(eventDraft.type)?.scorerOptionalWithQb) && Boolean(eventDraft.qb);
+  const hasRequiredEventPlayer = Boolean(eventDraft.player) || canSubmitSafetyWithoutScorer;
+  const isEventDraftReady =
+    Boolean(eventTeamId) &&
+    hasRequiredEventPlayer &&
+    (!eventRequiresQbAndPlayer || Boolean(eventDraft.qb)) &&
+    (isPenaltyEventSelected ? eventDraft.description.trim().length > 0 : hasValidPoints);
+
+  const updatePlayerInRosters = (updatedPlayer: PlayerApiResponse) => {
+    const updateRoster = (players: PlayerApiResponse[]) =>
+      sortPlayersByJerseyNumber(players.map((player) => (player._id === updatedPlayer._id ? updatedPlayer : player)));
+
+    setHomePlayers(updateRoster);
+    setAwayPlayers(updateRoster);
+  };
+
+  const setJerseyDraft = (playerId: string, value: string) => {
+    setJerseyDrafts((prev) => ({
+      ...prev,
+      [playerId]: value,
+    }));
+    setJerseyErrors((prev) => ({
+      ...prev,
+      [playerId]: null,
+    }));
+    setJerseyMessages((prev) => ({
+      ...prev,
+      [playerId]: null,
+    }));
+  };
+
+  const handleSaveJerseyNumber = async (player: PlayerApiResponse) => {
+    const draftValue = jerseyDrafts[player._id] ?? "";
+    const jerseyNumber = draftValue.trim() === "" ? null : Number(draftValue);
+
+    if (jerseyNumber !== null && (!Number.isInteger(jerseyNumber) || jerseyNumber < 0 || jerseyNumber > 99)) {
+      setJerseyErrors((prev) => ({
+        ...prev,
+        [player._id]: "Usá un número entre 0 y 99.",
+      }));
+      return;
+    }
+
+    if ((player.jerseyNumber ?? null) === jerseyNumber) {
+      setJerseyMessages((prev) => ({
+        ...prev,
+        [player._id]: "Sin cambios.",
+      }));
+      return;
+    }
+
+    try {
+      setSavingJerseyPlayerId(player._id);
+      setJerseyErrors((prev) => ({
+        ...prev,
+        [player._id]: null,
+      }));
+      setJerseyMessages((prev) => ({
+        ...prev,
+        [player._id]: null,
+      }));
+
+      const response = await fetch(`/api/players/${player._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ jerseyNumber }),
+      });
+      const data: ApiResponse<PlayerApiResponse> = await response.json();
+
+      if (!response.ok || !data.success || !data.data) {
+        setJerseyErrors((prev) => ({
+          ...prev,
+          [player._id]: data.message || "No se pudo actualizar.",
+        }));
+        return;
+      }
+
+      updatePlayerInRosters(data.data);
+      setJerseyDrafts((prev) => ({
+        ...prev,
+        [player._id]: data.data?.jerseyNumber == null ? "" : String(data.data.jerseyNumber),
+      }));
+      setJerseyMessages((prev) => ({
+        ...prev,
+        [player._id]: "Actualizado.",
+      }));
+    } catch {
+      setJerseyErrors((prev) => ({
+        ...prev,
+        [player._id]: "Error de conexión.",
+      }));
+    } finally {
+      setSavingJerseyPlayerId(null);
+    }
+  };
+
+  const setEventTeamSide = (teamSide: TeamSide) => {
+    setEventDraft((prev) => ({
+      ...prev,
+      teamSide,
+      qb: "",
+      player: "",
+    }));
+    setToast(null);
+  };
+
+  const selectEventType = (type: GameEventType, points?: number) => {
+    setEventDraft((prev) => ({
+      ...prev,
+      type,
+      playType: canChoosePlayType(type) ? prev.playType : "pass",
+      qb: requiresQbAndPlayer(type, canChoosePlayType(type) ? prev.playType : "pass") ? "" : prev.qb,
+      points: requiresPenaltyDescription(type) ? "" : points === undefined ? "" : String(points),
+      description: requiresPenaltyDescription(type) ? prev.description : "",
+    }));
+    setToast(null);
+  };
+
+  const resetEventDraft = () => {
+    setEditingEventId(null);
+    setEventDraft({
+      teamSide: "home",
+      type: "touchdown",
+      playType: "pass",
+      qb: "",
+      player: "",
+      points: "6",
+      description: "",
+    });
+    setCurrentQuarter(1);
+    setToast(null);
+  };
+
+  const submitGameEvent = async ({ allowSafetyWithoutScorer = false }: { allowSafetyWithoutScorer?: boolean } = {}) => {
+    if (!game) return;
+
+    const team = game[`${eventDraft.teamSide}Team`]?._id;
+    if (!team) {
+      showLiveToast("error", "Seleccioná un equipo válido antes de registrar la jugada.");
+      return;
+    }
+
+    const isSafetyWithoutScorer =
+      Boolean(ruleFor(eventDraft.type)?.scorerOptionalWithQb) && Boolean(eventDraft.qb) && !eventDraft.player;
+    if (isSafetyWithoutScorer && !allowSafetyWithoutScorer) {
+      setPendingConfirmation({
+        title: "¿Seguro que quiere registrar un safety sin defensa?",
+        message: "El safety se va a registrar con QB, pero sin jugador defensivo asociado.",
+        confirmLabel: "Aceptar",
+        variant: "warning",
+        onConfirm: async () => {
+          setPendingConfirmation(null);
+          await submitGameEvent({ allowSafetyWithoutScorer: true });
+        },
+      });
+      return;
+    }
+
+    if (
+      eventDraft.type !== "quarter_end" &&
+      eventDraft.type !== "game_end" &&
+      !eventDraft.player &&
+      !isSafetyWithoutScorer
+    ) {
+      showLiveToast("error", "Seleccioná el anotador del evento.");
+      return;
+    }
+
+    const eventNeedsQb = requiresQbAndPlayer(eventDraft.type, eventDraft.playType);
+    if (eventNeedsQb && !eventDraft.qb) {
+      showLiveToast("error", "Seleccioná el QB del evento.");
+      return;
+    }
+
+    const isPenaltyEvent = requiresPenaltyDescription(eventDraft.type);
+    const penaltyDescription = eventDraft.description.trim();
+    if (isPenaltyEvent && !penaltyDescription) {
+      showLiveToast("error", "Describí qué tipo de penalidad hubo.");
+      return;
+    }
+
+    const points = isPenaltyEvent || eventDraft.points === "" ? undefined : Number(eventDraft.points);
+    if (!isPenaltyEvent && points !== undefined && (!Number.isFinite(points) || points < 0)) {
+      showLiveToast("error", "Los puntos deben ser 0 o más.");
+      return;
+    }
+
+    try {
+      setSavingEvent(true);
+      setToast(null);
+
+      const response = await fetch(
+        editingEventId ? `/api/games/${gameId}/events/${editingEventId}` : `/api/games/${gameId}/events`,
+        {
+          method: editingEventId ? "PATCH" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            quarter: currentQuarterNumber,
+            type: eventDraft.type,
+            team,
+            player: eventDraft.player || undefined,
+            points,
+            details: isPenaltyEvent
+              ? { description: penaltyDescription }
+              : eventNeedsQb || eventCanChoosePlayType
+                ? {
+                    ...(eventCanChoosePlayType ? { playType: eventDraft.playType } : {}),
+                    ...(eventNeedsQb
+                      ? {
+                          qb: eventDraft.qb,
+                          qbStatValue: getQbStatValue(eventDraft.type, points),
+                        }
+                      : {}),
+                  }
+                : null,
+          }),
+        },
+      );
+
+      const data = (await response.json()) as LiveMatchEventMutationResponse;
+
+      if (!response.ok || !data.success || !data.data) {
+        showLiveToast("error", data.message || "No se pudo registrar el evento.");
+        return;
+      }
+
+      setGame(data.data);
+      if (editingEventId) {
+        setEditingEventId(null);
+        showLiveToast(
+          "info",
+          data.pendingApproval
+            ? data.message || "Corrección enviada. Queda pendiente de aprobación por un administrador."
+            : "Evento actualizado y marcador recalculado.",
+        );
+      } else {
+        setEventDraft((prev) => ({
+          ...prev,
+          qb: eventNeedsQb ? "" : prev.qb,
+          player: "",
+          description: isPenaltyEvent ? "" : prev.description,
+        }));
+        showLiveToast(
+          "info",
+          data.pendingApproval
+            ? data.message || "Corrección enviada. Queda pendiente de aprobación por un administrador."
+            : points && points > 0
+              ? "Evento registrado y marcador actualizado."
+              : "Evento registrado.",
+        );
+      }
+    } catch {
+      showLiveToast("error", "Error de conexión al registrar el evento.");
+    } finally {
+      setSavingEvent(false);
+    }
+  };
+
+  const handleAddGameEvent = () => {
+    submitGameEvent();
+  };
+
+  const handleEditGameEvent = (event: GameApiResponse["events"][number]) => {
+    if (!game || !event._id) return;
+
+    const eventTeamId = getEventReferenceId(event.team);
+    const teamSide: TeamSide = eventTeamId === game.awayTeam?._id ? "away" : "home";
+
+    setEditingEventId(event._id);
+    setEventDraft({
+      teamSide,
+      type: event.type,
+      playType: canChoosePlayType(event.type) ? getEventPlayType(event.details) : "pass",
+      qb: requiresQbAndPlayer(event.type, getEventPlayType(event.details)) ? getEventQbId(event.details) : "",
+      player: getEventReferenceId(event.player),
+      points:
+        requiresPenaltyDescription(event.type) || event.points === undefined || event.points === null
+          ? ""
+          : String(event.points),
+      description: requiresPenaltyDescription(event.type) ? getPenaltyDescription(event.details) : "",
+    });
+    setCurrentQuarter(rules.periods.some((period) => period.quarter === event.quarter) ? event.quarter : 1);
+    setToast(null);
+  };
+
+  const deleteGameEvent = async (eventId: string) => {
+    if (!game || !eventId) return;
+
+    try {
+      setSavingEvent(true);
+      setToast(null);
+
+      const response = await fetch(`/api/games/${gameId}/events/${eventId}`, {
+        method: "DELETE",
+      });
+
+      const data = (await response.json()) as LiveMatchEventMutationResponse;
+
+      if (!response.ok || !data.success) {
+        showLiveToast("error", data.message || "No se pudo eliminar el evento.");
+        return;
+      }
+
+      await fetchGameData();
+      showLiveToast(
+        "info",
+        data.pendingApproval
+          ? data.message || "Eliminación enviada. Queda pendiente de aprobación por un administrador."
+          : "Evento eliminado correctamente.",
+      );
+    } catch {
+      showLiveToast("error", "Error de conexión al eliminar el evento.");
+    } finally {
+      setSavingEvent(false);
+    }
+  };
+
+  const handleDeleteGameEvent = (eventId?: string) => {
+    if (!eventId) return;
+
+    setPendingConfirmation({
+      title: "Eliminar evento",
+      message:
+        "Esta acción quita el evento del historial y recalcula el partido. Podés registrar el evento nuevamente si fue un error.",
+      confirmLabel: "Eliminar evento",
+      variant: "error",
+      onConfirm: async () => {
+        setPendingConfirmation(null);
+        await deleteGameEvent(eventId);
+      },
+    });
+  };
+
+  const handleEndHalf = async () => {
+    if (!game) return;
+
+    const team = game[`${eventDraft.teamSide}Team`]?._id;
+    if (!team) {
+      showLiveToast("error", `Seleccioná un equipo válido antes de terminar ${isQuarter ? "el cuarto" : "la mitad"}.`);
+      return;
+    }
+
+    try {
+      setSavingEvent(true);
+      setToast(null);
+
+      const response = await fetch(`/api/games/${gameId}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quarter: currentQuarterNumber,
+          type: "quarter_end",
+          team,
+        }),
+      });
+
+      const data = (await response.json()) as LiveMatchEventMutationResponse;
+
+      if (!response.ok || !data.success || !data.data) {
+        showLiveToast("error", data.message || `No se pudo registrar el fin de ${rules.periodName.toLowerCase()}.`);
+        return;
+      }
+
+      setGame(data.data);
+      // Advance to the next regulation period; overtime is chosen by hand.
+      const nextPeriod = rules.periods[rules.periods.findIndex((period) => period.quarter === currentQuarter) + 1];
+      if (nextPeriod && nextPeriod.quarter !== 5) {
+        setCurrentQuarter(nextPeriod.quarter);
+      }
+      showLiveToast(
+        "info",
+        data.pendingApproval
+          ? data.message || "Corrección enviada. Queda pendiente de aprobación por un administrador."
+          : `${rules.periodName} ${isQuarter ? "registrado" : "registrada"} correctamente.`,
+      );
+    } catch {
+      showLiveToast("error", `Error de conexión al registrar el fin de ${rules.periodName.toLowerCase()}.`);
+    } finally {
+      setSavingEvent(false);
+    }
+  };
+
+  const completeGame = async () => {
+    if (!game) return;
+
+    try {
+      setSavingEvent(true);
+      setToast(null);
+
+      const response = await fetch(`/api/games/${gameId}/complete`, {
+        method: "PATCH",
+      });
+
+      const data: ApiResponse<GameApiResponse> = await response.json();
+
+      if (!response.ok || !data.success || !data.data) {
+        showLiveToast("error", data.message || "No se pudo finalizar el partido.");
+        return;
+      }
+
+      setGame(data.data);
+      showLiveToast("info", "Partido finalizado correctamente.");
+    } catch {
+      showLiveToast("error", "Error de conexión al finalizar el partido.");
+    } finally {
+      setSavingEvent(false);
+    }
+  };
+
+  const handleEndGame = () => {
+    setPendingConfirmation({
+      title: "Finalizar partido",
+      message:
+        "El partido quedará cerrado con el marcador actual. Después solo se podrá corregir desde el modo Corrección Live.",
+      confirmLabel: "Finalizar partido",
+      variant: "warning",
+      onConfirm: async () => {
+        setPendingConfirmation(null);
+        await completeGame();
+      },
+    });
+  };
+
+  const getEventTypeLabel = (type: GameEventType) => {
+    const option = rules.buttons.find((button) => button.type === type && button.points === undefined);
+    if (option) return option.label;
+
+    const scoringOption = rules.buttons.find((button) => button.type === type);
+    return scoringOption?.label || GAME_EVENT_LABELS[type] || type;
+  };
+
+  const getEventTeamName = (team: GameApiResponse["events"][number]["team"]) => {
+    return typeof team === "string" ? "Equipo" : team.name;
+  };
+
+  const getEventPlayerName = (player?: GameApiResponse["events"][number]["player"]) => {
+    if (!player) {
+      return "";
+    }
+
+    return typeof player === "string"
+      ? "Jugador"
+      : `${player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} ${player.firstName} ${player.lastName}`;
+  };
+
+  const getEventQbName = (details: unknown) => {
+    const qbId = getEventQbId(details);
+    if (!qbId) return "";
+
+    const qb = playersById.get(qbId);
+    if (!qb) return "QB";
+
+    return `${qb.jerseyNumber != null ? `#${qb.jerseyNumber}` : "S/N"} ${qb.firstName} ${qb.lastName}`;
+  };
+
+  const getEventQbStatValue = (details: unknown) => {
+    if (!details || typeof details !== "object") return undefined;
+
+    const value = (details as { qbStatValue?: unknown }).qbStatValue;
+    return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  };
+
+  const getEventReferenceId = (
+    reference?: GameApiResponse["events"][number]["team"] | GameApiResponse["events"][number]["player"],
+  ) => {
+    if (!reference) return "";
+    return typeof reference === "string" ? reference : reference._id;
+  };
+
+  const renderJerseyQuickEditor = (player: PlayerApiResponse) => {
+    const isSaving = savingJerseyPlayerId === player._id;
+    const draftValue = jerseyDrafts[player._id] ?? "";
+
+    return (
+      <div className="w-full sm:w-auto">
+        <div className="flex items-center gap-2">
+          <label className="sr-only" htmlFor={`jersey-${player._id}`}>
+            Camiseta de {player.firstName} {player.lastName}
+          </label>
+          <input
+            id={`jersey-${player._id}`}
+            type="number"
+            min={0}
+            max={99}
+            inputMode="numeric"
+            value={draftValue}
+            onChange={(event) => setJerseyDraft(player._id, event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                handleSaveJerseyNumber(player);
+              }
+            }}
+            className="h-10 w-20 rounded-md border border-gray-300 px-2 text-center text-base font-bold text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            placeholder="S/N"
+            disabled={isSaving}
+          />
+          <button
+            type="button"
+            onClick={() => handleSaveJerseyNumber(player)}
+            disabled={isSaving}
+            className="h-10 rounded-md bg-gray-900 px-3 text-sm font-bold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+          >
+            {isSaving ? "..." : "OK"}
+          </button>
+        </div>
+        {jerseyErrors[player._id] && (
+          <InlineFeedback
+            compact
+            className="mt-2"
+            variant="error"
+            title="Camiseta inválida"
+            message={jerseyErrors[player._id]}
+          />
+        )}
+        {!jerseyErrors[player._id] && jerseyMessages[player._id] && (
+          <InlineFeedback
+            compact
+            className="mt-2"
+            variant="info"
+            title="Camiseta"
+            message={jerseyMessages[player._id]}
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderPlayerSelectionRow = (side: TeamSide, player: PlayerApiResponse) => {
+    const selectedPlayers = side === "home" ? selectedHomePlayers : selectedAwayPlayers;
+    const togglePlayer = side === "home" ? toggleHomePlayer : toggleAwayPlayer;
+    const isSelected = selectedPlayers.has(player._id);
+
+    return (
+      <div
+        key={player._id}
+        className={`flex flex-col gap-3 border-b p-3 hover:bg-gray-50 sm:flex-row sm:items-center ${
+          isSelected ? "bg-blue-100" : ""
+        }`}
+      >
+        <label className="flex min-w-0 flex-1 cursor-pointer items-center">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => togglePlayer(player._id)}
+            className="h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+          />
+          <div className="ml-3 min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="shrink-0 font-bold text-gray-700">
+                {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"}
+              </span>
+              <span className="truncate text-gray-900">
+                {player.firstName} {player.lastName}
+              </span>
+            </div>
+            <span className="text-xs text-gray-500">{formatPlayerPositions(player)}</span>
+          </div>
+        </label>
+        {renderJerseyQuickEditor(player)}
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <LoadingSpinner />
+        </div>
+      </AdminProtection>
+    );
+  }
+
+  if (error && !game) {
+    return (
+      <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
+        <div className="min-h-screen bg-gray-50 p-4">
+          <ErrorMessage message={error} />
+          <div className="mt-4 text-center">
+            <button onClick={() => router.push("/games")} className="text-green-600 hover:text-green-800 font-medium">
+              Volver a partidos
+            </button>
+          </div>
+        </div>
+      </AdminProtection>
+    );
+  }
+
+  if (!game) {
+    return (
+      <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
+        <div className="min-h-screen bg-gray-50 p-4">
+          <ErrorMessage message="Partido no encontrado" />
+        </div>
+      </AdminProtection>
+    );
+  }
+
+  // If game is postponed or cancelled, show an end-state message.
+  if (game.status === "postponed" || game.status === "cancelled") {
+    return (
+      <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
+        <div className="min-h-screen bg-gray-50 p-4">
+          <div className="max-w-lg mx-auto">
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <h2 className="text-xl font-bold mb-2 text-gray-900">
+                Partido {game.status === "postponed" ? "pospuesto" : "cancelado"}
+              </h2>
+              <p className="text-gray-600 mb-4">Este partido no puede iniciarse en su estado actual.</p>
+              <button
+                onClick={() => router.push("/games")}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
+              >
+                Volver a partidos
+              </button>
+            </div>
+          </div>
+        </div>
+      </AdminProtection>
+    );
+  }
+
+  const showPresentPlayersSelection = game.status === "scheduled" || managingPresentPlayers;
+  const presentPlayersActionLabel = game.status === "scheduled" ? "Iniciar Partido" : "Guardar jugadores";
+
+  return (
+    <AdminProtection fallbackMessage={LIVE_MATCH_ACCESS_MESSAGE} allowedRoles={LIVE_MATCH_ROLES}>
+      <div className="min-h-screen bg-gray-50">
+        <Toast
+          open={Boolean(toast)}
+          variant={toast?.variant}
+          title={toast?.title}
+          message={toast?.message || ""}
+          durationMs={toast?.variant === "info" ? 5000 : null}
+          onClose={() => setToast(null)}
+        />
+        <Modal
+          open={Boolean(pendingConfirmation)}
+          title={pendingConfirmation?.title || ""}
+          variant={pendingConfirmation?.variant || "warning"}
+          onClose={() => setPendingConfirmation(null)}
+          secondaryAction={{
+            label: "Cancelar",
+            onClick: () => setPendingConfirmation(null),
+            disabled: savingEvent,
+          }}
+          primaryAction={
+            pendingConfirmation
+              ? {
+                  label: pendingConfirmation.confirmLabel,
+                  onClick: pendingConfirmation.onConfirm,
+                  variant: pendingConfirmation.variant === "error" ? "danger" : "primary",
+                  disabled: savingEvent,
+                }
+              : undefined
+          }
+        >
+          <p>{pendingConfirmation?.message}</p>
+        </Modal>
+        {/* Header */}
+        <div className="bg-white shadow">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => router.push("/games")}
+                className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Volver
+              </button>
+              <h1 className="text-lg font-bold text-gray-900">
+                {game.status === "completed" ? "Corrección Live" : "Live Match"}
+              </h1>
+              <div className="w-16" />
+            </div>
+          </div>
+        </div>
+
+        {/* Match Info */}
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="bg-white rounded-lg shadow p-4 mb-4">
+            <div className="text-center mb-2">
+              <span className="text-sm text-gray-500">{game.tournament?.name}</span>
+              <span className="mx-2 text-gray-300">·</span>
+              <span className="text-sm text-gray-500">{game.division?.name}</span>
+            </div>
+            <div className="mb-3 text-center">
+              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">
+                {game.status === "completed" ? "Marcador final" : "Marcador en vivo"}
+              </div>
+              <div className="mt-1 text-4xl font-black text-gray-900 sm:text-5xl">
+                {liveScoreHome} - {liveScoreAway}
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-center flex-1">
+                <div
+                  className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center font-bold text-lg"
+                  style={{
+                    backgroundColor: teamColors.home.background,
+                    color: teamColors.home.text,
+                  }}
+                >
+                  {game.homeTeam?.shortName?.substring(0, 2) || "LO"}
+                </div>
+                <div className="font-semibold text-gray-900">{game.homeTeam?.name || "TBD"}</div>
+                <div className="text-xs text-gray-500">Local</div>
+              </div>
+              <div className="text-2xl font-bold text-gray-400">VS</div>
+              <div className="text-center flex-1">
+                <div
+                  className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center font-bold text-lg"
+                  style={{
+                    backgroundColor: teamColors.away.background,
+                    color: teamColors.away.text,
+                  }}
+                >
+                  {game.awayTeam?.shortName?.substring(0, 2) || "VI"}
+                </div>
+                <div className="font-semibold text-gray-900">{game.awayTeam?.name || "TBD"}</div>
+                <div className="text-xs text-gray-500">Visitante</div>
+              </div>
+            </div>
+            <div className="text-center mt-3 text-sm text-gray-500">
+              <div>{game.venue?.name}</div>
+              <div>{new Date(game.scheduledDate).toLocaleString("es-ES")}</div>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mb-4">
+              <ErrorMessage message={error} />
+            </div>
+          )}
+
+          {showPresentPlayersSelection ? (
+            <>
+              {/* Player Selection */}
+              <div className="bg-white rounded-lg shadow mb-4">
+                <div className="p-4 border-b">
+                  <h2 className="font-bold text-gray-900 text-center">
+                    {game.status === "scheduled" ? "Seleccionar Jugadores Presentes" : "Agregar jugadores"}
+                  </h2>
+                  <p className="text-sm text-gray-500 text-center mt-1">
+                    Mínimo 4 jugadores por equipo. Podés corregir camisetas antes de guardar.
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-0 md:gap-0">
+                  {/* Home Team */}
+                  <div className="border-b md:border-b-0 md:border-r">
+                    <div
+                      className="p-3 flex items-center justify-between"
+                      style={{
+                        backgroundColor: teamColors.home.background,
+                        color: teamColors.home.text,
+                      }}
+                    >
+                      <span className="font-semibold">{game.homeTeam?.name || "Equipo Local"}</span>
+                      <span
+                        className={`text-sm px-2 py-1 rounded-full ${
+                          selectedHomePlayers.size >= 4 ? "bg-green-500 text-white" : "bg-white text-gray-700"
+                        }`}
+                      >
+                        {selectedHomePlayers.size} / {homePlayers.length}
+                      </span>
+                    </div>
+                    <div className="p-2 flex gap-2 border-b">
+                      <button onClick={selectAllHome} className="text-sm text-green-600 hover:text-green-800">
+                        Seleccionar todos
+                      </button>
+                      <span className="text-gray-300">|</span>
+                      <button onClick={deselectAllHome} className="text-sm text-gray-600 hover:text-gray-800">
+                        Deseleccionar todos
+                      </button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {homePlayers.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500 text-sm">
+                          No hay jugadores activos en este equipo
+                        </div>
+                      ) : (
+                        homePlayers.map((player) => renderPlayerSelectionRow("home", player))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Away Team */}
+                  <div>
+                    <div
+                      className="p-3 flex items-center justify-between"
+                      style={{
+                        backgroundColor: teamColors.away.background,
+                        color: teamColors.away.text,
+                      }}
+                    >
+                      <span className="font-semibold">{game.awayTeam?.name || "Equipo Visitante"}</span>
+                      <span
+                        className={`text-sm px-2 py-1 rounded-full ${
+                          selectedAwayPlayers.size >= 4 ? "bg-green-500 text-white" : "bg-white text-gray-700"
+                        }`}
+                      >
+                        {selectedAwayPlayers.size} / {awayPlayers.length}
+                      </span>
+                    </div>
+                    <div className="p-2 flex gap-2 border-b">
+                      <button onClick={selectAllAway} className="text-sm text-green-600 hover:text-green-800">
+                        Seleccionar todos
+                      </button>
+                      <span className="text-gray-300">|</span>
+                      <button onClick={deselectAllAway} className="text-sm text-gray-600 hover:text-gray-800">
+                        Deseleccionar todos
+                      </button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {awayPlayers.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500 text-sm">
+                          No hay jugadores activos en este equipo
+                        </div>
+                      ) : (
+                        awayPlayers.map((player) => renderPlayerSelectionRow("away", player))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Start Button */}
+              <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 md:relative md:bg-transparent md:border-t-0 md:p-0">
+                <div className="max-w-4xl mx-auto">
+                  <button
+                    onClick={handleSavePresentPlayers}
+                    disabled={!canSavePresentPlayers || starting}
+                    className={`w-full py-4 rounded-lg font-bold text-lg transition-colors ${
+                      canSavePresentPlayers && !starting
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                  >
+                    {starting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Guardando jugadores...
+                      </span>
+                    ) : (
+                      <>
+                        {presentPlayersActionLabel}
+                        {!canSavePresentPlayers && (
+                          <span className="block text-sm font-normal mt-1">
+                            Selecciona al menos 4 jugadores de cada equipo
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </button>
+                  {managingPresentPlayers && (
+                    <button
+                      type="button"
+                      onClick={cancelPresentPlayersManager}
+                      disabled={starting}
+                      className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Spacer for fixed button on mobile */}
+              <div className="h-24 md:hidden" />
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg shadow">
+                <div className="border-b border-gray-100 p-4">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="font-bold text-gray-900">
+                        {game.status === "completed"
+                          ? "Corregir jugadas"
+                          : editingEventId
+                            ? "Editar evento"
+                            : "Registrar evento"}
+                      </h2>
+                      <p className="text-sm text-gray-500">
+                        {game.status === "completed"
+                          ? "Los cambios recalculan marcador y standings."
+                          : `${rules.periodName} ${periodLabel(currentQuarter)}`}
+                      </p>
+                    </div>
+                    <div
+                      className={`grid w-full rounded-md bg-gray-100 p-1 sm:w-auto sm:min-w-80 ${
+                        rules.periods.length > 3 ? "grid-cols-5" : "grid-cols-3"
+                      }`}
+                    >
+                      {rules.periods.map((period) => (
+                        <button
+                          key={`quarter-${period.quarter}`}
+                          onClick={() => setCurrentQuarter(period.quarter)}
+                          className={`min-w-0 truncate rounded px-3 py-2 text-sm font-semibold transition-colors ${
+                            currentQuarter === period.quarter ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"
+                          }`}
+                        >
+                          {period.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-b border-gray-100 p-4">
+                  <div className="grid grid-cols-2">
+                    {(["home", "away"] as TeamSide[]).map((side, index, arr) => {
+                      const isSelected = eventDraft.teamSide === side;
+                      const isFirst = index === 0;
+                      const isLast = index === arr.length - 1;
+
+                      return (
+                        <button
+                          key={`event-${side}`}
+                          type="button"
+                          onClick={() => setEventTeamSide(side)}
+                          className={`min-w-0 truncate px-3 py-2 text-sm font-bold transition-all duration-300 ease-out shadow-2xl ${isFirst ? "rounded-l-xl" : ""} ${isLast ? "rounded-r-xl" : ""} ${
+                            isSelected
+                              ? "scale-[1.01] shadow-md "
+                              : "bg-white text-gray-600 shadow-sm hover:-translate-y-0.5 hover:bg-gray-50 hover:text-gray-900"
+                          }`}
+                          style={
+                            isSelected
+                              ? {
+                                  backgroundColor: teamColors[side].background,
+                                  color: teamColors[side].text,
+                                }
+                              : undefined
+                          }
+                        >
+                          {teamNames[side]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-4 p-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">Tipo</label>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                      {rules.buttons.map((eventType) => {
+                        const isSelected =
+                          eventDraft.type === eventType.type &&
+                          eventDraft.points === (eventType.points === undefined ? "" : String(eventType.points));
+
+                        return (
+                          <button
+                            key={`${eventType.type}-${eventType.label}`}
+                            onClick={() => selectEventType(eventType.type, eventType.points)}
+                            className={`rounded-md border px-3 py-3 text-sm font-bold transition-colors ${
+                              isSelected ? "border-blue-600 bg-blue-600 text-white" : "hover:brightness-110"
+                            }`}
+                            style={isSelected ? undefined : highContrastControlStyle}
+                          >
+                            {eventType.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {eventCanChoosePlayType && (
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-700">Jugada</label>
+                      <div className="grid grid-cols-2 p-1">
+                        {(
+                          [
+                            { value: "pass", label: "Pase" },
+                            { value: "run", label: "Corrida" },
+                          ] satisfies { value: PlayType; label: string }[]
+                        ).map((playTypeOption, index, arr) => (
+                          <button
+                            key={playTypeOption.value}
+                            type="button"
+                            onClick={() =>
+                              setEventDraft((prev) => ({
+                                ...prev,
+                                playType: playTypeOption.value,
+                                qb: playTypeOption.value === "run" ? "" : prev.qb,
+                              }))
+                            }
+                            className={`min-w-0 px-3 py-2 text-sm font-bold transition-all duration-300 ease-out ${index === 0 ? "rounded-l-xl" : ""} ${index === arr.length - 1 ? "rounded-r-xl" : ""} ${
+                              eventDraft.playType === playTypeOption.value
+                                ? "scale-[1.01] bg-blue-600 text-white shadow-md ring-1 ring-blue-700/20"
+                                : "bg-white text-gray-600 shadow-sm hover:-translate-y-0.5 hover:bg-blue-100 hover:text-blue-900"
+                            }`}
+                          >
+                            {playTypeOption.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div
+                    className={`grid gap-3 ${
+                      isPenaltyEventSelected
+                        ? "sm:grid-cols-[1fr_1fr]"
+                        : eventRequiresQbAndPlayer && showsPointsInput
+                          ? "sm:grid-cols-[1fr_1fr_120px]"
+                          : eventRequiresQbAndPlayer
+                            ? "sm:grid-cols-2"
+                            : showsPointsInput
+                              ? "sm:grid-cols-[1fr_120px]"
+                              : "sm:grid-cols-1"
+                    }`}
+                  >
+                    {eventRequiresQbAndPlayer && (
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-gray-700">QB</label>
+                        <select
+                          value={eventDraft.qb}
+                          onChange={(event) =>
+                            setEventDraft((prev) => ({
+                              ...prev,
+                              qb: event.target.value,
+                            }))
+                          }
+                          className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        >
+                          <option value="">Seleccionar QB</option>
+                          {qbPlayers.map((player) => (
+                            <option key={player._id} value={player._id}>
+                              {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} {player.firstName}{" "}
+                              {player.lastName} · {formatPlayerPositions(player)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-gray-700">
+                        {eventUsesScorerLabel ? "Anotador" : "Jugador"}
+                      </label>
+                      <select
+                        value={eventDraft.player}
+                        onChange={(event) =>
+                          setEventDraft((prev) => ({
+                            ...prev,
+                            player: event.target.value,
+                          }))
+                        }
+                        className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      >
+                        <option value="">
+                          {eventUsesScorerLabel ? "Seleccionar anotador" : "Seleccionar jugador"}
+                        </option>
+                        {eventPlayers.map((player) => (
+                          <option key={player._id} value={player._id}>
+                            {player.jerseyNumber != null ? `#${player.jerseyNumber}` : "S/N"} {player.firstName}{" "}
+                            {player.lastName} · {formatPlayerPositions(player)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {isPenaltyEventSelected ? (
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-gray-700">Descripción</label>
+                        <input
+                          type="text"
+                          value={eventDraft.description}
+                          onChange={(event) =>
+                            setEventDraft((prev) => ({
+                              ...prev,
+                              description: event.target.value,
+                            }))
+                          }
+                          className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          placeholder="Ej. Holding, offside, protestas"
+                        />
+                      </div>
+                    ) : showsPointsInput ? (
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-gray-700">Puntos</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={eventDraft.points}
+                          onChange={(event) =>
+                            setEventDraft((prev) => ({
+                              ...prev,
+                              points: event.target.value,
+                            }))
+                          }
+                          className="w-full rounded-md border border-gray-300 px-3 py-3 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          placeholder="0"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <button
+                    onClick={handleAddGameEvent}
+                    disabled={savingEvent || !isEventDraftReady}
+                    aria-busy={savingEvent}
+                    className={`live-event-submit w-full rounded-lg px-4 py-4 text-base font-bold transition-colors ${
+                      savingEvent
+                        ? "is-saving bg-blue-700 text-white shadow-[0_10px_26px_rgba(29,78,216,0.28)]"
+                        : isEventDraftReady
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "cursor-not-allowed bg-gray-300 text-gray-500"
+                    }`}
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {savingEvent && (
+                        <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-90"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4Z"
+                          />
+                        </svg>
+                      )}
+                      {savingEvent ? "Guardando evento..." : editingEventId ? "Guardar cambios" : "Registrar evento"}
+                    </span>
+                  </button>
+                  {editingEventId && (
+                    <button
+                      onClick={resetEventDraft}
+                      disabled={savingEvent}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      Cancelar edición
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="font-bold text-gray-900">Historial del partido</h2>
+                  <span className="text-sm text-gray-500">{game.events?.length || 0} eventos</span>
+                </div>
+                <div className="mt-3 max-h-96 divide-y divide-gray-100 overflow-y-auto pr-1">
+                  {game.events && game.events.length > 0 ? (
+                    [...game.events].reverse().map((event, index) => (
+                      <div key={event._id || `${event.quarter}-${event.type}-${index}`} className="py-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {event.description || getEventTypeLabel(event.type)}
+                              {!event.description && event.points ? ` +${event.points}` : ""}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {periodLabel(event.quarter)} · {getEventTeamName(event.team)}
+                              {event.player
+                                ? ` · ${usesScorerLabel(event.type) ? "Anotador" : "Jugador"}: ${getEventPlayerName(
+                                    event.player,
+                                  )}`
+                                : ""}
+                            </p>
+                            {canChoosePlayType(event.type) && (
+                              <p className="mt-1 text-sm text-gray-600">
+                                Jugada: {getEventPlayType(event.details) === "pass" ? "Pase" : "Corrida"}
+                              </p>
+                            )}
+                            {requiresQbAndPlayer(event.type, getEventPlayType(event.details)) &&
+                              getEventQbName(event.details) && (
+                                <p className="mt-1 text-sm text-gray-600">
+                                  QB: {getEventQbName(event.details)}
+                                  {getEventQbStatValue(event.details) !== undefined
+                                    ? ` (${getEventQbStatValue(event.details)! > 0 ? "+" : ""}${getEventQbStatValue(event.details)})`
+                                    : ""}
+                                </p>
+                              )}
+                            {requiresPenaltyDescription(event.type) && getPenaltyDescription(event.details) && (
+                              <p className="mt-1 text-sm text-gray-700">{getPenaltyDescription(event.details)}</p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteGameEvent(event._id)}
+                            className="rounded-md border border-red-200 bg-red-50 p-2 text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Eliminar evento"
+                            aria-label="Eliminar evento"
+                            disabled={savingEvent}
+                          >
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEditGameEvent(event)}
+                            className="rounded-md border border-blue-200 bg-blue-50 p-2 text-blue-600 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Editar evento"
+                            aria-label="Editar evento"
+                            disabled={savingEvent}
+                          >
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-6 text-center text-sm text-gray-500">Todavía no hay eventos registrados.</div>
+                  )}
+                </div>
+              </div>
+
+              {game.status === "in_progress" && (
+                <div className="mt-4 border-t border-gray-200 bg-white px-4 py-4">
+                  <button
+                    type="button"
+                    onClick={openPresentPlayersManager}
+                    disabled={savingEvent}
+                    className="mb-3 w-full rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm font-bold text-green-900 transition-colors hover:bg-green-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    Agregar jugadores
+                  </button>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <button
+                      onClick={handleEndHalf}
+                      disabled={savingEvent}
+                      className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      Terminar {rules.periodName.toLowerCase()}
+                    </button>
+                    <button
+                      onClick={handleEndGame}
+                      disabled={savingEvent}
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      Finalizar partido
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </AdminProtection>
+  );
+}

@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "node --env-file-if-exists=.env ./node_modules/turbo/bin/turbo run dev",
     "dev:institutional": "node --env-file-if-exists=.env ./node_modules/turbo/bin/turbo run dev --filter=@lufa/institutional",
+    "dev:tackle": "node --env-file-if-exists=.env ./node_modules/turbo/bin/turbo run dev --filter=@lufa/tackle-institucional",
     "dev:api": "node --env-file-if-exists=.env ./node_modules/turbo/bin/turbo run dev --filter=@lufa/api",
     "dev:fantasy": "node --env-file-if-exists=.env ./node_modules/turbo/bin/turbo run dev --filter=@lufa/fantasy",
     "build": "turbo run build",

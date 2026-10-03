@@ -36,6 +36,7 @@ export type FlagInterestMinAggregateOutputType = {
   experience: string | null
   company: string | null
   sponsorInterest: string | null
+  modality: string | null
   createdAt: Date | null
 }
 
@@ -51,6 +52,7 @@ export type FlagInterestMaxAggregateOutputType = {
   experience: string | null
   company: string | null
   sponsorInterest: string | null
+  modality: string | null
   createdAt: Date | null
 }
 
@@ -66,6 +68,7 @@ export type FlagInterestCountAggregateOutputType = {
   experience: number
   company: number
   sponsorInterest: number
+  modality: number
   createdAt: number
   _all: number
 }
@@ -83,6 +86,7 @@ export type FlagInterestMinAggregateInputType = {
   experience?: true
   company?: true
   sponsorInterest?: true
+  modality?: true
   createdAt?: true
 }
 
@@ -98,6 +102,7 @@ export type FlagInterestMaxAggregateInputType = {
   experience?: true
   company?: true
   sponsorInterest?: true
+  modality?: true
   createdAt?: true
 }
 
@@ -113,6 +118,7 @@ export type FlagInterestCountAggregateInputType = {
   experience?: true
   company?: true
   sponsorInterest?: true
+  modality?: true
   createdAt?: true
   _all?: true
 }
@@ -201,6 +207,7 @@ export type FlagInterestGroupByOutputType = {
   experience: string | null
   company: string | null
   sponsorInterest: string | null
+  modality: string
   createdAt: Date
   _count: FlagInterestCountAggregateOutputType | null
   _min: FlagInterestMinAggregateOutputType | null
@@ -237,6 +244,7 @@ export type FlagInterestWhereInput = {
   experience?: Prisma.StringNullableFilter<"FlagInterest"> | string | null
   company?: Prisma.StringNullableFilter<"FlagInterest"> | string | null
   sponsorInterest?: Prisma.StringNullableFilter<"FlagInterest"> | string | null
+  modality?: Prisma.StringFilter<"FlagInterest"> | string
   createdAt?: Prisma.DateTimeFilter<"FlagInterest"> | Date | string
 }
 
@@ -252,6 +260,7 @@ export type FlagInterestOrderByWithRelationInput = {
   experience?: Prisma.SortOrderInput | Prisma.SortOrder
   company?: Prisma.SortOrderInput | Prisma.SortOrder
   sponsorInterest?: Prisma.SortOrderInput | Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -270,6 +279,7 @@ export type FlagInterestWhereUniqueInput = Prisma.AtLeast<{
   experience?: Prisma.StringNullableFilter<"FlagInterest"> | string | null
   company?: Prisma.StringNullableFilter<"FlagInterest"> | string | null
   sponsorInterest?: Prisma.StringNullableFilter<"FlagInterest"> | string | null
+  modality?: Prisma.StringFilter<"FlagInterest"> | string
   createdAt?: Prisma.DateTimeFilter<"FlagInterest"> | Date | string
 }, "id">
 
@@ -285,6 +295,7 @@ export type FlagInterestOrderByWithAggregationInput = {
   experience?: Prisma.SortOrderInput | Prisma.SortOrder
   company?: Prisma.SortOrderInput | Prisma.SortOrder
   sponsorInterest?: Prisma.SortOrderInput | Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.FlagInterestCountOrderByAggregateInput
   _max?: Prisma.FlagInterestMaxOrderByAggregateInput
@@ -306,6 +317,7 @@ export type FlagInterestScalarWhereWithAggregatesInput = {
   experience?: Prisma.StringNullableWithAggregatesFilter<"FlagInterest"> | string | null
   company?: Prisma.StringNullableWithAggregatesFilter<"FlagInterest"> | string | null
   sponsorInterest?: Prisma.StringNullableWithAggregatesFilter<"FlagInterest"> | string | null
+  modality?: Prisma.StringWithAggregatesFilter<"FlagInterest"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"FlagInterest"> | Date | string
 }
 
@@ -321,6 +333,7 @@ export type FlagInterestCreateInput = {
   experience?: string | null
   company?: string | null
   sponsorInterest?: string | null
+  modality?: string
   createdAt?: Date | string
 }
 
@@ -336,6 +349,7 @@ export type FlagInterestUncheckedCreateInput = {
   experience?: string | null
   company?: string | null
   sponsorInterest?: string | null
+  modality?: string
   createdAt?: Date | string
 }
 
@@ -351,6 +365,7 @@ export type FlagInterestUpdateInput = {
   experience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sponsorInterest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -366,6 +381,7 @@ export type FlagInterestUncheckedUpdateInput = {
   experience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sponsorInterest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -381,6 +397,7 @@ export type FlagInterestCreateManyInput = {
   experience?: string | null
   company?: string | null
   sponsorInterest?: string | null
+  modality?: string
   createdAt?: Date | string
 }
 
@@ -396,6 +413,7 @@ export type FlagInterestUpdateManyMutationInput = {
   experience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sponsorInterest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -411,6 +429,7 @@ export type FlagInterestUncheckedUpdateManyInput = {
   experience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sponsorInterest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modality?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -426,6 +445,7 @@ export type FlagInterestCountOrderByAggregateInput = {
   experience?: Prisma.SortOrder
   company?: Prisma.SortOrder
   sponsorInterest?: Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -441,6 +461,7 @@ export type FlagInterestMaxOrderByAggregateInput = {
   experience?: Prisma.SortOrder
   company?: Prisma.SortOrder
   sponsorInterest?: Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -456,6 +477,7 @@ export type FlagInterestMinOrderByAggregateInput = {
   experience?: Prisma.SortOrder
   company?: Prisma.SortOrder
   sponsorInterest?: Prisma.SortOrder
+  modality?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -473,6 +495,7 @@ export type FlagInterestSelect<ExtArgs extends runtime.Types.Extensions.Internal
   experience?: boolean
   company?: boolean
   sponsorInterest?: boolean
+  modality?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["flagInterest"]>
 
@@ -488,6 +511,7 @@ export type FlagInterestSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   experience?: boolean
   company?: boolean
   sponsorInterest?: boolean
+  modality?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["flagInterest"]>
 
@@ -503,6 +527,7 @@ export type FlagInterestSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   experience?: boolean
   company?: boolean
   sponsorInterest?: boolean
+  modality?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["flagInterest"]>
 
@@ -518,10 +543,11 @@ export type FlagInterestSelectScalar = {
   experience?: boolean
   company?: boolean
   sponsorInterest?: boolean
+  modality?: boolean
   createdAt?: boolean
 }
 
-export type FlagInterestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "interestType" | "interestLabel" | "name" | "ageRange" | "location" | "whatsapp" | "whatsappDigits" | "experience" | "company" | "sponsorInterest" | "createdAt", ExtArgs["result"]["flagInterest"]>
+export type FlagInterestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "interestType" | "interestLabel" | "name" | "ageRange" | "location" | "whatsapp" | "whatsappDigits" | "experience" | "company" | "sponsorInterest" | "modality" | "createdAt", ExtArgs["result"]["flagInterest"]>
 
 export type $FlagInterestPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "FlagInterest"
@@ -538,6 +564,7 @@ export type $FlagInterestPayload<ExtArgs extends runtime.Types.Extensions.Intern
     experience: string | null
     company: string | null
     sponsorInterest: string | null
+    modality: string
     createdAt: Date
   }, ExtArgs["result"]["flagInterest"]>
   composites: {}
@@ -973,6 +1000,7 @@ export interface FlagInterestFieldRefs {
   readonly experience: Prisma.FieldRef<"FlagInterest", 'String'>
   readonly company: Prisma.FieldRef<"FlagInterest", 'String'>
   readonly sponsorInterest: Prisma.FieldRef<"FlagInterest", 'String'>
+  readonly modality: Prisma.FieldRef<"FlagInterest", 'String'>
   readonly createdAt: Prisma.FieldRef<"FlagInterest", 'DateTime'>
 }
     

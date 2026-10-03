@@ -10,6 +10,7 @@ import type {
   AdminSystemStatsResponseDto,
   AdminUserResponseDto,
   FlagInterestResponseDto,
+  Modality,
   SiteSettingsResponseDto,
   SiteSponsorResponseDto,
   UpdateAdminUserRequestDto,
@@ -17,9 +18,32 @@ import type {
 } from "@lufa/contracts";
 
 const VALID_ROLES: UserRole[] = ["user", "admin", "juez", "entrenador_juveniles", "redes"];
-const SETTINGS_KEY = "global";
-const DEFAULT_WHATSAPP_MESSAGE =
-  "Hola {nombre}, te escribimos de LUFA Flag por tu inscripción para jugar. Queremos contarte los próximos pasos para sumarte a juveniles.";
+/** Flag keeps the historical "global" row; other modalities use their own name. */
+export function siteSettingsKey(modality: Modality = "flag") {
+  return modality === "flag" ? "global" : modality;
+}
+
+const DEFAULT_CONTACT: Record<Modality, {
+  whatsappMessageTemplate: string;
+  contactEmail: string;
+  instagramUrl: string;
+  whatsappChannelUrl: string;
+}> = {
+  flag: {
+    whatsappMessageTemplate:
+      "Hola {nombre}, te escribimos de LUFA Flag por tu inscripción para jugar. Queremos contarte los próximos pasos para sumarte a juveniles.",
+    contactEmail: "lufaflag@gmail.com",
+    instagramUrl: "https://www.instagram.com/lufaflag.uy/",
+    whatsappChannelUrl: "https://whatsapp.com/channel/0029VbCnCzqKLaHqPlaOvV3W",
+  },
+  tackle: {
+    whatsappMessageTemplate:
+      "Hola {nombre}, te escribimos de LUFA Tackle por tu inscripción para jugar. Queremos contarte los próximos pasos.",
+    contactEmail: "",
+    instagramUrl: "",
+    whatsappChannelUrl: "",
+  },
+};
 
 export interface AdminRepositoryPort {
   getAdminSystemCounts(): Promise<Record<string, number>>;
@@ -27,10 +51,14 @@ export interface AdminRepositoryPort {
   findAdminUserById(id: string): Promise<Record<string, unknown> | null>;
   updateAdminUser(id: string, role: string, isActive: boolean): Promise<Record<string, unknown> | null>;
   countOtherActiveAdmins(excludeUserId: string): Promise<number>;
-  getSiteSettings(): Promise<Record<string, unknown> | null>;
-  upsertSiteSettings(data: Record<string, unknown>): Promise<Record<string, unknown>>;
+  getSiteSettings(key?: string): Promise<Record<string, unknown> | null>;
+  upsertSiteSettings(data: Record<string, unknown>, key?: string): Promise<Record<string, unknown>>;
   listAuditLogs(filters?: Record<string, string>): Promise<Record<string, unknown>[]>;
-  listFlagInterests(filters?: { interestType?: string; playerRegistrationsOnly?: boolean }): Promise<Record<string, unknown>[]>;
+  listFlagInterests(filters?: {
+    interestType?: string;
+    playerRegistrationsOnly?: boolean;
+    modality?: Modality;
+  }): Promise<Record<string, unknown>[]>;
   createAuditLog(data: Record<string, unknown>): Promise<void>;
 }
 
@@ -136,13 +164,14 @@ function toSettingsResponse(settings: {
     sponsorsVisible?: boolean;
   };
   updatedAt?: Date;
-}): SiteSettingsResponseDto {
+}, modality: Modality): SiteSettingsResponseDto {
+  const defaults = DEFAULT_CONTACT[modality];
   return {
-    whatsappMessageTemplate: settings.whatsappMessageTemplate || DEFAULT_WHATSAPP_MESSAGE,
-    contactEmail: settings.contactEmail || "lufaflag@gmail.com",
+    whatsappMessageTemplate: settings.whatsappMessageTemplate || defaults.whatsappMessageTemplate,
+    contactEmail: settings.contactEmail || defaults.contactEmail,
     contactWhatsapp: settings.contactWhatsapp || "",
-    instagramUrl: settings.instagramUrl || "https://www.instagram.com/lufaflag.uy/",
-    whatsappChannelUrl: settings.whatsappChannelUrl || "https://whatsapp.com/channel/0029VbCnCzqKLaHqPlaOvV3W",
+    instagramUrl: settings.instagramUrl || defaults.instagramUrl,
+    whatsappChannelUrl: settings.whatsappChannelUrl || defaults.whatsappChannelUrl,
     sponsors: (settings.sponsors?.length ? settings.sponsors : defaultSponsors)
       .map((sponsor, index) => ({
         name: sponsor.name || "",
@@ -289,20 +318,18 @@ export class AdminService {
     return after;
   }
 
-  async getSiteSettings() {
-    const existing = await this.auxiliaryRepo.getSiteSettings();
+  async getSiteSettings(modality: Modality = "flag") {
+    const key = siteSettingsKey(modality);
+    const existing = await this.auxiliaryRepo.getSiteSettings(key);
 
     if (existing) {
-      return toSettingsResponse(existing as unknown as Parameters<typeof toSettingsResponse>[0]);
+      return toSettingsResponse(existing as unknown as Parameters<typeof toSettingsResponse>[0], modality);
     }
 
     const created = await this.auxiliaryRepo.upsertSiteSettings({
-      key: SETTINGS_KEY,
-      whatsappMessageTemplate: DEFAULT_WHATSAPP_MESSAGE,
-      contactEmail: "lufaflag@gmail.com",
+      key,
+      ...DEFAULT_CONTACT[modality],
       contactWhatsapp: "",
-      instagramUrl: "https://www.instagram.com/lufaflag.uy/",
-      whatsappChannelUrl: "https://whatsapp.com/channel/0029VbCnCzqKLaHqPlaOvV3W",
       sponsors: defaultSponsors,
       homepageAnnouncement: {
         enabled: false,
@@ -313,13 +340,14 @@ export class AdminService {
         sumateEnabled: true,
         sponsorsVisible: true,
       },
-    });
+    }, key);
 
-    return toSettingsResponse(created as unknown as Parameters<typeof toSettingsResponse>[0]);
+    return toSettingsResponse(created as unknown as Parameters<typeof toSettingsResponse>[0], modality);
   }
 
-  async updateSiteSettings(actor: User, data: UpdateSiteSettingsRequestDto) {
-    const before = await this.getSiteSettings();
+  async updateSiteSettings(actor: User, data: UpdateSiteSettingsRequestDto, modality: Modality = "flag") {
+    const key = siteSettingsKey(modality);
+    const before = await this.getSiteSettings(modality);
 
     const update: Record<string, unknown> = {};
 
@@ -365,13 +393,13 @@ export class AdminService {
       };
     }
 
-    const saved = await this.auxiliaryRepo.upsertSiteSettings({ ...before, ...update });
+    const saved = await this.auxiliaryRepo.upsertSiteSettings({ ...before, ...update }, key);
 
-    const after = toSettingsResponse(saved as unknown as Parameters<typeof toSettingsResponse>[0]);
+    const after = toSettingsResponse(saved as unknown as Parameters<typeof toSettingsResponse>[0], modality);
     await this.recordAudit(actor, {
       action: "settings.updated",
       entityType: "site_settings",
-      entityId: SETTINGS_KEY,
+      entityId: key,
       entityLabel: "Configuración del sitio",
       summary: "Actualizó configuración del sitio",
       before,
@@ -391,7 +419,7 @@ export class AdminService {
     return logs.map(toAuditResponse);
   }
 
-  async listFlagInterests(filters: { interestType?: string } = {}) {
+  async listFlagInterests(filters: { interestType?: string; modality?: Modality } = {}) {
     const docs = (await this.auxiliaryRepo.listFlagInterests(filters)) as unknown as Array<
       Parameters<typeof toFlagInterestResponse>[0]
     >;

@@ -1,6 +1,7 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import type { GamePhase, GameStatus } from "@lufa/sports/entities/Game";
 import { toGameResponseDto } from "@/app/DTOs";
 import type { CreateGameRequestDto, UpdateGameRequestDto } from "@/app/DTOs";
@@ -87,6 +88,8 @@ export async function GET(request: NextRequest) {
     const playoffSlot = searchParams.get("playoffSlot") || undefined;
     const team = searchParams.get("team") || undefined;
     const upcoming = searchParams.get("upcoming") === "true";
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
 
     let games = await gameService.listGames({
       tournament,
@@ -95,6 +98,7 @@ export async function GET(request: NextRequest) {
       status,
       phase,
       playoffSlot,
+      modality,
     });
 
     if (upcoming) {

@@ -1,6 +1,7 @@
 import { serviceContainer } from "@/bootstrap/serviceContainer";
 import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/apiError";
+import { invalidModalityResponse, parseModality } from "@/lib/modality";
 import { getSessionTokenFromRequest } from "@/lib/auth";
 import { invalidateCacheByPrefix } from "@/lib/serverCache";
 
@@ -54,7 +55,10 @@ export async function GET(request: NextRequest) {
     if (!ALLOWED_SORT_FIELDS.has(sortBy)) {
       return NextResponse.json({ success: false, message: "sortBy inválido" }, { status: 400 });
     }
+    const modality = parseModality(searchParams);
+    if (!modality) return invalidModalityResponse();
     const result = await statisticsService.getTeamStatistics({
+      modality,
       tournament: searchParams.get("tournament"),
       division: searchParams.get("division"),
       team: searchParams.get("team"),

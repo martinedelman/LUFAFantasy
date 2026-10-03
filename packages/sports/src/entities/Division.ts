@@ -1,4 +1,5 @@
 import { AggregateRoot } from "./base/AggregateRoot";
+import { DEFAULT_MODALITY, type Modality } from "./Modality";
 
 export type DivisionCategory = "masculino" | "femenino" | "mixto";
 
@@ -13,6 +14,7 @@ export class Division extends AggregateRoot {
   public readonly tournament?: string; // ID del torneo
   public readonly teams: string[]; // IDs de equipos
   public readonly maxTeams?: number;
+  public readonly modality: Modality;
 
   constructor(
     name: string,
@@ -24,6 +26,7 @@ export class Division extends AggregateRoot {
     id?: string,
     createdAt?: Date,
     updatedAt?: Date,
+    modality: Modality = DEFAULT_MODALITY,
   ) {
     super(id, createdAt, updatedAt);
     this.name = name;
@@ -32,6 +35,7 @@ export class Division extends AggregateRoot {
     this.tournament = tournament;
     this.teams = teams;
     this.maxTeams = maxTeams;
+    this.modality = modality;
   }
 
   /**

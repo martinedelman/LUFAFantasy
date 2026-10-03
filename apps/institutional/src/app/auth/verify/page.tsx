@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import LegacyVerifyPage from "@/components/auth/LegacyVerifyPage";
+import LegacyVerifyPage from "@lufa/institutional-web/components/auth/LegacyVerifyPage";
 import { legacyFlagAuthentication } from "@/flags";
-import { centralAuthDestination } from "@/lib/centralAuth";
+import { centralAuthDestination } from "@lufa/institutional-web/lib/centralAuth";
 
 type VerifyPageProps = {
   searchParams: Promise<{

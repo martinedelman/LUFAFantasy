@@ -1,18 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Game, type GameEvent, type GameStatus } from "@lufa/sports/entities/Game";
 import { GameScore } from "@lufa/sports/entities/valueObjects/Score";
+import type { Modality } from "@lufa/sports/entities/Modality";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { IGameRepository } from "../contracts";
-import { plainJson, referenceId, toGame } from "./mappers";
+import { modalityFilter, plainJson, referenceId, toGame } from "./mappers";
 
 const gameInclude: any = {
   tournament: true,
   division: true,
   homeTeam: true,
   awayTeam: true,
-  presentPlayers: { include: { player: true }, orderBy: { ordinal: "asc" } },
+  // Profiles let the mapper show each player's number in the game's modality.
+  presentPlayers: { include: { player: { include: { modalityProfiles: true } } }, orderBy: { ordinal: "asc" } },
   events: {
-    include: { team: true, player: true },
+    include: { team: true, player: { include: { modalityProfiles: true } } },
     orderBy: [{ sequence: "asc" }, { createdAt: "asc" }],
   },
 };
@@ -33,6 +35,8 @@ export class PrismaGameRepository implements IGameRepository {
     if (typeof filters.status === "string") where.status = filters.status;
     if (typeof filters.phase === "string") where.phase = filters.phase;
     if (typeof filters.playoffSlot === "string") where.playoffSlot = filters.playoffSlot;
+    const modality = modalityFilter(filters);
+    if (modality) where.tournament = { modality };
     return (await this.db.game.findMany({ where, include: gameInclude }))
       .map(toGame)
       .filter((item): item is Game => Boolean(item));
@@ -70,9 +74,9 @@ export class PrismaGameRepository implements IGameRepository {
     return this.findAll({ tournament: tournamentId });
   }
 
-  async findByTeam(teamId: string): Promise<Game[]> {
+  async findByTeam(teamId: string, modality?: Modality): Promise<Game[]> {
     const rows = await this.db.game.findMany({
-      where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] },
+      where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }], ...(modality ? { tournament: { modality } } : {}) },
       include: gameInclude,
     });
     return rows.map(toGame).filter((item): item is Game => Boolean(item));
