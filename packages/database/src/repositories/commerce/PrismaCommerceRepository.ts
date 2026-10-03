@@ -1,4 +1,4 @@
-import type { CommerceAdminDashboardDto, CommerceCheckoutQuoteDto, CommerceFulfillmentStatus, CommerceItemDetailsDto, CommerceItemDto, CommerceOrderDto, CommerceOrderFiltersDto, CreateCommerceCheckoutDto, CreateCommerceItemDto, CreateCommerceRefundRequestDto, CreateCommerceSellerDto, UpdateCommerceItemDto } from "@lufa/contracts";
+import type { CommerceAdminDashboardDto, CommerceCheckoutQuoteDto, CommerceFulfillmentStatus, CommerceItemDetailsDto, CommerceItemDto, CommerceOrderDto, CommerceOrderFiltersDto, CommerceTournamentOptionDto, CreateCommerceCheckoutDto, CreateCommerceItemDto, CreateCommerceRefundRequestDto, CreateCommerceSellerDto, UpdateCommerceItemDto } from "@lufa/contracts";
 import { CommerceError, type CommerceActor, type CommerceRepository, type ReservedOrder, type VerifiedProviderOrder } from "@lufa/commerce";
 import { getPrismaClient } from "../../prisma";
 
@@ -45,6 +45,25 @@ export class PrismaCommerceRepository implements CommerceRepository {
   private get database(): Db { return this.db || getPrismaClient(); }
   private async hasCredential(userId?: string) { return Boolean(userId && await this.database.digitalCredential.findFirst({ where: { userId, status: "active", expiresAt: { gt: new Date() }, }, select: { id: true } })); }
   private async sellerIds(actor: CommerceActor) { return actor.role === "admin" ? null : (await this.database.commerceSellerMember.findMany({ where: { userId: actor.id }, select: { sellerId: true } })).map((row) => row.sellerId); }
+  private async requireTournamentPlayer(tx: Pick<Db, "player">, buyer: CommerceActor, items: Array<{ kind: string; details: unknown }>) {
+    const tournamentItems = items.filter((item) => item.kind === "tournament");
+    if (!tournamentItems.length) return;
+    const player = await tx.player.findFirst({ where: { email: { equals: buyer.email, mode: "insensitive" } }, select: { id: true, team: { select: { divisionId: true } } } });
+    if (!player) throw new CommerceError("Para inscribirte, primero vinculá tu perfil de jugador con tu cuenta LUFA.", "PLAYER_PROFILE_REQUIRED", 409);
+    for (const item of tournamentItems) {
+      const divisionId = plainDetails(item.details).divisionId;
+      if (!divisionId) throw new CommerceError("La inscripción no tiene una división configurada.", "ITEM_UNAVAILABLE", 409);
+      if (player.team.divisionId !== divisionId) throw new CommerceError("Tu perfil de jugador no pertenece a la división de esta inscripción.", "DIVISION_MISMATCH", 409);
+    }
+  }
+  private async validateTournamentSelection(input: CreateCommerceItemDto | UpdateCommerceItemDto) {
+    if (input.kind !== "tournament") return;
+    const divisionId = input.details?.divisionId;
+    if (!input.tournamentId || !divisionId) throw new CommerceError("Seleccioná un campeonato y una división.", "INVALID_TOURNAMENT_SELECTION", 400);
+    const tournament = await this.database.tournament.findUnique({ where: { id: input.tournamentId }, select: { status: true, divisions: { select: { divisionId: true } }, legacyDivisions: { select: { id: true } } } });
+    if (!tournament || !["active", "upcoming"].includes(tournament.status)) throw new CommerceError("El campeonato no está disponible para publicar inscripciones.", "INVALID_TOURNAMENT_SELECTION", 400);
+    if (![...tournament.divisions.map((row) => row.divisionId), ...tournament.legacyDivisions.map((row) => row.id)].includes(divisionId)) throw new CommerceError("La división no pertenece al campeonato seleccionado.", "INVALID_TOURNAMENT_SELECTION", 400);
+  }
   private audit(actor: CommerceActor, action: string, entityType: string, entityId: string, summary: string) { return this.database.adminAuditLog.create({ data: { actorId: actor.id, actorName: actor.name, actorEmail: actor.email, action, entityType, entityId, summary } }); }
   private inventoryStatus(item: any, variant: any, quantity: number) {
     const available = variant ? variant.stockQuantity : item.stockQuantity;
@@ -61,10 +80,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
     if (items.length !== new Set(requested.map((item) => item.itemId)).size) throw new CommerceError("Uno de los productos ya no está disponible.", "ITEM_UNAVAILABLE", 409);
     if (new Set(items.map((item: any) => item.sellerId)).size !== 1) throw new CommerceError("Cada compra debe contener productos de un único vendedor.", "MULTIPLE_SELLERS", 409);
     const byId = new Map(items.map((item: any) => [item.id, item]));
-    if (items.some((item: any) => item.kind === "tournament")) {
-      const player = await tx.player.findFirst({ where: { email: { equals: buyer.email, mode: "insensitive" } }, select: { id: true } });
-      if (!player) throw new CommerceError("Para inscribirte, primero vinculá tu perfil de jugador con tu cuenta LUFA.", "PLAYER_PROFILE_REQUIRED", 409);
-    }
+    await this.requireTournamentPlayer(tx, buyer, items);
     const lines = requested.map((request) => {
       const item = byId.get(request.itemId)!; const variant = request.variantId ? item.variants.find((candidate: any) => candidate.id === request.variantId) : null;
       if (request.variantId && !variant) throw new CommerceError("La variante seleccionada no está disponible.", "VARIANT_UNAVAILABLE", 409);
@@ -77,7 +93,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
     });
     for (const line of lines.filter((line: any) => line.item.kind === "tournament")) {
       const registration = await tx.commerceTournamentRegistration.findUnique({ where: { itemId_userId: { itemId: line.item.id, userId: buyer.id } }, select: { status: true } });
-      if (registration && registration.status !== "cancelled") throw new CommerceError("Ya tenés una inscripción reservada o activa para este torneo.", "TOURNAMENT_ALREADY_RESERVED", 409);
+      if (registration && registration.status !== "cancelled") throw new CommerceError("Ya tenés una inscripción vigente para este torneo.", "TOURNAMENT_ALREADY_RESERVED", 409);
     }
     return lines;
   }
@@ -131,10 +147,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
       if (items.length !== new Set(input.request.items.map((item) => item.itemId)).size) throw new CommerceError("Uno de los productos ya no está disponible.", "ITEM_UNAVAILABLE", 409);
       if (new Set(items.map((item: any) => item.sellerId)).size !== 1) throw new CommerceError("Cada compra debe contener productos de un único vendedor.", "MULTIPLE_SELLERS", 409);
       const byId = new Map(items.map((item: any) => [item.id, item]));
-      if (items.some((item: any) => item.kind === "tournament")) {
-        const player = await tx.player.findFirst({ where: { email: { equals: input.buyer.email, mode: "insensitive" } }, select: { id: true } });
-        if (!player) throw new CommerceError("Para inscribirte, primero vinculá tu perfil de jugador con tu cuenta LUFA.", "PLAYER_PROFILE_REQUIRED", 409);
-      }
+      await this.requireTournamentPlayer(tx, input.buyer, items);
       const lines = input.request.items.map((request) => {
         const item = byId.get(request.itemId)!; const variant = request.variantId ? item.variants.find((candidate: any) => candidate.id === request.variantId) : null;
         if (request.variantId && !variant) throw new CommerceError("La variante seleccionada no está disponible.", "VARIANT_UNAVAILABLE", 409);
@@ -147,7 +160,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
       });
       for (const line of lines.filter((line: any) => line.item.kind === "tournament")) {
         const registration = await tx.commerceTournamentRegistration.findUnique({ where: { itemId_userId: { itemId: line.item.id, userId: input.buyer.id } }, select: { status: true } });
-        if (registration && registration.status !== "cancelled") throw new CommerceError("Ya tenés una inscripción reservada o activa para este torneo.", "TOURNAMENT_ALREADY_RESERVED", 409);
+        if (registration && registration.status !== "cancelled") throw new CommerceError("Ya tenés una inscripción vigente para este torneo.", "TOURNAMENT_ALREADY_RESERVED", 409);
       }
       const { subtotalMinor, discountMinor, totalMinor } = this.checkoutQuote(lines);
       for (const line of lines) {
@@ -207,8 +220,13 @@ export class PrismaCommerceRepository implements CommerceRepository {
       if (provider.externalReference !== order.id || provider.currency !== order.currency || provider.totalMinor !== order.totalMinor || provider.id !== order.providerOrderId) throw new CommerceError("El pago verificado no coincide con la compra local.", "PAYMENT_MISMATCH", 409);
       const status = provider.status.toLowerCase();
       if (PAID.has(status) && !order.paidAt) {
+        if (order.items.some((line: { kind: string }) => line.kind === "tournament")) {
+          const player = await tx.player.findFirst({ where: { email: { equals: order.buyer.email, mode: "insensitive" } }, select: { id: true } });
+          if (!player) throw new CommerceError("No se encontró el perfil del jugador para preaprobar la inscripción.", "PLAYER_PROFILE_REQUIRED", 409);
+          await tx.player.update({ where: { id: player.id }, data: { status: "pre_approved" } });
+        }
         for (const line of order.items) {
-          if (line.item.kind === "tournament" && line.item.tournamentId) await tx.commerceTournamentRegistration.upsert({ where: { itemId_userId: { itemId: line.itemId, userId: order.buyerUserId } }, create: { orderId: order.id, itemId: line.itemId, tournamentId: line.item.tournamentId, userId: order.buyerUserId, status: "active" }, update: { status: "active", cancelledAt: null } });
+          if (line.item.kind === "tournament" && line.item.tournamentId) await tx.commerceTournamentRegistration.upsert({ where: { itemId_userId: { itemId: line.itemId, userId: order.buyerUserId } }, create: { orderId: order.id, itemId: line.itemId, tournamentId: line.item.tournamentId, userId: order.buyerUserId, status: "pre_approved" }, update: { status: "pre_approved", cancelledAt: null } });
           if (line.entitlementMonths) {
             const current = await tx.digitalCredential.findFirst({ where: { userId: order.buyerUserId }, orderBy: { expiresAt: "desc" } });
             const expiresAt = new Date(current && current.expiresAt > new Date() ? current.expiresAt : new Date()); expiresAt.setUTCMonth(expiresAt.getUTCMonth() + line.entitlementMonths);
@@ -234,6 +252,12 @@ export class PrismaCommerceRepository implements CommerceRepository {
   listReconciliationCandidates(limit: number) { return this.database.commerceOrder.findMany({ where: { status: { in: ["creating", "payment_pending", "payment_review"] } }, orderBy: { createdAt: "asc" }, take: limit, select: { id: true, providerOrderId: true } }); }
 
   async listActorSellers(actor: CommerceActor) { const sellerIds = await this.sellerIds(actor); return this.database.commerceSeller.findMany({ where: { status: "active", ...(sellerIds ? { id: { in: sellerIds } } : {}) }, select: { id: true, slug: true, name: true }, orderBy: { name: "asc" } }); }
+  async listTournamentOptions(actor: CommerceActor): Promise<CommerceTournamentOptionDto[]> {
+    const sellerIds = await this.sellerIds(actor);
+    if (sellerIds?.length === 0) throw new CommerceError("No autorizado para publicar inscripciones.", "FORBIDDEN", 403);
+    const tournaments = await this.database.tournament.findMany({ where: { status: { in: ["active", "upcoming"] } }, select: { id: true, name: true, season: true, year: true, modality: true, divisions: { orderBy: { ordinal: "asc" }, select: { division: { select: { id: true, name: true, category: true } } } }, legacyDivisions: { select: { id: true, name: true, category: true } } }, orderBy: [{ year: "desc" }, { name: "asc" }] });
+    return tournaments.map((tournament) => ({ id: tournament.id, name: tournament.name, season: tournament.season, year: tournament.year, modality: tournament.modality, divisions: [...new Map([...tournament.divisions.map((row) => row.division), ...tournament.legacyDivisions].map((division) => [division.id, division])).values()] }));
+  }
   async listSellerItems(actor: CommerceActor) { const sellerIds = await this.sellerIds(actor); return (await this.database.commerceItem.findMany({ where: sellerIds ? { sellerId: { in: sellerIds } } : {}, include: { seller: { select: { id: true, slug: true, name: true } }, variants: { orderBy: { label: "asc" } } }, orderBy: { updatedAt: "desc" } })).map((item) => itemDto(item)); }
   private validateDetails(input: CreateCommerceItemDto | UpdateCommerceItemDto) {
     if (input.kind !== undefined && !["product", "service", "tournament"].includes(input.kind)) throw new CommerceError("El tipo de publicación no es válido.", "INVALID_ITEM", 400);
@@ -252,13 +276,15 @@ export class PrismaCommerceRepository implements CommerceRepository {
     this.validateDetails(input); const sellerIds = await this.sellerIds(actor); if (sellerIds && !sellerIds.includes(input.sellerId)) throw new CommerceError("No autorizado para ese vendedor.", "FORBIDDEN", 403);
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input.slug) || !input.title.trim() || !input.description.trim()) throw new CommerceError("Completá título, descripción y un slug válido.", "INVALID_ITEM", 400);
     if (input.kind === "tournament" && (!input.tournamentId || !input.entitlementMonths)) throw new CommerceError("Una inscripción requiere torneo y vigencia de ID.", "INVALID_ITEM", 400);
+    await this.validateTournamentSelection(input);
     if (input.kind !== "product" && input.variants?.length) throw new CommerceError("Solo el equipamiento físico admite variantes.", "INVALID_VARIANT", 400);
     const item = await this.database.commerceItem.create({ data: { ...this.itemData(input), title: input.title.trim(), description: input.description.trim(), currency: "UYU", credentialDiscountBps: input.credentialDiscountBps || 0, active: input.active ?? true, variants: input.variants?.length ? { create: input.variants.map((variant) => ({ sku: variant.sku.trim(), label: variant.label.trim(), optionName: variant.optionName.trim(), optionValue: variant.optionValue.trim(), priceMinor: variant.priceMinor ?? null, stockQuantity: variant.stockQuantity ?? null, active: variant.active ?? true })) } : undefined }, include: { seller: { select: { id: true, slug: true, name: true } }, variants: true } } as any) as any;
     await this.audit(actor, "commerce.item.created", "commerce_item", item.id, `Publicó ${item.title} para ${item.seller.name}`); return itemDto(item);
   }
   async updateItem(actor: CommerceActor, itemId: string, input: UpdateCommerceItemDto) {
     this.validateDetails(input); const sellerIds = await this.sellerIds(actor); const current = await this.database.commerceItem.findFirst({ where: { id: itemId, ...(sellerIds ? { sellerId: { in: sellerIds } } : {}) } }); if (!current) throw new CommerceError("Producto no encontrado.", "ITEM_NOT_FOUND", 404);
-    const next = { ...current, ...input }; if (next.kind === "tournament" && (!next.tournamentId || !next.entitlementMonths)) throw new CommerceError("Una inscripción requiere torneo y vigencia de ID.", "INVALID_ITEM", 400); if (next.kind !== "product" && input.variants?.length) throw new CommerceError("Solo el equipamiento físico admite variantes.", "INVALID_VARIANT", 400);
+    const next = { ...current, ...input, details: input.details ?? plainDetails(current.details) }; if (next.kind === "tournament" && (!next.tournamentId || !next.entitlementMonths)) throw new CommerceError("Una inscripción requiere torneo y vigencia de ID.", "INVALID_ITEM", 400); if (next.kind !== "product" && input.variants?.length) throw new CommerceError("Solo el equipamiento físico admite variantes.", "INVALID_VARIANT", 400);
+    await this.validateTournamentSelection(next as CreateCommerceItemDto);
     const item = await this.database.$transaction(async (tx) => { if (input.variants) { await tx.commerceItemVariant.deleteMany({ where: { itemId } }); } return tx.commerceItem.update({ where: { id: itemId }, data: { ...this.itemData(input), ...(input.variants ? { variants: { create: input.variants.map((variant) => ({ sku: variant.sku.trim(), label: variant.label.trim(), optionName: variant.optionName.trim(), optionValue: variant.optionValue.trim(), priceMinor: variant.priceMinor ?? null, stockQuantity: variant.stockQuantity ?? null, active: variant.active ?? true })) } } : {}) }, include: { seller: { select: { id: true, slug: true, name: true } }, variants: true } } as any) as any; });
     await this.audit(actor, "commerce.item.updated", "commerce_item", item.id, `Actualizó ${item.title}`); return itemDto(item);
   }

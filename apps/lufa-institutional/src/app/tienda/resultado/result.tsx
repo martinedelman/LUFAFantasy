@@ -1,5 +1,6 @@
 "use client";
 import type { CommerceOrderDto } from "@lufa/contracts";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { clearConfirmedCheckout, discardCheckoutAttempt } from "@/lib/store-cart";
@@ -13,5 +14,6 @@ export function OrderResult() {
   if (!order) return <section className={styles.resultCard}><h1>Consultando tu pago…</h1></section>;
   const copy = messages[order.status] || ["Pago en revisión", "Estamos verificando la operación con Mercado Pago."];
   const financing = order.paymentInstallments && order.paymentInstallments > 1 ? `${order.paymentInstallments} cuotas de ${new Intl.NumberFormat("es-UY", { style: "currency", currency: "UYU" }).format((order.paymentInstallmentAmountMinor || 0) / 100)}` : order.paymentMode === "installments" ? "Pago en cuotas" : "Pago al contado";
-  return <section className={styles.resultCard}><span className={styles.resultIcon}>{order.status === "paid" ? "✓" : "…"}</span><p>Orden {order.id.slice(-8).toUpperCase()}</p><h1>{copy[0]}</h1><p>{copy[1]}</p><strong>{new Intl.NumberFormat("es-UY", { style: "currency", currency: "UYU" }).format(order.totalMinor / 100)}</strong><small>{financing}</small></section>;
+  const tournamentPaid = order.status === "paid" && order.items.some((item) => item.kind === "tournament");
+  return <section className={styles.resultCard}><span className={styles.resultIcon}>{order.status === "paid" ? "✓" : "…"}</span><p>Orden {order.id.slice(-8).toUpperCase()}</p><h1>{copy[0]}</h1><p>{tournamentPaid ? "Tu inscripción quedó preaprobada. Tu ID Digital LUFA ya está disponible en tu perfil." : copy[1]}</p><strong>{new Intl.NumberFormat("es-UY", { style: "currency", currency: "UYU" }).format(order.totalMinor / 100)}</strong><small>{financing}</small>{tournamentPaid ? <Link className={styles.resultAction} href="/mi-id">Ver mi ID Digital</Link> : null}</section>;
 }

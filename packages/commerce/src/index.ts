@@ -8,6 +8,7 @@ import type {
   CommerceOrderFiltersDto,
   CommerceOrderDto,
   CommercePaymentMode,
+  CommerceTournamentOptionDto,
   CreateCommerceCheckoutQuoteDto,
   CreateCommerceCheckoutDto,
   CreateCommerceItemDto,
@@ -84,6 +85,7 @@ export interface CommerceRepository {
   expireOrder(orderId: string): Promise<void>;
   listSellerItems(actor: CommerceActor): Promise<CommerceItemDto[]>;
   listActorSellers(actor: CommerceActor): Promise<Array<{ id: string; slug: string; name: string }>>;
+  listTournamentOptions(actor: CommerceActor): Promise<CommerceTournamentOptionDto[]>;
   createItem(actor: CommerceActor, input: CreateCommerceItemDto): Promise<CommerceItemDto>;
   updateItem(actor: CommerceActor, itemId: string, input: UpdateCommerceItemDto): Promise<CommerceItemDto>;
   createSeller(actor: CommerceActor, input: CreateCommerceSellerDto): Promise<{ id: string; slug: string; name: string }>;
@@ -250,6 +252,7 @@ export class CommerceService {
 
   listSellerItems(actor: CommerceActor) { return this.repository.listSellerItems(actor); }
   listActorSellers(actor: CommerceActor) { return this.repository.listActorSellers(actor); }
+  listTournamentOptions(actor: CommerceActor) { return this.repository.listTournamentOptions(actor); }
   createItem(actor: CommerceActor, input: CreateCommerceItemDto) { return this.repository.createItem(actor, input); }
   updateItem(actor: CommerceActor, id: string, input: UpdateCommerceItemDto) { return this.repository.updateItem(actor, id, input); }
   createSeller(actor: CommerceActor, input: CreateCommerceSellerDto) { return this.repository.createSeller(actor, input); }

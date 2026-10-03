@@ -13,6 +13,7 @@ GET /api/commerce/orders/:id
 GET /api/commerce/seller/items
 GET /api/commerce/seller/orders
 GET /api/commerce/seller/profile
+GET /api/commerce/seller/tournaments
 GET /api/cron/commerce-reconcile
 GET /api/admin/audit-logs
 GET /api/admin/analytics
