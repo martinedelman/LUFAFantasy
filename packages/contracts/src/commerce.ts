@@ -4,6 +4,10 @@ export type CommerceFulfillmentStatus = "pending_fulfillment" | "ready_for_picku
 export type CommercePaymentMode = "cash" | "installments";
 
 export interface CommerceSellerDto { id: string; slug: string; name: string; }
+export interface CommerceTournamentOptionDto {
+  id: string; name: string; season: string; year: number; modality: string;
+  divisions: Array<{ id: string; name: string; category: string }>;
+}
 export interface CommerceItemVariantDto {
   id: string; sku: string; label: string; optionName: string; optionValue: string;
   priceMinor: number | null; stockQuantity: number | null; active: boolean;
