@@ -30,6 +30,7 @@ export type { AdminSystemHealthResponseDto } from "./AdminSystemHealthResponseDt
 export type { AdminUserResponseDto } from "./AdminUserResponseDto";
 export type { DashboardStatsResponseDto } from "./DashboardStatsResponseDto";
 export type { DigitalCredentialResponseDto, DigitalCredentialStatus, DigitalCredentialSubjectType, PublicDigitalCredentialResponseDto } from "./DigitalCredentialResponseDto";
+export type { DigitalCredentialCandidateResponseDto } from "./DigitalCredentialCandidateResponseDto";
 export type { DivisionResponseDto } from "./DivisionResponseDto";
 export type { GameEventResponseDto, GameLiveResponseDto } from "./GameLiveResponseDto";
 export type { GameResponseDto } from "./GameResponseDto";

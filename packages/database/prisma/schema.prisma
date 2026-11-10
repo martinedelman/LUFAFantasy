@@ -14,6 +14,7 @@ model User {
   passwordHash String    @map("password_hash")
   role         String    @default("user")
   isActive     Boolean   @default(true) @map("is_active")
+  emailVerifiedAt DateTime? @map("email_verified_at")
   lastLogin    DateTime? @map("last_login")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
@@ -759,7 +760,8 @@ model FantasyPlayerFavorite {
 model DigitalCredential {
   id               String    @id @default(cuid())
   publicId         String    @unique @default(cuid()) @map("public_id")
-  userId           String    @map("user_id")
+  userId           String?   @map("user_id")
+  claimEmail       String?   @map("claim_email")
   playerId         String?   @map("player_id")
   judgeId          String?   @map("judge_id")
   subjectType      String    @map("subject_type")
@@ -778,12 +780,13 @@ model DigitalCredential {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  user   User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user   User?    @relation(fields: [userId], references: [id], onDelete: Restrict)
   player Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
   judge  Judge?   @relation(fields: [judgeId], references: [id], onDelete: SetNull)
   audits DigitalCredentialAudit[]
 
   @@index([userId, status])
+  @@index([claimEmail, status])
   @@index([playerId])
   @@index([judgeId])
   @@index([status, expiresAt])

@@ -24,7 +24,7 @@
     "db:postgres:migrate": "npm run db:postgres:migrate --workspace=@lufa/database",
     "db:migrate:mongo-to-postgres": "node --env-file=.env --import tsx scripts/migrate-mongo-to-postgres.ts",
     "db:postgres:test:prepare": "npm run db:postgres:test:prepare --workspace=@lufa/database",
-    "test:postgres": "npm run test:postgres --workspace=@lufa/database",
+    "test:postgres": "npm run test:postgres --workspace=@lufa/database && LUFA_REAL_ID_POSTGRES_TEST=1 npm run test --workspace=@lufa/api -- credentials.postgres.test.ts",
     "db:migrate-game-events": "node --env-file=.env --import tsx scripts/migrate-game-events.ts",
     "db:normalize-player-birthdates": "node --env-file=.env --import tsx scripts/normalize-player-birthdate-sentinel.ts",
     "db:sync-test-from-prod": "node --env-file=.env --import tsx scripts/sync-test-db-from-prod.ts"
