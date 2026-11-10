@@ -1,6 +1,8 @@
 import type { CommerceAdminDashboardDto, CommerceCheckoutQuoteDto, CommerceFulfillmentStatus, CommerceItemDetailsDto, CommerceItemDto, CommerceOrderDto, CommerceOrderFiltersDto, CommerceTournamentOptionDto, CreateCommerceCheckoutDto, CreateCommerceItemDto, CreateCommerceRefundRequestDto, CreateCommerceSellerDto, UpdateCommerceItemDto } from "@lufa/contracts";
 import { CommerceError, type CommerceActor, type CommerceRepository, type ReservedOrder, type VerifiedProviderOrder } from "@lufa/commerce";
 import { getPrismaClient } from "../../prisma";
+import { CredentialDomainError, type CredentialTransaction, findUniquePlayerByEmail, grantMembershipMonths, hasValidRealId, issueCredential, upsertMember } from "../digitalCredentials";
+import { credentialRoles, sortRoles, roleLabelFor } from "../digitalCredentialEvaluation";
 
 type Db = ReturnType<typeof getPrismaClient>;
 type ItemRow = any;
@@ -43,13 +45,18 @@ const orderInclude = { seller: { select: { id: true, slug: true, name: true } },
 export class PrismaCommerceRepository implements CommerceRepository {
   constructor(private readonly db?: Db) {}
   private get database(): Db { return this.db || getPrismaClient(); }
-  private async hasCredential(userId?: string) { return Boolean(userId && await this.database.digitalCredential.findFirst({ where: { userId, status: "active", expiresAt: { gt: new Date() }, }, select: { id: true } })); }
+  private async hasCredential(userId?: string) { return hasValidRealId(this.database, userId); }
+  /** Ficha del comprador: la ya vinculada a su Real ID o la única con su correo. Nunca adivina entre varias. */
+  private async buyerPlayer(tx: CredentialTransaction, buyer: { id: string; email: string }) {
+    const member = await tx.member.findUnique({ where: { userId: buyer.id }, select: { playerId: true } });
+    try { return await findUniquePlayerByEmail(tx, buyer.email, member?.playerId); }
+    catch (error) { if (error instanceof CredentialDomainError) throw new CommerceError(error.message, error.code, error.status); throw error; }
+  }
   private async sellerIds(actor: CommerceActor) { return actor.role === "admin" ? null : (await this.database.commerceSellerMember.findMany({ where: { userId: actor.id }, select: { sellerId: true } })).map((row) => row.sellerId); }
-  private async requireTournamentPlayer(tx: Pick<Db, "player">, buyer: CommerceActor, items: Array<{ kind: string; details: unknown }>) {
+  private async requireTournamentPlayer(tx: CredentialTransaction, buyer: CommerceActor, items: Array<{ kind: string; details: unknown }>) {
     const tournamentItems = items.filter((item) => item.kind === "tournament");
     if (!tournamentItems.length) return;
-    const player = await tx.player.findFirst({ where: { email: { equals: buyer.email, mode: "insensitive" } }, select: { id: true, team: { select: { divisionId: true } } } });
-    if (!player) throw new CommerceError("Para inscribirte, primero vinculá tu perfil de jugador con tu cuenta LUFA.", "PLAYER_PROFILE_REQUIRED", 409);
+    const player = await this.buyerPlayer(tx, buyer);
     for (const item of tournamentItems) {
       const divisionId = plainDetails(item.details).divisionId;
       if (!divisionId) throw new CommerceError("La inscripción no tiene una división configurada.", "ITEM_UNAVAILABLE", 409);
@@ -74,7 +81,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
     const keys = new Set(requested.map((line) => `${line.itemId}:${line.variantId || ""}`));
     if (keys.size !== requested.length) throw new CommerceError("No repitas la misma variante en el carrito.", "INVALID_CART", 400);
     const [hasActiveCredential, items]: [any, any[]] = await Promise.all([
-      tx.digitalCredential.findFirst({ where: { userId: buyer.id, status: "active", expiresAt: { gt: new Date() } }, select: { id: true } }),
+      hasValidRealId(tx, buyer.id),
       tx.commerceItem.findMany({ where: { id: { in: [...new Set(requested.map((item) => item.itemId))] }, active: true }, include: { seller: true, tournament: true, variants: { where: { active: true } } } }),
     ]);
     if (items.length !== new Set(requested.map((item) => item.itemId)).size) throw new CommerceError("Uno de los productos ya no está disponible.", "ITEM_UNAVAILABLE", 409);
@@ -141,7 +148,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
         return this.reserved(existing);
       }
       const [hasActiveCredential, items]: [any, any[]] = await Promise.all([
-        tx.digitalCredential.findFirst({ where: { userId: input.buyer.id, status: "active", expiresAt: { gt: new Date() } }, select: { id: true } }),
+        hasValidRealId(tx, input.buyer.id),
         tx.commerceItem.findMany({ where: { id: { in: [...new Set(input.request.items.map((item) => item.itemId))] }, active: true }, include: { seller: true, tournament: true, variants: { where: { active: true } } } }),
       ]);
       if (items.length !== new Set(input.request.items.map((item) => item.itemId)).size) throw new CommerceError("Uno de los productos ya no está disponible.", "ITEM_UNAVAILABLE", 409);
@@ -220,33 +227,60 @@ export class PrismaCommerceRepository implements CommerceRepository {
       if (provider.externalReference !== order.id || provider.currency !== order.currency || provider.totalMinor !== order.totalMinor || provider.id !== order.providerOrderId) throw new CommerceError("El pago verificado no coincide con la compra local.", "PAYMENT_MISMATCH", 409);
       const status = provider.status.toLowerCase();
       if (PAID.has(status) && !order.paidAt) {
-        if (order.items.some((line: { kind: string }) => line.kind === "tournament")) {
-          const player = await tx.player.findFirst({ where: { email: { equals: order.buyer.email, mode: "insensitive" } }, select: { id: true } });
-          if (!player) throw new CommerceError("No se encontró el perfil del jugador para preaprobar la inscripción.", "PLAYER_PROFILE_REQUIRED", 409);
-          await tx.player.update({ where: { id: player.id }, data: { status: "pre_approved" } });
+        const tournamentLines = order.items.filter((line: { kind: string }) => line.kind === "tournament");
+        const membershipMonths = order.items.reduce((sum: number, line: { entitlementMonths: number | null }) => sum + (line.entitlementMonths || 0), 0);
+        const player = tournamentLines.length || membershipMonths ? await this.buyerPlayer(tx, order.buyer) : null;
+        if (player && tournamentLines.length) await tx.player.update({ where: { id: player.id }, data: { status: "pre_approved" } });
+        for (const line of tournamentLines) {
+          if (line.item.tournamentId) await tx.commerceTournamentRegistration.upsert({ where: { itemId_userId: { itemId: line.itemId, userId: order.buyerUserId } }, create: { orderId: order.id, itemId: line.itemId, tournamentId: line.item.tournamentId, userId: order.buyerUserId, status: "pre_approved" }, update: { status: "pre_approved", cancelledAt: null } });
         }
-        for (const line of order.items) {
-          if (line.item.kind === "tournament" && line.item.tournamentId) await tx.commerceTournamentRegistration.upsert({ where: { itemId_userId: { itemId: line.itemId, userId: order.buyerUserId } }, create: { orderId: order.id, itemId: line.itemId, tournamentId: line.item.tournamentId, userId: order.buyerUserId, status: "pre_approved" }, update: { status: "pre_approved", cancelledAt: null } });
-          if (line.entitlementMonths) {
-            const current = await tx.digitalCredential.findFirst({ where: { userId: order.buyerUserId }, orderBy: { expiresAt: "desc" } });
-            const expiresAt = new Date(current && current.expiresAt > new Date() ? current.expiresAt : new Date()); expiresAt.setUTCMonth(expiresAt.getUTCMonth() + line.entitlementMonths);
-            if (current) { await tx.digitalCredential.update({ where: { id: current.id }, data: { status: "active", expiresAt, revokedAt: null } }); await tx.digitalCredentialAudit.create({ data: { credentialId: current.id, action: `extended_by_order:${order.id}` } }); }
-            else {
-              const player = await tx.player.findFirst({ where: { email: { equals: order.buyer.email, mode: "insensitive" } } });
-              if (!player) throw new CommerceError("No se encontró el perfil del jugador para emitir su ID.", "PLAYER_PROFILE_REQUIRED", 409);
-              const credential = await tx.digitalCredential.create({ data: { userId: order.buyerUserId, playerId: player.id, subjectType: "player", memberNumber: `LUFA-AUTO-${order.buyerUserId.slice(-10).toUpperCase()}`, displayName: `${player.firstName} ${player.lastName}`, profilePicture: player.profilePicture, roleLabel: "Jugador", organizationName: "LUFA", nationalityCode: "UY", dateOfBirth: player.dateOfBirth, expiresAt } });
-              await tx.digitalCredentialAudit.create({ data: { credentialId: credential.id, action: `issued_by_order:${order.id}` } });
-            }
-          }
-        }
+        if (player && membershipMonths) await this.grantRealIdMembership(tx, order, player, membershipMonths);
         const physical = order.items.some((line: { kind: string }) => line.kind === "product");
         return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: "paid", fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", providerStatus: provider.status, paidAt: provider.paidAt || new Date(), fulfilledAt: physical ? null : new Date(), paymentMethodId: provider.paymentMethodId, paymentMethodType: provider.paymentMethodType, paymentInstallments: provider.paymentInstallments, paymentInstallmentAmountMinor: provider.paymentInstallmentAmountMinor }, include: orderInclude }));
       }
       if (CANCELLED.has(status) && ["creating", "payment_pending"].includes(order.status)) { await this.releaseInventoryInUnitOfWork(tx, order.id, "cancelled"); return orderDto(await tx.commerceOrder.findUniqueOrThrow({ where: { id: order.id }, include: orderInclude })); }
       const mapped = status.includes("charged_back") ? "charged_back" : status.includes("refund") ? "refunded" : order.status;
+      if (mapped === "refunded" || mapped === "charged_back") {
+        // Un reembolso o contracargo anula la membresía que esta orden había pagado.
+        await tx.membershipPeriod.updateMany({ where: { orderId: order.id, status: "active" }, data: { status: "voided", voidedAt: new Date(), voidReason: mapped === "refunded" ? "Orden reembolsada" : "Contracargo" } });
+      }
       return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: mapped, providerStatus: provider.status }, include: orderInclude }));
     });
   }
+  /**
+   * La membresía paga en la tienda queda como período propio. Nunca reactiva una ID revocada:
+   * si la persona tiene una ID revocada, el pago se registra pero la tarjeta sigue revocada hasta que LUFA intervenga.
+   */
+  private async grantRealIdMembership(tx: CredentialTransaction, order: { id: string; buyerUserId: string; totalMinor: number }, player: { id: string; firstName: string; lastName: string; dateOfBirth: Date; profilePicture: string | null; team: { name: string } }, months: number) {
+    const member = await upsertMember(tx, {
+      userId: order.buyerUserId, playerId: player.id, displayName: `${player.firstName} ${player.lastName}`.trim(),
+      dateOfBirth: player.dateOfBirth, nationalityCode: "UY", profilePicture: player.profilePicture,
+    });
+    if (member.status === "suspended") throw new CommerceError("Tu membresía LUFA está suspendida. Contactá a LUFA.", "MEMBER_SUSPENDED", 409);
+    if (await tx.membershipPeriod.findUnique({ where: { orderId_memberId: { orderId: order.id, memberId: member.id } } })) return;
+    await grantMembershipMonths(tx, member.id, months, { source: "store_order", orderId: order.id, amountMinor: order.totalMinor, reference: `Orden ${order.id}` });
+
+    const now = new Date();
+    const credentials = await tx.digitalCredential.findMany({ where: { memberId: member.id }, orderBy: { issuedAt: "desc" } });
+    const active = credentials.find((credential) => credential.status === "active" && credential.expiresAt >= now);
+    if (active) {
+      const roles = credentialRoles(active);
+      if (!roles.includes("player") || active.playerId !== player.id) {
+        const nextRoles = sortRoles([...roles, "player"]);
+        await tx.digitalCredential.update({ where: { id: active.id }, data: { roles: nextRoles, roleLabel: roleLabelFor(nextRoles), playerId: player.id, subjectType: "player" } });
+      }
+      await tx.digitalCredentialAudit.create({ data: { credentialId: active.id, action: `membership_by_order:${order.id}` } });
+      return;
+    }
+    // La última tarjeta revocada por LUFA no se reemplaza automáticamente.
+    if (credentials[0]?.status === "revoked") return;
+    await issueCredential(tx, null, now.getUTCFullYear(), {
+      memberId: member.id, userId: order.buyerUserId, playerId: player.id, subjectType: "player", roles: ["player"],
+      displayName: member.displayName, profilePicture: member.profilePicture, organizationName: player.team.name,
+      nationalityCode: member.nationalityCode, dateOfBirth: member.dateOfBirth, renewedFromId: credentials[0]?.id ?? null,
+    }, `issued_by_order:${order.id}`);
+  }
+
   async recordWebhook(input: { deliveryKey: string; providerResourceId: string; action: string; liveMode: boolean }) { const event = await this.database.commerceWebhookEvent.upsert({ where: { deliveryKey: input.deliveryKey }, create: input, update: {} }); return { id: event.id, alreadyProcessed: event.status === "processed" }; }
   async completeWebhook(id: string, error?: string) { await this.database.commerceWebhookEvent.update({ where: { id }, data: error ? { status: "failed", error, attempts: { increment: 1 } } : { status: "processed", error: null, processedAt: new Date(), attempts: { increment: 1 } } }); }
   listReconciliationCandidates(limit: number) { return this.database.commerceOrder.findMany({ where: { status: { in: ["creating", "payment_pending", "payment_review"] } }, orderBy: { createdAt: "asc" }, take: limit, select: { id: true, providerOrderId: true } }); }

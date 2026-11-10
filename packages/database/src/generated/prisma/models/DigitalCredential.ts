@@ -27,6 +27,7 @@ export type AggregateDigitalCredential = {
 export type DigitalCredentialMinAggregateOutputType = {
   id: string | null
   publicId: string | null
+  memberId: string | null
   userId: string | null
   claimEmail: string | null
   playerId: string | null
@@ -51,6 +52,7 @@ export type DigitalCredentialMinAggregateOutputType = {
 export type DigitalCredentialMaxAggregateOutputType = {
   id: string | null
   publicId: string | null
+  memberId: string | null
   userId: string | null
   claimEmail: string | null
   playerId: string | null
@@ -75,6 +77,7 @@ export type DigitalCredentialMaxAggregateOutputType = {
 export type DigitalCredentialCountAggregateOutputType = {
   id: number
   publicId: number
+  memberId: number
   userId: number
   claimEmail: number
   playerId: number
@@ -84,6 +87,7 @@ export type DigitalCredentialCountAggregateOutputType = {
   displayName: number
   profilePicture: number
   roleLabel: number
+  roles: number
   organizationName: number
   nationalityCode: number
   dateOfBirth: number
@@ -101,6 +105,7 @@ export type DigitalCredentialCountAggregateOutputType = {
 export type DigitalCredentialMinAggregateInputType = {
   id?: true
   publicId?: true
+  memberId?: true
   userId?: true
   claimEmail?: true
   playerId?: true
@@ -125,6 +130,7 @@ export type DigitalCredentialMinAggregateInputType = {
 export type DigitalCredentialMaxAggregateInputType = {
   id?: true
   publicId?: true
+  memberId?: true
   userId?: true
   claimEmail?: true
   playerId?: true
@@ -149,6 +155,7 @@ export type DigitalCredentialMaxAggregateInputType = {
 export type DigitalCredentialCountAggregateInputType = {
   id?: true
   publicId?: true
+  memberId?: true
   userId?: true
   claimEmail?: true
   playerId?: true
@@ -158,6 +165,7 @@ export type DigitalCredentialCountAggregateInputType = {
   displayName?: true
   profilePicture?: true
   roleLabel?: true
+  roles?: true
   organizationName?: true
   nationalityCode?: true
   dateOfBirth?: true
@@ -246,6 +254,7 @@ export type DigitalCredentialGroupByArgs<ExtArgs extends runtime.Types.Extension
 export type DigitalCredentialGroupByOutputType = {
   id: string
   publicId: string
+  memberId: string
   userId: string | null
   claimEmail: string | null
   playerId: string | null
@@ -255,6 +264,7 @@ export type DigitalCredentialGroupByOutputType = {
   displayName: string
   profilePicture: string | null
   roleLabel: string
+  roles: string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date
@@ -291,6 +301,7 @@ export type DigitalCredentialWhereInput = {
   NOT?: Prisma.DigitalCredentialWhereInput | Prisma.DigitalCredentialWhereInput[]
   id?: Prisma.StringFilter<"DigitalCredential"> | string
   publicId?: Prisma.StringFilter<"DigitalCredential"> | string
+  memberId?: Prisma.StringFilter<"DigitalCredential"> | string
   userId?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   claimEmail?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   playerId?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
@@ -300,6 +311,7 @@ export type DigitalCredentialWhereInput = {
   displayName?: Prisma.StringFilter<"DigitalCredential"> | string
   profilePicture?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   roleLabel?: Prisma.StringFilter<"DigitalCredential"> | string
+  roles?: Prisma.StringNullableListFilter<"DigitalCredential">
   organizationName?: Prisma.StringFilter<"DigitalCredential"> | string
   nationalityCode?: Prisma.StringFilter<"DigitalCredential"> | string
   dateOfBirth?: Prisma.DateTimeFilter<"DigitalCredential"> | Date | string
@@ -310,6 +322,7 @@ export type DigitalCredentialWhereInput = {
   renewedFromId?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   createdAt?: Prisma.DateTimeFilter<"DigitalCredential"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DigitalCredential"> | Date | string
+  member?: Prisma.XOR<Prisma.MemberScalarRelationFilter, Prisma.MemberWhereInput>
   user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   player?: Prisma.XOR<Prisma.PlayerNullableScalarRelationFilter, Prisma.PlayerWhereInput> | null
   judge?: Prisma.XOR<Prisma.JudgeNullableScalarRelationFilter, Prisma.JudgeWhereInput> | null
@@ -319,6 +332,7 @@ export type DigitalCredentialWhereInput = {
 export type DigitalCredentialOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   publicId?: Prisma.SortOrder
+  memberId?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   claimEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   playerId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -328,6 +342,7 @@ export type DigitalCredentialOrderByWithRelationInput = {
   displayName?: Prisma.SortOrder
   profilePicture?: Prisma.SortOrderInput | Prisma.SortOrder
   roleLabel?: Prisma.SortOrder
+  roles?: Prisma.SortOrder
   organizationName?: Prisma.SortOrder
   nationalityCode?: Prisma.SortOrder
   dateOfBirth?: Prisma.SortOrder
@@ -338,6 +353,7 @@ export type DigitalCredentialOrderByWithRelationInput = {
   renewedFromId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  member?: Prisma.MemberOrderByWithRelationInput
   user?: Prisma.UserOrderByWithRelationInput
   player?: Prisma.PlayerOrderByWithRelationInput
   judge?: Prisma.JudgeOrderByWithRelationInput
@@ -351,6 +367,7 @@ export type DigitalCredentialWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.DigitalCredentialWhereInput | Prisma.DigitalCredentialWhereInput[]
   OR?: Prisma.DigitalCredentialWhereInput[]
   NOT?: Prisma.DigitalCredentialWhereInput | Prisma.DigitalCredentialWhereInput[]
+  memberId?: Prisma.StringFilter<"DigitalCredential"> | string
   userId?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   claimEmail?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   playerId?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
@@ -359,6 +376,7 @@ export type DigitalCredentialWhereUniqueInput = Prisma.AtLeast<{
   displayName?: Prisma.StringFilter<"DigitalCredential"> | string
   profilePicture?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   roleLabel?: Prisma.StringFilter<"DigitalCredential"> | string
+  roles?: Prisma.StringNullableListFilter<"DigitalCredential">
   organizationName?: Prisma.StringFilter<"DigitalCredential"> | string
   nationalityCode?: Prisma.StringFilter<"DigitalCredential"> | string
   dateOfBirth?: Prisma.DateTimeFilter<"DigitalCredential"> | Date | string
@@ -369,6 +387,7 @@ export type DigitalCredentialWhereUniqueInput = Prisma.AtLeast<{
   renewedFromId?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   createdAt?: Prisma.DateTimeFilter<"DigitalCredential"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DigitalCredential"> | Date | string
+  member?: Prisma.XOR<Prisma.MemberScalarRelationFilter, Prisma.MemberWhereInput>
   user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   player?: Prisma.XOR<Prisma.PlayerNullableScalarRelationFilter, Prisma.PlayerWhereInput> | null
   judge?: Prisma.XOR<Prisma.JudgeNullableScalarRelationFilter, Prisma.JudgeWhereInput> | null
@@ -378,6 +397,7 @@ export type DigitalCredentialWhereUniqueInput = Prisma.AtLeast<{
 export type DigitalCredentialOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   publicId?: Prisma.SortOrder
+  memberId?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   claimEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   playerId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -387,6 +407,7 @@ export type DigitalCredentialOrderByWithAggregationInput = {
   displayName?: Prisma.SortOrder
   profilePicture?: Prisma.SortOrderInput | Prisma.SortOrder
   roleLabel?: Prisma.SortOrder
+  roles?: Prisma.SortOrder
   organizationName?: Prisma.SortOrder
   nationalityCode?: Prisma.SortOrder
   dateOfBirth?: Prisma.SortOrder
@@ -408,6 +429,7 @@ export type DigitalCredentialScalarWhereWithAggregatesInput = {
   NOT?: Prisma.DigitalCredentialScalarWhereWithAggregatesInput | Prisma.DigitalCredentialScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"DigitalCredential"> | string
   publicId?: Prisma.StringWithAggregatesFilter<"DigitalCredential"> | string
+  memberId?: Prisma.StringWithAggregatesFilter<"DigitalCredential"> | string
   userId?: Prisma.StringNullableWithAggregatesFilter<"DigitalCredential"> | string | null
   claimEmail?: Prisma.StringNullableWithAggregatesFilter<"DigitalCredential"> | string | null
   playerId?: Prisma.StringNullableWithAggregatesFilter<"DigitalCredential"> | string | null
@@ -417,6 +439,7 @@ export type DigitalCredentialScalarWhereWithAggregatesInput = {
   displayName?: Prisma.StringWithAggregatesFilter<"DigitalCredential"> | string
   profilePicture?: Prisma.StringNullableWithAggregatesFilter<"DigitalCredential"> | string | null
   roleLabel?: Prisma.StringWithAggregatesFilter<"DigitalCredential"> | string
+  roles?: Prisma.StringNullableListFilter<"DigitalCredential">
   organizationName?: Prisma.StringWithAggregatesFilter<"DigitalCredential"> | string
   nationalityCode?: Prisma.StringWithAggregatesFilter<"DigitalCredential"> | string
   dateOfBirth?: Prisma.DateTimeWithAggregatesFilter<"DigitalCredential"> | Date | string
@@ -438,6 +461,7 @@ export type DigitalCredentialCreateInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -448,6 +472,7 @@ export type DigitalCredentialCreateInput = {
   renewedFromId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  member: Prisma.MemberCreateNestedOneWithoutCredentialsInput
   user?: Prisma.UserCreateNestedOneWithoutDigitalCredentialsInput
   player?: Prisma.PlayerCreateNestedOneWithoutDigitalCredentialsInput
   judge?: Prisma.JudgeCreateNestedOneWithoutDigitalCredentialsInput
@@ -457,6 +482,7 @@ export type DigitalCredentialCreateInput = {
 export type DigitalCredentialUncheckedCreateInput = {
   id?: string
   publicId?: string
+  memberId: string
   userId?: string | null
   claimEmail?: string | null
   playerId?: string | null
@@ -466,6 +492,7 @@ export type DigitalCredentialUncheckedCreateInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -488,6 +515,7 @@ export type DigitalCredentialUpdateInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -498,6 +526,7 @@ export type DigitalCredentialUpdateInput = {
   renewedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  member?: Prisma.MemberUpdateOneRequiredWithoutCredentialsNestedInput
   user?: Prisma.UserUpdateOneWithoutDigitalCredentialsNestedInput
   player?: Prisma.PlayerUpdateOneWithoutDigitalCredentialsNestedInput
   judge?: Prisma.JudgeUpdateOneWithoutDigitalCredentialsNestedInput
@@ -507,6 +536,7 @@ export type DigitalCredentialUpdateInput = {
 export type DigitalCredentialUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -516,6 +546,7 @@ export type DigitalCredentialUncheckedUpdateInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -532,6 +563,7 @@ export type DigitalCredentialUncheckedUpdateInput = {
 export type DigitalCredentialCreateManyInput = {
   id?: string
   publicId?: string
+  memberId: string
   userId?: string | null
   claimEmail?: string | null
   playerId?: string | null
@@ -541,6 +573,7 @@ export type DigitalCredentialCreateManyInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -562,6 +595,7 @@ export type DigitalCredentialUpdateManyMutationInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -577,6 +611,7 @@ export type DigitalCredentialUpdateManyMutationInput = {
 export type DigitalCredentialUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -586,6 +621,7 @@ export type DigitalCredentialUncheckedUpdateManyInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -608,9 +644,18 @@ export type DigitalCredentialOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type StringNullableListFilter<$PrismaModel = never> = {
+  equals?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  has?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
+}
+
 export type DigitalCredentialCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   publicId?: Prisma.SortOrder
+  memberId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   claimEmail?: Prisma.SortOrder
   playerId?: Prisma.SortOrder
@@ -620,6 +665,7 @@ export type DigitalCredentialCountOrderByAggregateInput = {
   displayName?: Prisma.SortOrder
   profilePicture?: Prisma.SortOrder
   roleLabel?: Prisma.SortOrder
+  roles?: Prisma.SortOrder
   organizationName?: Prisma.SortOrder
   nationalityCode?: Prisma.SortOrder
   dateOfBirth?: Prisma.SortOrder
@@ -635,6 +681,7 @@ export type DigitalCredentialCountOrderByAggregateInput = {
 export type DigitalCredentialMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   publicId?: Prisma.SortOrder
+  memberId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   claimEmail?: Prisma.SortOrder
   playerId?: Prisma.SortOrder
@@ -659,6 +706,7 @@ export type DigitalCredentialMaxOrderByAggregateInput = {
 export type DigitalCredentialMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   publicId?: Prisma.SortOrder
+  memberId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   claimEmail?: Prisma.SortOrder
   playerId?: Prisma.SortOrder
@@ -811,6 +859,57 @@ export type DigitalCredentialUncheckedUpdateManyWithoutJudgeNestedInput = {
   deleteMany?: Prisma.DigitalCredentialScalarWhereInput | Prisma.DigitalCredentialScalarWhereInput[]
 }
 
+export type DigitalCredentialCreaterolesInput = {
+  set: string[]
+}
+
+export type DigitalCredentialUpdaterolesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type DigitalCredentialCreateNestedManyWithoutMemberInput = {
+  create?: Prisma.XOR<Prisma.DigitalCredentialCreateWithoutMemberInput, Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput> | Prisma.DigitalCredentialCreateWithoutMemberInput[] | Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput[]
+  connectOrCreate?: Prisma.DigitalCredentialCreateOrConnectWithoutMemberInput | Prisma.DigitalCredentialCreateOrConnectWithoutMemberInput[]
+  createMany?: Prisma.DigitalCredentialCreateManyMemberInputEnvelope
+  connect?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+}
+
+export type DigitalCredentialUncheckedCreateNestedManyWithoutMemberInput = {
+  create?: Prisma.XOR<Prisma.DigitalCredentialCreateWithoutMemberInput, Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput> | Prisma.DigitalCredentialCreateWithoutMemberInput[] | Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput[]
+  connectOrCreate?: Prisma.DigitalCredentialCreateOrConnectWithoutMemberInput | Prisma.DigitalCredentialCreateOrConnectWithoutMemberInput[]
+  createMany?: Prisma.DigitalCredentialCreateManyMemberInputEnvelope
+  connect?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+}
+
+export type DigitalCredentialUpdateManyWithoutMemberNestedInput = {
+  create?: Prisma.XOR<Prisma.DigitalCredentialCreateWithoutMemberInput, Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput> | Prisma.DigitalCredentialCreateWithoutMemberInput[] | Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput[]
+  connectOrCreate?: Prisma.DigitalCredentialCreateOrConnectWithoutMemberInput | Prisma.DigitalCredentialCreateOrConnectWithoutMemberInput[]
+  upsert?: Prisma.DigitalCredentialUpsertWithWhereUniqueWithoutMemberInput | Prisma.DigitalCredentialUpsertWithWhereUniqueWithoutMemberInput[]
+  createMany?: Prisma.DigitalCredentialCreateManyMemberInputEnvelope
+  set?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+  disconnect?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+  delete?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+  connect?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+  update?: Prisma.DigitalCredentialUpdateWithWhereUniqueWithoutMemberInput | Prisma.DigitalCredentialUpdateWithWhereUniqueWithoutMemberInput[]
+  updateMany?: Prisma.DigitalCredentialUpdateManyWithWhereWithoutMemberInput | Prisma.DigitalCredentialUpdateManyWithWhereWithoutMemberInput[]
+  deleteMany?: Prisma.DigitalCredentialScalarWhereInput | Prisma.DigitalCredentialScalarWhereInput[]
+}
+
+export type DigitalCredentialUncheckedUpdateManyWithoutMemberNestedInput = {
+  create?: Prisma.XOR<Prisma.DigitalCredentialCreateWithoutMemberInput, Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput> | Prisma.DigitalCredentialCreateWithoutMemberInput[] | Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput[]
+  connectOrCreate?: Prisma.DigitalCredentialCreateOrConnectWithoutMemberInput | Prisma.DigitalCredentialCreateOrConnectWithoutMemberInput[]
+  upsert?: Prisma.DigitalCredentialUpsertWithWhereUniqueWithoutMemberInput | Prisma.DigitalCredentialUpsertWithWhereUniqueWithoutMemberInput[]
+  createMany?: Prisma.DigitalCredentialCreateManyMemberInputEnvelope
+  set?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+  disconnect?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+  delete?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+  connect?: Prisma.DigitalCredentialWhereUniqueInput | Prisma.DigitalCredentialWhereUniqueInput[]
+  update?: Prisma.DigitalCredentialUpdateWithWhereUniqueWithoutMemberInput | Prisma.DigitalCredentialUpdateWithWhereUniqueWithoutMemberInput[]
+  updateMany?: Prisma.DigitalCredentialUpdateManyWithWhereWithoutMemberInput | Prisma.DigitalCredentialUpdateManyWithWhereWithoutMemberInput[]
+  deleteMany?: Prisma.DigitalCredentialScalarWhereInput | Prisma.DigitalCredentialScalarWhereInput[]
+}
+
 export type DigitalCredentialCreateNestedOneWithoutAuditsInput = {
   create?: Prisma.XOR<Prisma.DigitalCredentialCreateWithoutAuditsInput, Prisma.DigitalCredentialUncheckedCreateWithoutAuditsInput>
   connectOrCreate?: Prisma.DigitalCredentialCreateOrConnectWithoutAuditsInput
@@ -836,6 +935,7 @@ export type DigitalCredentialCreateWithoutUserInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -846,6 +946,7 @@ export type DigitalCredentialCreateWithoutUserInput = {
   renewedFromId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  member: Prisma.MemberCreateNestedOneWithoutCredentialsInput
   player?: Prisma.PlayerCreateNestedOneWithoutDigitalCredentialsInput
   judge?: Prisma.JudgeCreateNestedOneWithoutDigitalCredentialsInput
   audits?: Prisma.DigitalCredentialAuditCreateNestedManyWithoutCredentialInput
@@ -854,6 +955,7 @@ export type DigitalCredentialCreateWithoutUserInput = {
 export type DigitalCredentialUncheckedCreateWithoutUserInput = {
   id?: string
   publicId?: string
+  memberId: string
   claimEmail?: string | null
   playerId?: string | null
   judgeId?: string | null
@@ -862,6 +964,7 @@ export type DigitalCredentialUncheckedCreateWithoutUserInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -907,6 +1010,7 @@ export type DigitalCredentialScalarWhereInput = {
   NOT?: Prisma.DigitalCredentialScalarWhereInput | Prisma.DigitalCredentialScalarWhereInput[]
   id?: Prisma.StringFilter<"DigitalCredential"> | string
   publicId?: Prisma.StringFilter<"DigitalCredential"> | string
+  memberId?: Prisma.StringFilter<"DigitalCredential"> | string
   userId?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   claimEmail?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   playerId?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
@@ -916,6 +1020,7 @@ export type DigitalCredentialScalarWhereInput = {
   displayName?: Prisma.StringFilter<"DigitalCredential"> | string
   profilePicture?: Prisma.StringNullableFilter<"DigitalCredential"> | string | null
   roleLabel?: Prisma.StringFilter<"DigitalCredential"> | string
+  roles?: Prisma.StringNullableListFilter<"DigitalCredential">
   organizationName?: Prisma.StringFilter<"DigitalCredential"> | string
   nationalityCode?: Prisma.StringFilter<"DigitalCredential"> | string
   dateOfBirth?: Prisma.DateTimeFilter<"DigitalCredential"> | Date | string
@@ -937,6 +1042,7 @@ export type DigitalCredentialCreateWithoutPlayerInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -947,6 +1053,7 @@ export type DigitalCredentialCreateWithoutPlayerInput = {
   renewedFromId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  member: Prisma.MemberCreateNestedOneWithoutCredentialsInput
   user?: Prisma.UserCreateNestedOneWithoutDigitalCredentialsInput
   judge?: Prisma.JudgeCreateNestedOneWithoutDigitalCredentialsInput
   audits?: Prisma.DigitalCredentialAuditCreateNestedManyWithoutCredentialInput
@@ -955,6 +1062,7 @@ export type DigitalCredentialCreateWithoutPlayerInput = {
 export type DigitalCredentialUncheckedCreateWithoutPlayerInput = {
   id?: string
   publicId?: string
+  memberId: string
   userId?: string | null
   claimEmail?: string | null
   judgeId?: string | null
@@ -963,6 +1071,7 @@ export type DigitalCredentialUncheckedCreateWithoutPlayerInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -1011,6 +1120,7 @@ export type DigitalCredentialCreateWithoutJudgeInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -1021,6 +1131,7 @@ export type DigitalCredentialCreateWithoutJudgeInput = {
   renewedFromId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  member: Prisma.MemberCreateNestedOneWithoutCredentialsInput
   user?: Prisma.UserCreateNestedOneWithoutDigitalCredentialsInput
   player?: Prisma.PlayerCreateNestedOneWithoutDigitalCredentialsInput
   audits?: Prisma.DigitalCredentialAuditCreateNestedManyWithoutCredentialInput
@@ -1029,6 +1140,7 @@ export type DigitalCredentialCreateWithoutJudgeInput = {
 export type DigitalCredentialUncheckedCreateWithoutJudgeInput = {
   id?: string
   publicId?: string
+  memberId: string
   userId?: string | null
   claimEmail?: string | null
   playerId?: string | null
@@ -1037,6 +1149,7 @@ export type DigitalCredentialUncheckedCreateWithoutJudgeInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -1076,7 +1189,7 @@ export type DigitalCredentialUpdateManyWithWhereWithoutJudgeInput = {
   data: Prisma.XOR<Prisma.DigitalCredentialUpdateManyMutationInput, Prisma.DigitalCredentialUncheckedUpdateManyWithoutJudgeInput>
 }
 
-export type DigitalCredentialCreateWithoutAuditsInput = {
+export type DigitalCredentialCreateWithoutMemberInput = {
   id?: string
   publicId?: string
   claimEmail?: string | null
@@ -1085,6 +1198,7 @@ export type DigitalCredentialCreateWithoutAuditsInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -1098,9 +1212,10 @@ export type DigitalCredentialCreateWithoutAuditsInput = {
   user?: Prisma.UserCreateNestedOneWithoutDigitalCredentialsInput
   player?: Prisma.PlayerCreateNestedOneWithoutDigitalCredentialsInput
   judge?: Prisma.JudgeCreateNestedOneWithoutDigitalCredentialsInput
+  audits?: Prisma.DigitalCredentialAuditCreateNestedManyWithoutCredentialInput
 }
 
-export type DigitalCredentialUncheckedCreateWithoutAuditsInput = {
+export type DigitalCredentialUncheckedCreateWithoutMemberInput = {
   id?: string
   publicId?: string
   userId?: string | null
@@ -1112,6 +1227,86 @@ export type DigitalCredentialUncheckedCreateWithoutAuditsInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
+  organizationName: string
+  nationalityCode: string
+  dateOfBirth: Date | string
+  status?: string
+  issuedAt?: Date | string
+  expiresAt: Date | string
+  revokedAt?: Date | string | null
+  renewedFromId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  audits?: Prisma.DigitalCredentialAuditUncheckedCreateNestedManyWithoutCredentialInput
+}
+
+export type DigitalCredentialCreateOrConnectWithoutMemberInput = {
+  where: Prisma.DigitalCredentialWhereUniqueInput
+  create: Prisma.XOR<Prisma.DigitalCredentialCreateWithoutMemberInput, Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput>
+}
+
+export type DigitalCredentialCreateManyMemberInputEnvelope = {
+  data: Prisma.DigitalCredentialCreateManyMemberInput | Prisma.DigitalCredentialCreateManyMemberInput[]
+  skipDuplicates?: boolean
+}
+
+export type DigitalCredentialUpsertWithWhereUniqueWithoutMemberInput = {
+  where: Prisma.DigitalCredentialWhereUniqueInput
+  update: Prisma.XOR<Prisma.DigitalCredentialUpdateWithoutMemberInput, Prisma.DigitalCredentialUncheckedUpdateWithoutMemberInput>
+  create: Prisma.XOR<Prisma.DigitalCredentialCreateWithoutMemberInput, Prisma.DigitalCredentialUncheckedCreateWithoutMemberInput>
+}
+
+export type DigitalCredentialUpdateWithWhereUniqueWithoutMemberInput = {
+  where: Prisma.DigitalCredentialWhereUniqueInput
+  data: Prisma.XOR<Prisma.DigitalCredentialUpdateWithoutMemberInput, Prisma.DigitalCredentialUncheckedUpdateWithoutMemberInput>
+}
+
+export type DigitalCredentialUpdateManyWithWhereWithoutMemberInput = {
+  where: Prisma.DigitalCredentialScalarWhereInput
+  data: Prisma.XOR<Prisma.DigitalCredentialUpdateManyMutationInput, Prisma.DigitalCredentialUncheckedUpdateManyWithoutMemberInput>
+}
+
+export type DigitalCredentialCreateWithoutAuditsInput = {
+  id?: string
+  publicId?: string
+  claimEmail?: string | null
+  subjectType: string
+  memberNumber: string
+  displayName: string
+  profilePicture?: string | null
+  roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
+  organizationName: string
+  nationalityCode: string
+  dateOfBirth: Date | string
+  status?: string
+  issuedAt?: Date | string
+  expiresAt: Date | string
+  revokedAt?: Date | string | null
+  renewedFromId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  member: Prisma.MemberCreateNestedOneWithoutCredentialsInput
+  user?: Prisma.UserCreateNestedOneWithoutDigitalCredentialsInput
+  player?: Prisma.PlayerCreateNestedOneWithoutDigitalCredentialsInput
+  judge?: Prisma.JudgeCreateNestedOneWithoutDigitalCredentialsInput
+}
+
+export type DigitalCredentialUncheckedCreateWithoutAuditsInput = {
+  id?: string
+  publicId?: string
+  memberId: string
+  userId?: string | null
+  claimEmail?: string | null
+  playerId?: string | null
+  judgeId?: string | null
+  subjectType: string
+  memberNumber: string
+  displayName: string
+  profilePicture?: string | null
+  roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -1149,6 +1344,7 @@ export type DigitalCredentialUpdateWithoutAuditsInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1159,6 +1355,7 @@ export type DigitalCredentialUpdateWithoutAuditsInput = {
   renewedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  member?: Prisma.MemberUpdateOneRequiredWithoutCredentialsNestedInput
   user?: Prisma.UserUpdateOneWithoutDigitalCredentialsNestedInput
   player?: Prisma.PlayerUpdateOneWithoutDigitalCredentialsNestedInput
   judge?: Prisma.JudgeUpdateOneWithoutDigitalCredentialsNestedInput
@@ -1167,6 +1364,7 @@ export type DigitalCredentialUpdateWithoutAuditsInput = {
 export type DigitalCredentialUncheckedUpdateWithoutAuditsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1176,6 +1374,7 @@ export type DigitalCredentialUncheckedUpdateWithoutAuditsInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1191,6 +1390,7 @@ export type DigitalCredentialUncheckedUpdateWithoutAuditsInput = {
 export type DigitalCredentialCreateManyUserInput = {
   id?: string
   publicId?: string
+  memberId: string
   claimEmail?: string | null
   playerId?: string | null
   judgeId?: string | null
@@ -1199,6 +1399,7 @@ export type DigitalCredentialCreateManyUserInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -1220,6 +1421,7 @@ export type DigitalCredentialUpdateWithoutUserInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1230,6 +1432,7 @@ export type DigitalCredentialUpdateWithoutUserInput = {
   renewedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  member?: Prisma.MemberUpdateOneRequiredWithoutCredentialsNestedInput
   player?: Prisma.PlayerUpdateOneWithoutDigitalCredentialsNestedInput
   judge?: Prisma.JudgeUpdateOneWithoutDigitalCredentialsNestedInput
   audits?: Prisma.DigitalCredentialAuditUpdateManyWithoutCredentialNestedInput
@@ -1238,6 +1441,7 @@ export type DigitalCredentialUpdateWithoutUserInput = {
 export type DigitalCredentialUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
   claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   judgeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1246,6 +1450,7 @@ export type DigitalCredentialUncheckedUpdateWithoutUserInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1262,6 +1467,7 @@ export type DigitalCredentialUncheckedUpdateWithoutUserInput = {
 export type DigitalCredentialUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
   claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   judgeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1270,6 +1476,7 @@ export type DigitalCredentialUncheckedUpdateManyWithoutUserInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1285,6 +1492,7 @@ export type DigitalCredentialUncheckedUpdateManyWithoutUserInput = {
 export type DigitalCredentialCreateManyPlayerInput = {
   id?: string
   publicId?: string
+  memberId: string
   userId?: string | null
   claimEmail?: string | null
   judgeId?: string | null
@@ -1293,6 +1501,7 @@ export type DigitalCredentialCreateManyPlayerInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -1314,6 +1523,7 @@ export type DigitalCredentialUpdateWithoutPlayerInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1324,6 +1534,7 @@ export type DigitalCredentialUpdateWithoutPlayerInput = {
   renewedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  member?: Prisma.MemberUpdateOneRequiredWithoutCredentialsNestedInput
   user?: Prisma.UserUpdateOneWithoutDigitalCredentialsNestedInput
   judge?: Prisma.JudgeUpdateOneWithoutDigitalCredentialsNestedInput
   audits?: Prisma.DigitalCredentialAuditUpdateManyWithoutCredentialNestedInput
@@ -1332,6 +1543,7 @@ export type DigitalCredentialUpdateWithoutPlayerInput = {
 export type DigitalCredentialUncheckedUpdateWithoutPlayerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   judgeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1340,6 +1552,7 @@ export type DigitalCredentialUncheckedUpdateWithoutPlayerInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1356,6 +1569,7 @@ export type DigitalCredentialUncheckedUpdateWithoutPlayerInput = {
 export type DigitalCredentialUncheckedUpdateManyWithoutPlayerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   judgeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1364,6 +1578,7 @@ export type DigitalCredentialUncheckedUpdateManyWithoutPlayerInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1379,6 +1594,7 @@ export type DigitalCredentialUncheckedUpdateManyWithoutPlayerInput = {
 export type DigitalCredentialCreateManyJudgeInput = {
   id?: string
   publicId?: string
+  memberId: string
   userId?: string | null
   claimEmail?: string | null
   playerId?: string | null
@@ -1387,6 +1603,7 @@ export type DigitalCredentialCreateManyJudgeInput = {
   displayName: string
   profilePicture?: string | null
   roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
   organizationName: string
   nationalityCode: string
   dateOfBirth: Date | string
@@ -1408,6 +1625,7 @@ export type DigitalCredentialUpdateWithoutJudgeInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1418,6 +1636,7 @@ export type DigitalCredentialUpdateWithoutJudgeInput = {
   renewedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  member?: Prisma.MemberUpdateOneRequiredWithoutCredentialsNestedInput
   user?: Prisma.UserUpdateOneWithoutDigitalCredentialsNestedInput
   player?: Prisma.PlayerUpdateOneWithoutDigitalCredentialsNestedInput
   audits?: Prisma.DigitalCredentialAuditUpdateManyWithoutCredentialNestedInput
@@ -1426,6 +1645,7 @@ export type DigitalCredentialUpdateWithoutJudgeInput = {
 export type DigitalCredentialUncheckedUpdateWithoutJudgeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1434,6 +1654,7 @@ export type DigitalCredentialUncheckedUpdateWithoutJudgeInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1450,6 +1671,7 @@ export type DigitalCredentialUncheckedUpdateWithoutJudgeInput = {
 export type DigitalCredentialUncheckedUpdateManyWithoutJudgeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  memberId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1458,6 +1680,109 @@ export type DigitalCredentialUncheckedUpdateManyWithoutJudgeInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
+  organizationName?: Prisma.StringFieldUpdateOperationsInput | string
+  nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  issuedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  renewedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type DigitalCredentialCreateManyMemberInput = {
+  id?: string
+  publicId?: string
+  userId?: string | null
+  claimEmail?: string | null
+  playerId?: string | null
+  judgeId?: string | null
+  subjectType: string
+  memberNumber: string
+  displayName: string
+  profilePicture?: string | null
+  roleLabel: string
+  roles?: Prisma.DigitalCredentialCreaterolesInput | string[]
+  organizationName: string
+  nationalityCode: string
+  dateOfBirth: Date | string
+  status?: string
+  issuedAt?: Date | string
+  expiresAt: Date | string
+  revokedAt?: Date | string | null
+  renewedFromId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type DigitalCredentialUpdateWithoutMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subjectType?: Prisma.StringFieldUpdateOperationsInput | string
+  memberNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
+  organizationName?: Prisma.StringFieldUpdateOperationsInput | string
+  nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  issuedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  renewedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutDigitalCredentialsNestedInput
+  player?: Prisma.PlayerUpdateOneWithoutDigitalCredentialsNestedInput
+  judge?: Prisma.JudgeUpdateOneWithoutDigitalCredentialsNestedInput
+  audits?: Prisma.DigitalCredentialAuditUpdateManyWithoutCredentialNestedInput
+}
+
+export type DigitalCredentialUncheckedUpdateWithoutMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  judgeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subjectType?: Prisma.StringFieldUpdateOperationsInput | string
+  memberNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
+  organizationName?: Prisma.StringFieldUpdateOperationsInput | string
+  nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  issuedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  renewedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  audits?: Prisma.DigitalCredentialAuditUncheckedUpdateManyWithoutCredentialNestedInput
+}
+
+export type DigitalCredentialUncheckedUpdateManyWithoutMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  playerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  judgeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subjectType?: Prisma.StringFieldUpdateOperationsInput | string
+  memberNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  roleLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  roles?: Prisma.DigitalCredentialUpdaterolesInput | string[]
   organizationName?: Prisma.StringFieldUpdateOperationsInput | string
   nationalityCode?: Prisma.StringFieldUpdateOperationsInput | string
   dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1504,6 +1829,7 @@ export type DigitalCredentialCountOutputTypeCountAuditsArgs<ExtArgs extends runt
 export type DigitalCredentialSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   publicId?: boolean
+  memberId?: boolean
   userId?: boolean
   claimEmail?: boolean
   playerId?: boolean
@@ -1513,6 +1839,7 @@ export type DigitalCredentialSelect<ExtArgs extends runtime.Types.Extensions.Int
   displayName?: boolean
   profilePicture?: boolean
   roleLabel?: boolean
+  roles?: boolean
   organizationName?: boolean
   nationalityCode?: boolean
   dateOfBirth?: boolean
@@ -1523,6 +1850,7 @@ export type DigitalCredentialSelect<ExtArgs extends runtime.Types.Extensions.Int
   renewedFromId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  member?: boolean | Prisma.MemberDefaultArgs<ExtArgs>
   user?: boolean | Prisma.DigitalCredential$userArgs<ExtArgs>
   player?: boolean | Prisma.DigitalCredential$playerArgs<ExtArgs>
   judge?: boolean | Prisma.DigitalCredential$judgeArgs<ExtArgs>
@@ -1533,6 +1861,7 @@ export type DigitalCredentialSelect<ExtArgs extends runtime.Types.Extensions.Int
 export type DigitalCredentialSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   publicId?: boolean
+  memberId?: boolean
   userId?: boolean
   claimEmail?: boolean
   playerId?: boolean
@@ -1542,6 +1871,7 @@ export type DigitalCredentialSelectCreateManyAndReturn<ExtArgs extends runtime.T
   displayName?: boolean
   profilePicture?: boolean
   roleLabel?: boolean
+  roles?: boolean
   organizationName?: boolean
   nationalityCode?: boolean
   dateOfBirth?: boolean
@@ -1552,6 +1882,7 @@ export type DigitalCredentialSelectCreateManyAndReturn<ExtArgs extends runtime.T
   renewedFromId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  member?: boolean | Prisma.MemberDefaultArgs<ExtArgs>
   user?: boolean | Prisma.DigitalCredential$userArgs<ExtArgs>
   player?: boolean | Prisma.DigitalCredential$playerArgs<ExtArgs>
   judge?: boolean | Prisma.DigitalCredential$judgeArgs<ExtArgs>
@@ -1560,6 +1891,7 @@ export type DigitalCredentialSelectCreateManyAndReturn<ExtArgs extends runtime.T
 export type DigitalCredentialSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   publicId?: boolean
+  memberId?: boolean
   userId?: boolean
   claimEmail?: boolean
   playerId?: boolean
@@ -1569,6 +1901,7 @@ export type DigitalCredentialSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   displayName?: boolean
   profilePicture?: boolean
   roleLabel?: boolean
+  roles?: boolean
   organizationName?: boolean
   nationalityCode?: boolean
   dateOfBirth?: boolean
@@ -1579,6 +1912,7 @@ export type DigitalCredentialSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   renewedFromId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  member?: boolean | Prisma.MemberDefaultArgs<ExtArgs>
   user?: boolean | Prisma.DigitalCredential$userArgs<ExtArgs>
   player?: boolean | Prisma.DigitalCredential$playerArgs<ExtArgs>
   judge?: boolean | Prisma.DigitalCredential$judgeArgs<ExtArgs>
@@ -1587,6 +1921,7 @@ export type DigitalCredentialSelectUpdateManyAndReturn<ExtArgs extends runtime.T
 export type DigitalCredentialSelectScalar = {
   id?: boolean
   publicId?: boolean
+  memberId?: boolean
   userId?: boolean
   claimEmail?: boolean
   playerId?: boolean
@@ -1596,6 +1931,7 @@ export type DigitalCredentialSelectScalar = {
   displayName?: boolean
   profilePicture?: boolean
   roleLabel?: boolean
+  roles?: boolean
   organizationName?: boolean
   nationalityCode?: boolean
   dateOfBirth?: boolean
@@ -1608,8 +1944,9 @@ export type DigitalCredentialSelectScalar = {
   updatedAt?: boolean
 }
 
-export type DigitalCredentialOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "publicId" | "userId" | "claimEmail" | "playerId" | "judgeId" | "subjectType" | "memberNumber" | "displayName" | "profilePicture" | "roleLabel" | "organizationName" | "nationalityCode" | "dateOfBirth" | "status" | "issuedAt" | "expiresAt" | "revokedAt" | "renewedFromId" | "createdAt" | "updatedAt", ExtArgs["result"]["digitalCredential"]>
+export type DigitalCredentialOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "publicId" | "memberId" | "userId" | "claimEmail" | "playerId" | "judgeId" | "subjectType" | "memberNumber" | "displayName" | "profilePicture" | "roleLabel" | "roles" | "organizationName" | "nationalityCode" | "dateOfBirth" | "status" | "issuedAt" | "expiresAt" | "revokedAt" | "renewedFromId" | "createdAt" | "updatedAt", ExtArgs["result"]["digitalCredential"]>
 export type DigitalCredentialInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  member?: boolean | Prisma.MemberDefaultArgs<ExtArgs>
   user?: boolean | Prisma.DigitalCredential$userArgs<ExtArgs>
   player?: boolean | Prisma.DigitalCredential$playerArgs<ExtArgs>
   judge?: boolean | Prisma.DigitalCredential$judgeArgs<ExtArgs>
@@ -1617,11 +1954,13 @@ export type DigitalCredentialInclude<ExtArgs extends runtime.Types.Extensions.In
   _count?: boolean | Prisma.DigitalCredentialCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DigitalCredentialIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  member?: boolean | Prisma.MemberDefaultArgs<ExtArgs>
   user?: boolean | Prisma.DigitalCredential$userArgs<ExtArgs>
   player?: boolean | Prisma.DigitalCredential$playerArgs<ExtArgs>
   judge?: boolean | Prisma.DigitalCredential$judgeArgs<ExtArgs>
 }
 export type DigitalCredentialIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  member?: boolean | Prisma.MemberDefaultArgs<ExtArgs>
   user?: boolean | Prisma.DigitalCredential$userArgs<ExtArgs>
   player?: boolean | Prisma.DigitalCredential$playerArgs<ExtArgs>
   judge?: boolean | Prisma.DigitalCredential$judgeArgs<ExtArgs>
@@ -1630,6 +1969,7 @@ export type DigitalCredentialIncludeUpdateManyAndReturn<ExtArgs extends runtime.
 export type $DigitalCredentialPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "DigitalCredential"
   objects: {
+    member: Prisma.$MemberPayload<ExtArgs>
     user: Prisma.$UserPayload<ExtArgs> | null
     player: Prisma.$PlayerPayload<ExtArgs> | null
     judge: Prisma.$JudgePayload<ExtArgs> | null
@@ -1638,6 +1978,7 @@ export type $DigitalCredentialPayload<ExtArgs extends runtime.Types.Extensions.I
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     publicId: string
+    memberId: string
     userId: string | null
     claimEmail: string | null
     playerId: string | null
@@ -1647,6 +1988,7 @@ export type $DigitalCredentialPayload<ExtArgs extends runtime.Types.Extensions.I
     displayName: string
     profilePicture: string | null
     roleLabel: string
+    roles: string[]
     organizationName: string
     nationalityCode: string
     dateOfBirth: Date
@@ -2051,6 +2393,7 @@ readonly fields: DigitalCredentialFieldRefs;
  */
 export interface Prisma__DigitalCredentialClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  member<T extends Prisma.MemberDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.MemberDefaultArgs<ExtArgs>>): Prisma.Prisma__MemberClient<runtime.Types.Result.GetResult<Prisma.$MemberPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   user<T extends Prisma.DigitalCredential$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DigitalCredential$userArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   player<T extends Prisma.DigitalCredential$playerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DigitalCredential$playerArgs<ExtArgs>>): Prisma.Prisma__PlayerClient<runtime.Types.Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   judge<T extends Prisma.DigitalCredential$judgeArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DigitalCredential$judgeArgs<ExtArgs>>): Prisma.Prisma__JudgeClient<runtime.Types.Result.GetResult<Prisma.$JudgePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -2086,6 +2429,7 @@ export interface Prisma__DigitalCredentialClient<T, Null = never, ExtArgs extend
 export interface DigitalCredentialFieldRefs {
   readonly id: Prisma.FieldRef<"DigitalCredential", 'String'>
   readonly publicId: Prisma.FieldRef<"DigitalCredential", 'String'>
+  readonly memberId: Prisma.FieldRef<"DigitalCredential", 'String'>
   readonly userId: Prisma.FieldRef<"DigitalCredential", 'String'>
   readonly claimEmail: Prisma.FieldRef<"DigitalCredential", 'String'>
   readonly playerId: Prisma.FieldRef<"DigitalCredential", 'String'>
@@ -2095,6 +2439,7 @@ export interface DigitalCredentialFieldRefs {
   readonly displayName: Prisma.FieldRef<"DigitalCredential", 'String'>
   readonly profilePicture: Prisma.FieldRef<"DigitalCredential", 'String'>
   readonly roleLabel: Prisma.FieldRef<"DigitalCredential", 'String'>
+  readonly roles: Prisma.FieldRef<"DigitalCredential", 'String[]'>
   readonly organizationName: Prisma.FieldRef<"DigitalCredential", 'String'>
   readonly nationalityCode: Prisma.FieldRef<"DigitalCredential", 'String'>
   readonly dateOfBirth: Prisma.FieldRef<"DigitalCredential", 'DateTime'>

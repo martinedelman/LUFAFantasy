@@ -87,6 +87,10 @@ export const ModelName = {
   FantasyDraftPick: 'FantasyDraftPick',
   FantasyPlayerFavorite: 'FantasyPlayerFavorite',
   DigitalCredential: 'DigitalCredential',
+  Member: 'Member',
+  MembershipPeriod: 'MembershipPeriod',
+  MemberCertification: 'MemberCertification',
+  CoachAssignment: 'CoachAssignment',
   CommerceSeller: 'CommerceSeller',
   CommerceSellerMember: 'CommerceSellerMember',
   CommerceItem: 'CommerceItem',
@@ -659,6 +663,7 @@ export type FantasyPlayerFavoriteScalarFieldEnum = (typeof FantasyPlayerFavorite
 export const DigitalCredentialScalarFieldEnum = {
   id: 'id',
   publicId: 'publicId',
+  memberId: 'memberId',
   userId: 'userId',
   claimEmail: 'claimEmail',
   playerId: 'playerId',
@@ -668,6 +673,7 @@ export const DigitalCredentialScalarFieldEnum = {
   displayName: 'displayName',
   profilePicture: 'profilePicture',
   roleLabel: 'roleLabel',
+  roles: 'roles',
   organizationName: 'organizationName',
   nationalityCode: 'nationalityCode',
   dateOfBirth: 'dateOfBirth',
@@ -681,6 +687,80 @@ export const DigitalCredentialScalarFieldEnum = {
 } as const
 
 export type DigitalCredentialScalarFieldEnum = (typeof DigitalCredentialScalarFieldEnum)[keyof typeof DigitalCredentialScalarFieldEnum]
+
+
+export const MemberScalarFieldEnum = {
+  id: 'id',
+  lufaNumber: 'lufaNumber',
+  userId: 'userId',
+  claimEmail: 'claimEmail',
+  playerId: 'playerId',
+  judgeId: 'judgeId',
+  displayName: 'displayName',
+  dateOfBirth: 'dateOfBirth',
+  nationalityCode: 'nationalityCode',
+  profilePicture: 'profilePicture',
+  status: 'status',
+  suspendedReason: 'suspendedReason',
+  suspendedAt: 'suspendedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MemberScalarFieldEnum = (typeof MemberScalarFieldEnum)[keyof typeof MemberScalarFieldEnum]
+
+
+export const MembershipPeriodScalarFieldEnum = {
+  id: 'id',
+  memberId: 'memberId',
+  source: 'source',
+  orderId: 'orderId',
+  method: 'method',
+  amountMinor: 'amountMinor',
+  reference: 'reference',
+  recordedById: 'recordedById',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  status: 'status',
+  voidedAt: 'voidedAt',
+  voidReason: 'voidReason',
+  createdAt: 'createdAt'
+} as const
+
+export type MembershipPeriodScalarFieldEnum = (typeof MembershipPeriodScalarFieldEnum)[keyof typeof MembershipPeriodScalarFieldEnum]
+
+
+export const MemberCertificationScalarFieldEnum = {
+  id: 'id',
+  memberId: 'memberId',
+  role: 'role',
+  level: 'level',
+  issuer: 'issuer',
+  courseItemId: 'courseItemId',
+  issuedAt: 'issuedAt',
+  expiresAt: 'expiresAt',
+  status: 'status',
+  revokedAt: 'revokedAt',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MemberCertificationScalarFieldEnum = (typeof MemberCertificationScalarFieldEnum)[keyof typeof MemberCertificationScalarFieldEnum]
+
+
+export const CoachAssignmentScalarFieldEnum = {
+  id: 'id',
+  memberId: 'memberId',
+  teamId: 'teamId',
+  season: 'season',
+  role: 'role',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CoachAssignmentScalarFieldEnum = (typeof CoachAssignmentScalarFieldEnum)[keyof typeof CoachAssignmentScalarFieldEnum]
 
 
 export const CommerceSellerScalarFieldEnum = {
