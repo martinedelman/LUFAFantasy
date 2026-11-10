@@ -20,7 +20,8 @@
     "./repositories/reporting": "./src/repositories/reporting/index.ts",
     "./repositories/reporting/*": "./src/repositories/reporting/*.ts",
     "./repositories/fantasy": "./src/repositories/fantasy/index.ts",
-    "./repositories/commerce": "./src/repositories/commerce/index.ts"
+    "./repositories/commerce": "./src/repositories/commerce/index.ts",
+    "./repositories/digitalCredentials": "./src/repositories/digitalCredentials.ts"
   },
   "scripts": {
     "generate": "prisma generate --config=../../prisma.config.ts",

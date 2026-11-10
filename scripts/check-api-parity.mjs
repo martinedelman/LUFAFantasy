@@ -110,6 +110,8 @@ PUT /api/teams/:id
 PUT /api/tournaments/:id
 PATCH /api/admin/digital-credentials/:id
 POST /api/admin/digital-credentials/issue-player
+POST /api/admin/digital-credentials/issue-official
+GET /api/admin/digital-credentials/candidates
 GET /api/admin/digital-credentials
 POST /api/admin/digital-credentials
 GET /api/digital-credentials/me

@@ -3912,6 +3912,7 @@ export const UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   role: 'role',
   isActive: 'isActive',
+  emailVerifiedAt: 'emailVerifiedAt',
   lastLogin: 'lastLogin',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -4449,6 +4450,7 @@ export const DigitalCredentialScalarFieldEnum = {
   id: 'id',
   publicId: 'publicId',
   userId: 'userId',
+  claimEmail: 'claimEmail',
   playerId: 'playerId',
   judgeId: 'judgeId',
   subjectType: 'subjectType',

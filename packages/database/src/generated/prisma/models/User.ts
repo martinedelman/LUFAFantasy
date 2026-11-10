@@ -31,6 +31,7 @@ export type UserMinAggregateOutputType = {
   passwordHash: string | null
   role: string | null
   isActive: boolean | null
+  emailVerifiedAt: Date | null
   lastLogin: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -43,6 +44,7 @@ export type UserMaxAggregateOutputType = {
   passwordHash: string | null
   role: string | null
   isActive: boolean | null
+  emailVerifiedAt: Date | null
   lastLogin: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -55,6 +57,7 @@ export type UserCountAggregateOutputType = {
   passwordHash: number
   role: number
   isActive: number
+  emailVerifiedAt: number
   lastLogin: number
   createdAt: number
   updatedAt: number
@@ -69,6 +72,7 @@ export type UserMinAggregateInputType = {
   passwordHash?: true
   role?: true
   isActive?: true
+  emailVerifiedAt?: true
   lastLogin?: true
   createdAt?: true
   updatedAt?: true
@@ -81,6 +85,7 @@ export type UserMaxAggregateInputType = {
   passwordHash?: true
   role?: true
   isActive?: true
+  emailVerifiedAt?: true
   lastLogin?: true
   createdAt?: true
   updatedAt?: true
@@ -93,6 +98,7 @@ export type UserCountAggregateInputType = {
   passwordHash?: true
   role?: true
   isActive?: true
+  emailVerifiedAt?: true
   lastLogin?: true
   createdAt?: true
   updatedAt?: true
@@ -178,6 +184,7 @@ export type UserGroupByOutputType = {
   passwordHash: string
   role: string
   isActive: boolean
+  emailVerifiedAt: Date | null
   lastLogin: Date | null
   createdAt: Date
   updatedAt: Date
@@ -211,6 +218,7 @@ export type UserWhereInput = {
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.StringFilter<"User"> | string
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  emailVerifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   lastLogin?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -232,6 +240,7 @@ export type UserOrderByWithRelationInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLogin?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -256,6 +265,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.StringFilter<"User"> | string
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  emailVerifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   lastLogin?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -277,6 +287,7 @@ export type UserOrderByWithAggregationInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLogin?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -295,6 +306,7 @@ export type UserScalarWhereWithAggregatesInput = {
   passwordHash?: Prisma.StringWithAggregatesFilter<"User"> | string
   role?: Prisma.StringWithAggregatesFilter<"User"> | string
   isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  emailVerifiedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   lastLogin?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -307,6 +319,7 @@ export type UserCreateInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -328,6 +341,7 @@ export type UserUncheckedCreateInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -349,6 +363,7 @@ export type UserUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -370,6 +385,7 @@ export type UserUncheckedUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -391,6 +407,7 @@ export type UserCreateManyInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -403,6 +420,7 @@ export type UserUpdateManyMutationInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -415,6 +433,7 @@ export type UserUncheckedUpdateManyInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -427,6 +446,7 @@ export type UserCountOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrder
   lastLogin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -439,6 +459,7 @@ export type UserMaxOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrder
   lastLogin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -451,6 +472,7 @@ export type UserMinOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrder
   lastLogin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -560,10 +582,12 @@ export type UserCreateNestedOneWithoutDigitalCredentialsInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
-export type UserUpdateOneRequiredWithoutDigitalCredentialsNestedInput = {
+export type UserUpdateOneWithoutDigitalCredentialsNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutDigitalCredentialsInput, Prisma.UserUncheckedCreateWithoutDigitalCredentialsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutDigitalCredentialsInput
   upsert?: Prisma.UserUpsertWithoutDigitalCredentialsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDigitalCredentialsInput, Prisma.UserUpdateWithoutDigitalCredentialsInput>, Prisma.UserUncheckedUpdateWithoutDigitalCredentialsInput>
 }
@@ -617,6 +641,7 @@ export type UserCreateWithoutAnalyticsReportsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -637,6 +662,7 @@ export type UserUncheckedCreateWithoutAnalyticsReportsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -673,6 +699,7 @@ export type UserUpdateWithoutAnalyticsReportsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -693,6 +720,7 @@ export type UserUncheckedUpdateWithoutAnalyticsReportsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -713,6 +741,7 @@ export type UserCreateWithoutOtpVerificationsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -733,6 +762,7 @@ export type UserUncheckedCreateWithoutOtpVerificationsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -769,6 +799,7 @@ export type UserUpdateWithoutOtpVerificationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -789,6 +820,7 @@ export type UserUncheckedUpdateWithoutOtpVerificationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -809,6 +841,7 @@ export type UserCreateWithoutRequestedCorrectionsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -829,6 +862,7 @@ export type UserUncheckedCreateWithoutRequestedCorrectionsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -854,6 +888,7 @@ export type UserCreateWithoutReviewedCorrectionsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -874,6 +909,7 @@ export type UserUncheckedCreateWithoutReviewedCorrectionsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -910,6 +946,7 @@ export type UserUpdateWithoutRequestedCorrectionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -930,6 +967,7 @@ export type UserUncheckedUpdateWithoutRequestedCorrectionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -961,6 +999,7 @@ export type UserUpdateWithoutReviewedCorrectionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -981,6 +1020,7 @@ export type UserUncheckedUpdateWithoutReviewedCorrectionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1001,6 +1041,7 @@ export type UserCreateWithoutAuditLogsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1021,6 +1062,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1057,6 +1099,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1077,6 +1120,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1097,6 +1141,7 @@ export type UserCreateWithoutDigitalCredentialsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1117,6 +1162,7 @@ export type UserUncheckedCreateWithoutDigitalCredentialsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1153,6 +1199,7 @@ export type UserUpdateWithoutDigitalCredentialsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1173,6 +1220,7 @@ export type UserUncheckedUpdateWithoutDigitalCredentialsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1193,6 +1241,7 @@ export type UserCreateWithoutSellerMembershipsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1213,6 +1262,7 @@ export type UserUncheckedCreateWithoutSellerMembershipsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1249,6 +1299,7 @@ export type UserUpdateWithoutSellerMembershipsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1269,6 +1320,7 @@ export type UserUncheckedUpdateWithoutSellerMembershipsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1289,6 +1341,7 @@ export type UserCreateWithoutCommerceOrdersInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1309,6 +1362,7 @@ export type UserUncheckedCreateWithoutCommerceOrdersInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1345,6 +1399,7 @@ export type UserUpdateWithoutCommerceOrdersInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1365,6 +1420,7 @@ export type UserUncheckedUpdateWithoutCommerceOrdersInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1385,6 +1441,7 @@ export type UserCreateWithoutTournamentRegistrationsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1405,6 +1462,7 @@ export type UserUncheckedCreateWithoutTournamentRegistrationsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1441,6 +1499,7 @@ export type UserUpdateWithoutTournamentRegistrationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1461,6 +1520,7 @@ export type UserUncheckedUpdateWithoutTournamentRegistrationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1584,6 +1644,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   passwordHash?: boolean
   role?: boolean
   isActive?: boolean
+  emailVerifiedAt?: boolean
   lastLogin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1606,6 +1667,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   passwordHash?: boolean
   role?: boolean
   isActive?: boolean
+  emailVerifiedAt?: boolean
   lastLogin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1618,6 +1680,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   passwordHash?: boolean
   role?: boolean
   isActive?: boolean
+  emailVerifiedAt?: boolean
   lastLogin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1630,12 +1693,13 @@ export type UserSelectScalar = {
   passwordHash?: boolean
   role?: boolean
   isActive?: boolean
+  emailVerifiedAt?: boolean
   lastLogin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "role" | "isActive" | "lastLogin" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "role" | "isActive" | "emailVerifiedAt" | "lastLogin" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   otpVerifications?: boolean | Prisma.User$otpVerificationsArgs<ExtArgs>
   requestedCorrections?: boolean | Prisma.User$requestedCorrectionsArgs<ExtArgs>
@@ -1671,6 +1735,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     passwordHash: string
     role: string
     isActive: boolean
+    emailVerifiedAt: Date | null
     lastLogin: Date | null
     createdAt: Date
     updatedAt: Date
@@ -2112,6 +2177,7 @@ export interface UserFieldRefs {
   readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'String'>
   readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
+  readonly emailVerifiedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly lastLogin: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
