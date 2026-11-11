@@ -20,7 +20,9 @@
     "./repositories/reporting": "./src/repositories/reporting/index.ts",
     "./repositories/reporting/*": "./src/repositories/reporting/*.ts",
     "./repositories/fantasy": "./src/repositories/fantasy/index.ts",
-    "./repositories/commerce": "./src/repositories/commerce/index.ts"
+    "./repositories/commerce": "./src/repositories/commerce/index.ts",
+    "./repositories/digitalCredentials": "./src/repositories/digitalCredentials.ts",
+    "./repositories/digitalCredentialEvaluation": "./src/repositories/digitalCredentialEvaluation.ts"
   },
   "scripts": {
     "generate": "prisma generate --config=../../prisma.config.ts",
@@ -46,5 +48,10 @@
     "mongoose": "8.16.0",
     "pg": "8.22.0"
   },
-  "devDependencies": { "@types/pg": "8.20.0", "prisma": "7.9.1", "typescript": "5.9.2", "vitest": "4.1.10" }
+  "devDependencies": {
+    "@types/pg": "8.20.0",
+    "prisma": "7.9.1",
+    "typescript": "5.9.2",
+    "vitest": "4.1.10"
+  }
 }

@@ -433,6 +433,10 @@ export const ModelName = {
   FantasyDraftPick: 'FantasyDraftPick',
   FantasyPlayerFavorite: 'FantasyPlayerFavorite',
   DigitalCredential: 'DigitalCredential',
+  Member: 'Member',
+  MembershipPeriod: 'MembershipPeriod',
+  MemberCertification: 'MemberCertification',
+  CoachAssignment: 'CoachAssignment',
   CommerceSeller: 'CommerceSeller',
   CommerceSellerMember: 'CommerceSellerMember',
   CommerceItem: 'CommerceItem',
@@ -458,7 +462,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "analyticsReport" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "playerModalityProfile" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite" | "digitalCredential" | "commerceSeller" | "commerceSellerMember" | "commerceItem" | "commerceOrder" | "commerceOrderItem" | "commerceItemVariant" | "commerceWebhookEvent" | "commerceTournamentRegistration" | "commerceRefundRequest" | "digitalCredentialAudit"
+    modelProps: "user" | "analyticsReport" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "playerModalityProfile" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite" | "digitalCredential" | "member" | "membershipPeriod" | "memberCertification" | "coachAssignment" | "commerceSeller" | "commerceSellerMember" | "commerceItem" | "commerceOrder" | "commerceOrderItem" | "commerceItemVariant" | "commerceWebhookEvent" | "commerceTournamentRegistration" | "commerceRefundRequest" | "digitalCredentialAudit"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3126,6 +3130,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Member: {
+      payload: Prisma.$MemberPayload<ExtArgs>
+      fields: Prisma.MemberFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MemberFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MemberFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload>
+        }
+        findFirst: {
+          args: Prisma.MemberFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MemberFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload>
+        }
+        findMany: {
+          args: Prisma.MemberFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload>[]
+        }
+        create: {
+          args: Prisma.MemberCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload>
+        }
+        createMany: {
+          args: Prisma.MemberCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MemberCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload>[]
+        }
+        delete: {
+          args: Prisma.MemberDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload>
+        }
+        update: {
+          args: Prisma.MemberUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload>
+        }
+        deleteMany: {
+          args: Prisma.MemberDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MemberUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MemberUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload>[]
+        }
+        upsert: {
+          args: Prisma.MemberUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberPayload>
+        }
+        aggregate: {
+          args: Prisma.MemberAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMember>
+        }
+        groupBy: {
+          args: Prisma.MemberGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MemberGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MemberCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MemberCountAggregateOutputType> | number
+        }
+      }
+    }
+    MembershipPeriod: {
+      payload: Prisma.$MembershipPeriodPayload<ExtArgs>
+      fields: Prisma.MembershipPeriodFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MembershipPeriodFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MembershipPeriodFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+        }
+        findFirst: {
+          args: Prisma.MembershipPeriodFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MembershipPeriodFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+        }
+        findMany: {
+          args: Prisma.MembershipPeriodFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>[]
+        }
+        create: {
+          args: Prisma.MembershipPeriodCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+        }
+        createMany: {
+          args: Prisma.MembershipPeriodCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MembershipPeriodCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>[]
+        }
+        delete: {
+          args: Prisma.MembershipPeriodDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+        }
+        update: {
+          args: Prisma.MembershipPeriodUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+        }
+        deleteMany: {
+          args: Prisma.MembershipPeriodDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MembershipPeriodUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MembershipPeriodUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>[]
+        }
+        upsert: {
+          args: Prisma.MembershipPeriodUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+        }
+        aggregate: {
+          args: Prisma.MembershipPeriodAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMembershipPeriod>
+        }
+        groupBy: {
+          args: Prisma.MembershipPeriodGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MembershipPeriodGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MembershipPeriodCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MembershipPeriodCountAggregateOutputType> | number
+        }
+      }
+    }
+    MemberCertification: {
+      payload: Prisma.$MemberCertificationPayload<ExtArgs>
+      fields: Prisma.MemberCertificationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MemberCertificationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MemberCertificationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload>
+        }
+        findFirst: {
+          args: Prisma.MemberCertificationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MemberCertificationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload>
+        }
+        findMany: {
+          args: Prisma.MemberCertificationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload>[]
+        }
+        create: {
+          args: Prisma.MemberCertificationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload>
+        }
+        createMany: {
+          args: Prisma.MemberCertificationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MemberCertificationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload>[]
+        }
+        delete: {
+          args: Prisma.MemberCertificationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload>
+        }
+        update: {
+          args: Prisma.MemberCertificationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload>
+        }
+        deleteMany: {
+          args: Prisma.MemberCertificationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MemberCertificationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MemberCertificationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload>[]
+        }
+        upsert: {
+          args: Prisma.MemberCertificationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemberCertificationPayload>
+        }
+        aggregate: {
+          args: Prisma.MemberCertificationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMemberCertification>
+        }
+        groupBy: {
+          args: Prisma.MemberCertificationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MemberCertificationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MemberCertificationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MemberCertificationCountAggregateOutputType> | number
+        }
+      }
+    }
+    CoachAssignment: {
+      payload: Prisma.$CoachAssignmentPayload<ExtArgs>
+      fields: Prisma.CoachAssignmentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CoachAssignmentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CoachAssignmentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload>
+        }
+        findFirst: {
+          args: Prisma.CoachAssignmentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CoachAssignmentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload>
+        }
+        findMany: {
+          args: Prisma.CoachAssignmentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload>[]
+        }
+        create: {
+          args: Prisma.CoachAssignmentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload>
+        }
+        createMany: {
+          args: Prisma.CoachAssignmentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CoachAssignmentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload>[]
+        }
+        delete: {
+          args: Prisma.CoachAssignmentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload>
+        }
+        update: {
+          args: Prisma.CoachAssignmentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload>
+        }
+        deleteMany: {
+          args: Prisma.CoachAssignmentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CoachAssignmentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CoachAssignmentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload>[]
+        }
+        upsert: {
+          args: Prisma.CoachAssignmentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CoachAssignmentPayload>
+        }
+        aggregate: {
+          args: Prisma.CoachAssignmentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCoachAssignment>
+        }
+        groupBy: {
+          args: Prisma.CoachAssignmentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CoachAssignmentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CoachAssignmentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CoachAssignmentCountAggregateOutputType> | number
+        }
+      }
+    }
     CommerceSeller: {
       payload: Prisma.$CommerceSellerPayload<ExtArgs>
       fields: Prisma.CommerceSellerFieldRefs
@@ -3912,6 +4212,7 @@ export const UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   role: 'role',
   isActive: 'isActive',
+  emailVerifiedAt: 'emailVerifiedAt',
   lastLogin: 'lastLogin',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -4448,7 +4749,9 @@ export type FantasyPlayerFavoriteScalarFieldEnum = (typeof FantasyPlayerFavorite
 export const DigitalCredentialScalarFieldEnum = {
   id: 'id',
   publicId: 'publicId',
+  memberId: 'memberId',
   userId: 'userId',
+  claimEmail: 'claimEmail',
   playerId: 'playerId',
   judgeId: 'judgeId',
   subjectType: 'subjectType',
@@ -4456,6 +4759,7 @@ export const DigitalCredentialScalarFieldEnum = {
   displayName: 'displayName',
   profilePicture: 'profilePicture',
   roleLabel: 'roleLabel',
+  roles: 'roles',
   organizationName: 'organizationName',
   nationalityCode: 'nationalityCode',
   dateOfBirth: 'dateOfBirth',
@@ -4469,6 +4773,80 @@ export const DigitalCredentialScalarFieldEnum = {
 } as const
 
 export type DigitalCredentialScalarFieldEnum = (typeof DigitalCredentialScalarFieldEnum)[keyof typeof DigitalCredentialScalarFieldEnum]
+
+
+export const MemberScalarFieldEnum = {
+  id: 'id',
+  lufaNumber: 'lufaNumber',
+  userId: 'userId',
+  claimEmail: 'claimEmail',
+  playerId: 'playerId',
+  judgeId: 'judgeId',
+  displayName: 'displayName',
+  dateOfBirth: 'dateOfBirth',
+  nationalityCode: 'nationalityCode',
+  profilePicture: 'profilePicture',
+  status: 'status',
+  suspendedReason: 'suspendedReason',
+  suspendedAt: 'suspendedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MemberScalarFieldEnum = (typeof MemberScalarFieldEnum)[keyof typeof MemberScalarFieldEnum]
+
+
+export const MembershipPeriodScalarFieldEnum = {
+  id: 'id',
+  memberId: 'memberId',
+  source: 'source',
+  orderId: 'orderId',
+  method: 'method',
+  amountMinor: 'amountMinor',
+  reference: 'reference',
+  recordedById: 'recordedById',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  status: 'status',
+  voidedAt: 'voidedAt',
+  voidReason: 'voidReason',
+  createdAt: 'createdAt'
+} as const
+
+export type MembershipPeriodScalarFieldEnum = (typeof MembershipPeriodScalarFieldEnum)[keyof typeof MembershipPeriodScalarFieldEnum]
+
+
+export const MemberCertificationScalarFieldEnum = {
+  id: 'id',
+  memberId: 'memberId',
+  role: 'role',
+  level: 'level',
+  issuer: 'issuer',
+  courseItemId: 'courseItemId',
+  issuedAt: 'issuedAt',
+  expiresAt: 'expiresAt',
+  status: 'status',
+  revokedAt: 'revokedAt',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MemberCertificationScalarFieldEnum = (typeof MemberCertificationScalarFieldEnum)[keyof typeof MemberCertificationScalarFieldEnum]
+
+
+export const CoachAssignmentScalarFieldEnum = {
+  id: 'id',
+  memberId: 'memberId',
+  teamId: 'teamId',
+  season: 'season',
+  role: 'role',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CoachAssignmentScalarFieldEnum = (typeof CoachAssignmentScalarFieldEnum)[keyof typeof CoachAssignmentScalarFieldEnum]
 
 
 export const CommerceSellerScalarFieldEnum = {
@@ -4964,6 +5342,10 @@ export type GlobalOmitConfig = {
   fantasyDraftPick?: Prisma.FantasyDraftPickOmit
   fantasyPlayerFavorite?: Prisma.FantasyPlayerFavoriteOmit
   digitalCredential?: Prisma.DigitalCredentialOmit
+  member?: Prisma.MemberOmit
+  membershipPeriod?: Prisma.MembershipPeriodOmit
+  memberCertification?: Prisma.MemberCertificationOmit
+  coachAssignment?: Prisma.CoachAssignmentOmit
   commerceSeller?: Prisma.CommerceSellerOmit
   commerceSellerMember?: Prisma.CommerceSellerMemberOmit
   commerceItem?: Prisma.CommerceItemOmit

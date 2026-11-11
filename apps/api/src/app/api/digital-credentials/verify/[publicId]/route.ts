@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrismaClient } from "@lufa/database/prisma";
-import { credentialStatus, serializeCredential } from "@/lib/digitalCredential";
+import { apiErrorResponse } from "@/lib/apiError";
+import { verifyCredential } from "@/lib/digitalCredential";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ publicId: string }> }) {
-  const { publicId } = await params;
-  const credential = await getPrismaClient().digitalCredential.findUnique({ where: { publicId } });
-  if (!credential) return NextResponse.json({ success: true, data: { status: "not_found", credential: null } }, { headers: { "Cache-Control": "no-store" } });
-  const status = credentialStatus(credential);
-  await getPrismaClient().digitalCredentialAudit.create({ data: { credentialId: credential.id, action: "verified" } });
-  return NextResponse.json({ success: true, data: { status, credential: status === "active" ? serializeCredential(credential) : null } }, { headers: { "Cache-Control": "no-store" } });
+export async function GET(request: NextRequest, { params }: { params: Promise<{ publicId: string }> }) {
+  const limit = checkRateLimit(request, { key: "digital-credential-verify", limit: 60, windowMs: 60_000 });
+  if (!limit.allowed) return rateLimitResponse(limit.resetAt);
+  try {
+    const { publicId } = await params;
+    return NextResponse.json({ success: true, data: await verifyCredential(publicId) }, {
+      headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" },
+    });
+  } catch (error) {
+    return apiErrorResponse({ request, error, message: "No pudimos verificar la credencial.", status: 500, route: "/api/digital-credentials/verify" });
+  }
 }

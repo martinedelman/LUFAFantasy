@@ -31,6 +31,7 @@ export type UserMinAggregateOutputType = {
   passwordHash: string | null
   role: string | null
   isActive: boolean | null
+  emailVerifiedAt: Date | null
   lastLogin: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -43,6 +44,7 @@ export type UserMaxAggregateOutputType = {
   passwordHash: string | null
   role: string | null
   isActive: boolean | null
+  emailVerifiedAt: Date | null
   lastLogin: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -55,6 +57,7 @@ export type UserCountAggregateOutputType = {
   passwordHash: number
   role: number
   isActive: number
+  emailVerifiedAt: number
   lastLogin: number
   createdAt: number
   updatedAt: number
@@ -69,6 +72,7 @@ export type UserMinAggregateInputType = {
   passwordHash?: true
   role?: true
   isActive?: true
+  emailVerifiedAt?: true
   lastLogin?: true
   createdAt?: true
   updatedAt?: true
@@ -81,6 +85,7 @@ export type UserMaxAggregateInputType = {
   passwordHash?: true
   role?: true
   isActive?: true
+  emailVerifiedAt?: true
   lastLogin?: true
   createdAt?: true
   updatedAt?: true
@@ -93,6 +98,7 @@ export type UserCountAggregateInputType = {
   passwordHash?: true
   role?: true
   isActive?: true
+  emailVerifiedAt?: true
   lastLogin?: true
   createdAt?: true
   updatedAt?: true
@@ -178,6 +184,7 @@ export type UserGroupByOutputType = {
   passwordHash: string
   role: string
   isActive: boolean
+  emailVerifiedAt: Date | null
   lastLogin: Date | null
   createdAt: Date
   updatedAt: Date
@@ -211,6 +218,7 @@ export type UserWhereInput = {
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.StringFilter<"User"> | string
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  emailVerifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   lastLogin?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -219,6 +227,7 @@ export type UserWhereInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionListRelationFilter
   auditLogs?: Prisma.AdminAuditLogListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
+  lufaMember?: Prisma.XOR<Prisma.MemberNullableScalarRelationFilter, Prisma.MemberWhereInput> | null
   analyticsReports?: Prisma.AnalyticsReportListRelationFilter
   sellerMemberships?: Prisma.CommerceSellerMemberListRelationFilter
   commerceOrders?: Prisma.CommerceOrderListRelationFilter
@@ -232,6 +241,7 @@ export type UserOrderByWithRelationInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLogin?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -240,6 +250,7 @@ export type UserOrderByWithRelationInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionOrderByRelationAggregateInput
   auditLogs?: Prisma.AdminAuditLogOrderByRelationAggregateInput
   digitalCredentials?: Prisma.DigitalCredentialOrderByRelationAggregateInput
+  lufaMember?: Prisma.MemberOrderByWithRelationInput
   analyticsReports?: Prisma.AnalyticsReportOrderByRelationAggregateInput
   sellerMemberships?: Prisma.CommerceSellerMemberOrderByRelationAggregateInput
   commerceOrders?: Prisma.CommerceOrderOrderByRelationAggregateInput
@@ -256,6 +267,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.StringFilter<"User"> | string
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  emailVerifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   lastLogin?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -264,6 +276,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   reviewedCorrections?: Prisma.GameEventCorrectionListRelationFilter
   auditLogs?: Prisma.AdminAuditLogListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
+  lufaMember?: Prisma.XOR<Prisma.MemberNullableScalarRelationFilter, Prisma.MemberWhereInput> | null
   analyticsReports?: Prisma.AnalyticsReportListRelationFilter
   sellerMemberships?: Prisma.CommerceSellerMemberListRelationFilter
   commerceOrders?: Prisma.CommerceOrderListRelationFilter
@@ -277,6 +290,7 @@ export type UserOrderByWithAggregationInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLogin?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -295,6 +309,7 @@ export type UserScalarWhereWithAggregatesInput = {
   passwordHash?: Prisma.StringWithAggregatesFilter<"User"> | string
   role?: Prisma.StringWithAggregatesFilter<"User"> | string
   isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  emailVerifiedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   lastLogin?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -307,6 +322,7 @@ export type UserCreateInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -315,6 +331,7 @@ export type UserCreateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -328,6 +345,7 @@ export type UserUncheckedCreateInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -336,6 +354,7 @@ export type UserUncheckedCreateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -349,6 +368,7 @@ export type UserUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -357,6 +377,7 @@ export type UserUpdateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -370,6 +391,7 @@ export type UserUncheckedUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -378,6 +400,7 @@ export type UserUncheckedUpdateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -391,6 +414,7 @@ export type UserCreateManyInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -403,6 +427,7 @@ export type UserUpdateManyMutationInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -415,6 +440,7 @@ export type UserUncheckedUpdateManyInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -427,6 +453,7 @@ export type UserCountOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrder
   lastLogin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -439,6 +466,7 @@ export type UserMaxOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrder
   lastLogin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -451,6 +479,7 @@ export type UserMinOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  emailVerifiedAt?: Prisma.SortOrder
   lastLogin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -560,12 +589,30 @@ export type UserCreateNestedOneWithoutDigitalCredentialsInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
-export type UserUpdateOneRequiredWithoutDigitalCredentialsNestedInput = {
+export type UserUpdateOneWithoutDigitalCredentialsNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutDigitalCredentialsInput, Prisma.UserUncheckedCreateWithoutDigitalCredentialsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutDigitalCredentialsInput
   upsert?: Prisma.UserUpsertWithoutDigitalCredentialsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDigitalCredentialsInput, Prisma.UserUpdateWithoutDigitalCredentialsInput>, Prisma.UserUncheckedUpdateWithoutDigitalCredentialsInput>
+}
+
+export type UserCreateNestedOneWithoutLufaMemberInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLufaMemberInput, Prisma.UserUncheckedCreateWithoutLufaMemberInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLufaMemberInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutLufaMemberNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLufaMemberInput, Prisma.UserUncheckedCreateWithoutLufaMemberInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLufaMemberInput
+  upsert?: Prisma.UserUpsertWithoutLufaMemberInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLufaMemberInput, Prisma.UserUpdateWithoutLufaMemberInput>, Prisma.UserUncheckedUpdateWithoutLufaMemberInput>
 }
 
 export type UserCreateNestedOneWithoutSellerMembershipsInput = {
@@ -617,6 +664,7 @@ export type UserCreateWithoutAnalyticsReportsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -625,6 +673,7 @@ export type UserCreateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
@@ -637,6 +686,7 @@ export type UserUncheckedCreateWithoutAnalyticsReportsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -645,6 +695,7 @@ export type UserUncheckedCreateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
@@ -673,6 +724,7 @@ export type UserUpdateWithoutAnalyticsReportsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -681,6 +733,7 @@ export type UserUpdateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
@@ -693,6 +746,7 @@ export type UserUncheckedUpdateWithoutAnalyticsReportsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -701,6 +755,7 @@ export type UserUncheckedUpdateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
@@ -713,6 +768,7 @@ export type UserCreateWithoutOtpVerificationsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -720,6 +776,7 @@ export type UserCreateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -733,6 +790,7 @@ export type UserUncheckedCreateWithoutOtpVerificationsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -740,6 +798,7 @@ export type UserUncheckedCreateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -769,6 +828,7 @@ export type UserUpdateWithoutOtpVerificationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -776,6 +836,7 @@ export type UserUpdateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -789,6 +850,7 @@ export type UserUncheckedUpdateWithoutOtpVerificationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -796,6 +858,7 @@ export type UserUncheckedUpdateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -809,6 +872,7 @@ export type UserCreateWithoutRequestedCorrectionsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -816,6 +880,7 @@ export type UserCreateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -829,6 +894,7 @@ export type UserUncheckedCreateWithoutRequestedCorrectionsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -836,6 +902,7 @@ export type UserUncheckedCreateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -854,6 +921,7 @@ export type UserCreateWithoutReviewedCorrectionsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -861,6 +929,7 @@ export type UserCreateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -874,6 +943,7 @@ export type UserUncheckedCreateWithoutReviewedCorrectionsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -881,6 +951,7 @@ export type UserUncheckedCreateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -910,6 +981,7 @@ export type UserUpdateWithoutRequestedCorrectionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -917,6 +989,7 @@ export type UserUpdateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -930,6 +1003,7 @@ export type UserUncheckedUpdateWithoutRequestedCorrectionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -937,6 +1011,7 @@ export type UserUncheckedUpdateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -961,6 +1036,7 @@ export type UserUpdateWithoutReviewedCorrectionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -968,6 +1044,7 @@ export type UserUpdateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -981,6 +1058,7 @@ export type UserUncheckedUpdateWithoutReviewedCorrectionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -988,6 +1066,7 @@ export type UserUncheckedUpdateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1001,6 +1080,7 @@ export type UserCreateWithoutAuditLogsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1008,6 +1088,7 @@ export type UserCreateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -1021,6 +1102,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1028,6 +1110,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -1057,6 +1140,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1064,6 +1148,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -1077,6 +1162,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1084,6 +1170,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1097,6 +1184,7 @@ export type UserCreateWithoutDigitalCredentialsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1104,6 +1192,7 @@ export type UserCreateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -1117,6 +1206,7 @@ export type UserUncheckedCreateWithoutDigitalCredentialsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1124,6 +1214,7 @@ export type UserUncheckedCreateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -1153,6 +1244,7 @@ export type UserUpdateWithoutDigitalCredentialsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1160,6 +1252,7 @@ export type UserUpdateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -1173,6 +1266,7 @@ export type UserUncheckedUpdateWithoutDigitalCredentialsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1180,6 +1274,111 @@ export type UserUncheckedUpdateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutLufaMemberInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  emailVerifiedAt?: Date | string | null
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutLufaMemberInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  emailVerifiedAt?: Date | string | null
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutLufaMemberInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutLufaMemberInput, Prisma.UserUncheckedCreateWithoutLufaMemberInput>
+}
+
+export type UserUpsertWithoutLufaMemberInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutLufaMemberInput, Prisma.UserUncheckedUpdateWithoutLufaMemberInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutLufaMemberInput, Prisma.UserUncheckedCreateWithoutLufaMemberInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutLufaMemberInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutLufaMemberInput, Prisma.UserUncheckedUpdateWithoutLufaMemberInput>
+}
+
+export type UserUpdateWithoutLufaMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutLufaMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1193,6 +1392,7 @@ export type UserCreateWithoutSellerMembershipsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1201,6 +1401,7 @@ export type UserCreateWithoutSellerMembershipsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
@@ -1213,6 +1414,7 @@ export type UserUncheckedCreateWithoutSellerMembershipsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1221,6 +1423,7 @@ export type UserUncheckedCreateWithoutSellerMembershipsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
@@ -1249,6 +1452,7 @@ export type UserUpdateWithoutSellerMembershipsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1257,6 +1461,7 @@ export type UserUpdateWithoutSellerMembershipsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
@@ -1269,6 +1474,7 @@ export type UserUncheckedUpdateWithoutSellerMembershipsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1277,6 +1483,7 @@ export type UserUncheckedUpdateWithoutSellerMembershipsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
@@ -1289,6 +1496,7 @@ export type UserCreateWithoutCommerceOrdersInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1297,6 +1505,7 @@ export type UserCreateWithoutCommerceOrdersInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
@@ -1309,6 +1518,7 @@ export type UserUncheckedCreateWithoutCommerceOrdersInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1317,6 +1527,7 @@ export type UserUncheckedCreateWithoutCommerceOrdersInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
@@ -1345,6 +1556,7 @@ export type UserUpdateWithoutCommerceOrdersInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1353,6 +1565,7 @@ export type UserUpdateWithoutCommerceOrdersInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
@@ -1365,6 +1578,7 @@ export type UserUncheckedUpdateWithoutCommerceOrdersInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1373,6 +1587,7 @@ export type UserUncheckedUpdateWithoutCommerceOrdersInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
@@ -1385,6 +1600,7 @@ export type UserCreateWithoutTournamentRegistrationsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1393,6 +1609,7 @@ export type UserCreateWithoutTournamentRegistrationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -1405,6 +1622,7 @@ export type UserUncheckedCreateWithoutTournamentRegistrationsInput = {
   passwordHash: string
   role?: string
   isActive?: boolean
+  emailVerifiedAt?: Date | string | null
   lastLogin?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1413,6 +1631,7 @@ export type UserUncheckedCreateWithoutTournamentRegistrationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -1441,6 +1660,7 @@ export type UserUpdateWithoutTournamentRegistrationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1449,6 +1669,7 @@ export type UserUpdateWithoutTournamentRegistrationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -1461,6 +1682,7 @@ export type UserUncheckedUpdateWithoutTournamentRegistrationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1469,6 +1691,7 @@ export type UserUncheckedUpdateWithoutTournamentRegistrationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1584,6 +1807,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   passwordHash?: boolean
   role?: boolean
   isActive?: boolean
+  emailVerifiedAt?: boolean
   lastLogin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1592,6 +1816,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   reviewedCorrections?: boolean | Prisma.User$reviewedCorrectionsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.User$digitalCredentialsArgs<ExtArgs>
+  lufaMember?: boolean | Prisma.User$lufaMemberArgs<ExtArgs>
   analyticsReports?: boolean | Prisma.User$analyticsReportsArgs<ExtArgs>
   sellerMemberships?: boolean | Prisma.User$sellerMembershipsArgs<ExtArgs>
   commerceOrders?: boolean | Prisma.User$commerceOrdersArgs<ExtArgs>
@@ -1606,6 +1831,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   passwordHash?: boolean
   role?: boolean
   isActive?: boolean
+  emailVerifiedAt?: boolean
   lastLogin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1618,6 +1844,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   passwordHash?: boolean
   role?: boolean
   isActive?: boolean
+  emailVerifiedAt?: boolean
   lastLogin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1630,18 +1857,20 @@ export type UserSelectScalar = {
   passwordHash?: boolean
   role?: boolean
   isActive?: boolean
+  emailVerifiedAt?: boolean
   lastLogin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "role" | "isActive" | "lastLogin" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "role" | "isActive" | "emailVerifiedAt" | "lastLogin" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   otpVerifications?: boolean | Prisma.User$otpVerificationsArgs<ExtArgs>
   requestedCorrections?: boolean | Prisma.User$requestedCorrectionsArgs<ExtArgs>
   reviewedCorrections?: boolean | Prisma.User$reviewedCorrectionsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.User$digitalCredentialsArgs<ExtArgs>
+  lufaMember?: boolean | Prisma.User$lufaMemberArgs<ExtArgs>
   analyticsReports?: boolean | Prisma.User$analyticsReportsArgs<ExtArgs>
   sellerMemberships?: boolean | Prisma.User$sellerMembershipsArgs<ExtArgs>
   commerceOrders?: boolean | Prisma.User$commerceOrdersArgs<ExtArgs>
@@ -1659,6 +1888,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     reviewedCorrections: Prisma.$GameEventCorrectionPayload<ExtArgs>[]
     auditLogs: Prisma.$AdminAuditLogPayload<ExtArgs>[]
     digitalCredentials: Prisma.$DigitalCredentialPayload<ExtArgs>[]
+    lufaMember: Prisma.$MemberPayload<ExtArgs> | null
     analyticsReports: Prisma.$AnalyticsReportPayload<ExtArgs>[]
     sellerMemberships: Prisma.$CommerceSellerMemberPayload<ExtArgs>[]
     commerceOrders: Prisma.$CommerceOrderPayload<ExtArgs>[]
@@ -1671,6 +1901,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     passwordHash: string
     role: string
     isActive: boolean
+    emailVerifiedAt: Date | null
     lastLogin: Date | null
     createdAt: Date
     updatedAt: Date
@@ -2073,6 +2304,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   reviewedCorrections<T extends Prisma.User$reviewedCorrectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedCorrectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GameEventCorrectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditLogs<T extends Prisma.User$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   digitalCredentials<T extends Prisma.User$digitalCredentialsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$digitalCredentialsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DigitalCredentialPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lufaMember<T extends Prisma.User$lufaMemberArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$lufaMemberArgs<ExtArgs>>): Prisma.Prisma__MemberClient<runtime.Types.Result.GetResult<Prisma.$MemberPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   analyticsReports<T extends Prisma.User$analyticsReportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$analyticsReportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AnalyticsReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   sellerMemberships<T extends Prisma.User$sellerMembershipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sellerMembershipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceSellerMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   commerceOrders<T extends Prisma.User$commerceOrdersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$commerceOrdersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceOrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2112,6 +2344,7 @@ export interface UserFieldRefs {
   readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'String'>
   readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
+  readonly emailVerifiedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly lastLogin: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -2625,6 +2858,25 @@ export type User$digitalCredentialsArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.DigitalCredentialScalarFieldEnum | Prisma.DigitalCredentialScalarFieldEnum[]
+}
+
+/**
+ * User.lufaMember
+ */
+export type User$lufaMemberArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Member
+   */
+  select?: Prisma.MemberSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Member
+   */
+  omit?: Prisma.MemberOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MemberInclude<ExtArgs> | null
+  where?: Prisma.MemberWhereInput
 }
 
 /**

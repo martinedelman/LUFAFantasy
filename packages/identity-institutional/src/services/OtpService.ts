@@ -136,9 +136,13 @@ export class OtpService {
       throw new Error("Código o link inválido");
     }
 
-    await this.auxiliaryRepo.consumeOtp(otp.id, new Date());
-
-    const user = await this.userRepo.updateActiveStatus(otp.userId, true);
+    let user: User;
+    if (this.userRepo.completeEmailVerification) {
+      user = await this.userRepo.completeEmailVerification(otp.userId, otp.email, otp.id);
+    } else {
+      await this.auxiliaryRepo.consumeOtp(otp.id, new Date());
+      user = await this.userRepo.updateActiveStatus(otp.userId, true);
+    }
     const sessionToken = createSessionToken({
       userId: user.id!,
       name: user.name,

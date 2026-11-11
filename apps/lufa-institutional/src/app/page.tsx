@@ -5,8 +5,7 @@ import Link from "next/link";
 import styles from "./page.module.css";
 
 const flagUrl = process.env.NEXT_PUBLIC_FLAG_URL || "https://flag.lufa.com.uy";
-// Opt-in: the tackle card links out only once its URL is configured.
-const tackleUrl = process.env.NEXT_PUBLIC_TACKLE_URL;
+const tackleUrl = process.env.NEXT_PUBLIC_TACKLE_URL || "https://tackle.lufa.com.uy";
 
 export default function HomePage() {
   return (
@@ -63,20 +62,12 @@ export default function HomePage() {
             <small>Ver competencia y novedades</small>
             <i aria-hidden="true">↗</i>
           </a>
-          {tackleUrl ? (
-            <a className="discipline-card tackle-card" href={tackleUrl}>
-              <span>02</span>
-              <strong>Tackle Football</strong>
-              <small>Ver competencia y novedades</small>
-              <i aria-hidden="true">↗</i>
-            </a>
-          ) : (
-            <div className="discipline-card tackle-card" aria-disabled="true">
-              <span>02</span>
-              <strong>Tackle Football</strong>
-              <small>Próximamente</small>
-            </div>
-          )}
+          <a className="discipline-card tackle-card" href={tackleUrl}>
+            <span>02</span>
+            <strong>Tackle Football</strong>
+            <small>Ver competencia y novedades</small>
+            <i aria-hidden="true">↗</i>
+          </a>
         </div>
       </section>
 

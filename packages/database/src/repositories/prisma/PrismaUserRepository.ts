@@ -2,6 +2,7 @@ import { User } from "@lufa/sports/entities/User";
 import { getPrismaClient } from "@lufa/database/prisma";
 import type { IUserRepository } from "../contracts";
 import { toUser } from "./mappers";
+import { credentialTransaction, linkVerifiedCredential, normalizeCredentialEmail } from "../digitalCredentials";
 
 export class PrismaUserRepository implements IUserRepository {
   private get db() {
@@ -74,6 +75,25 @@ export class PrismaUserRepository implements IUserRepository {
 
   async updateActiveStatus(id: string, isActive: boolean): Promise<User> {
     return toUser(await this.db.user.update({ where: { id }, data: { isActive } }))!;
+  }
+
+  async completeEmailVerification(id: string, email: string, otpId: string): Promise<User> {
+    return credentialTransaction(async (tx) => {
+      const now = new Date();
+      const consumed = await tx.otpVerification.updateMany({
+        where: { id: otpId, userId: id, email, purpose: "email_verification", consumedAt: null,
+          expiresAt: { gte: now }, attempts: { lt: tx.otpVerification.fields.maxAttempts } },
+        data: { consumedAt: now },
+      });
+      if (!consumed.count) throw new Error("Código o link inválido");
+
+      const account = await tx.user.update({
+        where: { id, AND: [{ email: { equals: normalizeCredentialEmail(email), mode: "insensitive" } }] },
+        data: { isActive: true, emailVerifiedAt: now },
+      });
+      await linkVerifiedCredential(tx, account.id, account.email);
+      return toUser(account)!;
+    });
   }
 
   async updatePasswordHash(id: string, passwordHash: string): Promise<User> {

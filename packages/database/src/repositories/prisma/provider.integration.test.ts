@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { promisify } from "node:util";
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import mongoose from "mongoose";
 import { NextRequest } from "next/server";
 import { User } from "@lufa/sports/entities/User";
@@ -37,6 +38,8 @@ const ids = {
   game: "integration-game",
   standing: "integration-standing",
 };
+
+const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 
 describe("PostgreSQL provider contract", () => {
   const migrationDatabase = "lufa_migration_integration";
@@ -691,7 +694,7 @@ describe("PostgreSQL provider contract", () => {
           "/tmp/lufa-migration-integration-report.json",
         ],
         {
-          cwd: process.cwd(),
+          cwd: repositoryRoot,
           env: {
             ...process.env,
             MONGODB_URI: "mongodb://localhost:27017",
@@ -759,7 +762,7 @@ describe("PostgreSQL provider contract", () => {
           "/tmp/lufa-migration-rollback-report.json",
         ],
         {
-          cwd: process.cwd(),
+          cwd: repositoryRoot,
           env: { ...process.env, MONGODB_URI: "mongodb://localhost:27017" },
           maxBuffer: 2_000_000,
         },

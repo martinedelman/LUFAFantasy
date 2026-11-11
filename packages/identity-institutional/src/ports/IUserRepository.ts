@@ -20,6 +20,8 @@ export interface IUserRepository extends IRepository<User> {
    */
   updateActiveStatus(id: string, isActive: boolean): Promise<User>;
 
+  completeEmailVerification?(id: string, email: string, otpId: string): Promise<User>;
+
   /**
    * Actualiza el hash de contraseña de un usuario
    */

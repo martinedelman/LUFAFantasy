@@ -235,6 +235,7 @@
 
 .disciplines :global(.tackle-card) {
   background: linear-gradient(135deg, #0b4265, #062f4c);
+  cursor: pointer;
   opacity: 1;
 }
 
@@ -247,7 +248,8 @@
   transition: transform 180ms ease;
 }
 
-.disciplines :global(.flag-card:hover i) {
+.disciplines :global(.flag-card:hover i),
+.disciplines :global(.tackle-card:hover i) {
   transform: translate(3px, -3px);
 }
 

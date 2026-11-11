@@ -3,56 +3,69 @@
 
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
-import type { DigitalCredentialResponseDto } from "@lufa/contracts";
+import type { DigitalCredentialResponseDto, DigitalCredentialRole, DigitalCredentialRoleStatus, DigitalCredentialStatus } from "@lufa/contracts";
 import "./DigitalCredentialCard.css";
 
 type Locale = "es" | "en";
 type CredentialFace = "details" | "qr";
 
-const text = {
+type Text = Record<string, string>;
+const text: Record<Locale, Text> = {
   es: {
-    title: "ID Digital", official: "CREDENCIAL OFICIAL LUFA", member: "N.º de miembro", role: "Rol", team: "Equipo / Asociación", nationality: "Nacionalidad", birth: "Fecha de nacimiento", issued: "Fecha de emisión", expiry: "Fecha de vencimiento", verified: "Verificada", status: "Estado", qrTitle: "Verificar credencial", qrLead: "Escaneá para verificar la credencial", qrHelp: "Esta credencial se puede verificar en línea en lufa.com.uy", swipe: "Deslizá la tarjeta para ver el QR", details: "Datos", qr: "QR", download: "Descargar QR", print: "Imprimir credencial", language: "English",
+    title: "ID Digital", official: "CREDENCIAL OFICIAL LUFA", lufaNumber: "N.º LUFA", card: "Tarjeta", role: "Roles", team: "Equipo / Asociación", nationality: "Nacionalidad", birth: "Fecha de nacimiento", issued: "Fecha de emisión", expiry: "Vencimiento de la tarjeta", status: "Estado", qrTitle: "Verificar credencial", qrLead: "Escaneá para verificar la credencial", qrHelp: "Verificá siempre en lufa.com.uy: el estado se consulta en vivo.", details: "Datos", qr: "QR", download: "Descargar QR", print: "Imprimir credencial", language: "English", fullName: "Nombre completo",
+    rolesTitle: "Habilitaciones", validUntil: "Válido hasta", level: "Nivel", international: "Internacional", teams: "Equipos",
+    liveTitle: "Verificado en vivo por LUFA", checked: "Consultado", signatureValid: "Firma digital LUFA válida", signatureInvalid: "La firma digital no coincide: no confíes en este QR", signatureUnavailable: "Esta credencial no trae firma digital", signatureChecking: "Comprobando firma digital…", signatureUnsupported: "Este dispositivo no puede comprobar la firma; el estado en vivo sigue siendo válido",
+    missingMembership: "Para jugar, pagá tu membresía LUFA en la tienda o en tu equipo.", missingApproval: "Tu inscripción está pendiente de aprobación por LUFA.", missingCertification: "Tu certificación no está vigente. Contactá a LUFA para renovarla.", missingPlayer: "Tu ficha o tu equipo no están activos. Contactá a tu equipo o a LUFA.", store: "Ir a la tienda",
   },
   en: {
-    title: "Digital Member ID", official: "OFFICIAL LUFA CREDENTIAL", member: "Member ID", role: "Role", team: "Team / Association", nationality: "Nationality", birth: "Date of birth", issued: "Issue date", expiry: "Expiry date", verified: "Verified", status: "Status", qrTitle: "Verify credential", qrLead: "Scan to verify this credential", qrHelp: "This credential can be verified online at lufa.com.uy", swipe: "Swipe the card to view the QR", details: "Details", qr: "QR", download: "Download QR", print: "Print credential", language: "Español",
+    title: "Digital Member ID", official: "OFFICIAL LUFA CREDENTIAL", lufaNumber: "LUFA No.", card: "Card", role: "Roles", team: "Team / Association", nationality: "Nationality", birth: "Date of birth", issued: "Issue date", expiry: "Card expiry", status: "Status", qrTitle: "Verify credential", qrLead: "Scan to verify this credential", qrHelp: "Always verify at lufa.com.uy: status is checked live.", details: "Details", qr: "QR", download: "Download QR", print: "Print credential", language: "Español", fullName: "Full name",
+    rolesTitle: "Authorizations", validUntil: "Valid until", level: "Level", international: "International", teams: "Teams",
+    liveTitle: "Verified live by LUFA", checked: "Checked", signatureValid: "Valid LUFA digital signature", signatureInvalid: "Digital signature does not match: do not trust this QR", signatureUnavailable: "This credential carries no digital signature", signatureChecking: "Checking digital signature…", signatureUnsupported: "This device cannot check the signature; the live status is still authoritative",
+    missingMembership: "To play, pay your LUFA membership in the store or through your team.", missingApproval: "Your registration is pending LUFA approval.", missingCertification: "Your certification is not current. Contact LUFA to renew it.", missingPlayer: "Your player profile or team is not active. Contact your team or LUFA.", store: "Go to the store",
   },
 };
+
+const statusText: Record<DigitalCredentialStatus, { es: string; en: string }> = {
+  active: { es: "Vigente", en: "Valid" },
+  inactive: { es: "Sin habilitaciones vigentes", en: "No current authorizations" },
+  suspended: { es: "Suspendida", en: "Suspended" },
+  revoked: { es: "Revocada", en: "Revoked" },
+  expired: { es: "Vencida", en: "Expired" },
+  not_found: { es: "No encontrada", en: "Not found" },
+};
+
+const roleStatusText: Record<DigitalCredentialRoleStatus, { es: string; en: string }> = {
+  valid: { es: "Habilitado", en: "Authorized" },
+  membership_required: { es: "Membresía pendiente de pago", en: "Membership payment pending" },
+  pending_approval: { es: "Pendiente de aprobación", en: "Pending approval" },
+  player_inactive: { es: "Ficha inactiva", en: "Player profile inactive" },
+  team_inactive: { es: "Equipo inactivo", en: "Team inactive" },
+  certification_required: { es: "Sin certificación vigente", en: "No current certification" },
+  certification_expired: { es: "Certificación vencida", en: "Certification expired" },
+};
+
+const roleNames: Record<DigitalCredentialRole, { es: string; en: string }> = {
+  player: { es: "Jugador", en: "Player" },
+  judge: { es: "Juez", en: "Referee" },
+  coach: { es: "Entrenador", en: "Coach" },
+};
+
+export type SignatureState = "checking" | "valid" | "invalid" | "unavailable" | "unsupported";
 
 function date(value: string, locale: Locale) {
   return new Intl.DateTimeFormat(locale === "es" ? "es-UY" : "en-US", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
 }
 
-function roleChips(roleLabel: string) {
-  const labels = roleLabel
-    .split(/[,;/|]/)
-    .flatMap((label) => label.split(/\s+·\s+/))
-    .map((label) => label.trim())
-    .filter(Boolean);
-  // Las credenciales anteriores guardaban "Jugador · C". La posición no es un rol.
-  const roles = labels.filter((label) => !/^[A-Z]{1,3}(?:\/[A-Z]{1,3})?$/.test(label));
-
-  return [...new Set(roles)];
+function levelLabel(level: string | null, copy: Text) {
+  if (!level) return null;
+  return level === "internacional" ? copy.international : `${copy.level} ${level}`;
 }
 
-const roleTranslations: Record<string, { es: string; en: string }> = {
-  jugador: { es: "Jugador", en: "Player" },
-  jugadora: { es: "Jugadora", en: "Player" },
-  player: { es: "Jugador", en: "Player" },
-  oficial: { es: "Oficial", en: "Official" },
-  official: { es: "Oficial", en: "Official" },
-  árbitro: { es: "Árbitro", en: "Referee" },
-  arbitro: { es: "Árbitro", en: "Referee" },
-  referee: { es: "Árbitro", en: "Referee" },
-  juez: { es: "Juez", en: "Judge" },
-  judge: { es: "Juez", en: "Judge" },
-  entrenador: { es: "Entrenador", en: "Coach" },
-  entrenadora: { es: "Entrenadora", en: "Coach" },
-  coach: { es: "Entrenador", en: "Coach" },
-};
-
-function localizedRole(role: string, locale: Locale) {
-  const key = role.trim().normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("es-UY");
-  return roleTranslations[key]?.[locale] || role;
+function LiveClock({ locale, checkedAt }: { locale: Locale; checkedAt: string }) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 1000); return () => window.clearInterval(timer); }, []);
+  const format = (value: Date) => new Intl.DateTimeFormat(locale === "es" ? "es-UY" : "en-US", { dateStyle: "medium", timeStyle: "medium" }).format(value);
+  return <><time dateTime={now.toISOString()} className="credential-live-clock">{format(now)}</time><small>{text[locale].checked}: {format(new Date(checkedAt))}</small></>;
 }
 
 function loadImage(source: string) {
@@ -81,26 +94,34 @@ async function createQrWithLogo(verifyUrl: string) {
   return canvas.toDataURL("image/png");
 }
 
-export function DigitalCredentialCard({ credential, initialLocale = "es" }: { credential: DigitalCredentialResponseDto; initialLocale?: Locale }) {
+export function DigitalCredentialCard({ credential, initialLocale = "es", mode = "holder", checkedAt, signature }: {
+  credential: DigitalCredentialResponseDto;
+  initialLocale?: Locale;
+  /** holder: la propia persona en /mi-id. verification: quien escanea el QR en /verificar. */
+  mode?: "holder" | "verification";
+  checkedAt?: string;
+  signature?: SignatureState;
+}) {
   const [locale, setLocale] = useState<Locale>(initialLocale);
   const [face, setFace] = useState<CredentialFace>("details");
   const [qr, setQr] = useState("");
   const swipeStart = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   const copy = text[locale];
-  const roles = roleChips(credential.roleLabel || "");
-  const visibleRoles = roles.length
-    ? roles
-    : [credential.subjectType === "official" ? locale === "es" ? "Oficial" : "Official" : locale === "es" ? "Jugador" : "Player"];
+  const active = credential.status === "active";
+  const pending = credential.roles.filter((role) => role.status !== "valid");
 
   useEffect(() => {
-    const saved = localStorage.getItem("lufa-id-locale");
-    if (saved === "es" || saved === "en") setLocale(saved);
+    try {
+      const saved = localStorage.getItem("lufa-id-locale");
+      if (saved === "es" || saved === "en") setLocale(saved);
+    } catch { /* almacenamiento no disponible */ }
   }, []);
-  useEffect(() => { localStorage.setItem("lufa-id-locale", locale); }, [locale]);
+  useEffect(() => { try { localStorage.setItem("lufa-id-locale", locale); } catch { /* almacenamiento no disponible */ } }, [locale]);
   useEffect(() => {
-    const verifyUrl = `${window.location.origin}/verificar/${credential.publicId}`;
-    void createQrWithLogo(verifyUrl).then(setQr).catch(() => { void QRCode.toDataURL(verifyUrl, { width: 560, margin: 2, errorCorrectionLevel: "H" }).then(setQr); });
-  }, [credential.publicId]);
+    // La URL canónica la arma el servidor: el QR siempre apunta a lufa.com.uy aunque la ID se abra en otro dominio.
+    const verifyUrl = credential.verifyUrl;
+    void createQrWithLogo(verifyUrl).then(setQr).catch(() => { void QRCode.toDataURL(verifyUrl, { width: 560, margin: 2, errorCorrectionLevel: "M" }).then(setQr); });
+  }, [credential.verifyUrl]);
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     swipeStart.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
@@ -125,8 +146,28 @@ export function DigitalCredentialCard({ credential, initialLocale = "es" }: { cr
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
+  const hints = [...new Set(pending.map((role) =>
+    role.status === "membership_required" ? copy.missingMembership
+      : role.status === "pending_approval" ? copy.missingApproval
+        : role.status === "player_inactive" || role.status === "team_inactive" ? copy.missingPlayer
+          : copy.missingCertification))];
+  const signatureText = signature ? {
+    checking: copy.signatureChecking, valid: copy.signatureValid, invalid: copy.signatureInvalid,
+    unavailable: copy.signatureUnavailable, unsupported: copy.signatureUnsupported,
+  }[signature] : null;
+
   return (
     <section className="credential-wrap">
+      {mode === "verification" && checkedAt ? (
+        <div className={`credential-live ${active ? "" : "is-warning"}`} role="status">
+          <span className="credential-live-dot" aria-hidden="true" />
+          <div>
+            <strong>{copy.liveTitle} · {statusText[credential.status][locale]}</strong>
+            <LiveClock locale={locale} checkedAt={checkedAt} />
+            {signatureText ? <small className={`credential-signature is-${signature}`}>{signatureText}</small> : null}
+          </div>
+        </div>
+      ) : null}
       <div className="credential-topbar">
         <div className="credential-face-controls" aria-label={copy.title}>
           <button type="button" aria-pressed={face === "details"} onClick={() => setFace("details")}>{copy.details}</button>
@@ -147,23 +188,27 @@ export function DigitalCredentialCard({ credential, initialLocale = "es" }: { cr
             <header className="credential-brand-row">
               <img src="/lufa_icon.png" alt="LUFA" />
               <div><p>{copy.official}</p><h1>{copy.title}</h1></div>
-              <span className="credential-verified-badge" aria-label={copy.verified}>✓</span>
+              <span className={`credential-verified-badge ${active ? "" : "is-warning"}`} aria-label={statusText[credential.status][locale]}>{active ? "✓" : "!"}</span>
             </header>
             <section className="credential-identity">
-              {credential.profilePicture ? <img src={credential.profilePicture} alt={`Foto de ${credential.displayName}`} /> : <div className="credential-avatar" aria-hidden="true">{credential.displayName.slice(0, 1)}</div>}
+              {credential.profilePicture ? <img src={credential.profilePicture} alt={`${copy.fullName}: ${credential.displayName}`} /> : <div className="credential-avatar" aria-hidden="true">{credential.displayName.slice(0, 1)}</div>}
               <div className="credential-identity-copy">
-                <span>{locale === "es" ? "Nombre completo" : "Full name"}</span>
+                <span>{copy.fullName}</span>
                 <h2>{credential.displayName}</h2>
-                <span>{copy.member}</span>
-                <b>{credential.memberNumber}</b>
+                <span>{copy.lufaNumber}</span>
+                <b>{credential.lufaNumber}</b>
                 <div className="credential-role-chips" aria-label={copy.role}>
-                  {visibleRoles.map((role) => <span className="credential-role-chip" key={role}>{localizedRole(role, locale)}</span>)}
+                  {credential.roles.map((role) => (
+                    <span className={`credential-role-chip ${role.status === "valid" ? "" : "is-pending"}`} key={role.role}>
+                      {role.status === "valid" ? "" : "○ "}{roleNames[role.role][locale]}{role.level ? ` · ${levelLabel(role.level, copy)}` : ""}
+                    </span>
+                  ))}
                 </div>
               </div>
             </section>
             <dl className="credential-details">
               <div className="credential-team"><dt>{copy.team}</dt><dd>{credential.organizationName}</dd></div>
-              <div className="credential-status"><dt>{copy.status}</dt><dd><span aria-hidden="true">✓</span>{copy.verified}</dd></div>
+              <div className="credential-status"><dt>{copy.status}</dt><dd className={active ? "" : "is-warning"}><span aria-hidden="true">{active ? "✓" : "!"}</span>{statusText[credential.status][locale]}</dd></div>
               <div><dt>{copy.nationality}</dt><dd>{credential.nationalityCode}</dd></div>
               <div><dt>{copy.issued}</dt><dd>{date(credential.issuedAt, locale)}</dd></div>
               <div><dt>{copy.birth}</dt><dd>{date(credential.dateOfBirth, locale)}</dd></div>
@@ -173,7 +218,7 @@ export function DigitalCredentialCard({ credential, initialLocale = "es" }: { cr
 
           <article className="credential-card credential-back" aria-label={`${copy.title}: ${copy.qr}`} aria-hidden={face !== "qr"}>
             <header className="credential-brand-row"><img src="/lufa_icon.png" alt="LUFA" /><div><p>{copy.official}</p><h1>{copy.qrTitle}</h1></div></header>
-            <div className="credential-qr-content"><div className="credential-qr-frame">{qr ? <img src={qr} alt={copy.qrLead} /> : <span aria-live="polite">…</span>}</div><h2>{copy.qrLead}</h2><p>{copy.qrHelp}</p><div className="credential-back-member">{credential.memberNumber}</div></div>
+            <div className="credential-qr-content"><div className="credential-qr-frame">{qr ? <img src={qr} alt={copy.qrLead} /> : <span aria-live="polite">…</span>}</div><h2>{copy.qrLead}</h2><p>{copy.qrHelp}</p><div className="credential-back-member">{credential.lufaNumber} · {copy.card} {credential.memberNumber}</div></div>
           </article>
         </div>
       </div>
@@ -183,7 +228,33 @@ export function DigitalCredentialCard({ credential, initialLocale = "es" }: { cr
           ? locale === "es" ? "Deslizá horizontalmente para ver el QR" : "Swipe horizontally to view the QR"
           : locale === "es" ? "Deslizá horizontalmente para volver a los datos" : "Swipe horizontally to return to the details"}
       </p>
-      <div className="credential-buttons">{qr ? <a href={qr} download={`LUFA-${credential.memberNumber}-QR.png`}>{copy.download}</a> : null}<button type="button" disabled={!qr} onClick={() => window.print()}>{copy.print}</button></div>
+
+      <section className="credential-roles" aria-labelledby="credential-roles-title">
+        <h2 id="credential-roles-title">{copy.rolesTitle}</h2>
+        <ul>
+          {credential.roles.map((role) => (
+            <li key={role.role} className={role.status === "valid" ? "is-valid" : "is-pending"}>
+              <div>
+                <strong>{roleNames[role.role][locale]}{role.level ? ` · ${levelLabel(role.level, copy)}` : ""}</strong>
+                {role.teams.length ? <span>{copy.teams}: {role.teams.join(", ")}</span> : null}
+                {role.issuer && role.issuer !== "LUFA" ? <span>{role.issuer}</span> : null}
+              </div>
+              <div>
+                <b>{roleStatusText[role.status][locale]}</b>
+                {role.validUntil ? <span>{copy.validUntil} {date(role.validUntil, locale)}</span> : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+        {mode === "holder" && hints.length ? (
+          <div className="credential-hints">
+            {hints.map((hint) => <p key={hint}>{hint}</p>)}
+            {pending.some((role) => role.status === "membership_required") ? <a href="/tienda">{copy.store}</a> : null}
+          </div>
+        ) : null}
+      </section>
+
+      {mode === "holder" ? <div className="credential-buttons">{qr ? <a href={qr} download={`LUFA-${credential.lufaNumber}-QR.png`}>{copy.download}</a> : null}<button type="button" disabled={!qr} onClick={() => window.print()}>{copy.print}</button></div> : null}
     </section>
   );
 }

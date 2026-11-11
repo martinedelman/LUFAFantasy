@@ -6,7 +6,6 @@ import { AuthControl } from "./AuthControl";
 import { StoreNavLinks } from "./StoreNavLinks";
 import "./SiteNav.css";
 
-/** `tackleUrl` stays unset until the tackle site is live, showing it as upcoming. */
 type Props = { flagUrl: string; tackleUrl?: string; store?: boolean };
 
 export function SiteNav({ flagUrl, tackleUrl, store = false }: Props) {
@@ -49,11 +48,7 @@ export function SiteNav({ flagUrl, tackleUrl, store = false }: Props) {
           <Link href="#sumate" onClick={closeMenu}>Sumate</Link>
           <Link href="/tienda" onClick={closeMenu}>Tienda</Link>
           <a href={flagUrl}>Flag Football</a>
-          {tackleUrl ? (
-            <a href={tackleUrl}>Tackle Football</a>
-          ) : (
-            <span aria-disabled="true">Tackle <small>Próximamente</small></span>
-          )}
+          {tackleUrl ? <a href={tackleUrl}>Tackle Football</a> : null}
         </>}
         <div className="site-nav-session">
           <AuthControl />
