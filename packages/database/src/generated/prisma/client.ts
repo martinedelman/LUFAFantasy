@@ -234,6 +234,26 @@ export type FantasyPlayerFavorite = Prisma.FantasyPlayerFavoriteModel
  */
 export type DigitalCredential = Prisma.DigitalCredentialModel
 /**
+ * Model Member
+ * Persona con número LUFA estable. Las credenciales (tarjetas) se emiten y renuevan para un miembro.
+ */
+export type Member = Prisma.MemberModel
+/**
+ * Model MembershipPeriod
+ * Período de membresía pago (tienda u offline). Habilita el rol de jugador mientras cubre la fecha.
+ */
+export type MembershipPeriod = Prisma.MembershipPeriodModel
+/**
+ * Model MemberCertification
+ * Certificación virtual de entrenador o juez, con nivel y vencimiento propios.
+ */
+export type MemberCertification = Prisma.MemberCertificationModel
+/**
+ * Model CoachAssignment
+ * Vínculo verificable entre un entrenador certificado y un equipo.
+ */
+export type CoachAssignment = Prisma.CoachAssignmentModel
+/**
  * Model CommerceSeller
  * 
  */

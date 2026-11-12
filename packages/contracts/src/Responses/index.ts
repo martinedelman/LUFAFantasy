@@ -29,7 +29,7 @@ export type {
 export type { AdminSystemHealthResponseDto } from "./AdminSystemHealthResponseDto";
 export type { AdminUserResponseDto } from "./AdminUserResponseDto";
 export type { DashboardStatsResponseDto } from "./DashboardStatsResponseDto";
-export type { DigitalCredentialResponseDto, DigitalCredentialStatus, DigitalCredentialSubjectType, PublicDigitalCredentialResponseDto } from "./DigitalCredentialResponseDto";
+export type { AdminDigitalCredentialDetailDto, CoachAssignmentDto, DigitalCredentialResponseDto, DigitalCredentialRoleDto, DigitalCredentialRoleStatus, DigitalCredentialStatus, DigitalCredentialSubjectType, MemberCertificationDto, MembershipPeriodDto, PublicDigitalCredentialResponseDto } from "./DigitalCredentialResponseDto";
 export type { DigitalCredentialCandidateResponseDto } from "./DigitalCredentialCandidateResponseDto";
 export type { DivisionResponseDto } from "./DivisionResponseDto";
 export type { GameEventResponseDto, GameLiveResponseDto } from "./GameLiveResponseDto";

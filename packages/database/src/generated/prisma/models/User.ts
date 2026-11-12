@@ -229,6 +229,7 @@ export type UserWhereInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionListRelationFilter
   auditLogs?: Prisma.AdminAuditLogListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
+  lufaMember?: Prisma.XOR<Prisma.MemberNullableScalarRelationFilter, Prisma.MemberWhereInput> | null
   analyticsReports?: Prisma.AnalyticsReportListRelationFilter
   sellerMemberships?: Prisma.CommerceSellerMemberListRelationFilter
   commerceOrders?: Prisma.CommerceOrderListRelationFilter
@@ -253,6 +254,7 @@ export type UserOrderByWithRelationInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionOrderByRelationAggregateInput
   auditLogs?: Prisma.AdminAuditLogOrderByRelationAggregateInput
   digitalCredentials?: Prisma.DigitalCredentialOrderByRelationAggregateInput
+  lufaMember?: Prisma.MemberOrderByWithRelationInput
   analyticsReports?: Prisma.AnalyticsReportOrderByRelationAggregateInput
   sellerMemberships?: Prisma.CommerceSellerMemberOrderByRelationAggregateInput
   commerceOrders?: Prisma.CommerceOrderOrderByRelationAggregateInput
@@ -280,6 +282,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   reviewedCorrections?: Prisma.GameEventCorrectionListRelationFilter
   auditLogs?: Prisma.AdminAuditLogListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
+  lufaMember?: Prisma.XOR<Prisma.MemberNullableScalarRelationFilter, Prisma.MemberWhereInput> | null
   analyticsReports?: Prisma.AnalyticsReportListRelationFilter
   sellerMemberships?: Prisma.CommerceSellerMemberListRelationFilter
   commerceOrders?: Prisma.CommerceOrderListRelationFilter
@@ -336,6 +339,7 @@ export type UserCreateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -360,6 +364,7 @@ export type UserUncheckedCreateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -384,6 +389,7 @@ export type UserUpdateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -408,6 +414,7 @@ export type UserUncheckedUpdateInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -636,6 +643,22 @@ export type UserUpdateOneWithoutDigitalCredentialsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDigitalCredentialsInput, Prisma.UserUpdateWithoutDigitalCredentialsInput>, Prisma.UserUncheckedUpdateWithoutDigitalCredentialsInput>
 }
 
+export type UserCreateNestedOneWithoutLufaMemberInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLufaMemberInput, Prisma.UserUncheckedCreateWithoutLufaMemberInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLufaMemberInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutLufaMemberNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLufaMemberInput, Prisma.UserUncheckedCreateWithoutLufaMemberInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLufaMemberInput
+  upsert?: Prisma.UserUpsertWithoutLufaMemberInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLufaMemberInput, Prisma.UserUpdateWithoutLufaMemberInput>, Prisma.UserUncheckedUpdateWithoutLufaMemberInput>
+}
+
 export type UserCreateNestedOneWithoutSellerMembershipsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutSellerMembershipsInput, Prisma.UserUncheckedCreateWithoutSellerMembershipsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutSellerMembershipsInput
@@ -696,6 +719,7 @@ export type UserCreateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
@@ -719,6 +743,7 @@ export type UserUncheckedCreateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
@@ -758,6 +783,7 @@ export type UserUpdateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
@@ -781,6 +807,7 @@ export type UserUncheckedUpdateWithoutAnalyticsReportsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
@@ -803,6 +830,7 @@ export type UserCreateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -826,6 +854,7 @@ export type UserUncheckedCreateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -865,6 +894,7 @@ export type UserUpdateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -888,6 +918,7 @@ export type UserUncheckedUpdateWithoutOtpVerificationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -911,6 +942,7 @@ export type UserCreateWithoutPasskeyCredentialsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -934,6 +966,7 @@ export type UserUncheckedCreateWithoutPasskeyCredentialsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -973,6 +1006,7 @@ export type UserUpdateWithoutPasskeyCredentialsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -996,6 +1030,7 @@ export type UserUncheckedUpdateWithoutPasskeyCredentialsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1019,6 +1054,7 @@ export type UserCreateWithoutWebAuthnChallengesInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -1042,6 +1078,7 @@ export type UserUncheckedCreateWithoutWebAuthnChallengesInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -1081,6 +1118,7 @@ export type UserUpdateWithoutWebAuthnChallengesInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -1104,6 +1142,7 @@ export type UserUncheckedUpdateWithoutWebAuthnChallengesInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1127,6 +1166,7 @@ export type UserCreateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -1150,6 +1190,7 @@ export type UserUncheckedCreateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -1178,6 +1219,7 @@ export type UserCreateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -1201,6 +1243,7 @@ export type UserUncheckedCreateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -1240,6 +1283,7 @@ export type UserUpdateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -1263,6 +1307,7 @@ export type UserUncheckedUpdateWithoutRequestedCorrectionsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1297,6 +1342,7 @@ export type UserUpdateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -1320,6 +1366,7 @@ export type UserUncheckedUpdateWithoutReviewedCorrectionsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1343,6 +1390,7 @@ export type UserCreateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -1366,6 +1414,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -1405,6 +1454,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -1428,6 +1478,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1451,6 +1502,7 @@ export type UserCreateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -1474,6 +1526,7 @@ export type UserUncheckedCreateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -1513,6 +1566,7 @@ export type UserUpdateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -1536,6 +1590,119 @@ export type UserUncheckedUpdateWithoutDigitalCredentialsInput = {
   requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutLufaMemberInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  emailVerifiedAt?: Date | string | null
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationCreateNestedManyWithoutUserInput
+  passkeyCredentials?: Prisma.PasskeyCredentialCreateNestedManyWithoutUserInput
+  webAuthnChallenges?: Prisma.WebAuthnChallengeCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutLufaMemberInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: string
+  isActive?: boolean
+  emailVerifiedAt?: Date | string | null
+  lastLogin?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedCreateNestedManyWithoutUserInput
+  passkeyCredentials?: Prisma.PasskeyCredentialUncheckedCreateNestedManyWithoutUserInput
+  webAuthnChallenges?: Prisma.WebAuthnChallengeUncheckedCreateNestedManyWithoutUserInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutRequestedByInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
+  commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutLufaMemberInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutLufaMemberInput, Prisma.UserUncheckedCreateWithoutLufaMemberInput>
+}
+
+export type UserUpsertWithoutLufaMemberInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutLufaMemberInput, Prisma.UserUncheckedUpdateWithoutLufaMemberInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutLufaMemberInput, Prisma.UserUncheckedCreateWithoutLufaMemberInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutLufaMemberInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutLufaMemberInput, Prisma.UserUncheckedUpdateWithoutLufaMemberInput>
+}
+
+export type UserUpdateWithoutLufaMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUpdateManyWithoutUserNestedInput
+  passkeyCredentials?: Prisma.PasskeyCredentialUpdateManyWithoutUserNestedInput
+  webAuthnChallenges?: Prisma.WebAuthnChallengeUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
+  sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
+  commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
+  tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutLufaMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  otpVerifications?: Prisma.OtpVerificationUncheckedUpdateManyWithoutUserNestedInput
+  passkeyCredentials?: Prisma.PasskeyCredentialUncheckedUpdateManyWithoutUserNestedInput
+  webAuthnChallenges?: Prisma.WebAuthnChallengeUncheckedUpdateManyWithoutUserNestedInput
+  requestedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutRequestedByNestedInput
+  reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
+  auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -1560,6 +1727,7 @@ export type UserCreateWithoutSellerMembershipsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
@@ -1583,6 +1751,7 @@ export type UserUncheckedCreateWithoutSellerMembershipsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
@@ -1622,6 +1791,7 @@ export type UserUpdateWithoutSellerMembershipsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
@@ -1645,6 +1815,7 @@ export type UserUncheckedUpdateWithoutSellerMembershipsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
@@ -1668,6 +1839,7 @@ export type UserCreateWithoutCommerceOrdersInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationCreateNestedManyWithoutUserInput
@@ -1691,6 +1863,7 @@ export type UserUncheckedCreateWithoutCommerceOrdersInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedCreateNestedManyWithoutUserInput
@@ -1730,6 +1903,7 @@ export type UserUpdateWithoutCommerceOrdersInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUpdateManyWithoutUserNestedInput
@@ -1753,6 +1927,7 @@ export type UserUncheckedUpdateWithoutCommerceOrdersInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   tournamentRegistrations?: Prisma.CommerceTournamentRegistrationUncheckedUpdateManyWithoutUserNestedInput
@@ -1776,6 +1951,7 @@ export type UserCreateWithoutTournamentRegistrationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderCreateNestedManyWithoutBuyerInput
@@ -1799,6 +1975,7 @@ export type UserUncheckedCreateWithoutTournamentRegistrationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedCreateNestedManyWithoutReviewedByInput
   auditLogs?: Prisma.AdminAuditLogUncheckedCreateNestedManyWithoutActorInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutUserInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutUserInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedCreateNestedManyWithoutOwnerInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedCreateNestedManyWithoutUserInput
   commerceOrders?: Prisma.CommerceOrderUncheckedCreateNestedManyWithoutBuyerInput
@@ -1838,6 +2015,7 @@ export type UserUpdateWithoutTournamentRegistrationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUpdateManyWithoutBuyerNestedInput
@@ -1861,6 +2039,7 @@ export type UserUncheckedUpdateWithoutTournamentRegistrationsInput = {
   reviewedCorrections?: Prisma.GameEventCorrectionUncheckedUpdateManyWithoutReviewedByNestedInput
   auditLogs?: Prisma.AdminAuditLogUncheckedUpdateManyWithoutActorNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutUserNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutUserNestedInput
   analyticsReports?: Prisma.AnalyticsReportUncheckedUpdateManyWithoutOwnerNestedInput
   sellerMemberships?: Prisma.CommerceSellerMemberUncheckedUpdateManyWithoutUserNestedInput
   commerceOrders?: Prisma.CommerceOrderUncheckedUpdateManyWithoutBuyerNestedInput
@@ -2005,6 +2184,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   reviewedCorrections?: boolean | Prisma.User$reviewedCorrectionsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.User$digitalCredentialsArgs<ExtArgs>
+  lufaMember?: boolean | Prisma.User$lufaMemberArgs<ExtArgs>
   analyticsReports?: boolean | Prisma.User$analyticsReportsArgs<ExtArgs>
   sellerMemberships?: boolean | Prisma.User$sellerMembershipsArgs<ExtArgs>
   commerceOrders?: boolean | Prisma.User$commerceOrdersArgs<ExtArgs>
@@ -2060,6 +2240,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   reviewedCorrections?: boolean | Prisma.User$reviewedCorrectionsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.User$digitalCredentialsArgs<ExtArgs>
+  lufaMember?: boolean | Prisma.User$lufaMemberArgs<ExtArgs>
   analyticsReports?: boolean | Prisma.User$analyticsReportsArgs<ExtArgs>
   sellerMemberships?: boolean | Prisma.User$sellerMembershipsArgs<ExtArgs>
   commerceOrders?: boolean | Prisma.User$commerceOrdersArgs<ExtArgs>
@@ -2079,6 +2260,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     reviewedCorrections: Prisma.$GameEventCorrectionPayload<ExtArgs>[]
     auditLogs: Prisma.$AdminAuditLogPayload<ExtArgs>[]
     digitalCredentials: Prisma.$DigitalCredentialPayload<ExtArgs>[]
+    lufaMember: Prisma.$MemberPayload<ExtArgs> | null
     analyticsReports: Prisma.$AnalyticsReportPayload<ExtArgs>[]
     sellerMemberships: Prisma.$CommerceSellerMemberPayload<ExtArgs>[]
     commerceOrders: Prisma.$CommerceOrderPayload<ExtArgs>[]
@@ -2496,6 +2678,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   reviewedCorrections<T extends Prisma.User$reviewedCorrectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedCorrectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GameEventCorrectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditLogs<T extends Prisma.User$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   digitalCredentials<T extends Prisma.User$digitalCredentialsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$digitalCredentialsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DigitalCredentialPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lufaMember<T extends Prisma.User$lufaMemberArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$lufaMemberArgs<ExtArgs>>): Prisma.Prisma__MemberClient<runtime.Types.Result.GetResult<Prisma.$MemberPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   analyticsReports<T extends Prisma.User$analyticsReportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$analyticsReportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AnalyticsReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   sellerMemberships<T extends Prisma.User$sellerMembershipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sellerMembershipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceSellerMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   commerceOrders<T extends Prisma.User$commerceOrdersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$commerceOrdersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommerceOrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3097,6 +3280,25 @@ export type User$digitalCredentialsArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.DigitalCredentialScalarFieldEnum | Prisma.DigitalCredentialScalarFieldEnum[]
+}
+
+/**
+ * User.lufaMember
+ */
+export type User$lufaMemberArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Member
+   */
+  select?: Prisma.MemberSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Member
+   */
+  omit?: Prisma.MemberOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MemberInclude<ExtArgs> | null
+  where?: Prisma.MemberWhereInput
 }
 
 /**
