@@ -2,6 +2,12 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 const expected = new Set(`
+DELETE /api/auth/passkeys/:id
+GET /api/auth/passkeys
+POST /api/auth/passkeys/authentication/options
+POST /api/auth/passkeys/authentication/verify
+POST /api/auth/passkeys/registration/options
+POST /api/auth/passkeys/registration/verify
 DELETE /api/games/:id
 DELETE /api/games/:id/events/:eventId
 DELETE /api/players/:id

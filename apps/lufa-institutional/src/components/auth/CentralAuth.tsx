@@ -4,6 +4,15 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { getLufaAppUrl, normalizeAuthReturnTo } from "@lufa/api-client/authUrls";
+import {
+  cancelPasskeyCeremony,
+  isPasskeyCancellation,
+  passkeyAutofillSupported,
+  passkeyErrorMessage,
+  passkeysSupported,
+  registerPasskey,
+  signInWithPasskey,
+} from "@/lib/passkeys";
 import styles from "./CentralAuth.module.css";
 
 type Mode = "login" | "signup" | "verify" | "forgot-password";
@@ -134,10 +143,49 @@ function Login({ returnTo }: { returnTo: string }) {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [pending, setPending] = useState(false);
+  const [passkeyPending, setPasskeyPending] = useState(false);
+  const [canUsePasskey, setCanUsePasskey] = useState(false);
   const requestMessage = useRequestFeedback(pending, "Ingresando a tu cuenta");
 
   const errors = { email: validateEmail(email), password: password ? "" : "Ingresá tu contraseña." };
   const ready = !errors.email && !errors.password;
+
+  useEffect(() => {
+    if (!passkeysSupported()) return;
+    setCanUsePasskey(true);
+
+    // Conditional UI: el navegador sugiere las passkeys guardadas en el campo de email.
+    let active = true;
+    void passkeyAutofillSupported().then(async (supported) => {
+      if (!supported || !active) return;
+      try {
+        await signInWithPasskey({ autofill: true });
+        window.location.assign(returnTo);
+      } catch (error) {
+        if (active && !isPasskeyCancellation(error)) {
+          setFeedback({ tone: "error", message: passkeyErrorMessage(error, "No pudimos validar la passkey. Probá de nuevo o ingresá con tu contraseña.") });
+        }
+      }
+    });
+    return () => {
+      active = false;
+      cancelPasskeyCeremony();
+    };
+  }, [returnTo]);
+
+  async function signInWithPasskeyButton() {
+    setPasskeyPending(true);
+    setFeedback(null);
+    try {
+      await signInWithPasskey();
+      window.location.assign(returnTo);
+    } catch (error) {
+      if (!isPasskeyCancellation(error)) {
+        setFeedback({ tone: "error", message: passkeyErrorMessage(error, "No pudimos validar la passkey. Probá de nuevo o ingresá con tu contraseña.") });
+      }
+      setPasskeyPending(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -169,13 +217,19 @@ function Login({ returnTo }: { returnTo: string }) {
       <form className={styles.form} onSubmit={submit} noValidate>
         <Status feedback={feedback} requestMessage={requestMessage} />
         <Field label="Email" error={touched.email ? errors.email : ""}>
-          <input value={email} onChange={(event) => setEmail(event.target.value)} onBlur={() => setTouched((value) => ({ ...value, email: true }))} type="email" autoComplete="email" maxLength={100} aria-invalid={Boolean(touched.email && errors.email)} />
+          <input value={email} onChange={(event) => setEmail(event.target.value)} onBlur={() => setTouched((value) => ({ ...value, email: true }))} type="email" autoComplete="username webauthn" maxLength={100} aria-invalid={Boolean(touched.email && errors.email)} />
         </Field>
         <Field label="Contraseña" error={touched.password ? errors.password : ""}>
           <input value={password} onChange={(event) => setPassword(event.target.value)} onBlur={() => setTouched((value) => ({ ...value, password: true }))} type="password" autoComplete="current-password" maxLength={128} aria-invalid={Boolean(touched.password && errors.password)} />
         </Field>
         <Link href={authHref("forgot-password", returnTo)} className={styles.textLink}>¿Olvidaste tu contraseña?</Link>
-        <button className={styles.primaryAction} disabled={pending} type="submit">{pending ? "Ingresando…" : "Iniciar sesión"}</button>
+        <button className={styles.primaryAction} disabled={pending || passkeyPending} type="submit">{pending ? "Ingresando…" : "Iniciar sesión"}</button>
+        {canUsePasskey ? <>
+          <p className={styles.divider}><span>o</span></p>
+          <button className={styles.secondaryAction} disabled={pending || passkeyPending} type="button" onClick={signInWithPasskeyButton}>
+            {passkeyPending ? "Esperando la passkey…" : "Ingresar con passkey"}
+          </button>
+        </> : null}
       </form>
       <p className={styles.switcher}>¿Todavía no tenés cuenta? <Link href={authHref("signup", returnTo)}>Crear una cuenta</Link></p>
     </AuthFrame>
@@ -247,10 +301,51 @@ function Signup({ returnTo }: { returnTo: string }) {
   );
 }
 
+function PasskeyOffer({ returnTo }: { returnTo: string }) {
+  const [feedback, setFeedback] = useState<Feedback>(null);
+  const [pending, setPending] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  async function addPasskey() {
+    setPending(true);
+    setFeedback(null);
+    try {
+      await registerPasskey();
+      setAdded(true);
+      setFeedback({ tone: "success", message: "Listo: la próxima vez podés entrar con tu passkey." });
+      window.setTimeout(() => window.location.assign(returnTo), 1_200);
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        message: isPasskeyCancellation(error)
+          ? "No se agregó la passkey. Podés agregarla más tarde desde Mi perfil."
+          : passkeyErrorMessage(error, "No pudimos agregar la passkey. Podés intentarlo más tarde desde Mi perfil."),
+      });
+      setPending(false);
+    }
+  }
+
+  return (
+    <AuthFrame eyebrow="Cuenta verificada" title="¡Ya estás adentro!" description="¿Querés entrar más rápido la próxima vez? Usá la huella, la cara o el PIN de este dispositivo en lugar de la contraseña.">
+      <div className={styles.form}>
+        <Status feedback={feedback} requestMessage={null} />
+        <button className={styles.primaryAction} disabled={pending || added} type="button" onClick={addPasskey}>
+          {pending ? "Esperando la passkey…" : "Agregar passkey"}
+        </button>
+        <button className={styles.secondaryAction} disabled={pending || added} type="button" onClick={() => window.location.assign(returnTo)}>
+          Ahora no
+        </button>
+      </div>
+      <p className={styles.switcher}>Tu contraseña sigue funcionando igual.</p>
+    </AuthFrame>
+  );
+}
+
 function Verify({ returnTo, token }: { returnTo: string; token: string }) {
   const [code, setCode] = useState("");
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [pending, setPending] = useState(false);
+  const [verified, setVerified] = useState(false);
   const requestMessage = useRequestFeedback(pending, "Verificando tu cuenta");
   const codeError = code.length === 6 ? "" : "Ingresá los 6 números del código.";
 
@@ -274,6 +369,11 @@ function Verify({ returnTo, token }: { returnTo: string; token: string }) {
         setFeedback({ tone: "error", message: payload.message || "No pudimos verificar la cuenta." });
         return;
       }
+      // La verificación deja la sesión iniciada: si el navegador soporta passkeys, ofrecemos agregar una.
+      if (passkeysSupported()) {
+        setVerified(true);
+        return;
+      }
       window.location.assign(returnTo);
     } catch {
       setFeedback({ tone: "error", message: requestFailureMessage() });
@@ -281,6 +381,8 @@ function Verify({ returnTo, token }: { returnTo: string; token: string }) {
       setPending(false);
     }
   }
+
+  if (verified) return <PasskeyOffer returnTo={returnTo} />;
 
   return (
     <AuthFrame eyebrow="Un último paso" title="Verificá tu email." description="Ingresá el código de seis números que recibiste.">
