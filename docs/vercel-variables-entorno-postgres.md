@@ -62,7 +62,7 @@ Agregar solo las que correspondan a funcionalidades habilitadas:
 | Funcionalidad | Variables | Sensibles |
 | --- | --- | --- |
 | OTP con pepper propio | `OTP_SECRET` | Sí. Si falta, se usa `JWT_SECRET`; en producción se recomienda definirlo por separado. |
-| Envío de email | `MAIL_FROM`, `MAIL_PROVIDER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | `SMTP_USER` y `SMTP_PASS`. |
+| Envío de email por SMTP | `MAIL_FROM`, `MAIL_PROVIDER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | `SMTP_USER` y `SMTP_PASS`. |
 | Carga de imágenes | `BLOB_READ_WRITE_TOKEN` | Sí. |
 | Endpoints cron | `CRON_SECRET` | Sí. Debe coincidir con el header `Authorization: Bearer …` de quien invoque el cron. |
 | Importación desde Google Sheets | `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SHEETS_TAB_NAME`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY` | `GOOGLE_PRIVATE_KEY`; las cuatro se requieren juntas. |
@@ -72,22 +72,31 @@ Agregar solo las que correspondan a funcionalidades habilitadas:
 Vercel. No agregar ninguna de las dos en configuraciones nuevas:
 usar siempre `NEXT_PUBLIC_APP_URL`.
 
-### Correo saliente con Gmail
+### Correo saliente con Gmail y OAuth
+
+1. Habilitar Gmail API en un proyecto de Google Cloud. Configurar la pantalla
+   de consentimiento OAuth y solicitar el permiso
+   `https://www.googleapis.com/auth/gmail.send`.
+2. Crear un cliente OAuth de tipo Web. Para obtener el token con
+   [OAuth Playground](https://developers.google.com/oauthplayground/), registrar
+   `https://developers.google.com/oauthplayground` como URI de redirección y
+   seleccionar **Use your own OAuth credentials** en Playground.
+3. Autorizar el permiso con `lufaflag@gmail.com` y canjear el código por tokens.
+   Guardar el refresh token. Si el cliente externo está en estado **Testing**,
+   [Google emite tokens que vencen en siete días](https://developers.google.com/identity/protocols/oauth2#expiration).
+   Para el envío continuo usar un cliente publicado y completar la verificación
+   de Google si corresponde.
 
 En `lufa-api`, configurar las siguientes variables en el entorno que se va a desplegar.
 
 | Variable | Valor |
 | --- | --- |
-| `MAIL_PROVIDER` | `gmail` |
+| `MAIL_PROVIDER` | `gmail-api` |
 | `MAIL_FROM` | `LUFA Flag <lufaflag@gmail.com>` |
-| `SMTP_HOST` | `smtp.gmail.com` |
-| `SMTP_PORT` | `465` |
-| `SMTP_SECURE` | `true` |
-| `SMTP_USER` | `lufaflag@gmail.com` |
-| `SMTP_PASS` | Contraseña de aplicación de esa cuenta, guardada como secreto en Vercel |
+| `GOOGLE_GMAIL_CLIENT_ID` | ID del cliente OAuth |
+| `GOOGLE_GMAIL_CLIENT_SECRET` | Secreto del cliente OAuth, guardado como secreto en Vercel |
+| `GOOGLE_GMAIL_REFRESH_TOKEN` | Refresh token de la cuenta, guardado como secreto en Vercel |
 
-La cuenta necesita la verificación en dos pasos para generar una
-[contraseña de aplicación](https://support.google.com/accounts/answer/185833).
 Después de guardar las variables, volver a desplegar la API y comprobar el
 remitente y la recepción con una cuenta de prueba. El resumen semanal envía un
 mensaje por usuario activo y comparte la

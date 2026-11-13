@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import sponsorData from "../sponsors.json";
 import type { User, UserRole } from "@lufa/sports/entities/User";
+import { usesGmailApi } from "@lufa/integrations/services/EmailService";
 import { PlayerImportService } from "./PlayerImportService";
 import type {
   AdminAuditLogResponseDto,
@@ -469,9 +470,18 @@ export class AdminService {
         this.envCheck("session-signing", "JWT_SECRET", "Firma de sesiones"),
         this.envCheck("public-url", "INSTITUTIONAL_APP_URL", "URL pública del sitio institucional"),
         this.envCheck("cron-auth", "CRON_SECRET", "Autenticación de procesos programados"),
-        this.envCheck("mail-host", "SMTP_HOST", "Servidor de email"),
-        this.envCheck("mail-user", "SMTP_USER", "Usuario de email"),
-        this.envCheck("mail-password", "SMTP_PASS", "Credencial de email"),
+        ...(usesGmailApi()
+          ? [
+              this.envCheck("mail-from", "MAIL_FROM", "Remitente de Gmail"),
+              this.envCheck("mail-client-id", "GOOGLE_GMAIL_CLIENT_ID", "Cliente OAuth de Gmail"),
+              this.envCheck("mail-client-secret", "GOOGLE_GMAIL_CLIENT_SECRET", "Secreto OAuth de Gmail"),
+              this.envCheck("mail-refresh-token", "GOOGLE_GMAIL_REFRESH_TOKEN", "Autorización de Gmail"),
+            ]
+          : [
+              this.envCheck("mail-host", "SMTP_HOST", "Servidor de email"),
+              this.envCheck("mail-user", "SMTP_USER", "Usuario de email"),
+              this.envCheck("mail-password", "SMTP_PASS", "Credencial de email"),
+            ]),
         this.envCheck("player-import-sheet", "GOOGLE_SHEETS_SPREADSHEET_ID", "Planilla de importación"),
         this.envCheck("player-import-account", "GOOGLE_SERVICE_ACCOUNT_EMAIL", "Cuenta de servicio de importación"),
         this.envCheck("player-import-key", "GOOGLE_PRIVATE_KEY", "Credencial de importación"),
