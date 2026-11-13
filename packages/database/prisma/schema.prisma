@@ -20,10 +20,13 @@ model User {
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
   otpVerifications     OtpVerification[]
+  passkeyCredentials   PasskeyCredential[]
+  webAuthnChallenges   WebAuthnChallenge[]
   requestedCorrections GameEventCorrection[] @relation("CorrectionRequester")
   reviewedCorrections  GameEventCorrection[] @relation("CorrectionReviewer")
   auditLogs            AdminAuditLog[]
   digitalCredentials   DigitalCredential[]
+  lufaMember           Member?
   analyticsReports     AnalyticsReport[]
   sellerMemberships    CommerceSellerMember[]
   commerceOrders       CommerceOrder[]
@@ -146,6 +149,7 @@ model Team {
   homeGames           Game[]           @relation("GameHomeTeam")
   awayGames           Game[]           @relation("GameAwayTeam")
   events              GameEvent[]
+  coachAssignments    CoachAssignment[]
   standings           Standing[]
   teamStats           TeamStatistics[]
   fantasyDefensePicks FantasyDraftPick[] @relation("FantasyDraftPickDefenseTeam")
@@ -189,6 +193,7 @@ model Player {
   fantasyDraftPicks FantasyDraftPick[]
   fantasyFavorites  FantasyPlayerFavorite[]
   digitalCredentials DigitalCredential[]
+  lufaMember         Member?
 
   @@index([firstName, lastName])
   @@index([teamId])
@@ -207,6 +212,7 @@ model Judge {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   digitalCredentials DigitalCredential[]
+  lufaMember         Member?
 
   @@index([firstName, lastName])
   @@map("judges")
@@ -327,6 +333,39 @@ model OtpVerification {
   @@index([expiresAt])
   @@index([userId, purpose, consumedAt])
   @@map("otp_verifications")
+}
+
+model PasskeyCredential {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  credentialId String    @unique @map("credential_id")
+  publicKey    Bytes     @map("public_key")
+  counter      BigInt    @default(0)
+  transports   String[]  @default([])
+  deviceType   String    @map("device_type")
+  backedUp     Boolean   @default(false) @map("backed_up")
+  name         String
+  createdAt    DateTime  @default(now()) @map("created_at")
+  lastUsedAt   DateTime? @map("last_used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("passkey_credentials")
+}
+
+model WebAuthnChallenge {
+  id        String   @id @default(cuid())
+  challenge String   @unique
+  purpose   String
+  userId    String?  @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("webauthn_challenges")
 }
 
 model GameEventCorrection {
@@ -760,6 +799,7 @@ model FantasyPlayerFavorite {
 model DigitalCredential {
   id               String    @id @default(cuid())
   publicId         String    @unique @default(cuid()) @map("public_id")
+  memberId         String    @map("member_id")
   userId           String?   @map("user_id")
   claimEmail       String?   @map("claim_email")
   playerId         String?   @map("player_id")
@@ -769,6 +809,7 @@ model DigitalCredential {
   displayName      String    @map("display_name")
   profilePicture   String?   @map("profile_picture")
   roleLabel        String    @map("role_label")
+  roles            String[]  @default([])
   organizationName String    @map("organization_name")
   nationalityCode  String    @map("nationality_code")
   dateOfBirth      DateTime  @map("date_of_birth")
@@ -780,17 +821,115 @@ model DigitalCredential {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
+  member Member   @relation(fields: [memberId], references: [id], onDelete: Restrict)
   user   User?    @relation(fields: [userId], references: [id], onDelete: Restrict)
   player Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
   judge  Judge?   @relation(fields: [judgeId], references: [id], onDelete: SetNull)
   audits DigitalCredentialAudit[]
 
+  @@index([memberId, status])
   @@index([userId, status])
   @@index([claimEmail, status])
   @@index([playerId])
   @@index([judgeId])
   @@index([status, expiresAt])
   @@map("digital_credentials")
+}
+
+/// Persona con número LUFA estable. Las credenciales (tarjetas) se emiten y renuevan para un miembro.
+model Member {
+  id              String    @id @default(cuid())
+  lufaNumber      String    @unique @default(dbgenerated("('LUFA-'::text || lpad((nextval('lufa_member_number_seq'::regclass))::text, 6, '0'::text))")) @map("lufa_number")
+  userId          String?   @unique @map("user_id")
+  claimEmail      String?   @map("claim_email")
+  playerId        String?   @unique @map("player_id")
+  judgeId         String?   @unique @map("judge_id")
+  displayName     String    @map("display_name")
+  dateOfBirth     DateTime  @map("date_of_birth")
+  nationalityCode String    @map("nationality_code")
+  profilePicture  String?   @map("profile_picture")
+  status          String    @default("active")
+  suspendedReason String?   @map("suspended_reason")
+  suspendedAt     DateTime? @map("suspended_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user             User?                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  player           Player?               @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  judge            Judge?                @relation(fields: [judgeId], references: [id], onDelete: SetNull)
+  credentials      DigitalCredential[]
+  memberships      MembershipPeriod[]
+  certifications   MemberCertification[]
+  coachAssignments CoachAssignment[]
+
+  @@index([claimEmail])
+  @@index([status])
+  @@map("lufa_members")
+}
+
+/// Período de membresía pago (tienda u offline). Habilita el rol de jugador mientras cubre la fecha.
+model MembershipPeriod {
+  id           String    @id @default(cuid())
+  memberId     String    @map("member_id")
+  source       String
+  orderId      String?   @map("order_id")
+  method       String?
+  amountMinor  Int?      @map("amount_minor")
+  reference    String?
+  recordedById String?   @map("recorded_by_id")
+  startsAt     DateTime  @map("starts_at")
+  endsAt       DateTime  @map("ends_at")
+  status       String    @default("active")
+  voidedAt     DateTime? @map("voided_at")
+  voidReason   String?   @map("void_reason")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, memberId])
+  @@index([memberId, status, endsAt])
+  @@map("membership_periods")
+}
+
+/// Certificación virtual de entrenador o juez, con nivel y vencimiento propios.
+model MemberCertification {
+  id           String    @id @default(cuid())
+  memberId     String    @map("member_id")
+  role         String
+  level        String
+  issuer       String    @default("LUFA")
+  courseItemId String?   @map("course_item_id")
+  issuedAt     DateTime  @default(now()) @map("issued_at")
+  expiresAt    DateTime  @map("expires_at")
+  status       String    @default("active")
+  revokedAt    DateTime? @map("revoked_at")
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, role, status])
+  @@map("member_certifications")
+}
+
+/// Vínculo verificable entre un entrenador certificado y un equipo.
+model CoachAssignment {
+  id        String   @id @default(cuid())
+  memberId  String   @map("member_id")
+  teamId    String   @map("team_id")
+  season    Int
+  role      String   @default("head")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, teamId, season])
+  @@index([teamId, active])
+  @@map("coach_assignments")
 }
 
 model CommerceSeller {

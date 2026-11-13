@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { apiErrorResponse } from "@/lib/apiError";
 import { safeTrack } from "@/lib/serverAnalytics";
-import { toRegisteredUserResponseDto } from "@/app/DTOs";
+import { setSessionCookie } from "@/lib/auth";
+import { toUserResponseDto } from "@/app/DTOs";
 import type { UserRegistrationRequestDto } from "@/app/DTOs";
-import { registrationReturnTo, registrationVerificationUrl } from "@/lib/authReturnTo";
 
 const authService = serviceContainer.authService;
 
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { name, email, password, returnTo } = (await request.json()) as UserRegistrationRequestDto & { returnTo?: unknown };
+    const { name, email, password } = (await request.json()) as UserRegistrationRequestDto;
 
     // Validaciones básicas
     if (!name || !email || !password) {
@@ -45,32 +45,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const returnDestination = registrationReturnTo(returnTo);
-
-    // Crear usuario a través del servicio (siempre como 'user'). Los clientes
-    // legacy no envían returnTo y conservan el link de verificación de Flag.
-    const user = await authService.register({
+    // Crear usuario a través del servicio (siempre como 'user'). La cuenta
+    // queda activa sin verificar el email y la sesión se inicia al registrarse.
+    const { user, token } = await authService.register({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
       role: "user",
-      verificationUrlFactory: returnDestination
-        ? (token) => registrationVerificationUrl(token, returnDestination)
-        : undefined,
     });
 
-    await safeTrack("Registration requested", {
+    await safeTrack("Registration completed", {
       userRole: user.role,
     });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
-        message: "Te enviamos un link y un código para verificar tu cuenta",
-        data: toRegisteredUserResponseDto(user),
+        message: "Cuenta creada correctamente",
+        data: toUserResponseDto(user),
       },
       { status: 201 },
     );
+    setSessionCookie(response, token);
+    return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error desconocido";
     const status = message.includes("ya está registrado") ? 400 : 500;

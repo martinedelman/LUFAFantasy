@@ -2,7 +2,12 @@
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { getLufaAppUrl } from "@lufa/api-client/authUrls";
-import type { DigitalCredentialCandidateResponseDto, DigitalCredentialResponseDto, DigitalCredentialRole, IssueOfficialCredentialRequestDto } from "@lufa/contracts";
+import {
+  certificationLevels, membershipPaymentMethods,
+  type AdminDigitalCredentialDetailDto, type CertificationInputDto, type CertificationLevel, type CertifiedRole, type DigitalCredentialCandidateResponseDto,
+  type DigitalCredentialResponseDto, type DigitalCredentialRole, type DigitalCredentialRoleStatus, type DigitalCredentialStatus,
+  type IssueOfficialCredentialRequestDto, type MembershipPaymentMethod,
+} from "@lufa/contracts";
 
 type Candidate = DigitalCredentialCandidateResponseDto;
 type Credential = DigitalCredentialResponseDto;
@@ -24,6 +29,19 @@ const roleOptions: { value: DigitalCredentialRole; label: string; aliases: strin
   { value: "judge", label: "Juez", aliases: ["juez", "judge", "árbitro", "arbitro", "referee"] },
   { value: "coach", label: "Entrenador", aliases: ["entrenador", "entrenadora", "coach"] },
 ];
+
+const statusLabels: Record<DigitalCredentialStatus, string> = {
+  active: "Vigente", inactive: "Sin habilitaciones vigentes", suspended: "Miembro suspendido", revoked: "Revocada", expired: "Vencida", not_found: "No encontrada",
+};
+const roleStatusLabels: Record<DigitalCredentialRoleStatus, string> = {
+  valid: "Habilitado", membership_required: "Membresía pendiente", pending_approval: "Pendiente de aprobación", player_inactive: "Ficha inactiva",
+  team_inactive: "Equipo inactivo", certification_required: "Sin certificación", certification_expired: "Certificación vencida",
+};
+const roleNames: Record<DigitalCredentialRole, string> = { player: "Jugador", judge: "Juez", coach: "Entrenador" };
+const methodLabels: Record<MembershipPaymentMethod, string> = { cash: "Efectivo", transfer: "Transferencia", team: "Cobrado por el equipo", other: "Otro" };
+const levelLabel = (level: string) => level === "internacional" ? "Internacional" : `Nivel ${level}`;
+const shortDate = (value: string) => new Intl.DateTimeFormat("es-UY", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
+const seasonEnd = () => `${new Date().getUTCFullYear() + 1}-02-28`;
 
 class RequestError extends Error {
   constructor(message: string, readonly credentials: Credential[]) {
@@ -50,7 +68,7 @@ function errorMessage(error: unknown) {
 }
 
 function ShareCredential({ credential }: { credential: Credential }) {
-  const url = `${getLufaAppUrl()}/verificar/${encodeURIComponent(credential.publicId)}`;
+  const url = credential.verifyUrl || `${getLufaAppUrl()}/verificar/${encodeURIComponent(credential.publicId)}`;
   const [copyStatus, setCopyStatus] = useState("");
   async function copy() {
     try {
@@ -78,11 +96,11 @@ function CredentialForm({ selection, credential, busy, save }: {
   const candidate = selection === "manual" ? null : selection;
   const player = candidate?.source === "player";
   const canSetPlayer = player || credential?.subjectType === "player";
-  const existingLabels = credential?.roleLabel.toLowerCase().split(/[,;/|·]/).map((label) => label.trim());
-  const initialRoles = roleOptions.filter(({ value, aliases }) =>
-    existingLabels ? aliases.some((alias) => existingLabels.includes(alias)) : value === candidate?.source,
-  ).map(({ value }) => value);
+  const initialRoles = credential ? credential.roles.map(({ role }) => role)
+    : roleOptions.filter(({ value }) => value === candidate?.source).map(({ value }) => value);
   const [roles, setRoles] = useState<DigitalCredentialRole[]>(initialRoles);
+  const [levels, setLevels] = useState<Record<CertifiedRole, CertificationLevel>>({ judge: "1", coach: "1" });
+  const certifiedRoles = roles.filter((role): role is CertifiedRole => role !== "player");
   const canIssue = !player || candidate.hasActiveAccount;
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -95,15 +113,20 @@ function CredentialForm({ selection, credential, busy, save }: {
       });
       return;
     }
-    if (player) {
-      void save("/issue-player", "POST", { playerId: candidate.id, roles });
-      return;
-    }
     const data = new FormData(event.currentTarget);
     const field = (key: string) => String(data.get(key) ?? "").trim();
+    if (player) {
+      void save("/issue-player", "POST", { playerId: candidate.id, roles, nationalityCode: field("nationality").toUpperCase() });
+      return;
+    }
+    const certifications: CertificationInputDto[] = certifiedRoles.map((role) => ({
+      role, level: levels[role], expiresAt: field(`expires-${role}`) || undefined,
+    }));
     const payload: IssueOfficialCredentialRequestDto = {
       ...(candidate?.source === "account" ? { userId: candidate.id } : {}),
       ...(candidate?.source === "judge" ? { judgeId: candidate.id } : {}),
+      ...(candidate?.source === "coach" && roles.includes("coach") ? { teamId: candidate.id.split(":")[0] } : {}),
+      certifications,
       email: field("email"), displayName: field("name"), organizationName: field("organization"),
       nationalityCode: field("nationality").toUpperCase(), dateOfBirth: field("birthDate"), roles,
     };
@@ -133,8 +156,13 @@ function CredentialForm({ selection, credential, busy, save }: {
           </label>
         </div>
       )}
+      {!credential && player && (
+        <label className="block max-w-xs space-y-1 text-sm font-medium">Nacionalidad (código de dos letras)
+          <input name="nationality" className={input} defaultValue="UY" pattern="[A-Za-z]{2}" maxLength={2} required />
+        </label>
+      )}
       <fieldset className="space-y-2" disabled={busy}>
-        <legend className="text-sm font-semibold text-slate-950">Roles certificados</legend>
+        <legend className="text-sm font-semibold text-slate-950">Roles</legend>
         <div className="flex flex-wrap gap-3">
           {roleOptions.filter(({ value }) => value !== "player" || canSetPlayer).map(({ value, label }) => (
             <label key={value} className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm">
@@ -147,11 +175,236 @@ function CredentialForm({ selection, credential, busy, save }: {
           ))}
         </div>
       </fieldset>
+      {!credential && !player && certifiedRoles.length > 0 && (
+        <fieldset className="space-y-2" disabled={busy}>
+          <legend className="text-sm font-semibold text-slate-950">Certificación virtual</legend>
+          <p className="text-sm text-slate-600">Entrenadores y jueces solo quedan habilitados con una certificación vigente.</p>
+          {certifiedRoles.map((role) => (
+            <div key={role} className="grid gap-3 sm:grid-cols-3">
+              <span className="self-center text-sm font-medium">{roleNames[role]}</span>
+              <label className="space-y-1 text-sm">Nivel
+                <select className={input} value={levels[role]} onChange={(event) => setLevels((current) => ({ ...current, [role]: event.target.value as CertificationLevel }))}>
+                  {certificationLevels.map((level) => <option key={level} value={level}>{levelLabel(level)}</option>)}
+                </select>
+              </label>
+              <label className="space-y-1 text-sm">Vence
+                <input type="date" name={`expires-${role}`} className={input} defaultValue={seasonEnd()} min={new Date().toISOString().slice(0, 10)} />
+              </label>
+            </div>
+          ))}
+          {candidate?.source === "coach" && roles.includes("coach") && <p className="text-sm text-slate-600">Se vinculará como entrenador de {candidate.detail}.</p>}
+        </fieldset>
+      )}
       {!credential && !canIssue && <p className="text-sm text-amber-800">Para emitir desde esta ficha, vinculala a una cuenta LUFA activa con el mismo correo.</p>}
       <button type="submit" className={primaryButton} disabled={busy || !roles.length || (!credential && !canIssue)}>
         {busy ? "Guardando…" : credential ? "Guardar roles" : "Emitir ID digital"}
       </button>
     </form>
+  );
+}
+
+function CredentialManager({ credential, busy, setBusy, onChanged }: {
+  credential: Credential;
+  busy: boolean;
+  setBusy: (value: boolean) => void;
+  onChanged: () => void;
+}) {
+  const [detail, setDetail] = useState<AdminDigitalCredentialDetailDto>();
+  const [message, setMessage] = useState<{ text: string; error?: boolean }>();
+  const [teamSearch, setTeamSearch] = useState("");
+  const [teams, setTeams] = useState<{ id: string; name: string; division: string }[]>([]);
+  const path = `/${encodeURIComponent(credential.id)}`;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void request<AdminDigitalCredentialDetailDto>(path, { signal: controller.signal })
+      .then((data) => { if (!controller.signal.aborted) setDetail(data); })
+      .catch((error) => { if (!controller.signal.aborted) setMessage({ text: errorMessage(error), error: true }); });
+    return () => controller.abort();
+  }, [path, credential.status, credential.roleLabel]);
+
+  useEffect(() => {
+    if (teamSearch.trim().length < 2) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void request<{ id: string; name: string; division: string }[]>(`/teams?${new URLSearchParams({ search: teamSearch.trim() })}`, { signal: controller.signal })
+        .then((rows) => { if (!controller.signal.aborted) setTeams(rows); }).catch(() => undefined);
+    }, 250);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [teamSearch]);
+
+  async function act(suffix: string, method: "POST" | "PATCH", body: object, done: string) {
+    setBusy(true);
+    setMessage(undefined);
+    try {
+      await request(`${path}${suffix}`, { method, body: JSON.stringify(body) });
+      setDetail(await request<AdminDigitalCredentialDetailDto>(path));
+      setMessage({ text: done });
+      onChanged();
+    } catch (error) {
+      setMessage({ text: errorMessage(error), error: true });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function recordPayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const amount = Number(data.get("amount") || 0);
+    void act("/memberships", "POST", {
+      method: data.get("method"), months: Number(data.get("months")), reference: String(data.get("reference") || "") || undefined,
+      ...(amount > 0 ? { amountMinor: Math.round(amount * 100) } : {}),
+    }, "Pago de membresía registrado.");
+    event.currentTarget.reset();
+  }
+
+  function grantCertification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    void act("/certifications", "POST", { role: data.get("role"), level: data.get("level"), expiresAt: data.get("expiresAt") || undefined }, "Certificación otorgada.");
+  }
+
+  const current = detail?.credential ?? credential;
+  const certifiedRoles = current.roles.map(({ role }) => role).filter((role): role is CertifiedRole => role !== "player");
+  const hasPlayer = current.roles.some(({ role }) => role === "player");
+  const hasCoach = certifiedRoles.includes("coach");
+  const sectionTitle = "text-sm font-semibold text-slate-950";
+  const row = "flex flex-col gap-1 border-t border-slate-100 py-2 text-sm sm:flex-row sm:items-center sm:justify-between";
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-md border border-slate-200 p-3">
+        <p className="text-sm font-semibold text-slate-950">{current.displayName} · {current.lufaNumber} · Tarjeta {current.memberNumber}</p>
+        <p className={`text-sm ${current.status === "active" ? "text-emerald-800" : "text-amber-800"}`}>
+          {statusLabels[current.status]}{detail?.suspendedReason ? ` — ${detail.suspendedReason}` : ""}
+        </p>
+        <ul className="mt-2 flex flex-wrap gap-2">
+          {current.roles.map((role) => (
+            <li key={role.role} className={`rounded-full border px-3 py-1 text-xs font-semibold ${role.status === "valid" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+              {roleNames[role.role]}{role.level ? ` ${levelLabel(role.level)}` : ""}: {roleStatusLabels[role.status]}{role.validUntil && role.status === "valid" ? ` hasta ${shortDate(role.validUntil)}` : ""}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-3"><ShareCredential credential={current} /></div>
+      </div>
+      {message && <p role={message.error ? "alert" : "status"} className={message.error ? "text-sm text-red-800" : "text-sm text-emerald-800"}>{message.text}</p>}
+
+      {hasPlayer && (
+        <section className="space-y-2" aria-label="Membresía">
+          <h4 className={sectionTitle}>Membresía</h4>
+          <p className="text-sm text-slate-600">El rol de jugador solo es válido mientras haya una membresía paga (tienda u offline).</p>
+          {detail?.memberships.length === 0 && <p className="text-sm text-slate-600">Sin pagos registrados.</p>}
+          <ul>
+            {detail?.memberships.map((period) => (
+              <li key={period.id} className={row}>
+                <span className={period.status === "voided" ? "text-slate-400 line-through" : ""}>
+                  {shortDate(period.startsAt)} → {shortDate(period.endsAt)} · {period.source === "store_order" ? "Tienda" : methodLabels[period.method as MembershipPaymentMethod] ?? period.method}
+                  {period.reference ? ` · ${period.reference}` : ""}{period.amountMinor ? ` · $${(period.amountMinor / 100).toLocaleString("es-UY")}` : ""}
+                </span>
+                {period.status === "voided" ? <span className="text-slate-500">Anulado: {period.voidReason}</span> : period.source === "offline" && (
+                  <button type="button" className={button} disabled={busy} onClick={() => {
+                    const reason = window.prompt("Motivo de la anulación");
+                    if (reason?.trim()) void act(`/memberships/${encodeURIComponent(period.id)}`, "PATCH", { action: "void", reason }, "Membresía anulada.");
+                  }}>Anular</button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <form onSubmit={recordPayment} className="grid gap-3 sm:grid-cols-5">
+            <label className="space-y-1 text-sm">Medio
+              <select name="method" className={input} defaultValue="cash">{membershipPaymentMethods.map((method) => <option key={method} value={method}>{methodLabels[method]}</option>)}</select>
+            </label>
+            <label className="space-y-1 text-sm">Meses<input name="months" type="number" min={1} max={24} defaultValue={12} className={input} required /></label>
+            <label className="space-y-1 text-sm">Monto UYU<input name="amount" type="number" min={0} step="0.01" className={input} /></label>
+            <label className="space-y-1 text-sm">Referencia<input name="reference" maxLength={200} className={input} placeholder="Recibo, transferencia…" /></label>
+            <button type="submit" className={`${primaryButton} self-end`} disabled={busy || current.status === "suspended"}>Registrar pago offline</button>
+          </form>
+        </section>
+      )}
+
+      {certifiedRoles.length > 0 && (
+        <section className="space-y-2" aria-label="Certificaciones">
+          <h4 className={sectionTitle}>Certificaciones</h4>
+          {detail?.certifications.length === 0 && <p className="text-sm text-slate-600">Sin certificaciones: estos roles no están habilitados.</p>}
+          <ul>
+            {detail?.certifications.map((certification) => (
+              <li key={certification.id} className={row}>
+                <span className={certification.status === "revoked" ? "text-slate-400 line-through" : ""}>
+                  {roleNames[certification.role]} · {levelLabel(certification.level)} · {certification.issuer} · vence {shortDate(certification.expiresAt)}
+                </span>
+                {certification.status === "active" && (
+                  <button type="button" className={button} disabled={busy} onClick={() => {
+                    if (window.confirm(`¿Revocar la certificación de ${roleNames[certification.role]}?`)) {
+                      void act(`/certifications/${encodeURIComponent(certification.id)}`, "PATCH", { action: "revoke" }, "Certificación revocada.");
+                    }
+                  }}>Revocar</button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <form onSubmit={grantCertification} className="grid gap-3 sm:grid-cols-4">
+            <label className="space-y-1 text-sm">Rol<select name="role" className={input}>{certifiedRoles.map((role) => <option key={role} value={role}>{roleNames[role]}</option>)}</select></label>
+            <label className="space-y-1 text-sm">Nivel<select name="level" className={input}>{certificationLevels.map((level) => <option key={level} value={level}>{levelLabel(level)}</option>)}</select></label>
+            <label className="space-y-1 text-sm">Vence<input name="expiresAt" type="date" className={input} defaultValue={seasonEnd()} min={new Date().toISOString().slice(0, 10)} /></label>
+            <button type="submit" className={`${primaryButton} self-end`} disabled={busy}>Otorgar certificación</button>
+          </form>
+        </section>
+      )}
+
+      {hasCoach && (
+        <section className="space-y-2" aria-label="Equipos que dirige">
+          <h4 className={sectionTitle}>Equipos que dirige</h4>
+          <ul>
+            {detail?.coachAssignments.map((assignment) => (
+              <li key={assignment.id} className={row}>
+                <span className={assignment.active ? "" : "text-slate-400"}>{assignment.teamName} · Temporada {assignment.season} · {assignment.role === "head" ? "Principal" : "Asistente"}</span>
+                <button type="button" className={button} disabled={busy} onClick={() => void act(`/coach-assignments/${encodeURIComponent(assignment.id)}`, "PATCH", { active: !assignment.active }, assignment.active ? "Entrenador desvinculado." : "Vínculo reactivado.")}>
+                  {assignment.active ? "Desvincular" : "Reactivar"}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <label className="block space-y-1 text-sm">Buscar equipo
+            <input type="search" className={input} value={teamSearch} maxLength={80} onChange={(event) => setTeamSearch(event.target.value)} placeholder="Nombre del equipo" />
+          </label>
+          {teamSearch.trim().length >= 2 && teams.length > 0 && (
+            <ul className="divide-y divide-slate-100 rounded-md border border-slate-200">
+              {teams.map((team) => (
+                <li key={team.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                  <span>{team.name} · {team.division}</span>
+                  <button type="button" className={button} disabled={busy} onClick={() => { void act("/coach-assignments", "POST", { teamId: team.id }, `Vinculado con ${team.name}.`); setTeamSearch(""); setTeams([]); }}>Vincular</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      <section className="space-y-2" aria-label="Miembro">
+        <h4 className={sectionTitle}>Miembro LUFA</h4>
+        <div className="flex flex-wrap items-end gap-3">
+          <form className="flex items-end gap-2" onSubmit={(event) => {
+            event.preventDefault();
+            const value = String(new FormData(event.currentTarget).get("nationality") || "").toUpperCase();
+            void act("", "PATCH", { action: "update-member", nationalityCode: value }, "Nacionalidad actualizada.");
+          }}>
+            <label className="space-y-1 text-sm">Nacionalidad
+              <input key={current.nationalityCode} name="nationality" className={`${input} w-24`} defaultValue={current.nationalityCode} pattern="[A-Za-z]{2}" maxLength={2} required />
+            </label>
+            <button type="submit" className={button} disabled={busy}>Guardar</button>
+          </form>
+          {current.memberStatus === "suspended" ? (
+            <button type="button" className={button} disabled={busy} onClick={() => void act("", "PATCH", { action: "reinstate" }, "Suspensión levantada.")}>Levantar suspensión</button>
+          ) : (
+            <button type="button" className={button} disabled={busy} onClick={() => {
+              const reason = window.prompt("Motivo de la suspensión (bloquea todos los roles, aunque pague)");
+              if (reason?.trim()) void act("", "PATCH", { action: "suspend", reason }, "Miembro suspendido.");
+            }}>Suspender miembro</button>
+          )}
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -280,7 +533,7 @@ export default function DigitalCredentialAdmin() {
               <ul className="space-y-3">
                 {related.map((item) => (
                   <li key={item.id} className="space-y-2 rounded-md border border-slate-200 p-3">
-                    <p className="text-sm font-medium">{item.displayName} · {item.memberNumber} · {item.roleLabel}</p>
+                    <p className="text-sm font-medium">{item.displayName} · {item.lufaNumber} · {item.memberNumber} · {item.roleLabel}</p>
                     <ShareCredential credential={item} />
                     <button type="button" className={button} disabled={busy} onClick={() => {
                       if (window.confirm(`¿Revocar la credencial ${item.memberNumber} de ${item.displayName}?`)) {
@@ -293,10 +546,8 @@ export default function DigitalCredentialAdmin() {
             </>
           ) : (
             <>
-              {credential && <>
-                <p className="text-sm text-slate-600">{credential.displayName} · {credential.memberNumber} · {credential.roleLabel}</p>
-                <ShareCredential key={credential.publicId} credential={credential} />
-              </>}
+              {credential && <CredentialManager key={credential.id} credential={credential} busy={busy} setBusy={setBusy}
+                onChanged={() => setRevision((value) => value + 1)} />}
               <CredentialForm key={credential ? `${credential.id}:${credential.roleLabel}` : `${selected === "manual" ? "manual" : selected.id}:${selected === "manual" ? "" : selected.source}`}
                 selection={selected} credential={credential} busy={busy} save={save} />
             </>
@@ -314,10 +565,10 @@ export default function DigitalCredentialAdmin() {
             <li key={item.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-semibold text-slate-950">{item.displayName}</p>
-                <p className="text-sm text-slate-600">{item.memberNumber} · {item.roleLabel} · {item.status === "active" ? "Vigente" : item.status === "revoked" ? "Revocada" : "Vencida"}</p>
+                <p className="text-sm text-slate-600">{item.lufaNumber} · {item.memberNumber} · {item.roleLabel} · {statusLabels[item.status]}</p>
                 <p className="text-sm text-slate-600">Vencimiento {new Intl.DateTimeFormat("es-UY", { dateStyle: "medium" }).format(new Date(item.expiresAt))}</p>
               </div>
-              {item.status === "active" && <button className={button} type="button" disabled={busy} onClick={() => select({
+              {item.cardStatus === "active" && <button className={button} type="button" disabled={busy} onClick={() => select({
                 id: item.id, source: "credential", fullName: item.displayName, detail: item.memberNumber,
                 email: null, hasActiveAccount: false, credentials: [item],
               })}>Gestionar ID</button>}

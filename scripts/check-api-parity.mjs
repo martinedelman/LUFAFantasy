@@ -2,6 +2,12 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 const expected = new Set(`
+DELETE /api/auth/passkeys/:id
+GET /api/auth/passkeys
+POST /api/auth/passkeys/authentication/options
+POST /api/auth/passkeys/authentication/verify
+POST /api/auth/passkeys/registration/options
+POST /api/auth/passkeys/registration/verify
 DELETE /api/games/:id
 DELETE /api/games/:id/events/:eventId
 DELETE /api/players/:id
@@ -108,7 +114,16 @@ PUT /api/games/:id
 PUT /api/players/:id
 PUT /api/teams/:id
 PUT /api/tournaments/:id
+GET /api/admin/digital-credentials/:id
 PATCH /api/admin/digital-credentials/:id
+POST /api/admin/digital-credentials/:id/memberships
+PATCH /api/admin/digital-credentials/:id/memberships/:periodId
+POST /api/admin/digital-credentials/:id/certifications
+PATCH /api/admin/digital-credentials/:id/certifications/:certificationId
+POST /api/admin/digital-credentials/:id/coach-assignments
+PATCH /api/admin/digital-credentials/:id/coach-assignments/:assignmentId
+GET /api/admin/digital-credentials/teams
+GET /api/digital-credentials/jwks
 POST /api/admin/digital-credentials/issue-player
 POST /api/admin/digital-credentials/issue-official
 GET /api/admin/digital-credentials/candidates

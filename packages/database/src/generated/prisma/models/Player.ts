@@ -342,6 +342,7 @@ export type PlayerWhereInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickListRelationFilter
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
+  lufaMember?: Prisma.XOR<Prisma.MemberNullableScalarRelationFilter, Prisma.MemberWhereInput> | null
 }
 
 export type PlayerOrderByWithRelationInput = {
@@ -374,6 +375,7 @@ export type PlayerOrderByWithRelationInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickOrderByRelationAggregateInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteOrderByRelationAggregateInput
   digitalCredentials?: Prisma.DigitalCredentialOrderByRelationAggregateInput
+  lufaMember?: Prisma.MemberOrderByWithRelationInput
 }
 
 export type PlayerWhereUniqueInput = Prisma.AtLeast<{
@@ -409,6 +411,7 @@ export type PlayerWhereUniqueInput = Prisma.AtLeast<{
   fantasyDraftPicks?: Prisma.FantasyDraftPickListRelationFilter
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteListRelationFilter
   digitalCredentials?: Prisma.DigitalCredentialListRelationFilter
+  lufaMember?: Prisma.XOR<Prisma.MemberNullableScalarRelationFilter, Prisma.MemberWhereInput> | null
 }, "id">
 
 export type PlayerOrderByWithAggregationInput = {
@@ -492,6 +495,7 @@ export type PlayerCreateInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateInput = {
@@ -523,6 +527,7 @@ export type PlayerUncheckedCreateInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUpdateInput = {
@@ -554,6 +559,7 @@ export type PlayerUpdateInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateInput = {
@@ -585,6 +591,7 @@ export type PlayerUncheckedUpdateInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerCreateManyInput = {
@@ -934,6 +941,22 @@ export type PlayerUpdateOneWithoutDigitalCredentialsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.PlayerUpdateToOneWithWhereWithoutDigitalCredentialsInput, Prisma.PlayerUpdateWithoutDigitalCredentialsInput>, Prisma.PlayerUncheckedUpdateWithoutDigitalCredentialsInput>
 }
 
+export type PlayerCreateNestedOneWithoutLufaMemberInput = {
+  create?: Prisma.XOR<Prisma.PlayerCreateWithoutLufaMemberInput, Prisma.PlayerUncheckedCreateWithoutLufaMemberInput>
+  connectOrCreate?: Prisma.PlayerCreateOrConnectWithoutLufaMemberInput
+  connect?: Prisma.PlayerWhereUniqueInput
+}
+
+export type PlayerUpdateOneWithoutLufaMemberNestedInput = {
+  create?: Prisma.XOR<Prisma.PlayerCreateWithoutLufaMemberInput, Prisma.PlayerUncheckedCreateWithoutLufaMemberInput>
+  connectOrCreate?: Prisma.PlayerCreateOrConnectWithoutLufaMemberInput
+  upsert?: Prisma.PlayerUpsertWithoutLufaMemberInput
+  disconnect?: Prisma.PlayerWhereInput | boolean
+  delete?: Prisma.PlayerWhereInput | boolean
+  connect?: Prisma.PlayerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.PlayerUpdateToOneWithWhereWithoutLufaMemberInput, Prisma.PlayerUpdateWithoutLufaMemberInput>, Prisma.PlayerUncheckedUpdateWithoutLufaMemberInput>
+}
+
 export type PlayerCreateWithoutTeamInput = {
   id?: string
   firstName: string
@@ -962,6 +985,7 @@ export type PlayerCreateWithoutTeamInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutTeamInput = {
@@ -992,6 +1016,7 @@ export type PlayerUncheckedCreateWithoutTeamInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutTeamInput = {
@@ -1073,6 +1098,7 @@ export type PlayerCreateWithoutEventsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutEventsInput = {
@@ -1103,6 +1129,7 @@ export type PlayerUncheckedCreateWithoutEventsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutEventsInput = {
@@ -1149,6 +1176,7 @@ export type PlayerUpdateWithoutEventsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutEventsInput = {
@@ -1179,6 +1207,7 @@ export type PlayerUncheckedUpdateWithoutEventsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerCreateWithoutImportMigrationsInput = {
@@ -1209,6 +1238,7 @@ export type PlayerCreateWithoutImportMigrationsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutImportMigrationsInput = {
@@ -1239,6 +1269,7 @@ export type PlayerUncheckedCreateWithoutImportMigrationsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutImportMigrationsInput = {
@@ -1285,6 +1316,7 @@ export type PlayerUpdateWithoutImportMigrationsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutImportMigrationsInput = {
@@ -1315,6 +1347,7 @@ export type PlayerUncheckedUpdateWithoutImportMigrationsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerCreateWithoutPlayerStatsInput = {
@@ -1345,6 +1378,7 @@ export type PlayerCreateWithoutPlayerStatsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutPlayerStatsInput = {
@@ -1375,6 +1409,7 @@ export type PlayerUncheckedCreateWithoutPlayerStatsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutPlayerStatsInput = {
@@ -1421,6 +1456,7 @@ export type PlayerUpdateWithoutPlayerStatsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutPlayerStatsInput = {
@@ -1451,6 +1487,7 @@ export type PlayerUncheckedUpdateWithoutPlayerStatsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerCreateWithoutModalityProfilesInput = {
@@ -1481,6 +1518,7 @@ export type PlayerCreateWithoutModalityProfilesInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutModalityProfilesInput = {
@@ -1511,6 +1549,7 @@ export type PlayerUncheckedCreateWithoutModalityProfilesInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutModalityProfilesInput = {
@@ -1557,6 +1596,7 @@ export type PlayerUpdateWithoutModalityProfilesInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutModalityProfilesInput = {
@@ -1587,6 +1627,7 @@ export type PlayerUncheckedUpdateWithoutModalityProfilesInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerCreateWithoutTeamMembershipsInput = {
@@ -1617,6 +1658,7 @@ export type PlayerCreateWithoutTeamMembershipsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutTeamMembershipsInput = {
@@ -1647,6 +1689,7 @@ export type PlayerUncheckedCreateWithoutTeamMembershipsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutTeamMembershipsInput = {
@@ -1693,6 +1736,7 @@ export type PlayerUpdateWithoutTeamMembershipsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutTeamMembershipsInput = {
@@ -1723,6 +1767,7 @@ export type PlayerUncheckedUpdateWithoutTeamMembershipsInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerCreateWithoutPresentGamesInput = {
@@ -1753,6 +1798,7 @@ export type PlayerCreateWithoutPresentGamesInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutPresentGamesInput = {
@@ -1783,6 +1829,7 @@ export type PlayerUncheckedCreateWithoutPresentGamesInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutPresentGamesInput = {
@@ -1829,6 +1876,7 @@ export type PlayerUpdateWithoutPresentGamesInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutPresentGamesInput = {
@@ -1859,6 +1907,7 @@ export type PlayerUncheckedUpdateWithoutPresentGamesInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerCreateWithoutFantasyDraftPicksInput = {
@@ -1889,6 +1938,7 @@ export type PlayerCreateWithoutFantasyDraftPicksInput = {
   playerStats?: Prisma.PlayerStatisticsCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutFantasyDraftPicksInput = {
@@ -1919,6 +1969,7 @@ export type PlayerUncheckedCreateWithoutFantasyDraftPicksInput = {
   playerStats?: Prisma.PlayerStatisticsUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutFantasyDraftPicksInput = {
@@ -1965,6 +2016,7 @@ export type PlayerUpdateWithoutFantasyDraftPicksInput = {
   playerStats?: Prisma.PlayerStatisticsUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutFantasyDraftPicksInput = {
@@ -1995,6 +2047,7 @@ export type PlayerUncheckedUpdateWithoutFantasyDraftPicksInput = {
   playerStats?: Prisma.PlayerStatisticsUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerCreateWithoutFantasyFavoritesInput = {
@@ -2025,6 +2078,7 @@ export type PlayerCreateWithoutFantasyFavoritesInput = {
   playerStats?: Prisma.PlayerStatisticsCreateNestedManyWithoutPlayerInput
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutFantasyFavoritesInput = {
@@ -2055,6 +2109,7 @@ export type PlayerUncheckedCreateWithoutFantasyFavoritesInput = {
   playerStats?: Prisma.PlayerStatisticsUncheckedCreateNestedManyWithoutPlayerInput
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutFantasyFavoritesInput = {
@@ -2101,6 +2156,7 @@ export type PlayerUpdateWithoutFantasyFavoritesInput = {
   playerStats?: Prisma.PlayerStatisticsUpdateManyWithoutPlayerNestedInput
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutFantasyFavoritesInput = {
@@ -2131,6 +2187,7 @@ export type PlayerUncheckedUpdateWithoutFantasyFavoritesInput = {
   playerStats?: Prisma.PlayerStatisticsUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerCreateWithoutDigitalCredentialsInput = {
@@ -2161,6 +2218,7 @@ export type PlayerCreateWithoutDigitalCredentialsInput = {
   playerStats?: Prisma.PlayerStatisticsCreateNestedManyWithoutPlayerInput
   fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerUncheckedCreateWithoutDigitalCredentialsInput = {
@@ -2191,6 +2249,7 @@ export type PlayerUncheckedCreateWithoutDigitalCredentialsInput = {
   playerStats?: Prisma.PlayerStatisticsUncheckedCreateNestedManyWithoutPlayerInput
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
+  lufaMember?: Prisma.MemberUncheckedCreateNestedOneWithoutPlayerInput
 }
 
 export type PlayerCreateOrConnectWithoutDigitalCredentialsInput = {
@@ -2237,6 +2296,7 @@ export type PlayerUpdateWithoutDigitalCredentialsInput = {
   playerStats?: Prisma.PlayerStatisticsUpdateManyWithoutPlayerNestedInput
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutDigitalCredentialsInput = {
@@ -2267,6 +2327,147 @@ export type PlayerUncheckedUpdateWithoutDigitalCredentialsInput = {
   playerStats?: Prisma.PlayerStatisticsUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
+}
+
+export type PlayerCreateWithoutLufaMemberInput = {
+  id?: string
+  firstName: string
+  lastName: string
+  profilePicture?: string | null
+  email?: string | null
+  phone?: string | null
+  dateOfBirth: Date | string
+  jerseyNumber?: number | null
+  position: string
+  secondaryPosition?: string | null
+  height?: number | null
+  weight?: number | null
+  experience?: string | null
+  emergencyContact?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  registrationDate: Date | string
+  status?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  team: Prisma.TeamCreateNestedOneWithoutPlayersInput
+  teamMemberships?: Prisma.TeamPlayerCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileCreateNestedManyWithoutPlayerInput
+  presentGames?: Prisma.GamePresentPlayerCreateNestedManyWithoutPlayerInput
+  events?: Prisma.GameEventCreateNestedManyWithoutPlayerInput
+  importMigrations?: Prisma.PlayerImportMigrationCreateNestedManyWithoutPlayerInput
+  playerStats?: Prisma.PlayerStatisticsCreateNestedManyWithoutPlayerInput
+  fantasyDraftPicks?: Prisma.FantasyDraftPickCreateNestedManyWithoutPlayerInput
+  fantasyFavorites?: Prisma.FantasyPlayerFavoriteCreateNestedManyWithoutPlayerInput
+  digitalCredentials?: Prisma.DigitalCredentialCreateNestedManyWithoutPlayerInput
+}
+
+export type PlayerUncheckedCreateWithoutLufaMemberInput = {
+  id?: string
+  firstName: string
+  lastName: string
+  profilePicture?: string | null
+  email?: string | null
+  phone?: string | null
+  dateOfBirth: Date | string
+  teamId: string
+  jerseyNumber?: number | null
+  position: string
+  secondaryPosition?: string | null
+  height?: number | null
+  weight?: number | null
+  experience?: string | null
+  emergencyContact?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  registrationDate: Date | string
+  status?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  teamMemberships?: Prisma.TeamPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedCreateNestedManyWithoutPlayerInput
+  presentGames?: Prisma.GamePresentPlayerUncheckedCreateNestedManyWithoutPlayerInput
+  events?: Prisma.GameEventUncheckedCreateNestedManyWithoutPlayerInput
+  importMigrations?: Prisma.PlayerImportMigrationUncheckedCreateNestedManyWithoutPlayerInput
+  playerStats?: Prisma.PlayerStatisticsUncheckedCreateNestedManyWithoutPlayerInput
+  fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedCreateNestedManyWithoutPlayerInput
+  fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedCreateNestedManyWithoutPlayerInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedCreateNestedManyWithoutPlayerInput
+}
+
+export type PlayerCreateOrConnectWithoutLufaMemberInput = {
+  where: Prisma.PlayerWhereUniqueInput
+  create: Prisma.XOR<Prisma.PlayerCreateWithoutLufaMemberInput, Prisma.PlayerUncheckedCreateWithoutLufaMemberInput>
+}
+
+export type PlayerUpsertWithoutLufaMemberInput = {
+  update: Prisma.XOR<Prisma.PlayerUpdateWithoutLufaMemberInput, Prisma.PlayerUncheckedUpdateWithoutLufaMemberInput>
+  create: Prisma.XOR<Prisma.PlayerCreateWithoutLufaMemberInput, Prisma.PlayerUncheckedCreateWithoutLufaMemberInput>
+  where?: Prisma.PlayerWhereInput
+}
+
+export type PlayerUpdateToOneWithWhereWithoutLufaMemberInput = {
+  where?: Prisma.PlayerWhereInput
+  data: Prisma.XOR<Prisma.PlayerUpdateWithoutLufaMemberInput, Prisma.PlayerUncheckedUpdateWithoutLufaMemberInput>
+}
+
+export type PlayerUpdateWithoutLufaMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  jerseyNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  position?: Prisma.StringFieldUpdateOperationsInput | string
+  secondaryPosition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  experience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergencyContact?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  registrationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  team?: Prisma.TeamUpdateOneRequiredWithoutPlayersNestedInput
+  teamMemberships?: Prisma.TeamPlayerUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUpdateManyWithoutPlayerNestedInput
+  presentGames?: Prisma.GamePresentPlayerUpdateManyWithoutPlayerNestedInput
+  events?: Prisma.GameEventUpdateManyWithoutPlayerNestedInput
+  importMigrations?: Prisma.PlayerImportMigrationUpdateManyWithoutPlayerNestedInput
+  playerStats?: Prisma.PlayerStatisticsUpdateManyWithoutPlayerNestedInput
+  fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
+  fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+}
+
+export type PlayerUncheckedUpdateWithoutLufaMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
+  jerseyNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  position?: Prisma.StringFieldUpdateOperationsInput | string
+  secondaryPosition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  experience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergencyContact?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  registrationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  teamMemberships?: Prisma.TeamPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  modalityProfiles?: Prisma.PlayerModalityProfileUncheckedUpdateManyWithoutPlayerNestedInput
+  presentGames?: Prisma.GamePresentPlayerUncheckedUpdateManyWithoutPlayerNestedInput
+  events?: Prisma.GameEventUncheckedUpdateManyWithoutPlayerNestedInput
+  importMigrations?: Prisma.PlayerImportMigrationUncheckedUpdateManyWithoutPlayerNestedInput
+  playerStats?: Prisma.PlayerStatisticsUncheckedUpdateManyWithoutPlayerNestedInput
+  fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
+  fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
+  digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
 }
 
 export type PlayerCreateManyTeamInput = {
@@ -2318,6 +2519,7 @@ export type PlayerUpdateWithoutTeamInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateWithoutTeamInput = {
@@ -2348,6 +2550,7 @@ export type PlayerUncheckedUpdateWithoutTeamInput = {
   fantasyDraftPicks?: Prisma.FantasyDraftPickUncheckedUpdateManyWithoutPlayerNestedInput
   fantasyFavorites?: Prisma.FantasyPlayerFavoriteUncheckedUpdateManyWithoutPlayerNestedInput
   digitalCredentials?: Prisma.DigitalCredentialUncheckedUpdateManyWithoutPlayerNestedInput
+  lufaMember?: Prisma.MemberUncheckedUpdateOneWithoutPlayerNestedInput
 }
 
 export type PlayerUncheckedUpdateManyWithoutTeamInput = {
@@ -2504,6 +2707,7 @@ export type PlayerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   fantasyDraftPicks?: boolean | Prisma.Player$fantasyDraftPicksArgs<ExtArgs>
   fantasyFavorites?: boolean | Prisma.Player$fantasyFavoritesArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.Player$digitalCredentialsArgs<ExtArgs>
+  lufaMember?: boolean | Prisma.Player$lufaMemberArgs<ExtArgs>
   _count?: boolean | Prisma.PlayerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["player"]>
 
@@ -2587,6 +2791,7 @@ export type PlayerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   fantasyDraftPicks?: boolean | Prisma.Player$fantasyDraftPicksArgs<ExtArgs>
   fantasyFavorites?: boolean | Prisma.Player$fantasyFavoritesArgs<ExtArgs>
   digitalCredentials?: boolean | Prisma.Player$digitalCredentialsArgs<ExtArgs>
+  lufaMember?: boolean | Prisma.Player$lufaMemberArgs<ExtArgs>
   _count?: boolean | Prisma.PlayerCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type PlayerIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2609,6 +2814,7 @@ export type $PlayerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     fantasyDraftPicks: Prisma.$FantasyDraftPickPayload<ExtArgs>[]
     fantasyFavorites: Prisma.$FantasyPlayerFavoritePayload<ExtArgs>[]
     digitalCredentials: Prisma.$DigitalCredentialPayload<ExtArgs>[]
+    lufaMember: Prisma.$MemberPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3034,6 +3240,7 @@ export interface Prisma__PlayerClient<T, Null = never, ExtArgs extends runtime.T
   fantasyDraftPicks<T extends Prisma.Player$fantasyDraftPicksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Player$fantasyDraftPicksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FantasyDraftPickPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   fantasyFavorites<T extends Prisma.Player$fantasyFavoritesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Player$fantasyFavoritesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FantasyPlayerFavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   digitalCredentials<T extends Prisma.Player$digitalCredentialsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Player$digitalCredentialsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DigitalCredentialPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lufaMember<T extends Prisma.Player$lufaMemberArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Player$lufaMemberArgs<ExtArgs>>): Prisma.Prisma__MemberClient<runtime.Types.Result.GetResult<Prisma.$MemberPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3696,6 +3903,25 @@ export type Player$digitalCredentialsArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.DigitalCredentialScalarFieldEnum | Prisma.DigitalCredentialScalarFieldEnum[]
+}
+
+/**
+ * Player.lufaMember
+ */
+export type Player$lufaMemberArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Member
+   */
+  select?: Prisma.MemberSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Member
+   */
+  omit?: Prisma.MemberOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MemberInclude<ExtArgs> | null
+  where?: Prisma.MemberWhereInput
 }
 
 /**

@@ -21,20 +21,22 @@
     "./repositories/reporting/*": "./src/repositories/reporting/*.ts",
     "./repositories/fantasy": "./src/repositories/fantasy/index.ts",
     "./repositories/commerce": "./src/repositories/commerce/index.ts",
-    "./repositories/digitalCredentials": "./src/repositories/digitalCredentials.ts"
+    "./repositories/digitalCredentials": "./src/repositories/digitalCredentials.ts",
+    "./repositories/digitalCredentialEvaluation": "./src/repositories/digitalCredentialEvaluation.ts",
+    "./repositories/passkeys": "./src/repositories/passkeys.ts"
   },
   "scripts": {
     "generate": "prisma generate --config=../../prisma.config.ts",
     "build": "tsc --noEmit",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests --exclude src/repositories/prisma/provider.integration.test.ts --exclude src/repositories/prisma/modality.integration.test.ts",
+    "test": "vitest run --passWithNoTests --exclude src/repositories/prisma/provider.integration.test.ts --exclude src/repositories/prisma/modality.integration.test.ts --exclude src/repositories/prisma/passkeys.integration.test.ts",
     "prisma:generate": "prisma generate --config=../../prisma.config.ts",
     "prisma:validate": "prisma validate --config=../../prisma.config.ts",
     "prisma:status": "prisma migrate status --config=../../prisma.config.ts",
     "db:postgres:migrate": "prisma migrate deploy --config=../../prisma.config.ts",
     "db:postgres:test:prepare": "prisma migrate deploy --config=../../prisma.config.ts",
-    "test:postgres": "vitest run src/repositories/prisma/provider.integration.test.ts src/repositories/prisma/modality.integration.test.ts"
+    "test:postgres": "vitest run src/repositories/prisma/provider.integration.test.ts src/repositories/prisma/modality.integration.test.ts src/repositories/prisma/passkeys.integration.test.ts"
   },
   "dependencies": {
     "@lufa/commerce": "*",
@@ -47,5 +49,11 @@
     "mongoose": "8.16.0",
     "pg": "8.22.0"
   },
-  "devDependencies": { "@types/pg": "8.20.0", "prisma": "7.9.1", "typescript": "5.9.2", "vitest": "4.1.10" }
+  "devDependencies": {
+    "@simplewebauthn/server": "13.3.3",
+    "@types/pg": "8.20.0",
+    "prisma": "7.9.1",
+    "typescript": "5.9.2",
+    "vitest": "4.1.10"
+  }
 }
