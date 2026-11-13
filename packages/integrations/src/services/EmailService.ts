@@ -48,7 +48,7 @@ function getMailFrom() {
 
 function getSmtpConfig() {
   const provider = process.env.MAIL_PROVIDER?.toLowerCase();
-  const isSecureByDefault = provider === "zoho" || provider === "zeptomail";
+  const isSecureByDefault = provider === "gmail" || provider === "zoho" || provider === "zeptomail";
 
   return {
     host: process.env.SMTP_HOST,

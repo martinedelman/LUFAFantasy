@@ -72,6 +72,27 @@ Agregar solo las que correspondan a funcionalidades habilitadas:
 Vercel. No agregar ninguna de las dos en configuraciones nuevas:
 usar siempre `NEXT_PUBLIC_APP_URL`.
 
+### Correo saliente con Gmail
+
+En `lufa-api`, configurar las siguientes variables en el entorno que se va a desplegar.
+
+| Variable | Valor |
+| --- | --- |
+| `MAIL_PROVIDER` | `gmail` |
+| `MAIL_FROM` | `LUFA Flag <lufaflag@gmail.com>` |
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `465` |
+| `SMTP_SECURE` | `true` |
+| `SMTP_USER` | `lufaflag@gmail.com` |
+| `SMTP_PASS` | Contraseña de aplicación de esa cuenta, guardada como secreto en Vercel |
+
+La cuenta necesita la verificación en dos pasos para generar una
+[contraseña de aplicación](https://support.google.com/accounts/answer/185833).
+Después de guardar las variables, volver a desplegar la API y comprobar el
+remitente y la recepción con una cuenta de prueba. El resumen semanal envía un
+mensaje por usuario activo y comparte la
+[cuota de envío de Gmail](https://support.google.com/mail/answer/22839) con los demás flujos.
+
 ## Secuencia recomendada de despliegue
 
 1. Crear o confirmar una instancia PostgreSQL exclusiva para Preview y otra para
