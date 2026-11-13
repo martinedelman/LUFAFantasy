@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import InlineFeedback from "../InlineFeedback";
 import LoadingSpinner from "../LoadingSpinner";
 import { useAuth } from "../../hooks/useAuth";
@@ -17,7 +18,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [success, setSuccess] = useState(false);
+  const router = useRouter();
   const { signUp } = useAuth();
 
   const validateForm = (data = formData) => {
@@ -71,7 +72,9 @@ export default function SignUpPage() {
         return;
       }
 
-      setSuccess(true);
+      // La cuenta queda activa y con la sesión iniciada al registrarse.
+      router.push("/");
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de conexión");
     } finally {
@@ -103,30 +106,6 @@ export default function SignUpPage() {
         {fieldErrors[fieldName]}
       </span>
     ) : null;
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <div className="flex justify-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Revisá tu correo</h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Te enviamos un link y un código para activar tu cuenta.
-              <br />
-              Después de verificarla vas a entrar automáticamente.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

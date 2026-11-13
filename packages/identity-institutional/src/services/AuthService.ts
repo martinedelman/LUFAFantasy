@@ -2,7 +2,7 @@ import { User } from "@lufa/sports/entities/User";
 import type { UserRole } from "@lufa/sports/entities/User";
 import type { IUserRepository } from "../ports";
 import { verifySessionToken, createSessionToken } from "../sessionToken";
-import { OtpService, type RegistrationVerificationUrlFactory } from "./OtpService";
+import { OtpService } from "./OtpService";
 
 export interface AuthEmailPort {
   sendTemplate(template:
@@ -59,31 +59,26 @@ export class AuthService {
   }
 
   /**
-   * Registra un nuevo usuario
+   * Registra un nuevo usuario. La cuenta queda activa al instante (sin
+   * verificación por email) y se devuelve la sesión ya iniciada.
    */
   async register(data: {
     email: string;
     password: string;
     name: string;
     role?: UserRole;
-    verificationUrlFactory?: RegistrationVerificationUrlFactory;
-  }): Promise<User> {
+  }): Promise<{ user: User; token: string }> {
     // Verificar que el email no esté en uso
     const existingUser = await this.userRepo.findByEmail(data.email);
     if (existingUser) {
-      if (!existingUser.isActive) {
-        await this.sendRegistrationVerification(existingUser, data.verificationUrlFactory);
-        return existingUser;
-      }
-
       throw new Error("El email ya está registrado");
     }
 
     // Hashear contraseña
     const passwordHash = await User.hashPassword(data.password);
 
-    // Crear usuario
-    const user = new User(data.email, passwordHash, data.name, data.role || "user", false);
+    // Crear usuario activo
+    const user = new User(data.email, passwordHash, data.name, data.role || "user", true);
 
     // Validar
     const validation = user.validate();
@@ -92,24 +87,14 @@ export class AuthService {
     }
 
     const createdUser = await this.userRepo.create(user);
-    await this.sendRegistrationVerification(createdUser, data.verificationUrlFactory);
-
-    return createdUser;
-  }
-
-  private async sendRegistrationVerification(user: User, verificationUrlFactory?: RegistrationVerificationUrlFactory): Promise<void> {
-    const otp = await this.otpService.createRegistrationOtp(user, verificationUrlFactory);
-
-    await this.emailService.sendTemplate({
-      name: "registration-verification",
-      to: user.email,
-      data: {
-        name: user.name,
-        verificationUrl: otp.verificationUrl,
-        code: otp.code,
-        expiresInMinutes: 15,
-      },
+    const token = createSessionToken({
+      userId: createdUser.id!,
+      name: createdUser.name,
+      email: createdUser.email,
+      role: createdUser.role,
     });
+
+    return { user: createdUser, token };
   }
 
   async verifyRegistration(data: { token: string; code: string }): Promise<{ user: User; token: string }> {

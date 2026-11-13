@@ -102,7 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
+        // El registro deja la sesión iniciada: no hace falta verificar el email.
+        setUser(data.data);
         return { success: true };
       } else {
         return { success: false, error: data.message };
