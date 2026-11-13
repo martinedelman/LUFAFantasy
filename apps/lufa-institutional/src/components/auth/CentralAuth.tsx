@@ -244,6 +244,7 @@ function Signup({ returnTo }: { returnTo: string }) {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [pending, setPending] = useState(false);
+  const [created, setCreated] = useState(false);
   const requestMessage = useRequestFeedback(pending, "Preparando tu cuenta");
   const errors = {
     name: name.trim().length >= 2 ? "" : "Ingresá al menos dos caracteres.",
@@ -270,7 +271,12 @@ function Signup({ returnTo }: { returnTo: string }) {
         setFeedback({ tone: "error", message: payload.message || "No pudimos crear la cuenta. Probá nuevamente." });
         return;
       }
-      setFeedback({ tone: "success", message: "Revisá tu email: te enviamos un link y un código para verificar tu cuenta." });
+      // El registro deja la sesión iniciada: si el navegador soporta passkeys, ofrecemos agregar una.
+      if (passkeysSupported()) {
+        setCreated(true);
+        return;
+      }
+      window.location.assign(returnTo);
     } catch {
       setFeedback({ tone: "error", message: requestFailureMessage() });
     } finally {
@@ -278,8 +284,10 @@ function Signup({ returnTo }: { returnTo: string }) {
     }
   }
 
+  if (created) return <PasskeyOffer returnTo={returnTo} eyebrow="Cuenta creada" />;
+
   return (
-    <AuthFrame eyebrow="Nueva cuenta" title="Sumate a LUFA." description="Creá tu cuenta y verificá tu email para continuar.">
+    <AuthFrame eyebrow="Nueva cuenta" title="Sumate a LUFA." description="Creá tu cuenta para continuar.">
       <form className={styles.form} onSubmit={submit} noValidate>
         <Status feedback={feedback} requestMessage={requestMessage} />
         <Field label="Nombre" error={touched.name ? errors.name : ""} hint={`${name.length}/80 caracteres`}>
@@ -301,7 +309,7 @@ function Signup({ returnTo }: { returnTo: string }) {
   );
 }
 
-function PasskeyOffer({ returnTo }: { returnTo: string }) {
+function PasskeyOffer({ returnTo, eyebrow = "Cuenta verificada" }: { returnTo: string; eyebrow?: string }) {
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [pending, setPending] = useState(false);
   const [added, setAdded] = useState(false);
@@ -326,7 +334,7 @@ function PasskeyOffer({ returnTo }: { returnTo: string }) {
   }
 
   return (
-    <AuthFrame eyebrow="Cuenta verificada" title="¡Ya estás adentro!" description="¿Querés entrar más rápido la próxima vez? Usá la huella, la cara o el PIN de este dispositivo en lugar de la contraseña.">
+    <AuthFrame eyebrow={eyebrow} title="¡Ya estás adentro!" description="¿Querés entrar más rápido la próxima vez? Usá la huella, la cara o el PIN de este dispositivo en lugar de la contraseña.">
       <div className={styles.form}>
         <Status feedback={feedback} requestMessage={null} />
         <button className={styles.primaryAction} disabled={pending || added} type="button" onClick={addPasskey}>
