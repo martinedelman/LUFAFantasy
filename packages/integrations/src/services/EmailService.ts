@@ -1,4 +1,5 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { GmailApiTransport } from "./GmailApiTransport";
 
 export interface EmailAttachment {
   filename: string;
@@ -48,7 +49,7 @@ function getMailFrom() {
 
 function getSmtpConfig() {
   const provider = process.env.MAIL_PROVIDER?.toLowerCase();
-  const isSecureByDefault = provider === "zoho" || provider === "zeptomail";
+  const isSecureByDefault = provider === "gmail" || provider === "zoho" || provider === "zeptomail";
 
   return {
     host: process.env.SMTP_HOST,
@@ -57,6 +58,10 @@ function getSmtpConfig() {
     port: Number(process.env.SMTP_PORT || (isSecureByDefault ? 465 : 587)),
     secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : isSecureByDefault,
   };
+}
+
+export function usesGmailApi() {
+  return process.env.MAIL_PROVIDER?.toLowerCase() === "gmail-api";
 }
 
 function escapeHtml(value: string) {
@@ -130,6 +135,7 @@ function renderPasswordReset(data: PasswordResetTemplateData): EmailMessage {
 
 export class EmailService {
   private transporter: Transporter | null = null;
+  private gmailTransport: GmailApiTransport | null = null;
 
   private getTransporter() {
     if (this.transporter) {
@@ -163,10 +169,17 @@ export class EmailService {
   }
 
   async send(message: EmailMessage) {
-    return this.getTransporter().sendMail({
+    const mail = {
       from: getMailFrom(),
       ...message,
-    });
+    };
+
+    if (usesGmailApi()) {
+      this.gmailTransport ??= new GmailApiTransport();
+      return this.gmailTransport.send(mail);
+    }
+
+    return this.getTransporter().sendMail(mail);
   }
 
   async sendTemplate(template: EmailTemplate) {
