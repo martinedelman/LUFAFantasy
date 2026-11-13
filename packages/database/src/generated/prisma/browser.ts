@@ -73,6 +73,16 @@ export type Standing = Prisma.StandingModel
  */
 export type OtpVerification = Prisma.OtpVerificationModel
 /**
+ * Model PasskeyCredential
+ * 
+ */
+export type PasskeyCredential = Prisma.PasskeyCredentialModel
+/**
+ * Model WebAuthnChallenge
+ * 
+ */
+export type WebAuthnChallenge = Prisma.WebAuthnChallengeModel
+/**
  * Model GameEventCorrection
  * 
  */

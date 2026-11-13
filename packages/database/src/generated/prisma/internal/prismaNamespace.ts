@@ -408,6 +408,8 @@ export const ModelName = {
   GameEvent: 'GameEvent',
   Standing: 'Standing',
   OtpVerification: 'OtpVerification',
+  PasskeyCredential: 'PasskeyCredential',
+  WebAuthnChallenge: 'WebAuthnChallenge',
   GameEventCorrection: 'GameEventCorrection',
   PlayerImportMigration: 'PlayerImportMigration',
   SiteSettings: 'SiteSettings',
@@ -462,7 +464,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "analyticsReport" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "playerModalityProfile" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite" | "digitalCredential" | "member" | "membershipPeriod" | "memberCertification" | "coachAssignment" | "commerceSeller" | "commerceSellerMember" | "commerceItem" | "commerceOrder" | "commerceOrderItem" | "commerceItemVariant" | "commerceWebhookEvent" | "commerceTournamentRegistration" | "commerceRefundRequest" | "digitalCredentialAudit"
+    modelProps: "user" | "analyticsReport" | "tournament" | "division" | "team" | "player" | "judge" | "game" | "gameEvent" | "standing" | "otpVerification" | "passkeyCredential" | "webAuthnChallenge" | "gameEventCorrection" | "playerImportMigration" | "siteSettings" | "flagInterest" | "adminAuditLog" | "playerStatistics" | "teamStatistics" | "tournamentDivision" | "tournamentTeam" | "divisionTeam" | "playerModalityProfile" | "teamPlayer" | "gamePresentPlayer" | "fantasyUser" | "fantasyPasswordReset" | "fantasyFeatureAssignment" | "fantasyAuditLog" | "fantasyOnboarding" | "fantasyLeague" | "fantasyLeagueMember" | "fantasyTeam" | "fantasyDraft" | "fantasyDraftPick" | "fantasyPlayerFavorite" | "digitalCredential" | "member" | "membershipPeriod" | "memberCertification" | "coachAssignment" | "commerceSeller" | "commerceSellerMember" | "commerceItem" | "commerceOrder" | "commerceOrderItem" | "commerceItemVariant" | "commerceWebhookEvent" | "commerceTournamentRegistration" | "commerceRefundRequest" | "digitalCredentialAudit"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1277,6 +1279,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.OtpVerificationCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.OtpVerificationCountAggregateOutputType> | number
+        }
+      }
+    }
+    PasskeyCredential: {
+      payload: Prisma.$PasskeyCredentialPayload<ExtArgs>
+      fields: Prisma.PasskeyCredentialFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PasskeyCredentialFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PasskeyCredentialFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload>
+        }
+        findFirst: {
+          args: Prisma.PasskeyCredentialFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PasskeyCredentialFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload>
+        }
+        findMany: {
+          args: Prisma.PasskeyCredentialFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload>[]
+        }
+        create: {
+          args: Prisma.PasskeyCredentialCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload>
+        }
+        createMany: {
+          args: Prisma.PasskeyCredentialCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PasskeyCredentialCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload>[]
+        }
+        delete: {
+          args: Prisma.PasskeyCredentialDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload>
+        }
+        update: {
+          args: Prisma.PasskeyCredentialUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload>
+        }
+        deleteMany: {
+          args: Prisma.PasskeyCredentialDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PasskeyCredentialUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PasskeyCredentialUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload>[]
+        }
+        upsert: {
+          args: Prisma.PasskeyCredentialUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyCredentialPayload>
+        }
+        aggregate: {
+          args: Prisma.PasskeyCredentialAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePasskeyCredential>
+        }
+        groupBy: {
+          args: Prisma.PasskeyCredentialGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PasskeyCredentialGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PasskeyCredentialCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PasskeyCredentialCountAggregateOutputType> | number
+        }
+      }
+    }
+    WebAuthnChallenge: {
+      payload: Prisma.$WebAuthnChallengePayload<ExtArgs>
+      fields: Prisma.WebAuthnChallengeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WebAuthnChallengeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WebAuthnChallengeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload>
+        }
+        findFirst: {
+          args: Prisma.WebAuthnChallengeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WebAuthnChallengeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload>
+        }
+        findMany: {
+          args: Prisma.WebAuthnChallengeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload>[]
+        }
+        create: {
+          args: Prisma.WebAuthnChallengeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload>
+        }
+        createMany: {
+          args: Prisma.WebAuthnChallengeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WebAuthnChallengeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload>[]
+        }
+        delete: {
+          args: Prisma.WebAuthnChallengeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload>
+        }
+        update: {
+          args: Prisma.WebAuthnChallengeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload>
+        }
+        deleteMany: {
+          args: Prisma.WebAuthnChallengeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WebAuthnChallengeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WebAuthnChallengeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload>[]
+        }
+        upsert: {
+          args: Prisma.WebAuthnChallengeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAuthnChallengePayload>
+        }
+        aggregate: {
+          args: Prisma.WebAuthnChallengeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWebAuthnChallenge>
+        }
+        groupBy: {
+          args: Prisma.WebAuthnChallengeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WebAuthnChallengeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WebAuthnChallengeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WebAuthnChallengeCountAggregateOutputType> | number
         }
       }
     }
@@ -4417,6 +4567,35 @@ export const OtpVerificationScalarFieldEnum = {
 export type OtpVerificationScalarFieldEnum = (typeof OtpVerificationScalarFieldEnum)[keyof typeof OtpVerificationScalarFieldEnum]
 
 
+export const PasskeyCredentialScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  credentialId: 'credentialId',
+  publicKey: 'publicKey',
+  counter: 'counter',
+  transports: 'transports',
+  deviceType: 'deviceType',
+  backedUp: 'backedUp',
+  name: 'name',
+  createdAt: 'createdAt',
+  lastUsedAt: 'lastUsedAt'
+} as const
+
+export type PasskeyCredentialScalarFieldEnum = (typeof PasskeyCredentialScalarFieldEnum)[keyof typeof PasskeyCredentialScalarFieldEnum]
+
+
+export const WebAuthnChallengeScalarFieldEnum = {
+  id: 'id',
+  challenge: 'challenge',
+  purpose: 'purpose',
+  userId: 'userId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type WebAuthnChallengeScalarFieldEnum = (typeof WebAuthnChallengeScalarFieldEnum)[keyof typeof WebAuthnChallengeScalarFieldEnum]
+
+
 export const GameEventCorrectionScalarFieldEnum = {
   id: 'id',
   gameId: 'gameId',
@@ -5155,6 +5334,34 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
+
+/**
+ * Reference to a field of type 'Bytes'
+ */
+export type BytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes'>
+    
+
+
+/**
+ * Reference to a field of type 'Bytes[]'
+ */
+export type ListBytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt'
+ */
+export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt[]'
+ */
+export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -5317,6 +5524,8 @@ export type GlobalOmitConfig = {
   gameEvent?: Prisma.GameEventOmit
   standing?: Prisma.StandingOmit
   otpVerification?: Prisma.OtpVerificationOmit
+  passkeyCredential?: Prisma.PasskeyCredentialOmit
+  webAuthnChallenge?: Prisma.WebAuthnChallengeOmit
   gameEventCorrection?: Prisma.GameEventCorrectionOmit
   playerImportMigration?: Prisma.PlayerImportMigrationOmit
   siteSettings?: Prisma.SiteSettingsOmit

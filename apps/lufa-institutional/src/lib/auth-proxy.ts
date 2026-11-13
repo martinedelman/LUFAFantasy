@@ -12,7 +12,7 @@ export async function proxyInstitutionalAuth(
   options: ProxyOptions = {},
 ) {
   let body: unknown;
-  if (request.method !== "GET") {
+  if (request.method !== "GET" && request.method !== "DELETE") {
     try {
       body = await request.json();
     } catch {

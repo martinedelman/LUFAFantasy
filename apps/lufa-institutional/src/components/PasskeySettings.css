@@ -1,0 +1,148 @@
+.passkeys {
+  width: min(760px, 100%);
+  margin: 28px auto 0;
+  padding: 24px;
+  border: 1px solid #c9dce8;
+  border-radius: 16px;
+  background: #fff;
+  color: #123451;
+}
+
+.passkeys-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.passkeys-header h2 {
+  margin: 0;
+  color: #042f4e;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+}
+
+.passkeys-header p {
+  max-width: 440px;
+  margin: 6px 0 0;
+  color: #547188;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.passkeys button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.passkeys button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.passkeys button:focus-visible {
+  outline: 3px solid #0876aa;
+  outline-offset: 3px;
+}
+
+.passkeys-add {
+  border: 0;
+  background: #0876aa;
+  color: #fff;
+}
+
+.passkeys-add:hover:not(:disabled) {
+  background: #075c8b;
+}
+
+.passkeys-list {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.passkeys-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #dbe8f0;
+  border-radius: 12px;
+  background: #f7fbfd;
+}
+
+.passkeys-list li > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.passkeys-list strong {
+  overflow-wrap: anywhere;
+}
+
+.passkeys-list span {
+  color: #5d7890;
+  font-size: 0.8rem;
+}
+
+.passkeys-list button {
+  flex-shrink: 0;
+  border: 1px solid #e3b7b8;
+  background: #fff;
+  color: #9f2528;
+}
+
+.passkeys-list button:hover:not(:disabled) {
+  background: #fff1f1;
+}
+
+.passkeys-empty {
+  margin: 18px 0 0;
+  color: #5d7890;
+  font-size: 0.88rem;
+}
+
+.passkeys-feedback {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 620;
+}
+
+.passkeys-feedback.error {
+  border: 1px solid #f0c3c4;
+  background: #fff1f1;
+  color: #9f2528;
+}
+
+.passkeys-feedback.success {
+  border: 1px solid #bde2d0;
+  background: #effaf5;
+  color: #176443;
+}
+
+@media (max-width: 520px) {
+  .passkeys {
+    padding: 18px;
+  }
+
+  .passkeys-add {
+    width: 100%;
+  }
+}
+
+@media print {
+  .passkeys {
+    display: none;
+  }
+}

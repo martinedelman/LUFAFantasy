@@ -62,6 +62,8 @@ export const ModelName = {
   GameEvent: 'GameEvent',
   Standing: 'Standing',
   OtpVerification: 'OtpVerification',
+  PasskeyCredential: 'PasskeyCredential',
+  WebAuthnChallenge: 'WebAuthnChallenge',
   GameEventCorrection: 'GameEventCorrection',
   PlayerImportMigration: 'PlayerImportMigration',
   SiteSettings: 'SiteSettings',
@@ -329,6 +331,35 @@ export const OtpVerificationScalarFieldEnum = {
 } as const
 
 export type OtpVerificationScalarFieldEnum = (typeof OtpVerificationScalarFieldEnum)[keyof typeof OtpVerificationScalarFieldEnum]
+
+
+export const PasskeyCredentialScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  credentialId: 'credentialId',
+  publicKey: 'publicKey',
+  counter: 'counter',
+  transports: 'transports',
+  deviceType: 'deviceType',
+  backedUp: 'backedUp',
+  name: 'name',
+  createdAt: 'createdAt',
+  lastUsedAt: 'lastUsedAt'
+} as const
+
+export type PasskeyCredentialScalarFieldEnum = (typeof PasskeyCredentialScalarFieldEnum)[keyof typeof PasskeyCredentialScalarFieldEnum]
+
+
+export const WebAuthnChallengeScalarFieldEnum = {
+  id: 'id',
+  challenge: 'challenge',
+  purpose: 'purpose',
+  userId: 'userId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type WebAuthnChallengeScalarFieldEnum = (typeof WebAuthnChallengeScalarFieldEnum)[keyof typeof WebAuthnChallengeScalarFieldEnum]
 
 
 export const GameEventCorrectionScalarFieldEnum = {
