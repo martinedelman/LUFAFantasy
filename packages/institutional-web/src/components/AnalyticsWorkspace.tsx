@@ -1,151 +1,420 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Responsive, useContainerWidth, type Layout, type ResponsiveLayouts } from "react-grid-layout";
-import type { AnalyticsCatalogDto, AnalyticsDimension, AnalyticsFiltersDto, AnalyticsQueryResponseDto, AnalyticsReportDto, AnalyticsResultRowDto, AnalyticsWidgetDto } from "@lufa/contracts";
-import AnalyticsChart from "./AnalyticsChart";
+import type { AnalyticsCatalogDto, AnalyticsFiltersDto, AnalyticsQueryResponseDto, AnalyticsReportDto, AnalyticsResultRowDto, AnalyticsWidgetDto } from "@lufa/contracts";
+import Modal from "./Modal";
 import Skeleton from "./Skeleton";
 import { useAuth } from "../hooks/useAuth";
+import { useSiteConfig } from "../site/SiteConfig";
+import AnalyticsFilters from "./analytics/AnalyticsFilters";
+import AnalyticsWidgetCard from "./analytics/AnalyticsWidgetCard";
+import AnalyticsWidgetEditor from "./analytics/AnalyticsWidgetEditor";
+import {
+  addCrossFilter, buildLayouts, canCrossFilter, cleanFilters, countFilters, crossFilterFor, crossFiltersToDto,
+  GRID_BREAKPOINTS, GRID_COLS, GRID_ROW_HEIGHT, MAX_WIDGETS, newWidget, sameReport, type CrossFilter,
+} from "./analytics/analyticsModel";
 
-const initialWidget = (): AnalyticsWidgetDto => ({ id: crypto.randomUUID(), title: "Nuevo gráfico", source: "events", metric: "event_count", dimension: "event_type", visualization: "bar", limit: 10, order: "desc" });
 const emptyCatalog: AnalyticsCatalogDto = { metrics: [], dimensions: [], eventTypes: [] };
+const STORAGE_KEY = "lufa.analytics.report";
+
+class ApiError extends Error {
+  constructor(message: string, readonly status: number) { super(message); }
+}
+
 const api = async <T,>(url: string, init?: RequestInit): Promise<T> => {
-  const response = await fetch(url, { cache: "no-store", headers: { "Content-Type": "application/json", ...init?.headers }, ...init });
-  const payload = await response.json() as { success: boolean; data?: T; message?: string };
-  if (!response.ok || !payload.success) throw new Error(payload.message || "No se pudo completar la operación");
+  const response = await fetch(url, { cache: "no-store", ...init, headers: { "Content-Type": "application/json", ...init?.headers } });
+  const payload = await response.json().catch(() => ({})) as { success?: boolean; data?: T; message?: string };
+  if (!response.ok || !payload.success) throw new ApiError(payload.message || "No se pudo completar la operación", response.status);
   return payload.data as T;
 };
+const errorMessage = (reason: unknown, fallback: string) => reason instanceof ApiError && reason.status === 409
+  ? "Este tablero cambió en otra pestaña o por otra persona. Recargá la página para ver la última versión."
+  : reason instanceof Error ? reason.message : fallback;
 
-function toFilters(dimension: AnalyticsDimension | undefined, row: AnalyticsResultRowDto): AnalyticsFiltersDto {
-  const key = row.key.split("::")[0];
-  if (dimension === "team") return { teamIds: [key] };
-  if (dimension === "player") return { playerIds: [key] };
-  if (dimension === "event_type") return { eventTypes: [key] };
-  if (dimension === "phase") return { phases: [key] };
-  if (dimension === "quarter") return { quarters: [Number(key)] };
-  if (dimension === "participation_role") return { participationRoles: [key as "primary" | "quarterback" | "unassigned"] };
-  return {};
+const readStoredReport = () => { try { return window.localStorage.getItem(STORAGE_KEY); } catch { return null; } };
+const storeReport = (id: string) => { try { window.localStorage.setItem(STORAGE_KEY, id); } catch { /* private mode */ } };
+
+const withTitles = (widgets: AnalyticsWidgetDto[]) => widgets.map((widget) => ({ ...widget, title: widget.title.trim() || "Sin título" }));
+
+function ActionsMenu({ items }: { items: Array<{ label: string; onClick: () => void; danger?: boolean; hidden?: boolean }> }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent | KeyboardEvent) => {
+      if (event instanceof KeyboardEvent ? event.key === "Escape" : !ref.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", close); };
+  }, [open]);
+  const visible = items.filter((item) => !item.hidden);
+  return <div ref={ref} className="relative">
+    <button type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((value) => !value)} className="grid h-10 w-10 place-items-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-brand-600 hover:text-brand-800" aria-label="Más acciones del tablero">
+      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M4 10a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm7.5 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm6 1.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /></svg>
+    </button>
+    {open ? <div role="menu" className="absolute right-0 z-40 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
+      {visible.map((item) => <button key={item.label} role="menuitem" type="button" onClick={() => { setOpen(false); item.onClick(); }} className={`block w-full px-4 py-2.5 text-left text-sm font-medium hover:bg-slate-50 ${item.danger ? "text-red-700" : "text-slate-800"}`}>{item.label}</button>)}
+    </div> : null}
+  </div>;
 }
 
-function MultiFilter({ label, options, value, onChange }: { label: string; options: Array<{ value: string | number; label: string }>; value: Array<string | number>; onChange: (values: string[]) => void }) {
-  const selectedValues = new Set(value.map(String));
-  const selectedCount = selectedValues.size;
-  const toggle = (optionValue: string) => {
-    const next = new Set(selectedValues);
-    if (next.has(optionValue)) next.delete(optionValue);
-    else next.add(optionValue);
-    onChange([...next]);
-  };
-
-  return <details className="group relative min-w-40 text-sm">
-    <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-md border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-700 outline-none transition hover:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-500 [&::-webkit-details-marker]:hidden">
-      <span>{label}</span>
-      <span className="max-w-28 truncate text-xs font-medium text-slate-500">{selectedCount ? `${selectedCount} seleccionado${selectedCount === 1 ? "" : "s"}` : "Todos"}</span>
-      <span className="text-slate-400 transition group-open:rotate-180" aria-hidden="true">⌄</span>
-    </summary>
-    <div className="absolute z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
-      <div className="max-h-64 overflow-y-auto overscroll-contain p-2" role="group" aria-label={label}>
-        {options.length ? options.map((item) => {
-          const optionValue = String(item.value);
-          const checked = selectedValues.has(optionValue);
-          return <label key={optionValue} className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
-            <input type="checkbox" className="peer sr-only" checked={checked} onChange={() => toggle(optionValue)} />
-            <span className="grid h-5 w-5 shrink-0 place-items-center rounded border-2 border-slate-400 text-xs font-black text-transparent transition peer-checked:border-sky-500 peer-checked:bg-sky-500 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500" aria-hidden="true">✓</span>
-            <span className={checked ? "font-semibold text-sky-700" : ""}>{item.label}</span>
-          </label>;
-        }) : <p className="px-2 py-3 text-sm text-slate-500">No hay opciones disponibles.</p>}
-      </div>
-    </div>
-  </details>;
-}
-
-function AnalyticsWorkspaceSkeleton() {
-  return <section className="space-y-5" aria-busy="true" aria-live="polite">
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <div className="flex items-center gap-3 text-sm font-medium text-slate-600"><span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-brand-700" aria-hidden="true" />Cargando tableros y filtros…</div>
-      <div className="mt-4 grid gap-3 md:grid-cols-3"><Skeleton className="h-10 rounded-md" /><Skeleton className="h-10 rounded-md" /><Skeleton className="h-10 rounded-md" /></div>
-    </div>
-    <div className="grid gap-4 lg:grid-cols-12">
-      {["a", "b", "c", "d"].map((key, index) => <div key={key} className={index < 2 ? "rounded-xl border border-slate-200 bg-white p-4 lg:col-span-6" : "rounded-xl border border-slate-200 bg-white p-4 lg:col-span-3"}>
-        <Skeleton className="h-4 w-32 rounded" /><Skeleton className="mt-3 h-3 w-20 rounded" /><Skeleton className="mt-8 h-40 rounded-lg" />
-      </div>)}
-    </div>
-  </section>;
-}
-
-function Widget({ widget, rows, editing, catalog, onRemove, onUpdate, onCrossFilter, onExport }: { widget: AnalyticsWidgetDto; rows: AnalyticsResultRowDto[]; editing: boolean; catalog: AnalyticsCatalogDto; onRemove: () => void; onUpdate: (patch: Partial<AnalyticsWidgetDto>) => void; onCrossFilter: (row: AnalyticsResultRowDto) => void; onExport: () => void }) {
-  const cardValue = rows.reduce((sum, row) => sum + row.value, 0);
-  return <section className="group flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm" aria-label={widget.title}>
-    <header className="shrink-0 flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
-      <div className="flex items-start gap-2">{editing ? <span className="widget-drag-handle mt-0.5 cursor-grab select-none text-slate-400 active:cursor-grabbing" aria-label="Arrastrar widget">⠿</span> : null}<div><h2 className="text-sm font-bold text-slate-900">{widget.title}</h2><p className="text-xs text-slate-500">{widget.metric.replaceAll("_", " ")}</p></div></div>
-      <div className="flex gap-2"><button type="button" className="text-xs font-semibold text-brand-700 hover:underline" onClick={onExport}>CSV</button>{editing ? <button type="button" className="text-xs font-semibold text-red-700 hover:underline" onClick={onRemove}>Quitar</button> : null}</div>
-    </header>
-    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
-      {editing ? <div className="mb-3 grid grid-cols-2 gap-2 rounded-lg bg-slate-50 p-2 text-xs sm:grid-cols-4 xl:grid-cols-7">
-        <label>Título<input className="mt-1 w-full rounded border border-slate-300 p-1" value={widget.title} onChange={(event) => onUpdate({ title: event.target.value })} /></label>
-        <label>Fuente<select className="mt-1 w-full rounded border border-slate-300 p-1" value={widget.source} onChange={(event) => onUpdate({ source: event.target.value as AnalyticsWidgetDto["source"] })}><option value="events">Eventos</option><option value="players">Jugadores</option><option value="teams">Equipos</option></select></label>
-        <label>Métrica<select className="mt-1 w-full rounded border border-slate-300 p-1" value={widget.metric} onChange={(event) => onUpdate({ metric: event.target.value as AnalyticsWidgetDto["metric"] })}>{catalog.metrics.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-        <label>Dimensión<select className="mt-1 w-full rounded border border-slate-300 p-1" value={widget.dimension || ""} onChange={(event) => onUpdate({ dimension: (event.target.value || undefined) as AnalyticsWidgetDto["dimension"] })}><option value="">Total</option>{catalog.dimensions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-        <label>Serie<select className="mt-1 w-full rounded border border-slate-300 p-1" value={widget.series || ""} onChange={(event) => onUpdate({ series: (event.target.value || undefined) as AnalyticsWidgetDto["series"] })}><option value="">Sin serie</option>{catalog.dimensions.filter((item) => item.value !== widget.dimension).map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-        <label>Visual<select className="mt-1 w-full rounded border border-slate-300 p-1" value={widget.visualization} onChange={(event) => onUpdate({ visualization: event.target.value as AnalyticsWidgetDto["visualization"] })}><option value="card">Tarjeta</option><option value="bar">Barras</option><option value="line">Línea</option><option value="donut">Donut</option><option value="table">Tabla</option></select></label>
-        <label>Top<select className="mt-1 w-full rounded border border-slate-300 p-1" value={widget.limit || 10} onChange={(event) => onUpdate({ limit: Number(event.target.value) as 5 | 10 | 20 | 50 })}>{[5, 10, 20, 50].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
-        <label>Evento<select className="mt-1 w-full rounded border border-slate-300 p-1" value={widget.filters?.eventTypes?.[0] || ""} onChange={(event) => onUpdate({ filters: { ...widget.filters, eventTypes: event.target.value ? [event.target.value] : undefined } })}><option value="">Todos</option>{catalog.eventTypes.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-      </div> : null}
-      {widget.visualization === "card" ? <div className={editing ? "flex min-h-44 flex-col justify-center" : "flex h-full flex-col justify-center"}><p className="text-4xl font-black text-slate-950">{Number(cardValue.toFixed(2))}</p><p className="mt-2 text-sm text-slate-500">{rows.length ? "Resultado con los filtros activos" : "Sin datos en este alcance"}</p></div> : null}
-      {widget.visualization === "table" ? <div className={editing ? "min-h-44 overflow-auto" : "h-full overflow-auto"}><table className="min-w-full text-left text-sm"><thead className="sticky top-0 bg-white text-xs uppercase text-slate-500"><tr><th className="pb-2">Categoría</th>{rows.some((row) => row.series) ? <th className="pb-2">Contribución</th> : null}<th className="pb-2 text-right">Valor</th></tr></thead><tbody>{rows.map((row) => <tr key={row.key} className="cursor-pointer border-t border-slate-100 hover:bg-brand-100/40" onClick={() => onCrossFilter(row)}><td className="py-2 font-medium text-slate-800">{row.label}</td>{rows.some((item) => item.series) ? <td className="py-2 text-slate-600">{row.series || "—"}</td> : null}<td className="py-2 text-right font-bold">{row.value}</td></tr>)}</tbody></table>{!rows.length ? <p className="py-8 text-center text-sm text-slate-500">Sin datos para estos filtros.</p> : null}</div> : null}
-      {widget.visualization !== "card" && widget.visualization !== "table" ? <div className={editing ? "h-56 min-h-44" : "h-full min-h-44"}><AnalyticsChart visualization={widget.visualization} rows={rows} onSelect={onCrossFilter} /></div> : null}
-    </div>
-  </section>;
+function BoardSkeleton() {
+  return <div className="grid gap-4 lg:grid-cols-12" aria-busy="true" aria-label="Cargando tablero">
+    {[3, 3, 3, 3, 6, 6].map((span, index) => <div key={index} className={`rounded-2xl border border-slate-200 bg-white p-4 ${span === 3 ? "lg:col-span-3" : "lg:col-span-6"}`}>
+      <Skeleton className="h-4 w-32 rounded" /><Skeleton className="mt-2 h-3 w-20 rounded" /><Skeleton className={`mt-4 rounded-lg ${span === 3 ? "h-10" : "h-48"}`} />
+    </div>)}
+  </div>;
 }
 
 export default function AnalyticsWorkspace() {
   const { user } = useAuth();
+  const { modality, sportName } = useSiteConfig();
+  const isAdmin = user?.role === "admin";
   const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
+
   const [catalog, setCatalog] = useState<AnalyticsCatalogDto>(emptyCatalog);
   const [reports, setReports] = useState<AnalyticsReportDto[]>([]);
-  const [report, setReport] = useState<AnalyticsReportDto | null>(null);
-  const [result, setResult] = useState<AnalyticsQueryResponseDto | null>(null);
-  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<AnalyticsReportDto | null>(null);
+  const [snapshot, setSnapshot] = useState<AnalyticsReportDto | null>(null);
   const [filters, setFilters] = useState<AnalyticsFiltersDto>({});
-  const [crossFilters, setCrossFilters] = useState<AnalyticsFiltersDto>({});
+  const [crossFilters, setCrossFilters] = useState<CrossFilter[]>([]);
+  const [result, setResult] = useState<AnalyticsQueryResponseDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [querying, setQuerying] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [loadingWorkspace, setLoadingWorkspace] = useState(true);
-  const [loadingBoard, setLoadingBoard] = useState(true);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [editorId, setEditorId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<null | "delete" | "publish" | "discard">(null);
+  const [breakpoint, setBreakpoint] = useState<string>("lg");
+  const [refreshTick, setRefreshTick] = useState(0);
 
-  const load = useCallback(async () => {
-    try { setBusy(true); setError(null); const [nextCatalog, nextReports] = await Promise.all([api<AnalyticsCatalogDto>("/api/analytics/catalog"), api<AnalyticsReportDto[]>("/api/analytics/reports")]); setCatalog(nextCatalog); setReports(nextReports); setReport((current) => current || nextReports[0] || null); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : "No se pudo cargar analítica"); } finally { setBusy(false); setLoadingWorkspace(false); }
+  const editing = snapshot !== null;
+  const dirty = editing && !sameReport(draft, snapshot);
+  const canModify = Boolean(draft && (draft.scope === "personal" || (draft.scope === "template" && isAdmin)));
+
+  // ---------- Load catalog and boards ----------
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [nextCatalog, nextReports] = await Promise.all([
+          api<AnalyticsCatalogDto>("/api/analytics/catalog"),
+          api<AnalyticsReportDto[]>("/api/analytics/reports"),
+        ]);
+        if (cancelled) return;
+        setCatalog(nextCatalog);
+        setReports(nextReports);
+        const stored = readStoredReport();
+        setDraft(nextReports.find((item) => item.id === stored) || nextReports[0] || null);
+      } catch (reason) {
+        if (!cancelled) setError(errorMessage(reason, "No se pudo cargar la analítica"));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
-  useEffect(() => { void load(); }, [load]);
-  const effectiveFilters = useMemo(() => ({ ...filters, ...crossFilters }), [crossFilters, filters]);
-  const refresh = useCallback(async () => {
-    if (!report) return;
-    try { setBusy(true); setLoadingBoard(true); setError(null); setResult(await api<AnalyticsQueryResponseDto>("/api/analytics/query", { method: "POST", body: JSON.stringify({ widgets: report.widgets, filters: { ...report.filters, ...effectiveFilters } }) })); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : "No se pudo actualizar"); } finally { setBusy(false); setLoadingBoard(false); }
-  }, [effectiveFilters, report]);
-  useEffect(() => { void refresh(); }, [refresh]);
-  useEffect(() => { if (!result?.provisional) return; const interval = window.setInterval(() => void refresh(), 30000); return () => window.clearInterval(interval); }, [refresh, result?.provisional]);
 
-  const layouts: ResponsiveLayouts = report?.layouts || {};
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  // ---------- Query (debounced, ignores stale responses) ----------
+  const effectiveFilters = useMemo(
+    () => cleanFilters({ ...draft?.filters, ...filters, ...crossFiltersToDto(crossFilters) }),
+    [crossFilters, draft?.filters, filters],
+  );
+  const widgetsKey = useMemo(() => JSON.stringify(draft?.widgets.map((widget) => ({ ...widget, title: "" })) || []), [draft?.widgets]);
+  const queryKey = draft ? `${draft.id}|${widgetsKey}|${JSON.stringify(effectiveFilters)}|${refreshTick}` : null;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const requestRef = useRef(0);
+
+  useEffect(() => {
+    if (!queryKey) return;
+    const requestId = ++requestRef.current;
+    setQuerying(true);
+    const timer = window.setTimeout(async () => {
+      const current = draftRef.current;
+      if (!current?.widgets.length) { setQuerying(false); return; }
+      try {
+        const data = await api<AnalyticsQueryResponseDto>("/api/analytics/query", { method: "POST", body: JSON.stringify({ widgets: withTitles(current.widgets), filters: effectiveFilters }) });
+        if (requestId === requestRef.current) { setResult(data); setError(null); }
+      } catch (reason) {
+        if (requestId === requestRef.current) setError(errorMessage(reason, "No se pudieron calcular las estadísticas"));
+      } finally {
+        if (requestId === requestRef.current) setQuerying(false);
+      }
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [effectiveFilters, queryKey]);
+
+  useEffect(() => {
+    if (!result?.provisional) return;
+    const interval = window.setInterval(() => setRefreshTick((tick) => tick + 1), 30000);
+    return () => window.clearInterval(interval);
+  }, [result?.provisional]);
+
+  // ---------- Board actions ----------
+  const selectReport = (id: string) => {
+    const next = reports.find((item) => item.id === id) || null;
+    setDraft(next);
+    setResult(null);
+    setCrossFilters([]);
+    if (next) storeReport(next.id);
+  };
+  const replaceReport = (saved: AnalyticsReportDto) => {
+    setReports((items) => items.some((item) => item.id === saved.id) ? items.map((item) => item.id === saved.id ? saved : item) : [...items, saved]);
+    setDraft(saved);
+    storeReport(saved.id);
+  };
+  const run = async (action: () => Promise<void>, fallback: string) => {
+    try { setSaving(true); setError(null); await action(); }
+    catch (reason) { setError(errorMessage(reason, fallback)); }
+    finally { setSaving(false); }
+  };
+
+  const startEditing = () => {
+    if (!draft) return;
+    if (canModify) { setSnapshot(draft); return; }
+    void run(async () => {
+      const copy = await api<AnalyticsReportDto>(`/api/analytics/reports/${draft.id}/clone`, { method: "POST" });
+      replaceReport(copy);
+      setSnapshot(copy);
+      setNotice("Creamos una copia personal para que la puedas editar. La plantilla original no cambia.");
+    }, "No se pudo crear la copia");
+  };
+  const duplicate = () => void (draft && run(async () => {
+    const copy = await api<AnalyticsReportDto>(`/api/analytics/reports/${draft.id}/clone`, { method: "POST" });
+    replaceReport(copy);
+    setResult(null);
+    setNotice(`Creaste “${copy.name}”.`);
+  }, "No se pudo duplicar el tablero"));
+  const createBlank = () => void run(async () => {
+    const widget = newWidget();
+    const created = await api<AnalyticsReportDto>("/api/analytics/reports", { method: "POST", body: JSON.stringify({ report: { name: "Nuevo tablero", description: "", filters: {}, widgets: [widget], layouts: {} } }) });
+    replaceReport(created);
+    setResult(null);
+    setSnapshot(created);
+    setEditorId(widget.id);
+  }, "No se pudo crear el tablero");
+  const save = () => void (draft && run(async () => {
+    if (!dirty) { setSnapshot(null); return; }
+    const report = { ...draft, name: draft.name.trim() || "Tablero sin nombre", widgets: withTitles(draft.widgets) };
+    const saved = await api<AnalyticsReportDto>(`/api/analytics/reports/${draft.id}`, { method: "PATCH", body: JSON.stringify({ expectedVersion: draft.version, report }) });
+    replaceReport(saved);
+    setSnapshot(null);
+    setNotice("Cambios guardados.");
+  }, "No se pudo guardar"));
+  const discard = () => { setDraft(snapshot); setSnapshot(null); setEditorId(null); setConfirm(null); };
+  const remove = () => void (draft && run(async () => {
+    await api(`/api/analytics/reports/${draft.id}?version=${draft.version}`, { method: "DELETE" });
+    const rest = reports.filter((item) => item.id !== draft.id);
+    setReports(rest);
+    setDraft(rest[0] || null);
+    setSnapshot(null);
+    setResult(null);
+    setConfirm(null);
+    setNotice(`Eliminaste “${draft.name}”.`);
+  }, "No se pudo eliminar"));
+  const publish = () => void (draft && run(async () => {
+    const published = await api<AnalyticsReportDto>(`/api/analytics/reports/${draft.id}/publish`, { method: "POST", body: JSON.stringify({ expectedVersion: draft.version }) });
+    replaceReport(published);
+    setConfirm(null);
+    setNotice("Ahora todo el staff con acceso a estadísticas ve este tablero como plantilla.");
+  }, "No se pudo publicar"));
+
+  const updateWidget = (widget: AnalyticsWidgetDto) => setDraft((current) => current ? { ...current, widgets: current.widgets.map((item) => item.id === widget.id ? widget : item) } : current);
+  const removeWidget = (id: string) => {
+    setDraft((current) => current && current.widgets.length > 1 ? { ...current, widgets: current.widgets.filter((item) => item.id !== id) } : current);
+    setEditorId(null);
+  };
+  const addWidget = () => {
+    const widget = newWidget();
+    setDraft((current) => current ? { ...current, widgets: [...current.widgets, widget] } : current);
+    setEditorId(widget.id);
+  };
+
+  const exportWidget = async (widget: AnalyticsWidgetDto) => {
+    try {
+      const response = await fetch("/api/analytics/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ widgets: withTitles([widget]), filters: effectiveFilters }) });
+      if (!response.ok) throw new Error();
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${widget.title.trim() || "estadisticas"}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("No se pudo descargar el CSV.");
+    }
+  };
+
+  // ---------- Layout ----------
+  const layouts = useMemo(() => draft ? buildLayouts(draft.widgets, draft.layouts) : { lg: [], sm: [] }, [draft]);
+  const handleLayoutChange = useCallback((_layout: Layout, all: ResponsiveLayouts) => {
+    if (!editing || breakpoint !== "lg" || !all.lg) return;
+    const next = all.lg.map(({ i, x, y, w, h }) => ({ i, x, y, w, h }));
+    setDraft((current) => {
+      if (!current) return current;
+      const previous = (current.layouts?.lg || []).map(({ i, x, y, w, h }) => ({ i, x, y, w, h }));
+      return JSON.stringify(previous) === JSON.stringify(next) ? current : { ...current, layouts: { lg: next } };
+    });
+  }, [breakpoint, editing]);
+
   const resultsByWidget = new Map(result?.results.map((item) => [item.widgetId, item.rows]) || []);
-  const updateReport = (patch: Partial<AnalyticsReportDto>) => setReport((current) => current ? { ...current, ...patch } : current);
-  const canEdit = Boolean(report && (report.scope === "personal" || user?.role === "admin"));
-  const save = async () => { if (!report || report.scope === "system") return; try { setBusy(true); const saved = await api<AnalyticsReportDto>(`/api/analytics/reports/${report.id}`, { method: "PATCH", body: JSON.stringify({ expectedVersion: report.version, report }) }); setReport(saved); setReports((items) => items.map((item) => item.id === saved.id ? saved : item)); setEditing(false); } catch (reason) { setError(reason instanceof Error ? reason.message : "No se pudo guardar"); } finally { setBusy(false); } };
-  const clone = async () => { if (!report) return; try { const created = await api<AnalyticsReportDto>(`/api/analytics/reports/${report.id}/clone`, { method: "POST" }); setReports((items) => [created, ...items]); setReport(created); setEditing(true); } catch (reason) { setError(reason instanceof Error ? reason.message : "No se pudo crear el reporte"); } };
-  const exportWidget = async (widget: AnalyticsWidgetDto) => { if (!report) return; const response = await fetch("/api/analytics/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ widgets: [widget], filters: { ...report.filters, ...effectiveFilters } }) }); if (!response.ok) { setError("No se pudo exportar el CSV"); return; } const url = URL.createObjectURL(await response.blob()); const link = document.createElement("a"); link.href = url; link.download = `${widget.title}.csv`; link.click(); URL.revokeObjectURL(url); };
-  const applyCrossFilter = (widget: AnalyticsWidgetDto, row: AnalyticsResultRowDto) => { const next = toFilters(widget.dimension, row); if (Object.keys(next).length) setCrossFilters(next); };
-  const showBoardLoading = loadingWorkspace || Boolean(report && loadingBoard && !result);
+  const filtered = countFilters(effectiveFilters) > 0;
+  const editorWidget = draft?.widgets.find((widget) => widget.id === editorId);
+  const personal = reports.filter((item) => item.scope === "personal");
+  const templates = reports.filter((item) => item.scope !== "personal");
+  const updatedAt = result ? new Date(result.generatedAt).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" }) : null;
 
-  return <main className="min-h-screen bg-slate-50"><div ref={containerRef} className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
-    <header className="mb-6 flex flex-col justify-between gap-4 rounded-2xl bg-slate-950 px-6 py-6 text-white md:flex-row md:items-end"><div><p className="text-sm font-semibold text-sky-300">Análisis por eventos</p><h1 className="mt-1 text-3xl font-black">Estadísticas explorables</h1><p className="mt-2 max-w-2xl text-sm text-slate-300">Construí tableros, compará jugadores y equipos, y filtrá cada visual con datos auditables desde los eventos.</p></div><div className="flex flex-wrap gap-2"><button type="button" className="rounded-lg border border-white/25 px-3 py-2 text-sm font-semibold hover:bg-white/10" onClick={() => void refresh()} disabled={busy}>Actualizar</button><button type="button" className="rounded-lg bg-sky-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-sky-300" onClick={() => void clone()} disabled={!report}>Crear desde este tablero</button></div></header>
-    {loadingWorkspace ? <AnalyticsWorkspaceSkeleton /> : <>
-    <section className="mb-5 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 lg:grid-cols-[1fr_auto_auto_auto]"><label className="text-sm font-semibold text-slate-700">Tablero<select className="mt-1 block w-full rounded-md border border-slate-300 p-2" value={report?.id || ""} onChange={(event) => { const next = reports.find((item) => item.id === event.target.value) || null; setResult(null); setLoadingBoard(Boolean(next)); setReport(next); setCrossFilters({}); }}><option value="">Elegí un tablero</option>{reports.map((item) => <option key={item.id} value={item.id}>{item.scope === "system" ? "Plantilla · " : item.scope === "template" ? "Global · " : "Personal · "}{item.name}</option>)}</select></label><button type="button" className="self-end rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold hover:bg-slate-50" onClick={() => setEditing((value) => !value)} disabled={!canEdit}>{editing ? "Cerrar edición" : "Editar tablero"}</button>{editing ? <button type="button" className="self-end rounded-md bg-brand-700 px-3 py-2 text-sm font-bold text-white hover:bg-brand-800" onClick={() => void save()} disabled={busy}>Guardar cambios</button> : null}{user?.role === "admin" && report?.scope === "personal" ? <button type="button" className="self-end rounded-md border border-brand-700 px-3 py-2 text-sm font-bold text-brand-700 hover:bg-brand-100" onClick={async () => { try { const published = await api<AnalyticsReportDto>(`/api/analytics/reports/${report.id}/publish`, { method: "POST", body: JSON.stringify({ expectedVersion: report.version }) }); setReport(published); setReports((items) => items.map((item) => item.id === published.id ? published : item)); } catch (reason) { setError(reason instanceof Error ? reason.message : "No se pudo publicar"); } }}>Publicar plantilla</button> : null}</section>
-    <section className="mb-5 rounded-xl border border-slate-200 bg-white p-4"><div className="flex flex-wrap items-end gap-3"><MultiFilter label="Torneos" options={catalog.filterOptions?.tournaments || []} value={filters.tournamentIds || []} onChange={(values) => setFilters((current) => ({ ...current, tournamentIds: values }))} /><MultiFilter label="Divisiones" options={catalog.filterOptions?.divisions || []} value={filters.divisionIds || []} onChange={(values) => setFilters((current) => ({ ...current, divisionIds: values }))} /><MultiFilter label="Fases" options={catalog.filterOptions?.phases || []} value={filters.phases || []} onChange={(values) => setFilters((current) => ({ ...current, phases: values }))} /><MultiFilter label="Equipos" options={catalog.filterOptions?.teams || []} value={filters.teamIds || []} onChange={(values) => setFilters((current) => ({ ...current, teamIds: values }))} /><MultiFilter label="Jugadores" options={catalog.filterOptions?.players || []} value={filters.playerIds || []} onChange={(values) => setFilters((current) => ({ ...current, playerIds: values }))} /><MultiFilter label="Eventos" options={catalog.eventTypes} value={filters.eventTypes || []} onChange={(values) => setFilters((current) => ({ ...current, eventTypes: values }))} /><MultiFilter label="Cuartos" options={catalog.filterOptions?.quarters || []} value={filters.quarters || []} onChange={(values) => setFilters((current) => ({ ...current, quarters: values.map(Number) }))} /><MultiFilter label="Mitad" options={[{ value: "first", label: "1T" }, { value: "second", label: "2T" }]} value={filters.halves || []} onChange={(values) => setFilters((current) => ({ ...current, halves: values as AnalyticsFiltersDto["halves"] }))} /><MultiFilter label="Aporte de jugador" options={[{ value: "passing", label: "Pase" }, { value: "receiving", label: "Recepción" }, { value: "rushing", label: "Corrida" }, { value: "other", label: "Otros" }]} value={filters.contributionTypes || []} onChange={(values) => setFilters((current) => ({ ...current, contributionTypes: values as AnalyticsFiltersDto["contributionTypes"] }))} /><label className="text-sm font-semibold">Desde<input type="date" className="mt-1 block rounded-md border border-slate-300 p-2" value={filters.from || ""} onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value || undefined }))} /></label><label className="text-sm font-semibold">Hasta<input type="date" className="mt-1 block rounded-md border border-slate-300 p-2" value={filters.to || ""} onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value || undefined }))} /></label><button type="button" className="rounded-md px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-100" onClick={() => { setFilters({}); setCrossFilters({}); }}>Limpiar filtros</button></div><p className="mt-3 text-xs text-slate-500">El filtro de aporte se aplica a los widgets cuya fuente es Jugadores.</p>{Object.keys(crossFilters).length ? <div className="mt-3 flex items-center gap-2 text-sm"><span className="rounded-full bg-sky-100 px-2 py-1 font-medium text-sky-800">Filtro cruzado activo</span><button type="button" className="font-semibold text-brand-700 underline" onClick={() => setCrossFilters({})}>Quitar</button></div> : null}</section>
-    {editing && report ? <section className="mb-5 rounded-xl border border-dashed border-brand-600 bg-brand-100/40 p-4"><div className="flex flex-wrap items-center gap-3"><strong className="text-sm">Edición del tablero</strong><button type="button" className="rounded-md bg-white px-3 py-2 text-sm font-semibold shadow-sm" onClick={() => updateReport({ widgets: [...report.widgets, initialWidget()] })} disabled={report.widgets.length >= 12}>Agregar widget</button><label className="text-sm">Nombre<input className="ml-2 rounded border border-slate-300 p-1" value={report.name} onChange={(event) => updateReport({ name: event.target.value })} /></label></div></section> : null}
-    {result?.provisional ? <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Incluye partidos en vivo: los valores son provisionales y se actualizan cada 30 segundos.</p> : null}
-    {error ? <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div> : null}
-    <div>{showBoardLoading ? <AnalyticsWorkspaceSkeleton /> : mounted && report ? <Responsive width={width} layouts={layouts} breakpoints={{ lg: 1200, md: 900, sm: 640, xs: 0 }} cols={{ lg: 12, md: 8, sm: 4, xs: 1 }} rowHeight={30} margin={[16, 16]} dragConfig={{ enabled: editing, handle: ".widget-drag-handle" }} resizeConfig={{ enabled: editing }} onLayoutChange={(_layout: Layout, nextLayouts: ResponsiveLayouts) => updateReport({ layouts: nextLayouts as AnalyticsReportDto["layouts"] })}>{report.widgets.map((widget) => <div key={widget.id}><Widget widget={widget} rows={resultsByWidget.get(widget.id) || []} editing={editing} catalog={catalog} onRemove={() => updateReport({ widgets: report.widgets.filter((item) => item.id !== widget.id) })} onUpdate={(patch) => updateReport({ widgets: report.widgets.map((item) => item.id === widget.id ? { ...item, ...patch } : item) })} onCrossFilter={(row) => applyCrossFilter(widget, row)} onExport={() => void exportWidget(widget)} /></div>)}</Responsive> : <div className="grid min-h-60 place-items-center rounded-xl border border-dashed border-slate-300 bg-white text-sm text-slate-500">No hay tablero disponible.</div>}</div>
-    </>}
-  </div></main>;
+  const selectCross = (widget: AnalyticsWidgetDto) => editing || !canCrossFilter(widget.dimension) ? undefined : (row: AnalyticsResultRowDto) => {
+    const next = crossFilterFor(widget.dimension, row);
+    if (next) setCrossFilters((current) => addCrossFilter(current, next));
+  };
+
+  return <main className="min-h-screen bg-[var(--background)] pb-28">
+    <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
+      <header className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-800">Estadísticas · {sportName}</p>
+          <h1 className="mt-1 text-2xl font-black text-slate-950 sm:text-3xl">{editing ? "Editando tablero" : draft?.name || "Estadísticas explorables"}</h1>
+          <p className="mt-1 max-w-2xl text-sm text-slate-600">{editing ? "Mové y redimensioná los gráficos arrastrándolos. Los cambios se ven al instante y se guardan cuando confirmás." : draft?.description || "Explorá eventos, puntos y rendimiento de jugadores y equipos."}</p>
+        </div>
+        {!editing && !loading ? <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
+          <label className="min-w-0 flex-1 lg:w-80 lg:flex-none">
+            <span className="sr-only">Tablero</span>
+            <select value={draft?.id || ""} onChange={(event) => selectReport(event.target.value)} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 focus:border-brand-600 focus:outline-none">
+              {templates.length ? <optgroup label="Plantillas">{templates.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup> : null}
+              {personal.length ? <optgroup label="Mis tableros">{personal.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup> : null}
+            </select>
+          </label>
+          <button type="button" onClick={startEditing} disabled={!draft || saving} className="h-10 rounded-lg bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-50" title={canModify ? "Editar este tablero" : "Las plantillas no se editan: se crea una copia personal"}>
+            {canModify ? "Editar" : "Personalizar"}
+          </button>
+          <ActionsMenu items={[
+            { label: "Nuevo tablero vacío", onClick: createBlank },
+            { label: "Duplicar tablero", onClick: duplicate, hidden: !draft },
+            { label: "Actualizar datos", onClick: () => setRefreshTick((tick) => tick + 1), hidden: !draft },
+            { label: "Publicar como plantilla", onClick: () => setConfirm("publish"), hidden: !(isAdmin && draft?.scope === "personal") },
+            { label: "Eliminar tablero", onClick: () => setConfirm("delete"), danger: true, hidden: !canModify },
+          ]} />
+        </div> : null}
+      </header>
+
+      <div ref={containerRef}>
+      {notice ? <div role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">{notice}</div> : null}
+      {error ? <div role="alert" className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <span>{error}</span>
+        <button type="button" className="shrink-0 font-semibold underline" onClick={() => { setError(null); setRefreshTick((tick) => tick + 1); }}>Reintentar</button>
+      </div> : null}
+
+      {loading ? <><Skeleton className="mb-4 h-16 rounded-2xl" /><BoardSkeleton /></> : !draft ? <div className="grid min-h-60 place-items-center rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center">
+        <div>
+          <p className="font-semibold text-slate-800">No hay tableros disponibles.</p>
+          <button type="button" onClick={createBlank} className="mt-3 rounded-lg bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">Crear un tablero</button>
+        </div>
+      </div> : <>
+        {editing ? null : <AnalyticsFilters
+          catalog={catalog}
+          filters={filters}
+          onChange={setFilters}
+          crossFilters={crossFilters}
+          onRemoveCross={(filter) => setCrossFilters((current) => current.filter((item) => item.dimension !== filter.dimension))}
+          onClearAll={() => { setFilters({}); setCrossFilters([]); }}
+          showHalves={modality === "tackle"}
+        />}
+
+        <div className="my-3 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-slate-500" aria-live="polite">
+          <span className="inline-flex items-center gap-1.5">
+            {querying ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-brand-700" aria-hidden="true" /> : <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />}
+            {querying ? "Calculando…" : updatedAt ? `Actualizado ${updatedAt}` : ""}
+          </span>
+          {result?.provisional ? <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-900"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-600" aria-hidden="true" />Incluye partidos en vivo · se actualiza cada 30 s</span> : null}
+          {!editing ? <span className="hidden sm:inline">Tip: hacé click en una barra, porción o fila para filtrar todo el tablero.</span> : null}
+          {editing && breakpoint !== "lg" ? <span className="font-semibold text-amber-800">Para reorganizar los gráficos usá una pantalla más ancha.</span> : null}
+        </div>
+
+        {mounted ? <Responsive
+          width={width}
+          layouts={layouts as unknown as ResponsiveLayouts}
+          breakpoints={GRID_BREAKPOINTS}
+          cols={GRID_COLS}
+          rowHeight={GRID_ROW_HEIGHT}
+          margin={[16, 16]}
+          containerPadding={[0, 0]}
+          dragConfig={{ enabled: editing && breakpoint === "lg", handle: ".widget-drag-handle" }}
+          resizeConfig={{ enabled: editing && breakpoint === "lg" }}
+          onBreakpointChange={(next: string) => setBreakpoint(next)}
+          onLayoutChange={handleLayoutChange}
+        >
+          {draft.widgets.map((widget) => <div key={widget.id}>
+            <AnalyticsWidgetCard
+              widget={widget}
+              rows={resultsByWidget.get(widget.id)}
+              catalog={catalog}
+              editing={editing}
+              refreshing={querying && Boolean(result)}
+              filtered={filtered}
+              onSelect={selectCross(widget)}
+              onConfigure={() => setEditorId(widget.id)}
+              onRemove={draft.widgets.length > 1 ? () => removeWidget(widget.id) : undefined}
+              onExport={() => void exportWidget(widget)}
+            />
+          </div>)}
+        </Responsive> : <BoardSkeleton />}
+      </>}
+      </div>
+    </div>
+
+    {editing && draft ? <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 shadow-[0_-8px_24px_rgba(18,50,74,0.08)] backdrop-blur">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:px-6 lg:px-8">
+        <label className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500">Nombre</span>
+          <input value={draft.name} maxLength={80} onChange={(event) => setDraft({ ...draft, name: event.target.value })} className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 px-3 text-sm font-semibold focus:border-brand-600 focus:outline-none sm:max-w-sm" />
+          {dirty ? <span className="hidden shrink-0 text-xs font-semibold text-amber-700 md:inline">Cambios sin guardar</span> : null}
+        </label>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={addWidget} disabled={draft.widgets.length >= MAX_WIDGETS} title={draft.widgets.length >= MAX_WIDGETS ? `Máximo ${MAX_WIDGETS} gráficos por tablero` : undefined} className="h-10 flex-1 rounded-lg border border-brand-700 px-3 text-sm font-bold text-brand-800 hover:bg-brand-100 disabled:opacity-40 sm:flex-none">+ Agregar gráfico</button>
+          <button type="button" onClick={() => dirty ? setConfirm("discard") : discard()} className="h-10 flex-1 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:flex-none">{dirty ? "Descartar" : "Salir"}</button>
+          <button type="button" onClick={save} disabled={saving || !dirty} className="h-10 flex-1 rounded-lg bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-50 sm:flex-none">{saving ? "Guardando…" : "Guardar"}</button>
+        </div>
+      </div>
+    </div> : null}
+
+    {editorWidget ? <AnalyticsWidgetEditor
+      widget={editorWidget}
+      catalog={catalog}
+      onChange={updateWidget}
+      onClose={() => setEditorId(null)}
+      onRemove={draft && draft.widgets.length > 1 ? () => removeWidget(editorWidget.id) : undefined}
+    /> : null}
+
+    <Modal open={confirm === "discard"} title="¿Descartar los cambios?" variant="warning" onClose={() => setConfirm(null)}
+      primaryAction={{ label: "Descartar", variant: "danger", onClick: discard }} secondaryAction={{ label: "Seguir editando", onClick: () => setConfirm(null) }}>
+      El tablero vuelve a como estaba la última vez que lo guardaste.
+    </Modal>
+    <Modal open={confirm === "delete"} title={`¿Eliminar “${draft?.name}”?`} variant="error" onClose={() => setConfirm(null)}
+      primaryAction={{ label: saving ? "Eliminando…" : "Eliminar", variant: "danger", onClick: remove, disabled: saving }} secondaryAction={{ label: "Cancelar", onClick: () => setConfirm(null) }}>
+      {draft?.scope === "template" ? "Es una plantilla: deja de estar disponible para todo el staff." : "El tablero se elimina para siempre."} Esta acción no se puede deshacer.
+    </Modal>
+    <Modal open={confirm === "publish"} title="¿Publicar como plantilla?" variant="info" onClose={() => setConfirm(null)}
+      primaryAction={{ label: saving ? "Publicando…" : "Publicar", onClick: publish, disabled: saving }} secondaryAction={{ label: "Cancelar", onClick: () => setConfirm(null) }}>
+      Todo el staff con acceso a estadísticas lo va a ver en “Plantillas”. Solo los administradores pueden modificarlo.
+    </Modal>
+  </main>;
 }
+
