@@ -233,21 +233,69 @@ export async function listCredentialCandidates(search: string, type: "player" | 
   }));
 }
 
+const systemHistory: Record<string, string> = {
+  issued_by_order: "La tienda emitió la ID al acreditarse el pago",
+  membership_by_order: "La tienda acreditó meses de membresía",
+  extended_by_order: "La tienda extendió la ID (sistema anterior)",
+  linked_by_email: "Se vinculó a la cuenta LUFA al verificar el correo",
+};
+
 export async function loadAdminDetail(id: string): Promise<AdminDigitalCredentialDetailDto | null> {
   const db = getPrismaClient();
   const record = await db.digitalCredential.findUnique({
     where: { id },
-    select: { member: { include: {
-      memberships: { orderBy: { startsAt: "desc" } },
-      certifications: { orderBy: [{ role: "asc" }, { expiresAt: "desc" }] },
-      coachAssignments: { include: { team: { select: { name: true } } }, orderBy: [{ season: "desc" }, { createdAt: "desc" }] },
-    } } },
+    select: {
+      claimEmail: true,
+      user: { select: { email: true } },
+      member: { include: {
+        user: { select: { email: true } },
+        player: { select: { id: true, firstName: true, lastName: true, status: true, team: { select: { name: true, status: true } } } },
+        credentials: { select: { id: true } },
+        memberships: { orderBy: { startsAt: "desc" } },
+        certifications: { orderBy: [{ role: "asc" }, { expiresAt: "desc" }] },
+        coachAssignments: { include: { team: { select: { name: true } } }, orderBy: [{ season: "desc" }, { createdAt: "desc" }] },
+      } },
+    },
   });
   if (!record) return null;
   const { member } = record;
+  const credentialIds = member.credentials.map((credential) => credential.id);
+  const [adminLogs, systemLogs, verificationCount, lastVerification] = await Promise.all([
+    db.adminAuditLog.findMany({
+      where: { entityType: "digital_credential", entityId: { in: credentialIds } },
+      orderBy: { createdAt: "desc" }, take: 40,
+      select: { id: true, createdAt: true, actorName: true, action: true, summary: true, after: true },
+    }),
+    db.digitalCredentialAudit.findMany({
+      where: { credentialId: { in: credentialIds }, OR: Object.keys(systemHistory).map((prefix) => ({ action: { startsWith: prefix } })) },
+      orderBy: { createdAt: "desc" }, take: 40,
+    }),
+    db.digitalCredentialAudit.count({ where: { credentialId: { in: credentialIds }, action: "verified" } }),
+    db.digitalCredentialAudit.findFirst({ where: { credentialId: { in: credentialIds }, action: "verified" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+  ]);
+  const history = [
+    ...adminLogs.map((log) => ({
+      id: log.id, at: log.createdAt.toISOString(), actor: log.actorName, action: log.action.replace(/^digital_credential\./, ""), summary: log.summary,
+      details: log.after && typeof log.after === "object" && !Array.isArray(log.after) && Object.keys(log.after).length ? log.after as Record<string, unknown> : null,
+    })),
+    ...systemLogs.map((log) => ({
+      id: log.id, at: log.createdAt.toISOString(), actor: null, action: log.action,
+      summary: systemHistory[log.action.split(":")[0]!] ?? log.action, details: null,
+    })),
+  ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 40);
+  const linkedEmail = member.user?.email ?? record.user?.email ?? member.claimEmail ?? record.claimEmail ?? null;
   return {
     credential: await serializeCredentialById(id),
     suspendedReason: member.suspendedReason,
+    linkedEmail,
+    accountLinked: Boolean(member.userId),
+    playerProfile: member.player ? {
+      id: member.player.id, name: `${member.player.firstName} ${member.player.lastName}`.trim(), status: member.player.status,
+      teamName: member.player.team.name, teamStatus: member.player.team.status,
+    } : null,
+    verificationCount,
+    lastVerifiedAt: lastVerification?.createdAt.toISOString() ?? null,
+    history,
     memberships: member.memberships.map((period) => ({
       id: period.id, source: period.source === "store_order" ? "store_order" : "offline", orderId: period.orderId, method: period.method,
       amountMinor: period.amountMinor, reference: period.reference, startsAt: period.startsAt.toISOString(), endsAt: period.endsAt.toISOString(),

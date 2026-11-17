@@ -97,9 +97,26 @@ export interface CoachAssignmentDto {
   active: boolean;
 }
 
+export interface CredentialHistoryEntryDto {
+  id: string;
+  at: string;
+  /** Administrador que hizo el cambio; null cuando lo hizo el sistema (tienda, vinculación por correo). */
+  actor: string | null;
+  action: string;
+  summary: string;
+  details: Record<string, unknown> | null;
+}
+
 export interface AdminDigitalCredentialDetailDto {
   credential: DigitalCredentialResponseDto;
   suspendedReason: string | null;
+  /** Correo con el que se vincula la persona (cuenta LUFA o correo de reclamo). */
+  linkedEmail: string | null;
+  accountLinked: boolean;
+  playerProfile: { id: string; name: string; status: string; teamName: string; teamStatus: string } | null;
+  verificationCount: number;
+  lastVerifiedAt: string | null;
+  history: CredentialHistoryEntryDto[];
   memberships: MembershipPeriodDto[];
   certifications: MemberCertificationDto[];
   coachAssignments: CoachAssignmentDto[];
