@@ -1,10 +1,23 @@
 import type {
   FantasyFeatureAssignment,
+  FantasyOnboardingChanges,
   FantasyIdentityRepository,
   FantasyOnboardingState,
   FantasyUserRecord,
 } from "@lufa/fantasy-core";
 import { getPrismaClient } from "@lufa/database/prisma";
+
+type OnboardingRecord = { version: number; status: string; currentStep: string; startedAt: Date | null; completedAt: Date | null };
+
+function toOnboardingState(onboarding: OnboardingRecord): FantasyOnboardingState {
+  return {
+    version: onboarding.version,
+    status: onboarding.status as FantasyOnboardingState["status"],
+    currentStep: onboarding.currentStep as FantasyOnboardingState["currentStep"],
+    startedAt: onboarding.startedAt?.toISOString() || null,
+    completedAt: onboarding.completedAt?.toISOString() || null,
+  };
+}
 
 export class PrismaFantasyIdentityRepository implements FantasyIdentityRepository {
   private get db() {
@@ -59,14 +72,19 @@ export class PrismaFantasyIdentityRepository implements FantasyIdentityRepositor
 
   async getOnboarding(userId: string): Promise<FantasyOnboardingState | null> {
     const onboarding = await this.db.fantasyOnboarding.findUnique({ where: { userId } });
-    if (!onboarding) return null;
-    return {
-      version: onboarding.version,
-      status: onboarding.status as FantasyOnboardingState["status"],
-      currentStep: onboarding.currentStep as FantasyOnboardingState["currentStep"],
-      startedAt: onboarding.startedAt?.toISOString() || null,
-      completedAt: onboarding.completedAt?.toISOString() || null,
-    };
+    return onboarding ? toOnboardingState(onboarding) : null;
+  }
+
+  async upsertOnboarding(
+    userId: string,
+    changes: { update: FantasyOnboardingChanges; create: FantasyOnboardingChanges },
+  ): Promise<FantasyOnboardingState> {
+    const onboarding = await this.db.fantasyOnboarding.upsert({
+      where: { userId },
+      update: changes.update,
+      create: { userId, ...changes.create },
+    });
+    return toOnboardingState(onboarding);
   }
 
   async createAudit(data: {

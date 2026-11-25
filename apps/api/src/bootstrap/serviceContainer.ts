@@ -3,8 +3,8 @@ import { getAppEnvironment } from "@lufa/database/appEnvironment";
 import { getDatabaseProvider } from "@lufa/database/databaseProvider";
 import { getAuxiliaryRepository } from "@lufa/database/repositories/auxiliary";
 import { getAnalyticsReportRepository, getReportingRepository } from "@lufa/database/repositories/reporting";
-import { PrismaFantasyCompetitionRepository, PrismaFantasyIdentityRepository } from "@lufa/database/repositories/fantasy";
-import { FantasyCompetitionService, FantasyIdentityService } from "@lufa/fantasy-core";
+import { PrismaFantasyCompetitionRepository, PrismaFantasyIdentityRepository, PrismaFantasyPlayerRepository } from "@lufa/database/repositories/fantasy";
+import { FantasyCompetitionService, FantasyIdentityService, FantasyPlayerService } from "@lufa/fantasy-core";
 import { AuthService, OtpService, PasskeyService } from "@lufa/identity-institutional";
 import { PrismaPasskeyRepository } from "@lufa/database/repositories/passkeys";
 import { resolvePasskeyConfig } from "@/lib/passkeyConfig";
@@ -63,6 +63,7 @@ const fantasyIdentityService = new FantasyIdentityService(new PrismaFantasyIdent
   },
 });
 const fantasyCompetitionService = new FantasyCompetitionService(new PrismaFantasyCompetitionRepository());
+const fantasyPlayerService = new FantasyPlayerService(new PrismaFantasyPlayerRepository());
 const otpService = new OtpService(userRepository, auxiliaryRepository);
 const authService = new AuthService(userRepository, emailService, otpService);
 // Las passkeys sólo se guardan en PostgreSQL; con MongoDB quedan deshabilitadas.
@@ -109,6 +110,7 @@ export const serviceContainer = {
   emailService,
   fantasyIdentityService,
   fantasyCompetitionService,
+  fantasyPlayerService,
   gameService,
   judgeService: new JudgeService(auxiliaryRepository),
   notificationService,

@@ -4,7 +4,16 @@ import type { AnalyticsReportDto } from "@lufa/contracts";
 import mongoose from "mongoose";
 import type { AnalyticsReportRepository } from "./AnalyticsReportRepository";
 
-const dto = (row: any): AnalyticsReportDto => ({
+type AnalyticsReportDocument = Pick<AnalyticsReportDto, "name" | "scope" | "version"> & Partial<Pick<AnalyticsReportDto, "description" | "filters" | "widgets" | "layouts">> & {
+  _id: unknown;
+  owner: unknown;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+// El modelo de Mongoose no está tipado; `lean()` devuelve el documento plano.
+const dto = (value: object): AnalyticsReportDto => dtoFromDocument(value as AnalyticsReportDocument);
+const dtoFromDocument = (row: AnalyticsReportDocument): AnalyticsReportDto => ({
   id: String(row._id), ownerId: String(row.owner), name: row.name, description: row.description || "", scope: row.scope,
   filters: row.filters || {}, widgets: row.widgets || [], layouts: row.layouts || {}, version: row.version,
   createdAt: row.createdAt?.toISOString(), updatedAt: row.updatedAt?.toISOString(),

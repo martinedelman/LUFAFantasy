@@ -3,6 +3,7 @@ import { createHash, randomInt } from "node:crypto";
 import { jwtVerify, SignJWT } from "jose";
 
 export * from "./leagues";
+export * from "./players";
 export * from "./scoring";
 
 export const FANTASY_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
@@ -39,6 +40,14 @@ export interface FantasyOnboardingState {
   completedAt: string | null;
 }
 
+export interface FantasyOnboardingChanges {
+  version?: number;
+  status?: FantasyOnboardingStatus;
+  currentStep?: FantasyOnboardingStep;
+  startedAt?: Date | null;
+  completedAt?: Date | null;
+}
+
 export interface FantasyIdentityRepository {
   findUserById(id: string): Promise<FantasyUserRecord | null>;
   findUserByEmail(email: string): Promise<FantasyUserRecord | null>;
@@ -48,6 +57,10 @@ export interface FantasyIdentityRepository {
   consumePasswordReset(data: { userId: string; codeHash: string; now: Date }): Promise<boolean>;
   getFeatureAssignments(userId: string): Promise<FantasyFeatureAssignment[]>;
   getOnboarding(userId: string): Promise<FantasyOnboardingState | null>;
+  upsertOnboarding(
+    userId: string,
+    changes: { update: FantasyOnboardingChanges; create: FantasyOnboardingChanges },
+  ): Promise<FantasyOnboardingState>;
   createAudit(data: {
     actorId?: string;
     action: string;
@@ -185,6 +198,57 @@ export class FantasyIdentityService {
     const assignments = await this.repository.getFeatureAssignments(userId);
     for (const assignment of assignments) configuredDefaults[assignment.key] = assignment.enabled;
     return { features: configuredDefaults, onboarding: await this.repository.getOnboarding(userId) };
+  }
+
+  async getOnboarding(userId: string): Promise<FantasyOnboardingState> {
+    // Existing users do not receive an unsolicited tutorial; they can restart it from Perfil.
+    return (await this.repository.getOnboarding(userId))
+      ?? { version: 1, status: "completed", currentStep: "welcome", startedAt: null, completedAt: null };
+  }
+
+  async updateOnboarding(
+    userId: string,
+    { status, currentStep }: { status?: FantasyOnboardingStatus; currentStep?: FantasyOnboardingStep },
+    now = new Date(),
+  ): Promise<FantasyOnboardingState> {
+    const previous = await this.repository.getOnboarding(userId);
+    const onboarding = await this.repository.upsertOnboarding(userId, {
+      update: {
+        ...(status ? { status } : {}),
+        ...(currentStep ? { currentStep } : {}),
+        ...(status === "in_progress" ? { startedAt: now, completedAt: null } : {}),
+        ...(status === "completed" || status === "skipped" ? { completedAt: now } : {}),
+      },
+      create: {
+        status: status || "in_progress",
+        currentStep: currentStep || "welcome",
+        ...(status === "in_progress" ? { startedAt: now } : {}),
+      },
+    });
+    if (status === "in_progress" && previous?.status !== "in_progress") {
+      await this.repository.createAudit({ actorId: userId, action: "fantasy.onboarding.started" });
+    }
+    if (status === "completed" || status === "skipped") {
+      await this.repository.createAudit({ actorId: userId, action: `fantasy.onboarding.${status}` });
+    }
+    return onboarding;
+  }
+
+  async restartOnboarding(userId: string, now = new Date()): Promise<FantasyOnboardingState> {
+    const onboarding = await this.repository.upsertOnboarding(userId, {
+      update: { version: 1, status: "not_started", currentStep: "welcome", startedAt: null, completedAt: null },
+      create: {},
+    });
+    await this.repository.createAudit({ actorId: userId, action: "fantasy.onboarding.restarted", metadata: { at: now.toISOString() } });
+    return { ...onboarding, startedAt: null, completedAt: null };
+  }
+
+  /** Registra la primera elección del draft cuando la persona está en ese paso del tutorial. */
+  async recordDraftPick(userId: string) {
+    const onboarding = await this.repository.getOnboarding(userId);
+    if (onboarding?.status === "in_progress" && onboarding.currentStep === "draft") {
+      await this.repository.createAudit({ actorId: userId, action: "fantasy.onboarding.first_pick" });
+    }
   }
 
   private async createSession(user: FantasyUserRecord) {

@@ -23,6 +23,7 @@ function repository(): FantasyIdentityRepository {
     consumePasswordReset: async () => true,
     getFeatureAssignments: async () => [],
     getOnboarding: async () => null,
+    upsertOnboarding: async () => ({ version: 1, status: "not_started", currentStep: "welcome", startedAt: null, completedAt: null }),
     createAudit: async () => undefined,
   };
 }
