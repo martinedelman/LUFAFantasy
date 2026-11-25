@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getPrismaClient } from "@lufa/database/prisma";
+import { getPrismaClient, qualifiedTable } from "@lufa/database/prisma";
 import { Prisma } from "@lufa/database/generated/prisma/client";
 import type {
   IAuxiliaryRepository,
@@ -509,12 +509,7 @@ export class PrismaAuxiliaryRepository implements IAuxiliaryRepository {
   }
 
   private statisticsTable(table: "player_statistics" | "team_statistics" | "tournaments") {
-    const databaseUrl = process.env.DATABASE_URL;
-    const schema = databaseUrl ? new URL(databaseUrl).searchParams.get("schema") || "public" : "public";
-    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(schema)) {
-      throw new Error("Schema PostgreSQL inválido");
-    }
-    return Prisma.raw(`"${schema}"."${table}"`);
+    return qualifiedTable(table);
   }
 
   private playerStatisticsSort(sortBy: string) {

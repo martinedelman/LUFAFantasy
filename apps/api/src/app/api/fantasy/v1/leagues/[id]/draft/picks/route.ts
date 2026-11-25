@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceContainer } from "@/bootstrap/serviceContainer";
-import { getPrismaClient } from "@lufa/database/prisma";
 import { fantasyUserFromRequest } from "@/lib/fantasyAuth";
 import { fantasyApiErrorResponse } from "@/lib/fantasyApiError";
 
@@ -13,10 +12,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const { id } = await context.params;
     const body = await request.json();
     const league = await serviceContainer.fantasyCompetitionService.makePick(user.id, { leagueId: id, playerId: body.playerId ? String(body.playerId) : undefined, defenseTeamId: body.defenseTeamId ? String(body.defenseTeamId) : undefined });
-    const onboarding = await getPrismaClient().fantasyOnboarding.findUnique({ where: { userId: user.id } });
-    if (onboarding?.status === "in_progress" && onboarding.currentStep === "draft") {
-      await getPrismaClient().fantasyAuditLog.create({ data: { actorId: user.id, action: "fantasy.onboarding.first_pick" } });
-    }
+    await serviceContainer.fantasyIdentityService.recordDraftPick(user.id);
     return NextResponse.json({ success: true, data: league });
   } catch (error) {
     return fantasyApiErrorResponse({ request, error, route: "/api/fantasy/v1/leagues/draft/picks", knownMessages, knownStatus: 409 });

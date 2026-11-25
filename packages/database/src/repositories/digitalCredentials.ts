@@ -1,16 +1,13 @@
 import { randomBytes } from "node:crypto";
 import { Prisma } from "../generated/prisma/client";
-import { getPrismaClient } from "../prisma";
+import { getPrismaClient, qualifiedTable } from "../prisma";
 import type { DigitalCredentialCandidateResponseDto } from "@lufa/contracts";
 import { evaluateCredential, roleLabelFor, sortRoles } from "./digitalCredentialEvaluation";
 
 export type CredentialTransaction = Prisma.TransactionClient;
 
 function table(name: "players" | "teams" | "judges" | "users" | "digital_credentials") {
-  const databaseUrl = process.env.DATABASE_URL;
-  const schema = databaseUrl ? new URL(databaseUrl).searchParams.get("schema") || "public" : "public";
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(schema)) throw new Error("Schema PostgreSQL inválido");
-  return Prisma.raw(`"${schema}"."${name}"`);
+  return qualifiedTable(name);
 }
 
 export async function nextCredentialMemberNumber(tx: CredentialTransaction, season: number) {
@@ -275,4 +272,15 @@ export async function searchCredentialCandidates(query: string, type: "player" |
     ORDER BY folded.name, source, id
     LIMIT 20
   `);
+}
+
+/** Equipos activos (flag y tackle) para vincular entrenadores a una credencial. */
+export async function searchCredentialTeams(search: string) {
+  const teams = await getPrismaClient().team.findMany({
+    where: { status: "active", name: { contains: search, mode: "insensitive" } },
+    select: { id: true, name: true, division: { select: { name: true } } },
+    orderBy: { name: "asc" },
+    take: 20,
+  });
+  return teams.map((team) => ({ id: team.id, name: team.name, division: team.division.name }));
 }

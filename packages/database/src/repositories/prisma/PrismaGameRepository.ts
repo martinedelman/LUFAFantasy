@@ -2,7 +2,7 @@
 import { Game, type GameEvent, type GameStatus } from "@lufa/sports/entities/Game";
 import { GameScore } from "@lufa/sports/entities/valueObjects/Score";
 import type { Modality } from "@lufa/sports/entities/Modality";
-import { getPrismaClient } from "@lufa/database/prisma";
+import { getPrismaClient, qualifiedTable } from "@lufa/database/prisma";
 import type { IGameRepository } from "../contracts";
 import { modalityFilter, plainJson, referenceId, toGame } from "./mappers";
 
@@ -109,7 +109,7 @@ export class PrismaGameRepository implements IGameRepository {
 
   async addEvent(id: string, event: GameEvent, score?: GameScore): Promise<Game> {
     await this.db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "id" FROM "games" WHERE "id" = ${id} FOR UPDATE`;
+      await tx.$queryRaw`SELECT "id" FROM ${qualifiedTable("games")} WHERE "id" = ${id} FOR UPDATE`;
       const game = await tx.game.findUnique({ where: { id } });
       if (!game) throw new Error("Partido no encontrado");
       const latest = await tx.gameEvent.aggregate({ where: { gameId: id }, _max: { sequence: true } });
@@ -135,7 +135,7 @@ export class PrismaGameRepository implements IGameRepository {
 
   async updateEvent(id: string, eventId: string, event: GameEvent, score?: GameScore): Promise<Game> {
     await this.db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "id" FROM "games" WHERE "id" = ${id} FOR UPDATE`;
+      await tx.$queryRaw`SELECT "id" FROM ${qualifiedTable("games")} WHERE "id" = ${id} FOR UPDATE`;
       const game = await tx.game.findUnique({ where: { id } });
       if (!game) throw new Error("Partido no encontrado");
       const existing = await tx.gameEvent.findFirst({ where: { id: eventId, gameId: id } });
@@ -161,7 +161,7 @@ export class PrismaGameRepository implements IGameRepository {
 
   async removeEvent(id: string, eventId: string, score?: GameScore): Promise<Game> {
     await this.db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "id" FROM "games" WHERE "id" = ${id} FOR UPDATE`;
+      await tx.$queryRaw`SELECT "id" FROM ${qualifiedTable("games")} WHERE "id" = ${id} FOR UPDATE`;
       const game = await tx.game.findUnique({ where: { id } });
       if (!game) throw new Error("Partido no encontrado");
       const result = await tx.gameEvent.deleteMany({ where: { id: eventId, gameId: id } });
