@@ -3,7 +3,7 @@
 import type { CommerceCheckoutQuoteDto } from "@lufa/contracts";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { cartLineKey, checkoutAttempt, discardRejectedCheckoutAttempt, rememberCheckoutOrder, type StorePaymentMode, useStoreCart } from "@/lib/store-cart";
+import { cartLineKey, checkoutAttempt, discardRejectedCheckoutAttempt, rememberCheckoutOrder, useStoreCart } from "@/lib/store-cart";
 import styles from "../store.module.css";
 
 const money = (minor: number) => new Intl.NumberFormat("es-UY", { style: "currency", currency: "UYU", maximumFractionDigits: 0 }).format(minor / 100);
@@ -11,7 +11,6 @@ const money = (minor: number) => new Intl.NumberFormat("es-UY", { style: "curren
 export function StoreCheckout() {
   const { cart, setCart } = useStoreCart();
   const [quote, setQuote] = useState<CommerceCheckoutQuoteDto | null>(null);
-  const [paymentMode, setPaymentMode] = useState<StorePaymentMode>("cash");
   const [error, setError] = useState("");
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -41,17 +40,17 @@ export function StoreCheckout() {
     if (!quote || submitting) return;
     setSubmitting(true); setError("");
     try {
-      const attempt = checkoutAttempt(cart, paymentMode);
+      const attempt = checkoutAttempt(cart);
       const response = await fetch("/api/commerce/checkouts", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idempotencyKey: attempt.idempotencyKey, paymentMode, items: cart }),
+        body: JSON.stringify({ idempotencyKey: attempt.idempotencyKey, items: cart }),
       });
       const body = await response.json() as { data?: { id: string; checkoutUrl: string | null }; message?: string };
       if (!response.ok || !body.data?.checkoutUrl) {
-        if (response.status === 422) discardRejectedCheckoutAttempt(cart, paymentMode);
+        if (response.status === 422) discardRejectedCheckoutAttempt(cart);
         throw new Error(body.message || "No pudimos iniciar el pago.");
       }
-      rememberCheckoutOrder(cart, paymentMode, body.data.id);
+      rememberCheckoutOrder(cart, body.data.id);
       window.location.assign(body.data.checkoutUrl);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No pudimos iniciar el pago.");
@@ -62,7 +61,7 @@ export function StoreCheckout() {
   if (!cart.length) return <section className={styles.checkoutEmpty}><p>Tu compra</p><h1>Tu carrito está vacío</h1><span>Elegí productos, cursos o inscripciones para continuar.</span><Link href="/tienda">Ver catálogo</Link></section>;
 
   return <section className={styles.checkoutPage}>
-    <div className={styles.checkoutTitle}><p>Tu compra</p><h1>Revisá y elegí cómo pagar</h1><span>El precio se confirma con el catálogo de LUFA antes de enviarte a Mercado Pago.</span></div>
+    <div className={styles.checkoutTitle}><p>Tu compra</p><h1>Revisá tu compra</h1><span>El precio se confirma con el catálogo de LUFA antes de enviarte a Handy.</span></div>
     <div className={styles.checkoutLayout}>
       <section className={styles.checkoutPanel} aria-busy={loadingQuote}>
         <div className={styles.checkoutPanelHead}><h2>Productos</h2><Link href="/tienda">Seguir comprando</Link></div>
@@ -75,10 +74,9 @@ export function StoreCheckout() {
       <aside className={styles.checkoutSummary}>
         <p>Resumen</p><h2>{quote?.seller.name || "Tienda LUFA"}</h2>
         {quote ? <><div className={styles.summaryRow}><span>Subtotal</span><strong>{money(quote.subtotalMinor)}</strong></div>{quote.discountMinor ? <div className={styles.summaryRow}><span>Descuento Mi ID</span><strong>− {money(quote.discountMinor)}</strong></div> : null}<div className={styles.summaryTotal}><span>Total comercial</span><strong>{money(quote.totalMinor)}</strong></div></> : null}
-        <fieldset className={styles.paymentModes}><legend>Forma de pago</legend><label className={paymentMode === "cash" ? styles.paymentModeActive : styles.paymentMode}><input type="radio" name="payment-mode" value="cash" checked={paymentMode === "cash"} onChange={() => setPaymentMode("cash")} /><span><b>Al contado</b><small>Un pago.</small></span></label><label className={paymentMode === "installments" ? styles.paymentModeActive : styles.paymentMode}><input type="radio" name="payment-mode" value="installments" checked={paymentMode === "installments"} onChange={() => setPaymentMode("installments")} /><span><b>En cuotas</b><small>Hasta 12 cuotas con tarjeta de crédito.</small></span></label></fieldset>
-        <p className={styles.financingNote}>Mercado Pago calcula y muestra el costo financiero y el total definitivo antes de que confirmes. LUFA no agrega una comisión propia.</p>
+        <p className={styles.financingNote}>Pagás en Handy con tarjeta de crédito o débito, Redpagos o transferencia bancaria. Si tu tarjeta lo permite, elegís las cuotas ahí mismo.</p>
         {error ? <p className={styles.error} role="alert">{error}</p> : null}
-        <button className={styles.payButton} disabled={!quote || loadingQuote || submitting} onClick={() => void continueToPayment()}>{submitting ? "Abriendo Mercado Pago…" : "Ir a Mercado Pago"}</button>
+        <button className={styles.payButton} disabled={!quote || loadingQuote || submitting} onClick={() => void continueToPayment()}>{submitting ? "Abriendo Handy…" : "Pagar con Handy"}</button>
       </aside>
     </div>
   </section>;

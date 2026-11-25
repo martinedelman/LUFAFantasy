@@ -29,6 +29,7 @@ export type AggregateCommerceItem = {
 export type CommerceItemAvgAggregateOutputType = {
   priceMinor: number | null
   credentialDiscountBps: number | null
+  vatRateBps: number | null
   stockQuantity: number | null
   entitlementMonths: number | null
 }
@@ -36,6 +37,7 @@ export type CommerceItemAvgAggregateOutputType = {
 export type CommerceItemSumAggregateOutputType = {
   priceMinor: number | null
   credentialDiscountBps: number | null
+  vatRateBps: number | null
   stockQuantity: number | null
   entitlementMonths: number | null
 }
@@ -54,6 +56,7 @@ export type CommerceItemMinAggregateOutputType = {
   priceMinor: number | null
   currency: string | null
   credentialDiscountBps: number | null
+  vatRateBps: number | null
   stockQuantity: number | null
   entitlementMonths: number | null
   active: boolean | null
@@ -75,6 +78,7 @@ export type CommerceItemMaxAggregateOutputType = {
   priceMinor: number | null
   currency: string | null
   credentialDiscountBps: number | null
+  vatRateBps: number | null
   stockQuantity: number | null
   entitlementMonths: number | null
   active: boolean | null
@@ -98,6 +102,7 @@ export type CommerceItemCountAggregateOutputType = {
   priceMinor: number
   currency: number
   credentialDiscountBps: number
+  vatRateBps: number
   stockQuantity: number
   entitlementMonths: number
   active: number
@@ -110,6 +115,7 @@ export type CommerceItemCountAggregateOutputType = {
 export type CommerceItemAvgAggregateInputType = {
   priceMinor?: true
   credentialDiscountBps?: true
+  vatRateBps?: true
   stockQuantity?: true
   entitlementMonths?: true
 }
@@ -117,6 +123,7 @@ export type CommerceItemAvgAggregateInputType = {
 export type CommerceItemSumAggregateInputType = {
   priceMinor?: true
   credentialDiscountBps?: true
+  vatRateBps?: true
   stockQuantity?: true
   entitlementMonths?: true
 }
@@ -135,6 +142,7 @@ export type CommerceItemMinAggregateInputType = {
   priceMinor?: true
   currency?: true
   credentialDiscountBps?: true
+  vatRateBps?: true
   stockQuantity?: true
   entitlementMonths?: true
   active?: true
@@ -156,6 +164,7 @@ export type CommerceItemMaxAggregateInputType = {
   priceMinor?: true
   currency?: true
   credentialDiscountBps?: true
+  vatRateBps?: true
   stockQuantity?: true
   entitlementMonths?: true
   active?: true
@@ -179,6 +188,7 @@ export type CommerceItemCountAggregateInputType = {
   priceMinor?: true
   currency?: true
   credentialDiscountBps?: true
+  vatRateBps?: true
   stockQuantity?: true
   entitlementMonths?: true
   active?: true
@@ -289,6 +299,7 @@ export type CommerceItemGroupByOutputType = {
   priceMinor: number
   currency: string
   credentialDiscountBps: number
+  vatRateBps: number
   stockQuantity: number | null
   entitlementMonths: number | null
   active: boolean
@@ -335,6 +346,7 @@ export type CommerceItemWhereInput = {
   priceMinor?: Prisma.IntFilter<"CommerceItem"> | number
   currency?: Prisma.StringFilter<"CommerceItem"> | string
   credentialDiscountBps?: Prisma.IntFilter<"CommerceItem"> | number
+  vatRateBps?: Prisma.IntFilter<"CommerceItem"> | number
   stockQuantity?: Prisma.IntNullableFilter<"CommerceItem"> | number | null
   entitlementMonths?: Prisma.IntNullableFilter<"CommerceItem"> | number | null
   active?: Prisma.BoolFilter<"CommerceItem"> | boolean
@@ -363,6 +375,7 @@ export type CommerceItemOrderByWithRelationInput = {
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrderInput | Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -394,6 +407,7 @@ export type CommerceItemWhereUniqueInput = Prisma.AtLeast<{
   priceMinor?: Prisma.IntFilter<"CommerceItem"> | number
   currency?: Prisma.StringFilter<"CommerceItem"> | string
   credentialDiscountBps?: Prisma.IntFilter<"CommerceItem"> | number
+  vatRateBps?: Prisma.IntFilter<"CommerceItem"> | number
   stockQuantity?: Prisma.IntNullableFilter<"CommerceItem"> | number | null
   entitlementMonths?: Prisma.IntNullableFilter<"CommerceItem"> | number | null
   active?: Prisma.BoolFilter<"CommerceItem"> | boolean
@@ -422,6 +436,7 @@ export type CommerceItemOrderByWithAggregationInput = {
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrderInput | Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -453,6 +468,7 @@ export type CommerceItemScalarWhereWithAggregatesInput = {
   priceMinor?: Prisma.IntWithAggregatesFilter<"CommerceItem"> | number
   currency?: Prisma.StringWithAggregatesFilter<"CommerceItem"> | string
   credentialDiscountBps?: Prisma.IntWithAggregatesFilter<"CommerceItem"> | number
+  vatRateBps?: Prisma.IntWithAggregatesFilter<"CommerceItem"> | number
   stockQuantity?: Prisma.IntNullableWithAggregatesFilter<"CommerceItem"> | number | null
   entitlementMonths?: Prisma.IntNullableWithAggregatesFilter<"CommerceItem"> | number | null
   active?: Prisma.BoolWithAggregatesFilter<"CommerceItem"> | boolean
@@ -474,6 +490,7 @@ export type CommerceItemCreateInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -502,6 +519,7 @@ export type CommerceItemUncheckedCreateInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -526,6 +544,7 @@ export type CommerceItemUpdateInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -554,6 +573,7 @@ export type CommerceItemUncheckedUpdateInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -580,6 +600,7 @@ export type CommerceItemCreateManyInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -601,6 +622,7 @@ export type CommerceItemUpdateManyMutationInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -624,6 +646,7 @@ export type CommerceItemUncheckedUpdateManyInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -657,6 +680,7 @@ export type CommerceItemCountOrderByAggregateInput = {
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -667,6 +691,7 @@ export type CommerceItemCountOrderByAggregateInput = {
 export type CommerceItemAvgOrderByAggregateInput = {
   priceMinor?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
 }
@@ -685,6 +710,7 @@ export type CommerceItemMaxOrderByAggregateInput = {
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -706,6 +732,7 @@ export type CommerceItemMinOrderByAggregateInput = {
   priceMinor?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -716,6 +743,7 @@ export type CommerceItemMinOrderByAggregateInput = {
 export type CommerceItemSumOrderByAggregateInput = {
   priceMinor?: Prisma.SortOrder
   credentialDiscountBps?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
 }
@@ -865,6 +893,7 @@ export type CommerceItemCreateWithoutTournamentInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -891,6 +920,7 @@ export type CommerceItemUncheckedCreateWithoutTournamentInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -946,6 +976,7 @@ export type CommerceItemScalarWhereInput = {
   priceMinor?: Prisma.IntFilter<"CommerceItem"> | number
   currency?: Prisma.StringFilter<"CommerceItem"> | string
   credentialDiscountBps?: Prisma.IntFilter<"CommerceItem"> | number
+  vatRateBps?: Prisma.IntFilter<"CommerceItem"> | number
   stockQuantity?: Prisma.IntNullableFilter<"CommerceItem"> | number | null
   entitlementMonths?: Prisma.IntNullableFilter<"CommerceItem"> | number | null
   active?: Prisma.BoolFilter<"CommerceItem"> | boolean
@@ -967,6 +998,7 @@ export type CommerceItemCreateWithoutSellerInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -993,6 +1025,7 @@ export type CommerceItemUncheckedCreateWithoutSellerInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -1043,6 +1076,7 @@ export type CommerceItemCreateWithoutOrderItemsInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -1070,6 +1104,7 @@ export type CommerceItemUncheckedCreateWithoutOrderItemsInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -1109,6 +1144,7 @@ export type CommerceItemUpdateWithoutOrderItemsInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1136,6 +1172,7 @@ export type CommerceItemUncheckedUpdateWithoutOrderItemsInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1159,6 +1196,7 @@ export type CommerceItemCreateWithoutVariantsInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -1186,6 +1224,7 @@ export type CommerceItemUncheckedCreateWithoutVariantsInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -1225,6 +1264,7 @@ export type CommerceItemUpdateWithoutVariantsInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1252,6 +1292,7 @@ export type CommerceItemUncheckedUpdateWithoutVariantsInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1275,6 +1316,7 @@ export type CommerceItemCreateWithoutRegistrationsInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -1302,6 +1344,7 @@ export type CommerceItemUncheckedCreateWithoutRegistrationsInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -1341,6 +1384,7 @@ export type CommerceItemUpdateWithoutRegistrationsInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1368,6 +1412,7 @@ export type CommerceItemUncheckedUpdateWithoutRegistrationsInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1392,6 +1437,7 @@ export type CommerceItemCreateManyTournamentInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -1413,6 +1459,7 @@ export type CommerceItemUpdateWithoutTournamentInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1439,6 +1486,7 @@ export type CommerceItemUncheckedUpdateWithoutTournamentInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1464,6 +1512,7 @@ export type CommerceItemUncheckedUpdateManyWithoutTournamentInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1486,6 +1535,7 @@ export type CommerceItemCreateManySellerInput = {
   priceMinor: number
   currency?: string
   credentialDiscountBps?: number
+  vatRateBps?: number
   stockQuantity?: number | null
   entitlementMonths?: number | null
   active?: boolean
@@ -1507,6 +1557,7 @@ export type CommerceItemUpdateWithoutSellerInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1533,6 +1584,7 @@ export type CommerceItemUncheckedUpdateWithoutSellerInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1558,6 +1610,7 @@ export type CommerceItemUncheckedUpdateManyWithoutSellerInput = {
   priceMinor?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   credentialDiscountBps?: Prisma.IntFieldUpdateOperationsInput | number
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   stockQuantity?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1630,6 +1683,7 @@ export type CommerceItemSelect<ExtArgs extends runtime.Types.Extensions.Internal
   priceMinor?: boolean
   currency?: boolean
   credentialDiscountBps?: boolean
+  vatRateBps?: boolean
   stockQuantity?: boolean
   entitlementMonths?: boolean
   active?: boolean
@@ -1659,6 +1713,7 @@ export type CommerceItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   priceMinor?: boolean
   currency?: boolean
   credentialDiscountBps?: boolean
+  vatRateBps?: boolean
   stockQuantity?: boolean
   entitlementMonths?: boolean
   active?: boolean
@@ -1684,6 +1739,7 @@ export type CommerceItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   priceMinor?: boolean
   currency?: boolean
   credentialDiscountBps?: boolean
+  vatRateBps?: boolean
   stockQuantity?: boolean
   entitlementMonths?: boolean
   active?: boolean
@@ -1709,6 +1765,7 @@ export type CommerceItemSelectScalar = {
   priceMinor?: boolean
   currency?: boolean
   credentialDiscountBps?: boolean
+  vatRateBps?: boolean
   stockQuantity?: boolean
   entitlementMonths?: boolean
   active?: boolean
@@ -1716,7 +1773,7 @@ export type CommerceItemSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CommerceItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sellerId" | "tournamentId" | "slug" | "kind" | "title" | "description" | "imageUrl" | "imageUrls" | "sku" | "details" | "pickupInstructions" | "priceMinor" | "currency" | "credentialDiscountBps" | "stockQuantity" | "entitlementMonths" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["commerceItem"]>
+export type CommerceItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sellerId" | "tournamentId" | "slug" | "kind" | "title" | "description" | "imageUrl" | "imageUrls" | "sku" | "details" | "pickupInstructions" | "priceMinor" | "currency" | "credentialDiscountBps" | "vatRateBps" | "stockQuantity" | "entitlementMonths" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["commerceItem"]>
 export type CommerceItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   seller?: boolean | Prisma.CommerceSellerDefaultArgs<ExtArgs>
   tournament?: boolean | Prisma.CommerceItem$tournamentArgs<ExtArgs>
@@ -1759,6 +1816,10 @@ export type $CommerceItemPayload<ExtArgs extends runtime.Types.Extensions.Intern
     priceMinor: number
     currency: string
     credentialDiscountBps: number
+    /**
+     * IVA incluido en el precio, en puntos básicos (0, 1000 o 2200).
+     */
+    vatRateBps: number
     stockQuantity: number | null
     entitlementMonths: number | null
     active: boolean
@@ -2207,6 +2268,7 @@ export interface CommerceItemFieldRefs {
   readonly priceMinor: Prisma.FieldRef<"CommerceItem", 'Int'>
   readonly currency: Prisma.FieldRef<"CommerceItem", 'String'>
   readonly credentialDiscountBps: Prisma.FieldRef<"CommerceItem", 'Int'>
+  readonly vatRateBps: Prisma.FieldRef<"CommerceItem", 'Int'>
   readonly stockQuantity: Prisma.FieldRef<"CommerceItem", 'Int'>
   readonly entitlementMonths: Prisma.FieldRef<"CommerceItem", 'Int'>
   readonly active: Prisma.FieldRef<"CommerceItem", 'Boolean'>

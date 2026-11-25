@@ -3,12 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 export type StoreCartLine = { itemId: string; variantId: string | null; quantity: number };
-export type StorePaymentMode = "cash" | "installments";
-
-type CheckoutAttempt = { cartSignature: string; paymentMode: StorePaymentMode; idempotencyKey: string; orderId?: string };
+type CheckoutAttempt = { cartSignature: string; idempotencyKey: string; orderId?: string };
 
 const CART_KEY = "lufa-store-cart:v1";
-const ATTEMPT_KEY = "lufa-store-checkout-attempt:v1";
+const ATTEMPT_KEY = "lufa-store-checkout-attempt:v2";
 const CHANGE_EVENT = "lufa-store-cart-change";
 
 export function cartLineKey(line: Pick<StoreCartLine, "itemId" | "variantId">) { return `${line.itemId}:${line.variantId || "base"}`; }
@@ -75,8 +73,8 @@ function readAttempt(): CheckoutAttempt | null {
   if (!stored) return null;
   try {
     const value = JSON.parse(stored) as Partial<CheckoutAttempt>;
-    return typeof value.cartSignature === "string" && (value.paymentMode === "cash" || value.paymentMode === "installments") && typeof value.idempotencyKey === "string"
-      ? { cartSignature: value.cartSignature, paymentMode: value.paymentMode, idempotencyKey: value.idempotencyKey, ...(typeof value.orderId === "string" ? { orderId: value.orderId } : {}) }
+    return typeof value.cartSignature === "string" && typeof value.idempotencyKey === "string"
+      ? { cartSignature: value.cartSignature, idempotencyKey: value.idempotencyKey, ...(typeof value.orderId === "string" ? { orderId: value.orderId } : {}) }
       : null;
   } catch { return null; }
 }
@@ -86,15 +84,15 @@ function writeAttempt(value: CheckoutAttempt | null) {
   try { if (value) window.localStorage.setItem(ATTEMPT_KEY, JSON.stringify(value)); else window.localStorage.removeItem(ATTEMPT_KEY); } catch { /* Storage is optional. */ }
 }
 
-export function checkoutAttempt(lines: StoreCartLine[], paymentMode: StorePaymentMode) {
+export function checkoutAttempt(lines: StoreCartLine[]) {
   const signature = cartSignature(lines); const current = readAttempt();
-  if (current?.cartSignature === signature && current.paymentMode === paymentMode) return current;
-  const next: CheckoutAttempt = { cartSignature: signature, paymentMode, idempotencyKey: crypto.randomUUID() };
+  if (current?.cartSignature === signature) return current;
+  const next: CheckoutAttempt = { cartSignature: signature, idempotencyKey: crypto.randomUUID() };
   writeAttempt(next); return next;
 }
 
-export function rememberCheckoutOrder(lines: StoreCartLine[], paymentMode: StorePaymentMode, orderId: string) {
-  const current = checkoutAttempt(lines, paymentMode);
+export function rememberCheckoutOrder(lines: StoreCartLine[], orderId: string) {
+  const current = checkoutAttempt(lines);
   writeAttempt({ ...current, orderId });
 }
 
@@ -110,7 +108,7 @@ export function discardCheckoutAttempt(orderId: string) {
 }
 
 /** A definitively rejected provider attempt can use a fresh idempotency key. */
-export function discardRejectedCheckoutAttempt(lines: StoreCartLine[], paymentMode: StorePaymentMode) {
+export function discardRejectedCheckoutAttempt(lines: StoreCartLine[]) {
   const current = readAttempt();
-  if (current?.cartSignature === cartSignature(lines) && current.paymentMode === paymentMode && !current.orderId) writeAttempt(null);
+  if (current?.cartSignature === cartSignature(lines) && !current.orderId) writeAttempt(null);
 }

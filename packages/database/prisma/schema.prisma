@@ -980,6 +980,8 @@ model CommerceItem {
   priceMinor            Int      @map("price_minor")
   currency              String   @default("UYU")
   credentialDiscountBps Int      @default(0) @map("credential_discount_bps")
+  /// IVA incluido en el precio, en puntos básicos (0, 1000 o 2200).
+  vatRateBps            Int      @default(2200) @map("vat_rate_bps")
   stockQuantity         Int?     @map("stock_quantity")
   entitlementMonths     Int?     @map("entitlement_months")
   active                Boolean  @default(true)
@@ -1008,12 +1010,11 @@ model CommerceOrder {
   subtotalMinor         Int       @map("subtotal_minor")
   discountMinor         Int       @default(0) @map("discount_minor")
   totalMinor            Int       @map("total_minor")
-  paymentMode           String    @default("cash") @map("payment_mode")
-  maxInstallments       Int       @default(1) @map("max_installments")
   paymentMethodId       String?   @map("payment_method_id")
   paymentMethodType     String?   @map("payment_method_type")
-  paymentInstallments   Int?      @map("payment_installments")
-  paymentInstallmentAmountMinor Int? @map("payment_installment_amount_minor")
+  paymentDueAt          DateTime? @map("payment_due_at")
+  /// Número correlativo informado a Handy como InvoiceNumber.
+  invoiceNumber         Int       @unique @default(autoincrement()) @map("invoice_number")
   idempotencyKey        String    @unique @map("idempotency_key")
   payloadFingerprint    String    @map("payload_fingerprint")
   providerOrderId       String?   @unique @map("provider_order_id")
@@ -1053,6 +1054,7 @@ model CommerceOrderItem {
   entitlementMonths     Int?   @map("entitlement_months")
   variantSku            String? @map("variant_sku")
   variantLabel          String? @map("variant_label")
+  vatRateBps            Int    @default(2200) @map("vat_rate_bps")
 
   order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
   item  CommerceItem  @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -1126,8 +1128,10 @@ model CommerceRefundRequest {
   requestedById  String    @map("requested_by_id")
   amountMinor    Int       @map("amount_minor")
   reason         String
+  /// requested | processing | completed | failed
   status         String    @default("requested")
   providerRefundId String? @unique @map("provider_refund_id")
+  providerMessage String?  @map("provider_message")
   reviewedById   String?   @map("reviewed_by_id")
   reviewedAt     DateTime? @map("reviewed_at")
   createdAt      DateTime  @default(now()) @map("created_at")
