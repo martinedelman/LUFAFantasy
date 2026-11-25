@@ -31,6 +31,7 @@ export type CommerceOrderItemAvgAggregateOutputType = {
   unitPriceMinor: number | null
   unitDiscountMinor: number | null
   entitlementMonths: number | null
+  vatRateBps: number | null
 }
 
 export type CommerceOrderItemSumAggregateOutputType = {
@@ -38,6 +39,7 @@ export type CommerceOrderItemSumAggregateOutputType = {
   unitPriceMinor: number | null
   unitDiscountMinor: number | null
   entitlementMonths: number | null
+  vatRateBps: number | null
 }
 
 export type CommerceOrderItemMinAggregateOutputType = {
@@ -53,6 +55,7 @@ export type CommerceOrderItemMinAggregateOutputType = {
   entitlementMonths: number | null
   variantSku: string | null
   variantLabel: string | null
+  vatRateBps: number | null
 }
 
 export type CommerceOrderItemMaxAggregateOutputType = {
@@ -68,6 +71,7 @@ export type CommerceOrderItemMaxAggregateOutputType = {
   entitlementMonths: number | null
   variantSku: string | null
   variantLabel: string | null
+  vatRateBps: number | null
 }
 
 export type CommerceOrderItemCountAggregateOutputType = {
@@ -83,6 +87,7 @@ export type CommerceOrderItemCountAggregateOutputType = {
   entitlementMonths: number
   variantSku: number
   variantLabel: number
+  vatRateBps: number
   _all: number
 }
 
@@ -92,6 +97,7 @@ export type CommerceOrderItemAvgAggregateInputType = {
   unitPriceMinor?: true
   unitDiscountMinor?: true
   entitlementMonths?: true
+  vatRateBps?: true
 }
 
 export type CommerceOrderItemSumAggregateInputType = {
@@ -99,6 +105,7 @@ export type CommerceOrderItemSumAggregateInputType = {
   unitPriceMinor?: true
   unitDiscountMinor?: true
   entitlementMonths?: true
+  vatRateBps?: true
 }
 
 export type CommerceOrderItemMinAggregateInputType = {
@@ -114,6 +121,7 @@ export type CommerceOrderItemMinAggregateInputType = {
   entitlementMonths?: true
   variantSku?: true
   variantLabel?: true
+  vatRateBps?: true
 }
 
 export type CommerceOrderItemMaxAggregateInputType = {
@@ -129,6 +137,7 @@ export type CommerceOrderItemMaxAggregateInputType = {
   entitlementMonths?: true
   variantSku?: true
   variantLabel?: true
+  vatRateBps?: true
 }
 
 export type CommerceOrderItemCountAggregateInputType = {
@@ -144,6 +153,7 @@ export type CommerceOrderItemCountAggregateInputType = {
   entitlementMonths?: true
   variantSku?: true
   variantLabel?: true
+  vatRateBps?: true
   _all?: true
 }
 
@@ -246,6 +256,7 @@ export type CommerceOrderItemGroupByOutputType = {
   entitlementMonths: number | null
   variantSku: string | null
   variantLabel: string | null
+  vatRateBps: number
   _count: CommerceOrderItemCountAggregateOutputType | null
   _avg: CommerceOrderItemAvgAggregateOutputType | null
   _sum: CommerceOrderItemSumAggregateOutputType | null
@@ -284,6 +295,7 @@ export type CommerceOrderItemWhereInput = {
   entitlementMonths?: Prisma.IntNullableFilter<"CommerceOrderItem"> | number | null
   variantSku?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
   variantLabel?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
+  vatRateBps?: Prisma.IntFilter<"CommerceOrderItem"> | number
   order?: Prisma.XOR<Prisma.CommerceOrderScalarRelationFilter, Prisma.CommerceOrderWhereInput>
   item?: Prisma.XOR<Prisma.CommerceItemScalarRelationFilter, Prisma.CommerceItemWhereInput>
 }
@@ -301,6 +313,7 @@ export type CommerceOrderItemOrderByWithRelationInput = {
   entitlementMonths?: Prisma.SortOrderInput | Prisma.SortOrder
   variantSku?: Prisma.SortOrderInput | Prisma.SortOrder
   variantLabel?: Prisma.SortOrderInput | Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
   order?: Prisma.CommerceOrderOrderByWithRelationInput
   item?: Prisma.CommerceItemOrderByWithRelationInput
 }
@@ -321,6 +334,7 @@ export type CommerceOrderItemWhereUniqueInput = Prisma.AtLeast<{
   entitlementMonths?: Prisma.IntNullableFilter<"CommerceOrderItem"> | number | null
   variantSku?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
   variantLabel?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
+  vatRateBps?: Prisma.IntFilter<"CommerceOrderItem"> | number
   order?: Prisma.XOR<Prisma.CommerceOrderScalarRelationFilter, Prisma.CommerceOrderWhereInput>
   item?: Prisma.XOR<Prisma.CommerceItemScalarRelationFilter, Prisma.CommerceItemWhereInput>
 }, "id">
@@ -338,6 +352,7 @@ export type CommerceOrderItemOrderByWithAggregationInput = {
   entitlementMonths?: Prisma.SortOrderInput | Prisma.SortOrder
   variantSku?: Prisma.SortOrderInput | Prisma.SortOrder
   variantLabel?: Prisma.SortOrderInput | Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
   _count?: Prisma.CommerceOrderItemCountOrderByAggregateInput
   _avg?: Prisma.CommerceOrderItemAvgOrderByAggregateInput
   _max?: Prisma.CommerceOrderItemMaxOrderByAggregateInput
@@ -361,6 +376,7 @@ export type CommerceOrderItemScalarWhereWithAggregatesInput = {
   entitlementMonths?: Prisma.IntNullableWithAggregatesFilter<"CommerceOrderItem"> | number | null
   variantSku?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrderItem"> | string | null
   variantLabel?: Prisma.StringNullableWithAggregatesFilter<"CommerceOrderItem"> | string | null
+  vatRateBps?: Prisma.IntWithAggregatesFilter<"CommerceOrderItem"> | number
 }
 
 export type CommerceOrderItemCreateInput = {
@@ -374,6 +390,7 @@ export type CommerceOrderItemCreateInput = {
   entitlementMonths?: number | null
   variantSku?: string | null
   variantLabel?: string | null
+  vatRateBps?: number
   order: Prisma.CommerceOrderCreateNestedOneWithoutItemsInput
   item: Prisma.CommerceItemCreateNestedOneWithoutOrderItemsInput
 }
@@ -391,6 +408,7 @@ export type CommerceOrderItemUncheckedCreateInput = {
   entitlementMonths?: number | null
   variantSku?: string | null
   variantLabel?: string | null
+  vatRateBps?: number
 }
 
 export type CommerceOrderItemUpdateInput = {
@@ -404,6 +422,7 @@ export type CommerceOrderItemUpdateInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   order?: Prisma.CommerceOrderUpdateOneRequiredWithoutItemsNestedInput
   item?: Prisma.CommerceItemUpdateOneRequiredWithoutOrderItemsNestedInput
 }
@@ -421,6 +440,7 @@ export type CommerceOrderItemUncheckedUpdateInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type CommerceOrderItemCreateManyInput = {
@@ -436,6 +456,7 @@ export type CommerceOrderItemCreateManyInput = {
   entitlementMonths?: number | null
   variantSku?: string | null
   variantLabel?: string | null
+  vatRateBps?: number
 }
 
 export type CommerceOrderItemUpdateManyMutationInput = {
@@ -449,6 +470,7 @@ export type CommerceOrderItemUpdateManyMutationInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type CommerceOrderItemUncheckedUpdateManyInput = {
@@ -464,6 +486,7 @@ export type CommerceOrderItemUncheckedUpdateManyInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type CommerceOrderItemListRelationFilter = {
@@ -489,6 +512,7 @@ export type CommerceOrderItemCountOrderByAggregateInput = {
   entitlementMonths?: Prisma.SortOrder
   variantSku?: Prisma.SortOrder
   variantLabel?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
 }
 
 export type CommerceOrderItemAvgOrderByAggregateInput = {
@@ -496,6 +520,7 @@ export type CommerceOrderItemAvgOrderByAggregateInput = {
   unitPriceMinor?: Prisma.SortOrder
   unitDiscountMinor?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
 }
 
 export type CommerceOrderItemMaxOrderByAggregateInput = {
@@ -511,6 +536,7 @@ export type CommerceOrderItemMaxOrderByAggregateInput = {
   entitlementMonths?: Prisma.SortOrder
   variantSku?: Prisma.SortOrder
   variantLabel?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
 }
 
 export type CommerceOrderItemMinOrderByAggregateInput = {
@@ -526,6 +552,7 @@ export type CommerceOrderItemMinOrderByAggregateInput = {
   entitlementMonths?: Prisma.SortOrder
   variantSku?: Prisma.SortOrder
   variantLabel?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
 }
 
 export type CommerceOrderItemSumOrderByAggregateInput = {
@@ -533,6 +560,7 @@ export type CommerceOrderItemSumOrderByAggregateInput = {
   unitPriceMinor?: Prisma.SortOrder
   unitDiscountMinor?: Prisma.SortOrder
   entitlementMonths?: Prisma.SortOrder
+  vatRateBps?: Prisma.SortOrder
 }
 
 export type CommerceOrderItemCreateNestedManyWithoutItemInput = {
@@ -630,6 +658,7 @@ export type CommerceOrderItemCreateWithoutItemInput = {
   entitlementMonths?: number | null
   variantSku?: string | null
   variantLabel?: string | null
+  vatRateBps?: number
   order: Prisma.CommerceOrderCreateNestedOneWithoutItemsInput
 }
 
@@ -645,6 +674,7 @@ export type CommerceOrderItemUncheckedCreateWithoutItemInput = {
   entitlementMonths?: number | null
   variantSku?: string | null
   variantLabel?: string | null
+  vatRateBps?: number
 }
 
 export type CommerceOrderItemCreateOrConnectWithoutItemInput = {
@@ -689,6 +719,7 @@ export type CommerceOrderItemScalarWhereInput = {
   entitlementMonths?: Prisma.IntNullableFilter<"CommerceOrderItem"> | number | null
   variantSku?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
   variantLabel?: Prisma.StringNullableFilter<"CommerceOrderItem"> | string | null
+  vatRateBps?: Prisma.IntFilter<"CommerceOrderItem"> | number
 }
 
 export type CommerceOrderItemCreateWithoutOrderInput = {
@@ -702,6 +733,7 @@ export type CommerceOrderItemCreateWithoutOrderInput = {
   entitlementMonths?: number | null
   variantSku?: string | null
   variantLabel?: string | null
+  vatRateBps?: number
   item: Prisma.CommerceItemCreateNestedOneWithoutOrderItemsInput
 }
 
@@ -717,6 +749,7 @@ export type CommerceOrderItemUncheckedCreateWithoutOrderInput = {
   entitlementMonths?: number | null
   variantSku?: string | null
   variantLabel?: string | null
+  vatRateBps?: number
 }
 
 export type CommerceOrderItemCreateOrConnectWithoutOrderInput = {
@@ -757,6 +790,7 @@ export type CommerceOrderItemCreateManyItemInput = {
   entitlementMonths?: number | null
   variantSku?: string | null
   variantLabel?: string | null
+  vatRateBps?: number
 }
 
 export type CommerceOrderItemUpdateWithoutItemInput = {
@@ -770,6 +804,7 @@ export type CommerceOrderItemUpdateWithoutItemInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   order?: Prisma.CommerceOrderUpdateOneRequiredWithoutItemsNestedInput
 }
 
@@ -785,6 +820,7 @@ export type CommerceOrderItemUncheckedUpdateWithoutItemInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type CommerceOrderItemUncheckedUpdateManyWithoutItemInput = {
@@ -799,6 +835,7 @@ export type CommerceOrderItemUncheckedUpdateManyWithoutItemInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type CommerceOrderItemCreateManyOrderInput = {
@@ -813,6 +850,7 @@ export type CommerceOrderItemCreateManyOrderInput = {
   entitlementMonths?: number | null
   variantSku?: string | null
   variantLabel?: string | null
+  vatRateBps?: number
 }
 
 export type CommerceOrderItemUpdateWithoutOrderInput = {
@@ -826,6 +864,7 @@ export type CommerceOrderItemUpdateWithoutOrderInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
   item?: Prisma.CommerceItemUpdateOneRequiredWithoutOrderItemsNestedInput
 }
 
@@ -841,6 +880,7 @@ export type CommerceOrderItemUncheckedUpdateWithoutOrderInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type CommerceOrderItemUncheckedUpdateManyWithoutOrderInput = {
@@ -855,6 +895,7 @@ export type CommerceOrderItemUncheckedUpdateManyWithoutOrderInput = {
   entitlementMonths?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vatRateBps?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 
@@ -872,6 +913,7 @@ export type CommerceOrderItemSelect<ExtArgs extends runtime.Types.Extensions.Int
   entitlementMonths?: boolean
   variantSku?: boolean
   variantLabel?: boolean
+  vatRateBps?: boolean
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["commerceOrderItem"]>
@@ -889,6 +931,7 @@ export type CommerceOrderItemSelectCreateManyAndReturn<ExtArgs extends runtime.T
   entitlementMonths?: boolean
   variantSku?: boolean
   variantLabel?: boolean
+  vatRateBps?: boolean
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["commerceOrderItem"]>
@@ -906,6 +949,7 @@ export type CommerceOrderItemSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   entitlementMonths?: boolean
   variantSku?: boolean
   variantLabel?: boolean
+  vatRateBps?: boolean
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["commerceOrderItem"]>
@@ -923,9 +967,10 @@ export type CommerceOrderItemSelectScalar = {
   entitlementMonths?: boolean
   variantSku?: boolean
   variantLabel?: boolean
+  vatRateBps?: boolean
 }
 
-export type CommerceOrderItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "itemId" | "variantId" | "title" | "kind" | "quantity" | "unitPriceMinor" | "unitDiscountMinor" | "entitlementMonths" | "variantSku" | "variantLabel", ExtArgs["result"]["commerceOrderItem"]>
+export type CommerceOrderItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "itemId" | "variantId" | "title" | "kind" | "quantity" | "unitPriceMinor" | "unitDiscountMinor" | "entitlementMonths" | "variantSku" | "variantLabel" | "vatRateBps", ExtArgs["result"]["commerceOrderItem"]>
 export type CommerceOrderItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
   item?: boolean | Prisma.CommerceItemDefaultArgs<ExtArgs>
@@ -958,6 +1003,7 @@ export type $CommerceOrderItemPayload<ExtArgs extends runtime.Types.Extensions.I
     entitlementMonths: number | null
     variantSku: string | null
     variantLabel: string | null
+    vatRateBps: number
   }, ExtArgs["result"]["commerceOrderItem"]>
   composites: {}
 }
@@ -1395,6 +1441,7 @@ export interface CommerceOrderItemFieldRefs {
   readonly entitlementMonths: Prisma.FieldRef<"CommerceOrderItem", 'Int'>
   readonly variantSku: Prisma.FieldRef<"CommerceOrderItem", 'String'>
   readonly variantLabel: Prisma.FieldRef<"CommerceOrderItem", 'String'>
+  readonly vatRateBps: Prisma.FieldRef<"CommerceOrderItem", 'Int'>
 }
     
 

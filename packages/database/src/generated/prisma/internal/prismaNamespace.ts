@@ -5068,6 +5068,7 @@ export const CommerceItemScalarFieldEnum = {
   priceMinor: 'priceMinor',
   currency: 'currency',
   credentialDiscountBps: 'credentialDiscountBps',
+  vatRateBps: 'vatRateBps',
   stockQuantity: 'stockQuantity',
   entitlementMonths: 'entitlementMonths',
   active: 'active',
@@ -5089,12 +5090,10 @@ export const CommerceOrderScalarFieldEnum = {
   subtotalMinor: 'subtotalMinor',
   discountMinor: 'discountMinor',
   totalMinor: 'totalMinor',
-  paymentMode: 'paymentMode',
-  maxInstallments: 'maxInstallments',
   paymentMethodId: 'paymentMethodId',
   paymentMethodType: 'paymentMethodType',
-  paymentInstallments: 'paymentInstallments',
-  paymentInstallmentAmountMinor: 'paymentInstallmentAmountMinor',
+  paymentDueAt: 'paymentDueAt',
+  invoiceNumber: 'invoiceNumber',
   idempotencyKey: 'idempotencyKey',
   payloadFingerprint: 'payloadFingerprint',
   providerOrderId: 'providerOrderId',
@@ -5125,7 +5124,8 @@ export const CommerceOrderItemScalarFieldEnum = {
   unitDiscountMinor: 'unitDiscountMinor',
   entitlementMonths: 'entitlementMonths',
   variantSku: 'variantSku',
-  variantLabel: 'variantLabel'
+  variantLabel: 'variantLabel',
+  vatRateBps: 'vatRateBps'
 } as const
 
 export type CommerceOrderItemScalarFieldEnum = (typeof CommerceOrderItemScalarFieldEnum)[keyof typeof CommerceOrderItemScalarFieldEnum]
@@ -5186,6 +5186,7 @@ export const CommerceRefundRequestScalarFieldEnum = {
   reason: 'reason',
   status: 'status',
   providerRefundId: 'providerRefundId',
+  providerMessage: 'providerMessage',
   reviewedById: 'reviewedById',
   reviewedAt: 'reviewedAt',
   createdAt: 'createdAt'

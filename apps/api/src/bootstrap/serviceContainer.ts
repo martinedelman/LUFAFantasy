@@ -10,7 +10,7 @@ import { PrismaPasskeyRepository } from "@lufa/database/repositories/passkeys";
 import { resolvePasskeyConfig } from "@/lib/passkeyConfig";
 import { CommerceService } from "@lufa/commerce";
 import { PrismaCommerceRepository } from "@lufa/database/repositories/commerce";
-import { BlobStorageService, EmailService, MercadoPagoOrdersProvider, PreApprovedPlayerNotificationService } from "@lufa/integrations";
+import { BlobStorageService, EmailService, HandyPaymentProvider, PreApprovedPlayerNotificationService, type HandyEnvironment } from "@lufa/integrations";
 import { AdminService, DashboardService, PlayerImportService, WeeklyDigestEmailService } from "@lufa/operations";
 import {
   AnalyticsReportService,
@@ -77,20 +77,23 @@ const playerImportService = new PlayerImportService(
   notificationService,
   auxiliaryRepository,
 );
+const handyEnvironment = process.env.HANDY_ENVIRONMENT;
+const handyEnvironmentConfigured = handyEnvironment === "testing" || handyEnvironment === "production";
 const commerceService = new CommerceService(
   new PrismaCommerceRepository(),
-  new MercadoPagoOrdersProvider({
-    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
-    collectorId: process.env.MERCADOPAGO_COLLECTOR_ID || "",
-    applicationId: process.env.MERCADOPAGO_APPLICATION_ID || "",
+  new HandyPaymentProvider({
+    merchantSecret: process.env.HANDY_MERCHANT_SECRET || "",
+    environment: (handyEnvironmentConfigured ? handyEnvironment : "testing") as HandyEnvironment,
+    commerceName: process.env.HANDY_COMMERCE_NAME || "LUFA",
   }),
   {
-    liveMode: process.env.MERCADOPAGO_EXPECTED_LIVE_MODE === "true",
+    liveMode: handyEnvironment === "production",
     returnBaseUrl: (process.env.LUFA_PUBLIC_APP_URL || "http://localhost:3003").replace(/\/$/, ""),
+    callbackBaseUrl: (process.env.HANDY_CALLBACK_BASE_URL || "").replace(/\/$/, ""),
+    callbackSecret: process.env.HANDY_CALLBACK_SECRET || "",
     reservationMinutes: Number(process.env.COMMERCE_RESERVATION_MINUTES || 30),
-    maxInstallments: Number(process.env.COMMERCE_MAX_INSTALLMENTS || 12),
     enabled: process.env.COMMERCE_ENABLED === "true",
-    environmentConfigured: ["true", "false"].includes(process.env.MERCADOPAGO_EXPECTED_LIVE_MODE || ""),
+    environmentConfigured: handyEnvironmentConfigured && Boolean(process.env.HANDY_MERCHANT_SECRET),
   },
 );
 

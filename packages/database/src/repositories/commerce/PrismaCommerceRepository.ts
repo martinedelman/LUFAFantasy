@@ -1,5 +1,6 @@
 import type { CommerceAdminDashboardDto, CommerceCheckoutQuoteDto, CommerceFulfillmentStatus, CommerceItemDetailsDto, CommerceItemDto, CommerceOrderDto, CommerceOrderFiltersDto, CommerceTournamentOptionDto, CreateCommerceCheckoutDto, CreateCommerceItemDto, CreateCommerceRefundRequestDto, CreateCommerceSellerDto, UpdateCommerceItemDto } from "@lufa/contracts";
-import { CommerceError, type CommerceActor, type CommerceRepository, type ReservedOrder, type VerifiedProviderOrder } from "@lufa/commerce";
+import { randomUUID } from "node:crypto";
+import { COMMERCE_VAT_RATES, CommerceError, type CommerceActor, type CommerceRepository, type ProviderPaymentUpdate, type ReservedOrder } from "@lufa/commerce";
 import { getPrismaClient } from "../../prisma";
 import { CredentialDomainError, type CredentialTransaction, findUniquePlayerByEmail, grantMembershipMonths, hasValidRealId, issueCredential, upsertMember } from "../digitalCredentials";
 import { credentialRoles, sortRoles, roleLabelFor } from "../digitalCredentialEvaluation";
@@ -7,8 +8,7 @@ import { credentialRoles, sortRoles, roleLabelFor } from "../digitalCredentialEv
 type Db = ReturnType<typeof getPrismaClient>;
 type ItemRow = any;
 type OrderRow = any;
-const PAID = new Set(["processed", "accredited"]);
-const CANCELLED = new Set(["cancelled", "canceled", "expired", "rejected"]);
+const OPEN_ORDER = ["creating", "payment_pending"];
 const FULFILLMENT = new Set<CommerceFulfillmentStatus>(["pending_fulfillment", "ready_for_pickup", "delivered", "not_required"]);
 const DATE_KEYS = new Set(["startsAt", "endsAt", "registrationDeadline"]);
 
@@ -24,20 +24,20 @@ function itemDto(item: ItemRow, hasCredential = false): CommerceItemDto {
     id: item.id, seller: item.seller, slug: item.slug, kind: item.kind, title: item.title, description: item.description,
     imageUrl: item.imageUrl, imageUrls: imageUrls(item.imageUrls, item.imageUrl), sku: item.sku, details: plainDetails(item.details), pickupInstructions: item.pickupInstructions,
     currency: "UYU", priceMinor: item.priceMinor, effectivePriceMinor: item.priceMinor - discount, credentialDiscountBps: item.credentialDiscountBps,
-    hasCredentialDiscount: discount > 0, stockQuantity: item.stockQuantity, entitlementMonths: item.entitlementMonths, active: item.active,
+    hasCredentialDiscount: discount > 0, stockQuantity: item.stockQuantity, entitlementMonths: item.entitlementMonths, active: item.active, vatRateBps: item.vatRateBps ?? 2200,
     variants: (item.variants || []).map((variant: any) => ({ id: variant.id, sku: variant.sku, label: variant.label, optionName: variant.optionName, optionValue: variant.optionValue, priceMinor: variant.priceMinor, stockQuantity: variant.stockQuantity, active: variant.active })),
   };
 }
 function orderDto(order: OrderRow): CommerceOrderDto {
   return {
     id: order.id, status: order.status, fulfillmentStatus: order.fulfillmentStatus, currency: "UYU", subtotalMinor: order.subtotalMinor,
-    discountMinor: order.discountMinor, totalMinor: order.totalMinor, paymentMode: order.paymentMode || "cash", maxInstallments: order.maxInstallments || 1,
+    discountMinor: order.discountMinor, totalMinor: order.totalMinor, 
     paymentMethodId: order.paymentMethodId || null, paymentMethodType: order.paymentMethodType || null,
-    paymentInstallments: order.paymentInstallments ?? null, paymentInstallmentAmountMinor: order.paymentInstallmentAmountMinor ?? null,
+    paymentDueAt: order.paymentDueAt ? order.paymentDueAt.toISOString() : null,
     checkoutUrl: order.checkoutUrl, createdAt: order.createdAt.toISOString(),
     seller: order.seller || { id: order.sellerId, slug: "", name: "Vendedor" }, buyer: order.buyer ? { name: order.buyer.name, email: order.buyer.email } : undefined,
     pickupInstructions: order.pickupInstructions || null,
-    items: order.items.map((item: any) => ({ itemId: item.itemId, title: item.title, kind: item.kind, quantity: item.quantity, unitPriceMinor: item.unitPriceMinor, unitDiscountMinor: item.unitDiscountMinor, entitlementMonths: item.entitlementMonths, variantId: item.variantId, variantSku: item.variantSku, variantLabel: item.variantLabel })),
+    items: order.items.map((item: any) => ({ itemId: item.itemId, title: item.title, kind: item.kind, quantity: item.quantity, unitPriceMinor: item.unitPriceMinor, unitDiscountMinor: item.unitDiscountMinor, entitlementMonths: item.entitlementMonths, variantId: item.variantId, variantSku: item.variantSku, variantLabel: item.variantLabel, vatRateBps: item.vatRateBps ?? 2200 })),
   };
 }
 const orderInclude = { seller: { select: { id: true, slug: true, name: true } }, buyer: { select: { name: true, email: true } }, items: true } as const;
@@ -112,7 +112,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
     if (!Number.isSafeInteger(totalMinor) || totalMinor <= 0) throw new CommerceError("El total de la compra no es válido.", "INVALID_TOTAL", 409);
     return {
       currency: "UYU", seller: { id: lines[0]!.item.seller.id, slug: lines[0]!.item.seller.slug, name: lines[0]!.item.seller.name }, subtotalMinor, discountMinor, totalMinor,
-      items: lines.map((line) => ({ itemId: line.item.id, title: line.item.title, kind: line.item.kind, quantity: line.quantity, unitPriceMinor: line.unitPriceMinor, unitDiscountMinor: line.discount, entitlementMonths: line.item.entitlementMonths, variantId: line.variant?.id || null, variantSku: line.variant?.sku || null, variantLabel: line.variant?.label || null })),
+      items: lines.map((line) => ({ itemId: line.item.id, title: line.item.title, kind: line.item.kind, quantity: line.quantity, unitPriceMinor: line.unitPriceMinor, unitDiscountMinor: line.discount, entitlementMonths: line.item.entitlementMonths, variantId: line.variant?.id || null, variantSku: line.variant?.sku || null, variantLabel: line.variant?.label || null, vatRateBps: line.item.vatRateBps ?? 2200 })),
     };
   }
 
@@ -136,9 +136,9 @@ export class PrismaCommerceRepository implements CommerceRepository {
     }
     throw new CommerceError("No se pudo confirmar la operación local.", "TRANSACTION_RETRY_EXHAUSTED", 503);
   }
-  private reserved(order: any): ReservedOrder { return { ...orderDto(order), buyerEmail: order.buyer.email, idempotencyKey: order.idempotencyKey, providerOrderId: order.providerOrderId, payloadFingerprint: order.payloadFingerprint }; }
+  private reserved(order: any, imageUrl: string | null = null): ReservedOrder { return { ...orderDto(order), buyerEmail: order.buyer.email, idempotencyKey: order.idempotencyKey, providerOrderId: order.providerOrderId, invoiceNumber: order.invoiceNumber, imageUrl, payloadFingerprint: order.payloadFingerprint }; }
 
-  async reserveOrder(input: { buyer: CommerceActor; request: CreateCommerceCheckoutDto; fingerprint: string; liveMode: boolean; reservationMinutes: number; maxInstallments: number }): Promise<ReservedOrder> {
+  async reserveOrder(input: { buyer: CommerceActor; request: CreateCommerceCheckoutDto; fingerprint: string; liveMode: boolean; reservationMinutes: number }): Promise<ReservedOrder> {
     const keys = new Set(input.request.items.map((line) => `${line.itemId}:${line.variantId || ""}`));
     if (keys.size !== input.request.items.length) throw new CommerceError("No repitas la misma variante en el carrito.", "INVALID_CART", 400);
     const reserve = async (tx: any): Promise<ReservedOrder> => {
@@ -180,10 +180,9 @@ export class PrismaCommerceRepository implements CommerceRepository {
         }
       }
       const physical = lines.some((line) => line.item.kind === "product");
-      const paymentMode = input.request.paymentMode || "cash";
-      const created = await tx.commerceOrder.create({ data: { buyerUserId: input.buyer.id, sellerId: lines[0]!.item.sellerId, currency: "UYU", subtotalMinor, discountMinor, totalMinor, paymentMode, maxInstallments: paymentMode === "cash" ? 1 : input.maxInstallments, idempotencyKey: input.request.idempotencyKey, payloadFingerprint: input.fingerprint, liveMode: input.liveMode, reservationExpiresAt: new Date(Date.now() + input.reservationMinutes * 60_000), fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", pickupInstructions: physical ? lines.map((line) => line.item.pickupInstructions).filter(Boolean).join("\n") || null : null, items: { create: lines.map((line) => ({ itemId: line.item.id, variantId: line.variant?.id || null, title: line.item.title, kind: line.item.kind, quantity: line.quantity, unitPriceMinor: line.unitPriceMinor, unitDiscountMinor: line.discount, entitlementMonths: line.item.entitlementMonths, variantSku: line.variant?.sku || null, variantLabel: line.variant?.label || null })) } }, include: orderInclude });
+      const created = await tx.commerceOrder.create({ data: { buyerUserId: input.buyer.id, sellerId: lines[0]!.item.sellerId, currency: "UYU", subtotalMinor, discountMinor, totalMinor, providerOrderId: randomUUID(), idempotencyKey: input.request.idempotencyKey, payloadFingerprint: input.fingerprint, liveMode: input.liveMode, reservationExpiresAt: new Date(Date.now() + input.reservationMinutes * 60_000), fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", pickupInstructions: physical ? lines.map((line) => line.item.pickupInstructions).filter(Boolean).join("\n") || null : null, items: { create: lines.map((line) => ({ itemId: line.item.id, variantId: line.variant?.id || null, title: line.item.title, kind: line.item.kind, quantity: line.quantity, unitPriceMinor: line.unitPriceMinor, unitDiscountMinor: line.discount, entitlementMonths: line.item.entitlementMonths, variantSku: line.variant?.sku || null, variantLabel: line.variant?.label || null, vatRateBps: line.item.vatRateBps ?? 2200 })) } }, include: orderInclude });
       for (const line of lines.filter((line) => line.item.kind === "tournament")) await tx.commerceTournamentRegistration.upsert({ where: { itemId_userId: { itemId: line.item.id, userId: input.buyer.id } }, create: { orderId: created.id, itemId: line.item.id, tournamentId: line.item.tournamentId, userId: input.buyer.id, status: "reserved" }, update: { orderId: created.id, status: "reserved", cancelledAt: null } });
-      return this.reserved(created);
+      return this.reserved(created, lines.find((line) => line.item.imageUrl)?.item.imageUrl ?? null);
     };
     try { return await this.inCommerceUnitOfWork(reserve); }
     catch (error: any) {
@@ -194,18 +193,17 @@ export class PrismaCommerceRepository implements CommerceRepository {
     }
   }
 
-  async attachProviderOrder(orderId: string, provider: VerifiedProviderOrder) {
+  async attachCheckoutUrl(orderId: string, checkoutUrl: string) {
     const local = await this.database.commerceOrder.findUnique({ where: { id: orderId } });
     if (!local) throw new CommerceError("Orden local inexistente.", "ORDER_NOT_FOUND", 404);
-    if (provider.externalReference !== local.id || provider.currency !== local.currency || provider.totalMinor !== local.totalMinor) throw new CommerceError("La orden de Mercado Pago no coincide con la compra local.", "PAYMENT_MISMATCH", 502);
-    return orderDto(await this.database.commerceOrder.update({ where: { id: orderId }, data: { providerOrderId: provider.id, providerStatus: provider.status, checkoutUrl: provider.checkoutUrl, status: "payment_pending" }, include: orderInclude }));
+    return orderDto(await this.database.commerceOrder.update({ where: { id: orderId }, data: { checkoutUrl, providerStatus: "handy:link_created", status: "payment_pending" }, include: orderInclude }));
   }
   private async releaseInventory(orderId: string, status: string) {
     await this.inCommerceUnitOfWork(async (tx) => this.releaseInventoryInUnitOfWork(tx, orderId, status));
   }
   private async releaseInventoryInUnitOfWork(tx: any, orderId: string, status: string) {
     const order = await tx.commerceOrder.findUnique({ where: { id: orderId }, include: { items: { include: { item: true } } } });
-    if (!order || !["creating", "payment_pending"].includes(order.status)) return;
+    if (!order || !OPEN_ORDER.includes(order.status)) return;
     for (const line of order.items) {
       if (line.variantId) await tx.commerceItemVariant.updateMany({ where: { id: line.variantId, stockQuantity: { not: null } }, data: { stockQuantity: { increment: line.quantity } } });
       else if (line.item.stockQuantity !== null) await tx.commerceItem.update({ where: { id: line.itemId }, data: { stockQuantity: { increment: line.quantity } } });
@@ -214,19 +212,35 @@ export class PrismaCommerceRepository implements CommerceRepository {
     await tx.commerceOrder.update({ where: { id: orderId }, data: { status, cancelledAt: new Date() } });
   }
   async cancelCreation(orderId: string, reason: string) { void reason; await this.releaseInventory(orderId, "cancelled"); }
-  async expireOrder(orderId: string) { await this.releaseInventory(orderId, "cancelled"); }
+  /** Sólo libera la reserva si sigue vencida: un callback de pago pendiente pudo haberla extendido. */
+  async expireOrder(orderId: string) {
+    await this.inCommerceUnitOfWork(async (tx) => {
+      const order = await tx.commerceOrder.findUnique({ where: { id: orderId }, select: { reservationExpiresAt: true } });
+      if (order && order.reservationExpiresAt < new Date()) await this.releaseInventoryInUnitOfWork(tx, orderId, "cancelled");
+    });
+  }
   async listBuyerOrders(buyerId: string) { return (await this.database.commerceOrder.findMany({ where: { buyerUserId: buyerId }, include: orderInclude, orderBy: { createdAt: "desc" } })).map(orderDto); }
   async getOrderForBuyer(orderId: string, buyerId: string) { const order = await this.database.commerceOrder.findFirst({ where: { id: orderId, buyerUserId: buyerId }, include: orderInclude }); return order ? orderDto(order) : null; }
-  async getOrderForReconciliation(orderId: string) { const order = await this.database.commerceOrder.findUnique({ where: { id: orderId }, include: orderInclude }); return order ? { ...orderDto(order), buyerEmail: order.buyer.email, idempotencyKey: order.idempotencyKey, providerOrderId: order.providerOrderId, payloadFingerprint: order.payloadFingerprint } : null; }
-  async getOrderByProviderId(providerOrderId: string) { const order = await this.database.commerceOrder.findUnique({ where: { providerOrderId }, include: orderInclude }); return order ? { ...orderDto(order), buyerEmail: order.buyer.email, idempotencyKey: order.idempotencyKey, providerOrderId: order.providerOrderId, payloadFingerprint: order.payloadFingerprint } : null; }
+  async getOrderForPayment(orderId: string) { const order = await this.database.commerceOrder.findUnique({ where: { id: orderId }, include: orderInclude }); return order ? this.reserved(order) : null; }
 
-  async reconcileOrder(localOrderId: string, provider: VerifiedProviderOrder) {
+  /**
+   * Aplica una notificación de estado de cobro. Handy puede reenviar la misma notificación o mandarla
+   * fuera de orden, así que cada transición sólo avanza desde estados abiertos.
+   */
+  async applyPaymentUpdate(localOrderId: string, update: ProviderPaymentUpdate) {
     return this.inCommerceUnitOfWork(async (tx) => {
       const order = await tx.commerceOrder.findUnique({ where: { id: localOrderId }, include: { buyer: true, seller: { select: { id: true, slug: true, name: true } }, items: { include: { item: true } } } });
       if (!order) throw new CommerceError("Orden local inexistente.", "ORDER_NOT_FOUND", 404);
-      if (provider.externalReference !== order.id || provider.currency !== order.currency || provider.totalMinor !== order.totalMinor || provider.id !== order.providerOrderId) throw new CommerceError("El pago verificado no coincide con la compra local.", "PAYMENT_MISMATCH", 409);
-      const status = provider.status.toLowerCase();
-      if (PAID.has(status) && !order.paidAt) {
+      if (!order.providerOrderId || update.transactionId.toLowerCase() !== order.providerOrderId.toLowerCase() || update.currency !== order.currency || update.totalMinor !== order.totalMinor) throw new CommerceError("El pago verificado no coincide con la compra local.", "PAYMENT_MISMATCH", 409);
+      const open = OPEN_ORDER.includes(order.status);
+      const method = { paymentMethodId: update.paymentMethodId ?? order.paymentMethodId, paymentMethodType: update.paymentMethodType ?? order.paymentMethodType };
+      if (update.status === "paid") {
+        if (order.paidAt) return orderDto(order);
+        if (!open) {
+          // Pago tardío sobre una reserva ya liberada: el stock pudo venderse a otra persona.
+          if (order.status !== "cancelled") return orderDto(order);
+          return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: "payment_review", providerStatus: update.providerStatus, ...method }, include: orderInclude }));
+        }
         const tournamentLines = order.items.filter((line: { kind: string }) => line.kind === "tournament");
         const membershipMonths = order.items.reduce((sum: number, line: { entitlementMonths: number | null }) => sum + (line.entitlementMonths || 0), 0);
         const player = tournamentLines.length || membershipMonths ? await this.buyerPlayer(tx, order.buyer) : null;
@@ -236,15 +250,32 @@ export class PrismaCommerceRepository implements CommerceRepository {
         }
         if (player && membershipMonths) await this.grantRealIdMembership(tx, order, player, membershipMonths);
         const physical = order.items.some((line: { kind: string }) => line.kind === "product");
-        return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: "paid", fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", providerStatus: provider.status, paidAt: provider.paidAt || new Date(), fulfilledAt: physical ? null : new Date(), paymentMethodId: provider.paymentMethodId, paymentMethodType: provider.paymentMethodType, paymentInstallments: provider.paymentInstallments, paymentInstallmentAmountMinor: provider.paymentInstallmentAmountMinor }, include: orderInclude }));
+        return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: "paid", fulfillmentStatus: physical ? "pending_fulfillment" : "not_required", providerStatus: update.providerStatus, paidAt: update.occurredAt || new Date(), fulfilledAt: physical ? null : new Date(), paymentDueAt: null, ...method }, include: orderInclude }));
       }
-      if (CANCELLED.has(status) && ["creating", "payment_pending"].includes(order.status)) { await this.releaseInventoryInUnitOfWork(tx, order.id, "cancelled"); return orderDto(await tx.commerceOrder.findUniqueOrThrow({ where: { id: order.id }, include: orderInclude })); }
-      const mapped = status.includes("charged_back") ? "charged_back" : status.includes("refund") ? "refunded" : order.status;
-      if (mapped === "refunded" || mapped === "charged_back") {
-        // Un reembolso o contracargo anula la membresía que esta orden había pagado.
-        await tx.membershipPeriod.updateMany({ where: { orderId: order.id, status: "active" }, data: { status: "voided", voidedAt: new Date(), voidReason: mapped === "refunded" ? "Orden reembolsada" : "Contracargo" } });
+      if (!open) return orderDto(order);
+      if (update.status === "failed") {
+        await this.releaseInventoryInUnitOfWork(tx, order.id, "cancelled");
+        return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { providerStatus: update.providerStatus, ...method }, include: orderInclude }));
       }
-      return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: mapped, providerStatus: provider.status }, include: orderInclude }));
+      if (update.status === "pending") {
+        // Redpagos: la reserva se mantiene hasta el vencimiento del cupón.
+        const reservationExpiresAt = update.paymentDueAt && update.paymentDueAt > order.reservationExpiresAt ? update.paymentDueAt : order.reservationExpiresAt;
+        return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { status: "payment_pending", providerStatus: update.providerStatus, paymentDueAt: update.paymentDueAt, reservationExpiresAt, ...method }, include: orderInclude }));
+      }
+      return orderDto(await tx.commerceOrder.update({ where: { id: order.id }, data: { providerStatus: update.providerStatus }, include: orderInclude }));
+    });
+  }
+
+  async applyRefundResult(orderId: string, result: { success: boolean; message: string }) {
+    await this.inCommerceUnitOfWork(async (tx) => {
+      const refund = await tx.commerceRefundRequest.findFirst({ where: { orderId, status: "processing" }, orderBy: { createdAt: "desc" } });
+      if (refund) await tx.commerceRefundRequest.update({ where: { id: refund.id }, data: { status: result.success ? "completed" : "failed", providerMessage: result.message || null } });
+      if (!result.success) return;
+      const order = await tx.commerceOrder.findUnique({ where: { id: orderId } });
+      if (!order || order.status === "refunded") return;
+      // Handy sólo devuelve el total de la venta, también si la devolución se hizo fuera de LUFA.
+      await tx.commerceOrder.update({ where: { id: orderId }, data: { refundedMinor: order.totalMinor, status: "refunded", providerStatus: "handy:refunded" } });
+      await tx.membershipPeriod.updateMany({ where: { orderId, status: "active" }, data: { status: "voided", voidedAt: new Date(), voidReason: "Orden reembolsada" } });
     });
   }
   /**
@@ -283,7 +314,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
 
   async recordWebhook(input: { deliveryKey: string; providerResourceId: string; action: string; liveMode: boolean }) { const event = await this.database.commerceWebhookEvent.upsert({ where: { deliveryKey: input.deliveryKey }, create: input, update: {} }); return { id: event.id, alreadyProcessed: event.status === "processed" }; }
   async completeWebhook(id: string, error?: string) { await this.database.commerceWebhookEvent.update({ where: { id }, data: error ? { status: "failed", error, attempts: { increment: 1 } } : { status: "processed", error: null, processedAt: new Date(), attempts: { increment: 1 } } }); }
-  listReconciliationCandidates(limit: number) { return this.database.commerceOrder.findMany({ where: { status: { in: ["creating", "payment_pending", "payment_review"] } }, orderBy: { createdAt: "asc" }, take: limit, select: { id: true, providerOrderId: true } }); }
+  listExpiredReservations(limit: number) { return this.database.commerceOrder.findMany({ where: { status: { in: OPEN_ORDER }, reservationExpiresAt: { lt: new Date() } }, orderBy: { reservationExpiresAt: "asc" }, take: limit, select: { id: true } }); }
 
   async listActorSellers(actor: CommerceActor) { const sellerIds = await this.sellerIds(actor); return this.database.commerceSeller.findMany({ where: { status: "active", ...(sellerIds ? { id: { in: sellerIds } } : {}) }, select: { id: true, slug: true, name: true }, orderBy: { name: "asc" } }); }
   async listTournamentOptions(actor: CommerceActor): Promise<CommerceTournamentOptionDto[]> {
@@ -301,6 +332,7 @@ export class PrismaCommerceRepository implements CommerceRepository {
     if (input.priceMinor !== undefined && (!Number.isInteger(input.priceMinor) || input.priceMinor < 1)) throw new CommerceError("El precio no es válido.", "INVALID_ITEM", 400);
     if (input.credentialDiscountBps !== undefined && (!Number.isInteger(input.credentialDiscountBps) || input.credentialDiscountBps < 0 || input.credentialDiscountBps > 9000)) throw new CommerceError("El descuento no es válido.", "INVALID_ITEM", 400);
     if (input.stockQuantity !== undefined && input.stockQuantity !== null && (!Number.isInteger(input.stockQuantity) || input.stockQuantity < 0)) throw new CommerceError("El stock no es válido.", "INVALID_ITEM", 400);
+    if (input.vatRateBps !== undefined && !(COMMERCE_VAT_RATES as readonly number[]).includes(input.vatRateBps)) throw new CommerceError("La tasa de IVA debe ser 22%, 10% o exento.", "INVALID_ITEM", 400);
     if (input.entitlementMonths !== undefined && input.entitlementMonths !== null && ![6, 12].includes(input.entitlementMonths)) throw new CommerceError("La vigencia del ID debe ser de 6 o 12 meses.", "INVALID_ITEM", 400);
     if (input.imageUrls && (!Array.isArray(input.imageUrls) || input.imageUrls.some((url) => typeof url !== "string" || url.length > 2048))) throw new CommerceError("Las imágenes no son válidas.", "INVALID_ITEM", 400);
     for (const variant of input.variants || []) if (!variant.sku?.trim() || !variant.label?.trim() || !variant.optionName?.trim() || !variant.optionValue?.trim() || (variant.priceMinor != null && (!Number.isInteger(variant.priceMinor) || variant.priceMinor < 1)) || (variant.stockQuantity != null && (!Number.isInteger(variant.stockQuantity) || variant.stockQuantity < 0))) throw new CommerceError("Una variante no es válida.", "INVALID_VARIANT", 400);
@@ -341,7 +373,29 @@ export class PrismaCommerceRepository implements CommerceRepository {
   async listAdminOrders(actor: CommerceActor, filters: CommerceOrderFiltersDto) { assertAdmin(actor); const from = filters.from ? new Date(filters.from) : undefined; const to = filters.to ? new Date(filters.to) : undefined; return (await this.database.commerceOrder.findMany({ where: { ...(filters.status ? { status: filters.status } : {}), ...(filters.fulfillmentStatus ? { fulfillmentStatus: filters.fulfillmentStatus } : {}), ...(filters.sellerId ? { sellerId: filters.sellerId } : {}), ...(from || to ? { createdAt: { ...(from && !Number.isNaN(from.getTime()) ? { gte: from } : {}), ...(to && !Number.isNaN(to.getTime()) ? { lte: to } : {}) } } : {}) }, include: orderInclude, orderBy: { createdAt: "desc" }, take: 250 })).map(orderDto); }
   async listCommerceSellers(actor: CommerceActor) { assertAdmin(actor); return this.database.commerceSeller.findMany({ select: { id: true, slug: true, name: true, status: true, kind: true }, orderBy: { name: "asc" } }); }
   async updateSellerStatus(actor: CommerceActor, sellerId: string, status: "active" | "inactive") { assertAdmin(actor); const seller = await this.database.commerceSeller.update({ where: { id: sellerId }, data: { status }, select: { id: true, slug: true, name: true, status: true, kind: true } }); await this.audit(actor, "commerce.seller.status_updated", "commerce_seller", seller.id, `Actualizó estado a ${status}`); return seller; }
-  async requestRefund(actor: CommerceActor, orderId: string, input: CreateCommerceRefundRequestDto) { const sellerIds = await this.sellerIds(actor); const order = await this.database.commerceOrder.findFirst({ where: { id: orderId, status: "paid", ...(sellerIds ? { sellerId: { in: sellerIds } } : {}) } }); if (!order) throw new CommerceError("Compra pagada no encontrada.", "ORDER_NOT_FOUND", 404); const remaining = order.totalMinor - order.refundedMinor; if (!Number.isInteger(input.amountMinor) || input.amountMinor < 1 || input.amountMinor > remaining || !input.reason?.trim()) throw new CommerceError("El monto o motivo del reembolso no es válido.", "INVALID_REFUND", 400); return this.database.commerceRefundRequest.create({ data: { orderId, requestedById: actor.id, amountMinor: input.amountMinor, reason: input.reason.trim() }, select: { id: true, status: true } }); }
-  async getRefundForExecution(actor: CommerceActor, refundId: string) { assertAdmin(actor); const refund = await this.database.commerceRefundRequest.findFirst({ where: { id: refundId, status: "requested" }, include: { order: true } }); if (!refund?.order.providerOrderId) throw new CommerceError("Solicitud de reembolso no encontrada.", "REFUND_NOT_FOUND", 404); return { id: refund.id, orderId: refund.orderId, providerOrderId: refund.order.providerOrderId, amountMinor: refund.amountMinor }; }
-  async completeRefund(refundId: string, providerRefundId: string, reviewedById: string) { await this.database.$transaction(async (tx) => { const refund = await tx.commerceRefundRequest.update({ where: { id: refundId }, data: { status: "completed", providerRefundId, reviewedById, reviewedAt: new Date() } }); const order = await tx.commerceOrder.findUniqueOrThrow({ where: { id: refund.orderId } }); const refundedMinor = order.refundedMinor + refund.amountMinor; await tx.commerceOrder.update({ where: { id: order.id }, data: { refundedMinor, status: refundedMinor >= order.totalMinor ? "refunded" : order.status } }); }); }
+  /** Handy admite una única devolución total por venta y sólo para pagos con tarjeta. */
+  async requestRefund(actor: CommerceActor, orderId: string, input: CreateCommerceRefundRequestDto) {
+    const sellerIds = await this.sellerIds(actor);
+    const order = await this.database.commerceOrder.findFirst({ where: { id: orderId, status: "paid", ...(sellerIds ? { sellerId: { in: sellerIds } } : {}) } });
+    if (!order) throw new CommerceError("Compra pagada no encontrada.", "ORDER_NOT_FOUND", 404);
+    if (!input.reason?.trim()) throw new CommerceError("Indicá el motivo del reembolso.", "INVALID_REFUND", 400);
+    if (input.amountMinor !== order.totalMinor || order.refundedMinor > 0) throw new CommerceError("Handy sólo permite devolver el total de la compra, una única vez.", "INVALID_REFUND", 400);
+    if (order.paymentMethodType === "not_card") throw new CommerceError("Handy sólo permite devolver pagos hechos con tarjeta.", "REFUND_NOT_SUPPORTED", 409);
+    const open = await this.database.commerceRefundRequest.count({ where: { orderId, status: { in: ["requested", "processing"] } } });
+    if (open) throw new CommerceError("Ya hay una solicitud de reembolso en curso para esta compra.", "REFUND_IN_PROGRESS", 409);
+    return this.database.commerceRefundRequest.create({ data: { orderId, requestedById: actor.id, amountMinor: order.totalMinor, reason: input.reason.trim() }, select: { id: true, status: true } });
+  }
+  async getRefundForExecution(actor: CommerceActor, refundId: string) {
+    assertAdmin(actor);
+    const refund = await this.database.commerceRefundRequest.findFirst({ where: { id: refundId, status: { in: ["requested", "failed"] } }, include: { order: true } });
+    if (!refund?.order.providerOrderId || refund.order.status !== "paid") throw new CommerceError("Solicitud de reembolso no encontrada.", "REFUND_NOT_FOUND", 404);
+    return { id: refund.id, orderId: refund.orderId, transactionId: refund.order.providerOrderId, amountMinor: refund.amountMinor };
+  }
+  async markRefundProcessing(refundId: string, reviewedById: string, message: string) {
+    const updated = await this.database.commerceRefundRequest.updateMany({ where: { id: refundId, status: { in: ["requested", "failed"] } }, data: { status: "processing", reviewedById, reviewedAt: new Date(), providerMessage: message } });
+    if (!updated.count) throw new CommerceError("La solicitud de reembolso ya se está procesando.", "REFUND_IN_PROGRESS", 409);
+  }
+  async markRefundFailed(refundId: string, reviewedById: string, message: string) {
+    await this.database.commerceRefundRequest.update({ where: { id: refundId }, data: { status: "failed", reviewedById, reviewedAt: new Date(), providerMessage: message } });
+  }
 }

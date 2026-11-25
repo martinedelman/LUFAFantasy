@@ -1,7 +1,8 @@
 export type CommerceItemKind = "product" | "service" | "tournament";
 export type CommerceOrderStatus = "creating" | "payment_pending" | "paid" | "cancelled" | "refunded" | "charged_back" | "payment_review";
 export type CommerceFulfillmentStatus = "pending_fulfillment" | "ready_for_pickup" | "delivered" | "not_required";
-export type CommercePaymentMode = "cash" | "installments";
+/** IVA incluido en el precio, en puntos básicos: 22% básico, 10% mínimo o exento. */
+export type CommerceVatRateBps = 0 | 1000 | 2200;
 
 export interface CommerceSellerDto { id: string; slug: string; name: string; }
 export interface CommerceTournamentOptionDto {
@@ -24,13 +25,14 @@ export interface CommerceItemDto {
   sku: string | null; details: CommerceItemDetailsDto; pickupInstructions: string | null;
   currency: "UYU"; priceMinor: number; effectivePriceMinor: number;
   credentialDiscountBps: number; hasCredentialDiscount: boolean; stockQuantity: number | null;
-  entitlementMonths: 6 | 12 | null; active: boolean; variants: CommerceItemVariantDto[];
+  entitlementMonths: 6 | 12 | null; active: boolean; vatRateBps: CommerceVatRateBps; variants: CommerceItemVariantDto[];
 }
 export interface CommerceCatalogDto { items: CommerceItemDto[]; hasActiveCredential: boolean; }
 export interface CommerceCheckoutLineDto {
   itemId: string; title: string; kind: CommerceItemKind; quantity: number;
   unitPriceMinor: number; unitDiscountMinor: number; entitlementMonths: number | null;
   variantId: string | null; variantSku: string | null; variantLabel: string | null;
+  vatRateBps: CommerceVatRateBps;
 }
 export interface CreateCommerceCheckoutQuoteDto { items: Array<{ itemId: string; variantId?: string | null; quantity: number }>; }
 export interface CommerceCheckoutQuoteDto {
@@ -39,14 +41,14 @@ export interface CommerceCheckoutQuoteDto {
 }
 export interface CreateCommerceCheckoutDto extends CreateCommerceCheckoutQuoteDto {
   idempotencyKey: string;
-  /** Omitted requests are treated as cash during the rollout. */
-  paymentMode?: CommercePaymentMode;
 }
 export interface CommerceOrderDto {
   id: string; status: CommerceOrderStatus; fulfillmentStatus: CommerceFulfillmentStatus;
   currency: "UYU"; subtotalMinor: number; discountMinor: number; totalMinor: number;
-  paymentMode: CommercePaymentMode; maxInstallments: number;
-  paymentMethodId: string | null; paymentMethodType: string | null; paymentInstallments: number | null; paymentInstallmentAmountMinor: number | null;
+  /** Medio usado (p. ej. "MasterCard", "Redpagos") y si fue tarjeta ("card") o no ("not_card"). */
+  paymentMethodId: string | null; paymentMethodType: string | null;
+  /** Vencimiento de un pago pendiente en redes de cobranza. */
+  paymentDueAt: string | null;
   checkoutUrl: string | null; createdAt: string; seller: CommerceSellerDto;
   buyer?: { name: string; email: string }; pickupInstructions: string | null;
   items: CommerceCheckoutLineDto[];
@@ -56,7 +58,7 @@ export interface CreateCommerceItemDto {
   title: string; description: string; imageUrl?: string | null; imageUrls?: string[];
   sku?: string | null; details?: CommerceItemDetailsDto; pickupInstructions?: string | null;
   priceMinor: number; credentialDiscountBps?: number; stockQuantity?: number | null;
-  entitlementMonths?: 6 | 12 | null; active?: boolean;
+  entitlementMonths?: 6 | 12 | null; active?: boolean; vatRateBps?: CommerceVatRateBps;
   variants?: Array<{ id?: string; sku: string; label: string; optionName: string; optionValue: string; priceMinor?: number | null; stockQuantity?: number | null; active?: boolean }>;
 }
 export type UpdateCommerceItemDto = Partial<Omit<CreateCommerceItemDto, "sellerId">>;

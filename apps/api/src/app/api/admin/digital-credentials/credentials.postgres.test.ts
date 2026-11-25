@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { disconnectPrisma, getPrismaClient } from "@lufa/database/prisma";
@@ -59,6 +60,7 @@ async function removeFixtures() {
   await db.digitalCredential.deleteMany({ where: { id: { in: ids } } });
   await db.member.deleteMany({ where: { id: { in: memberIds } } });
   await db.commerceTournamentRegistration.deleteMany({ where: { userId: { startsWith: prefix } } });
+  await db.commerceRefundRequest.deleteMany({ where: { order: { buyerUserId: { startsWith: prefix } } } });
   await db.commerceOrderItem.deleteMany({ where: { order: { buyerUserId: { startsWith: prefix } } } });
   await db.commerceOrder.deleteMany({ where: { buyerUserId: { startsWith: prefix } } });
   await db.commerceItem.deleteMany({ where: { sellerId: `${prefix}-seller` } });
@@ -254,14 +256,14 @@ describe.skipIf(process.env.LUFA_REAL_ID_POSTGRES_TEST !== "1")("Real ID con Pos
       orderNumber += 1;
       const order = await db.commerceOrder.create({ data: {
         buyerUserId, sellerId: `${prefix}-seller`, subtotalMinor: 100000, totalMinor: 100000, idempotencyKey: `${prefix}-order-${orderNumber}`,
-        payloadFingerprint: "fp", providerOrderId: `${prefix}-provider-${orderNumber}`, liveMode: false, reservationExpiresAt: new Date(Date.now() + 600_000),
+        payloadFingerprint: "fp", providerOrderId: randomUUID(), liveMode: false, reservationExpiresAt: new Date(Date.now() + 600_000),
         status: "payment_pending", items: { create: [{ itemId: item.id, title: item.title, kind: "tournament", quantity: 1, unitPriceMinor: 100000, entitlementMonths: 6 }] },
       } });
-      const provider = (status: string) => ({
-        id: order.providerOrderId!, externalReference: order.id, status, currency: "UYU", totalMinor: 100000, collectorId: "c", applicationId: "a",
-        checkoutUrl: null, paidAt: new Date(), paymentMethodId: null, paymentMethodType: null, paymentInstallments: null, paymentInstallmentAmountMinor: null,
-      });
-      return { order, pay: () => commerce.reconcileOrder(order.id, provider("processed")), refund: () => commerce.reconcileOrder(order.id, provider("refunded")) };
+      const paid = {
+        transactionId: order.providerOrderId!, status: "paid" as const, providerStatus: "handy:1", currency: "UYU", totalMinor: 100000,
+        occurredAt: new Date(), paymentMethodId: "MasterCard", paymentMethodType: "card" as const, paymentDueAt: null,
+      };
+      return { order, pay: () => commerce.applyPaymentUpdate(order.id, paid), refund: () => commerce.applyRefundResult(order.id, { success: true, message: "Devolución completada." }) };
     }
 
     // Primera compra: emite la ID por la vía oficial (número de temporada, membresía de 6 meses).
@@ -291,5 +293,68 @@ describe.skipIf(process.env.LUFA_REAL_ID_POSTGRES_TEST !== "1")("Real ID con Pos
     await db.player.createMany({ data: ["Hijo", "Hija"].map((firstName) => ({ teamId, firstName, lastName: "Familia", email: parent.email, dateOfBirth: new Date("2012-01-01"), position: "WR", registrationDate: new Date() })) });
     await expect((await paidOrder(parent.id)).pay()).rejects.toMatchObject({ code: "PLAYER_PROFILE_AMBIGUOUS" });
     expect(await db.member.findUnique({ where: { userId: parent.id } })).toBeNull();
+  });
+  it("la tienda aplica los callbacks de Handy: pendiente, fallido, pago tardío y devolución total", async () => {
+    const db = getPrismaClient();
+    const commerce = new PrismaCommerceRepository();
+    const adminActor = { id: admin.id, name: admin.name, email: admin.email, role: "admin" };
+    const buyer = await db.user.create({ data: { id: `${prefix}-handy`, email: `${prefix}-handy@example.com`, name: "Lucía Handy", passwordHash: "unused", isActive: true } });
+    await db.commerceSeller.upsert({ where: { id: `${prefix}-seller` }, create: { id: `${prefix}-seller`, slug: `${prefix}-seller`, name: "LUFA", kind: "lufa" }, update: {} });
+    const item = await db.commerceItem.create({ data: { sellerId: `${prefix}-seller`, slug: `${prefix}-pelota`, kind: "product", title: "Pelota", description: "Oficial", priceMinor: 122000, stockQuantity: 5, vatRateBps: 1000 } });
+    const actor = { id: buyer.id, name: buyer.name, email: buyer.email, role: "user" };
+    let attempt = 0;
+    const reserve = async () => {
+      attempt += 1;
+      const order = await commerce.reserveOrder({ buyer: actor, request: { idempotencyKey: `${prefix}-handy-${attempt}-0000`, items: [{ itemId: item.id, quantity: 2 }] }, fingerprint: `fp-${attempt}`, liveMode: false, reservationMinutes: 30 });
+      await commerce.attachCheckoutUrl(order.id, "https://pago.arriba.uy?sessionId=M_test");
+      return order;
+    };
+    const update = (order: { providerOrderId: string | null }, status: "paid" | "failed" | "pending", extra: Partial<{ paymentDueAt: Date; paymentMethodType: "card" | "not_card" }> = {}) => ({
+      transactionId: order.providerOrderId!, status, providerStatus: `handy:${status}`, currency: "UYU", totalMinor: 244000, occurredAt: new Date(),
+      paymentMethodId: "MasterCard", paymentMethodType: "card" as const, paymentDueAt: null, ...extra,
+    });
+    const stock = async () => (await db.commerceItem.findUniqueOrThrow({ where: { id: item.id } })).stockQuantity;
+
+    // La reserva guarda el GUID para Handy, el número de factura y el IVA de cada línea.
+    const pending = await reserve();
+    expect(pending.providerOrderId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(pending.invoiceNumber).toEqual(expect.any(Number));
+    expect(pending.items[0]).toMatchObject({ vatRateBps: 1000 });
+    expect(await stock()).toBe(3);
+
+    // Redpagos pendiente: la reserva se extiende hasta el vencimiento del cupón.
+    const dueAt = new Date(Date.now() + 3 * 86_400_000);
+    expect(await commerce.applyPaymentUpdate(pending.id, update(pending, "pending", { paymentDueAt: dueAt, paymentMethodType: "not_card" }))).toMatchObject({ status: "payment_pending", paymentDueAt: dueAt.toISOString(), paymentMethodType: "not_card" });
+    expect((await db.commerceOrder.findUniqueOrThrow({ where: { id: pending.id } })).reservationExpiresAt).toEqual(dueAt);
+    await commerce.expireOrder(pending.id);
+    expect(await stock()).toBe(3);
+
+    // Un monto distinto nunca se aplica.
+    await expect(commerce.applyPaymentUpdate(pending.id, { ...update(pending, "paid"), totalMinor: 1 })).rejects.toMatchObject({ code: "PAYMENT_MISMATCH" });
+
+    // Pago fallido: se cancela y vuelve el stock.
+    expect(await commerce.applyPaymentUpdate(pending.id, update(pending, "failed"))).toMatchObject({ status: "cancelled" });
+    expect(await stock()).toBe(5);
+
+    // Un pago que llega después de liberar la reserva queda en revisión manual, sin volver a descontar stock.
+    expect(await commerce.applyPaymentUpdate(pending.id, update(pending, "paid"))).toMatchObject({ status: "payment_review" });
+    expect(await stock()).toBe(5);
+
+    // Pago aprobado y devolución: sólo total, una vez y con el resultado del callback.
+    const paid = await reserve();
+    expect(await commerce.applyPaymentUpdate(paid.id, update(paid, "paid"))).toMatchObject({ status: "paid", paymentMethodId: "MasterCard" });
+    expect(await commerce.applyPaymentUpdate(paid.id, update(paid, "failed"))).toMatchObject({ status: "paid" });
+    await expect(commerce.requestRefund(adminActor, paid.id, { amountMinor: 1000, reason: "Parcial" })).rejects.toMatchObject({ code: "INVALID_REFUND" });
+    const refund = await commerce.requestRefund(adminActor, paid.id, { amountMinor: 244000, reason: "Talle equivocado" });
+    await expect(commerce.requestRefund(adminActor, paid.id, { amountMinor: 244000, reason: "Duplicada" })).rejects.toMatchObject({ code: "REFUND_IN_PROGRESS" });
+    expect(await commerce.getRefundForExecution(adminActor, refund.id)).toMatchObject({ transactionId: paid.providerOrderId, amountMinor: 244000 });
+    await commerce.markRefundProcessing(refund.id, admin.id, "Solicitud enviada a Handy.");
+    await expect(commerce.markRefundProcessing(refund.id, admin.id, "otra vez")).rejects.toMatchObject({ code: "REFUND_IN_PROGRESS" });
+    await commerce.applyRefundResult(paid.id, { success: false, message: "Saldo insuficiente" });
+    expect(await db.commerceRefundRequest.findUniqueOrThrow({ where: { id: refund.id } })).toMatchObject({ status: "failed", providerMessage: "Saldo insuficiente" });
+    await commerce.markRefundProcessing(refund.id, admin.id, "Reintento");
+    await commerce.applyRefundResult(paid.id, { success: true, message: "La devolución se completó correctamente" });
+    expect(await db.commerceRefundRequest.findUniqueOrThrow({ where: { id: refund.id } })).toMatchObject({ status: "completed" });
+    expect(await db.commerceOrder.findUniqueOrThrow({ where: { id: paid.id } })).toMatchObject({ status: "refunded", refundedMinor: 244000 });
   });
 });

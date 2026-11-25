@@ -42,6 +42,7 @@ export type CommerceRefundRequestMinAggregateOutputType = {
   reason: string | null
   status: string | null
   providerRefundId: string | null
+  providerMessage: string | null
   reviewedById: string | null
   reviewedAt: Date | null
   createdAt: Date | null
@@ -55,6 +56,7 @@ export type CommerceRefundRequestMaxAggregateOutputType = {
   reason: string | null
   status: string | null
   providerRefundId: string | null
+  providerMessage: string | null
   reviewedById: string | null
   reviewedAt: Date | null
   createdAt: Date | null
@@ -68,6 +70,7 @@ export type CommerceRefundRequestCountAggregateOutputType = {
   reason: number
   status: number
   providerRefundId: number
+  providerMessage: number
   reviewedById: number
   reviewedAt: number
   createdAt: number
@@ -91,6 +94,7 @@ export type CommerceRefundRequestMinAggregateInputType = {
   reason?: true
   status?: true
   providerRefundId?: true
+  providerMessage?: true
   reviewedById?: true
   reviewedAt?: true
   createdAt?: true
@@ -104,6 +108,7 @@ export type CommerceRefundRequestMaxAggregateInputType = {
   reason?: true
   status?: true
   providerRefundId?: true
+  providerMessage?: true
   reviewedById?: true
   reviewedAt?: true
   createdAt?: true
@@ -117,6 +122,7 @@ export type CommerceRefundRequestCountAggregateInputType = {
   reason?: true
   status?: true
   providerRefundId?: true
+  providerMessage?: true
   reviewedById?: true
   reviewedAt?: true
   createdAt?: true
@@ -217,6 +223,7 @@ export type CommerceRefundRequestGroupByOutputType = {
   reason: string
   status: string
   providerRefundId: string | null
+  providerMessage: string | null
   reviewedById: string | null
   reviewedAt: Date | null
   createdAt: Date
@@ -253,6 +260,7 @@ export type CommerceRefundRequestWhereInput = {
   reason?: Prisma.StringFilter<"CommerceRefundRequest"> | string
   status?: Prisma.StringFilter<"CommerceRefundRequest"> | string
   providerRefundId?: Prisma.StringNullableFilter<"CommerceRefundRequest"> | string | null
+  providerMessage?: Prisma.StringNullableFilter<"CommerceRefundRequest"> | string | null
   reviewedById?: Prisma.StringNullableFilter<"CommerceRefundRequest"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"CommerceRefundRequest"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CommerceRefundRequest"> | Date | string
@@ -267,6 +275,7 @@ export type CommerceRefundRequestOrderByWithRelationInput = {
   reason?: Prisma.SortOrder
   status?: Prisma.SortOrder
   providerRefundId?: Prisma.SortOrderInput | Prisma.SortOrder
+  providerMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -284,6 +293,7 @@ export type CommerceRefundRequestWhereUniqueInput = Prisma.AtLeast<{
   amountMinor?: Prisma.IntFilter<"CommerceRefundRequest"> | number
   reason?: Prisma.StringFilter<"CommerceRefundRequest"> | string
   status?: Prisma.StringFilter<"CommerceRefundRequest"> | string
+  providerMessage?: Prisma.StringNullableFilter<"CommerceRefundRequest"> | string | null
   reviewedById?: Prisma.StringNullableFilter<"CommerceRefundRequest"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"CommerceRefundRequest"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CommerceRefundRequest"> | Date | string
@@ -298,6 +308,7 @@ export type CommerceRefundRequestOrderByWithAggregationInput = {
   reason?: Prisma.SortOrder
   status?: Prisma.SortOrder
   providerRefundId?: Prisma.SortOrderInput | Prisma.SortOrder
+  providerMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -319,6 +330,7 @@ export type CommerceRefundRequestScalarWhereWithAggregatesInput = {
   reason?: Prisma.StringWithAggregatesFilter<"CommerceRefundRequest"> | string
   status?: Prisma.StringWithAggregatesFilter<"CommerceRefundRequest"> | string
   providerRefundId?: Prisma.StringNullableWithAggregatesFilter<"CommerceRefundRequest"> | string | null
+  providerMessage?: Prisma.StringNullableWithAggregatesFilter<"CommerceRefundRequest"> | string | null
   reviewedById?: Prisma.StringNullableWithAggregatesFilter<"CommerceRefundRequest"> | string | null
   reviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"CommerceRefundRequest"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"CommerceRefundRequest"> | Date | string
@@ -331,6 +343,7 @@ export type CommerceRefundRequestCreateInput = {
   reason: string
   status?: string
   providerRefundId?: string | null
+  providerMessage?: string | null
   reviewedById?: string | null
   reviewedAt?: Date | string | null
   createdAt?: Date | string
@@ -345,6 +358,7 @@ export type CommerceRefundRequestUncheckedCreateInput = {
   reason: string
   status?: string
   providerRefundId?: string | null
+  providerMessage?: string | null
   reviewedById?: string | null
   reviewedAt?: Date | string | null
   createdAt?: Date | string
@@ -357,6 +371,7 @@ export type CommerceRefundRequestUpdateInput = {
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   providerRefundId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  providerMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -371,6 +386,7 @@ export type CommerceRefundRequestUncheckedUpdateInput = {
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   providerRefundId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  providerMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -384,6 +400,7 @@ export type CommerceRefundRequestCreateManyInput = {
   reason: string
   status?: string
   providerRefundId?: string | null
+  providerMessage?: string | null
   reviewedById?: string | null
   reviewedAt?: Date | string | null
   createdAt?: Date | string
@@ -396,6 +413,7 @@ export type CommerceRefundRequestUpdateManyMutationInput = {
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   providerRefundId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  providerMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -409,6 +427,7 @@ export type CommerceRefundRequestUncheckedUpdateManyInput = {
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   providerRefundId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  providerMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -432,6 +451,7 @@ export type CommerceRefundRequestCountOrderByAggregateInput = {
   reason?: Prisma.SortOrder
   status?: Prisma.SortOrder
   providerRefundId?: Prisma.SortOrder
+  providerMessage?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -449,6 +469,7 @@ export type CommerceRefundRequestMaxOrderByAggregateInput = {
   reason?: Prisma.SortOrder
   status?: Prisma.SortOrder
   providerRefundId?: Prisma.SortOrder
+  providerMessage?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -462,6 +483,7 @@ export type CommerceRefundRequestMinOrderByAggregateInput = {
   reason?: Prisma.SortOrder
   status?: Prisma.SortOrder
   providerRefundId?: Prisma.SortOrder
+  providerMessage?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -520,6 +542,7 @@ export type CommerceRefundRequestCreateWithoutOrderInput = {
   reason: string
   status?: string
   providerRefundId?: string | null
+  providerMessage?: string | null
   reviewedById?: string | null
   reviewedAt?: Date | string | null
   createdAt?: Date | string
@@ -532,6 +555,7 @@ export type CommerceRefundRequestUncheckedCreateWithoutOrderInput = {
   reason: string
   status?: string
   providerRefundId?: string | null
+  providerMessage?: string | null
   reviewedById?: string | null
   reviewedAt?: Date | string | null
   createdAt?: Date | string
@@ -574,6 +598,7 @@ export type CommerceRefundRequestScalarWhereInput = {
   reason?: Prisma.StringFilter<"CommerceRefundRequest"> | string
   status?: Prisma.StringFilter<"CommerceRefundRequest"> | string
   providerRefundId?: Prisma.StringNullableFilter<"CommerceRefundRequest"> | string | null
+  providerMessage?: Prisma.StringNullableFilter<"CommerceRefundRequest"> | string | null
   reviewedById?: Prisma.StringNullableFilter<"CommerceRefundRequest"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"CommerceRefundRequest"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CommerceRefundRequest"> | Date | string
@@ -586,6 +611,7 @@ export type CommerceRefundRequestCreateManyOrderInput = {
   reason: string
   status?: string
   providerRefundId?: string | null
+  providerMessage?: string | null
   reviewedById?: string | null
   reviewedAt?: Date | string | null
   createdAt?: Date | string
@@ -598,6 +624,7 @@ export type CommerceRefundRequestUpdateWithoutOrderInput = {
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   providerRefundId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  providerMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -610,6 +637,7 @@ export type CommerceRefundRequestUncheckedUpdateWithoutOrderInput = {
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   providerRefundId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  providerMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -622,6 +650,7 @@ export type CommerceRefundRequestUncheckedUpdateManyWithoutOrderInput = {
   reason?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   providerRefundId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  providerMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -637,6 +666,7 @@ export type CommerceRefundRequestSelect<ExtArgs extends runtime.Types.Extensions
   reason?: boolean
   status?: boolean
   providerRefundId?: boolean
+  providerMessage?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
   createdAt?: boolean
@@ -651,6 +681,7 @@ export type CommerceRefundRequestSelectCreateManyAndReturn<ExtArgs extends runti
   reason?: boolean
   status?: boolean
   providerRefundId?: boolean
+  providerMessage?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
   createdAt?: boolean
@@ -665,6 +696,7 @@ export type CommerceRefundRequestSelectUpdateManyAndReturn<ExtArgs extends runti
   reason?: boolean
   status?: boolean
   providerRefundId?: boolean
+  providerMessage?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
   createdAt?: boolean
@@ -679,12 +711,13 @@ export type CommerceRefundRequestSelectScalar = {
   reason?: boolean
   status?: boolean
   providerRefundId?: boolean
+  providerMessage?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
   createdAt?: boolean
 }
 
-export type CommerceRefundRequestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "requestedById" | "amountMinor" | "reason" | "status" | "providerRefundId" | "reviewedById" | "reviewedAt" | "createdAt", ExtArgs["result"]["commerceRefundRequest"]>
+export type CommerceRefundRequestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "requestedById" | "amountMinor" | "reason" | "status" | "providerRefundId" | "providerMessage" | "reviewedById" | "reviewedAt" | "createdAt", ExtArgs["result"]["commerceRefundRequest"]>
 export type CommerceRefundRequestInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   order?: boolean | Prisma.CommerceOrderDefaultArgs<ExtArgs>
 }
@@ -706,8 +739,12 @@ export type $CommerceRefundRequestPayload<ExtArgs extends runtime.Types.Extensio
     requestedById: string
     amountMinor: number
     reason: string
+    /**
+     * requested | processing | completed | failed
+     */
     status: string
     providerRefundId: string | null
+    providerMessage: string | null
     reviewedById: string | null
     reviewedAt: Date | null
     createdAt: Date
@@ -1142,6 +1179,7 @@ export interface CommerceRefundRequestFieldRefs {
   readonly reason: Prisma.FieldRef<"CommerceRefundRequest", 'String'>
   readonly status: Prisma.FieldRef<"CommerceRefundRequest", 'String'>
   readonly providerRefundId: Prisma.FieldRef<"CommerceRefundRequest", 'String'>
+  readonly providerMessage: Prisma.FieldRef<"CommerceRefundRequest", 'String'>
   readonly reviewedById: Prisma.FieldRef<"CommerceRefundRequest", 'String'>
   readonly reviewedAt: Prisma.FieldRef<"CommerceRefundRequest", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"CommerceRefundRequest", 'DateTime'>

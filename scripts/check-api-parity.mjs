@@ -108,7 +108,7 @@ POST /api/statistics/teams
 POST /api/teams
 POST /api/teams/:id/players
 POST /api/tournaments
-POST /api/webhooks/mercado-pago
+POST /api/webhooks/handy/:orderId
 PUT /api/games
 PUT /api/games/:id
 PUT /api/players/:id
